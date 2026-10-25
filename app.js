@@ -541,21 +541,8 @@ async function loadR2Catalog() {
   dom.playlistLoading.classList.remove('hidden');
   dom.playlistItemsList.replaceChildren();
   try {
-    const catalogUrlInput = prompt('Nhập URL đầy đủ của books.json trên R2 (ví dụ: https://pub-xxxxxxxx.r2.dev/books.json):');
-    if (!catalogUrlInput || !catalogUrlInput.trim()) {
-      showToast('Đã hủy tải danh sách R2 vì chưa nhập URL.');
-      return;
-    }
-    let catalogUrl;
-    try {
-      catalogUrl = new URL(catalogUrlInput.trim());
-      if (catalogUrl.protocol !== 'https:' || !catalogUrl.pathname.toLowerCase().endsWith('/books.json')) {
-        throw new Error('URL phải là HTTPS và kết thúc bằng /books.json.');
-      }
-    } catch (error) {
-      alert('URL books.json không hợp lệ. ' + error.message);
-      return;
-    }
+    // Catalog được đóng gói sẵn trong ứng dụng; không hỏi người dùng nhập URL.
+    const catalogUrl = new URL('https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/books.json');
     const response = await fetch(catalogUrl.href, { cache: 'no-store' });
     if (!response.ok) throw new Error('Không tải được books.json (' + response.status + ').');
     const data = await response.json();
@@ -2081,4 +2068,8 @@ function onAudioEnded() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', initEvents);
+document.addEventListener('DOMContentLoaded', () => {
+  initEvents();
+  // Tự tải danh sách sách ngay khi mở ứng dụng.
+  loadR2Catalog();
+});
