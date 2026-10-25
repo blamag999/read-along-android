@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
+  <meta name="theme-color" content="#1e293b">
+  <title>Read Along - Công cụ đọc sách kèm audio cho người học tiếng Anh</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- PDF.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  </script>
+</head>
+<body>
+  <!-- HEADER & APP BAR -->
+  <header class="app-header">
+    <div class="header-left">
+      <h1 class="app-title">📖 Read Along</h1>
+    </div>
+
+    <!-- VIEW MODE CONTROLS -->
+    <div class="view-controls-bar">
+      <button id="btnFitHeight" class="view-btn active" title="Vừa chiều dọc màn hình (xem trọn trang)">
+        ↕ <span class="hide-mobile">Vừa dọc</span>
+      </button>
+      <button id="btnTwoPages" class="view-btn" title="Hiển thị 2 trang cùng lúc (chế độ sách)">
+        📖 <span class="hide-mobile">2 Trang</span>
+      </button>
+      
+      <div class="zoom-group">
+        <button id="btnZoomOut" class="view-btn-mini" title="Thu nhỏ">➖</button>
+        <span id="lblZoomLevel" class="zoom-label">100%</span>
+        <button id="btnZoomIn" class="view-btn-mini" title="Phóng to">➕</button>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <!-- NÚT MỞ DANH SÁCH TẬP TRUYỆN (PLAYLIST) -->
+      <button id="btnOpenPlaylist" class="icon-btn playlist-btn" title="Chọn thư mục hoặc tải danh sách sách R2 để mở danh sách tập" disabled aria-disabled="true">
+        📚 <span class="hide-mobile">Danh sách tập</span>
+        <span id="lblPlaylistCount" class="badge-count hidden">0</span>
+      </button>
+
+      <button id="btnOpenSyncModal" class="icon-btn" title="Quản lý mốc đồng bộ thời gian">
+        ⚙️ <span class="hide-mobile">Mốc thời gian</span>
+      </button>
+      <button id="btnToggleSettings" class="icon-btn menu-toggle-btn" type="button" aria-controls="filePickerSection syncBanner" aria-expanded="true" title="Ẩn/hiện dòng chọn tệp và tùy chọn">
+        ☰ <span>Menu</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- THANH CHỌN TỆP VÀ TÙY CHỌN (ẨN/HIỆN BẰNG MENU) -->
+  <section id="filePickerSection" class="file-picker-section">
+    <div class="file-picker-card">
+      
+      <!-- Nút bắt đầu mở hộp thoại lựa chọn cách nạp nội dung -->
+      <button id="btnNode1FolderOnline" class="action-btn btn-node-1" type="button" title="Bắt đầu: chọn thư mục hoặc PDF">📂 Bắt đầu</button>
+      <button id="btnChooseAudio" class="action-btn btn-choose-audio hidden" type="button" title="Chọn MP3 cho PDF đang mở">🎵 Chọn MP3</button>
+      <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none;">
+      <input type="file" id="pdfFileInput" accept="application/pdf" style="display:none;">
+      <input type="file" id="audioFileInput" accept="audio/*" multiple style="display:none;">
+
+      <!-- TRẠNG THÁI FILE ĐANG NẠP -->
+      <div class="active-files-indicator">
+        <span id="pdfFileName" class="file-status-pill empty">📄 Chưa có PDF</span>
+        <span id="audioFileName" class="file-status-pill empty">🎵 Chưa có MP3</span>
+        <span id="syncCountBadge" class="file-status-pill sync-pill empty">⏱️ 0 mốc</span>
+      </div>
+
+      <!-- TÙY CHỌN TỰ ĐỘNG -->
+      <div class="quick-options">
+        <label class="toggle-label page-turn-mode-label" title="Chọn chế độ đọc: dừng chờ lật trang, tự chuyển trang hoặc đọc liên tục">
+          <span>Chế độ đọc</span>
+          <select id="selPageTurnMode" aria-label="Chế độ đọc">
+            <option value="next">Tự động lật trang (theo mốc thời gian)</option>
+            <option value="markers">Tự lật trang (dừng chờ lật trang)</option>
+            <option value="off">Đọc liên tục</option>
+          </select>
+        </label>
+        <label class="toggle-label" title="Khi bạn bấm lật trang thì audio tự động nhảy đến đúng đoạn của trang đó">
+          <input type="checkbox" id="chkAutoSeekAudio" checked>
+          <span>Lật trang tự tua</span>
+        </label>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- MAIN READING CANVAS AREA -->
+  <main class="viewer-container" id="viewerContainer">
+    <div id="dropOverlay" class="drop-overlay hidden">
+      <div class="drop-box">
+        <div class="drop-icon">📥</div>
+        <h3>Thả file PDF và MP3 vào đây!</h3>
+        <p>Ứng dụng sẽ tự động nhận diện và ghép đôi cho bạn</p>
+      </div>
+    </div>
+
+    <div id="pdfLoadingIndicator" class="loading-spinner hidden">
+      <div class="spinner"></div>
+      <p id="lblLoadingText">Đang tải tài liệu...</p>
+    </div>
+
+    <!-- Empty State Prompt -->
+    <div id="emptyState" class="empty-state">
+      <div class="empty-icon">📚</div>
+      <h2>Read Along – Đọc sách cùng âm thanh</h2>
+      <p>Read Along là ứng dụng kết hợp sách điện tử với lời đọc bằng âm thanh, giúp trẻ em và người học vừa nghe lời đọc vừa theo dõi văn bản tương ứng.</p>
+      
+      <section class="readalong-tutorial" aria-labelledby="readalongTutorialTitle">
+        <h3 id="readalongTutorialTitle">Read Along hoạt động như thế nào?</h3>
+        <p class="tutorial-intro">Sách điện tử kết hợp lời đọc bằng âm thanh, giúp trẻ em và người học vừa nghe vừa theo dõi nội dung văn bản tương ứng.</p>
+        <div class="tutorial-steps">
+          <article class="tutorial-step"><img src="./assets/read-along-step-1.svg" alt="Mở sách PDF trên màn hình" loading="lazy" width="132" height="132"><div><h4>Bước 1 — Mở sách</h4><p>Chọn tệp PDF hoặc một thư mục chứa nhiều tập truyện. PDF là phần nội dung người đọc nhìn thấy trên màn hình.</p></div></article>
+          <article class="tutorial-step"><img src="./assets/read-along-step-2.svg" alt="Sách kết hợp với lời đọc âm thanh" loading="lazy" width="132" height="132"><div><h4>Bước 2 — Ghép lời đọc</h4><p>Chọn tệp MP3 hoặc định dạng âm thanh được trình duyệt hỗ trợ, tương ứng với cuốn sách. Người đọc có thể nghe và theo dõi văn bản cùng lúc.</p></div></article>
+          <article class="tutorial-step"><img src="./assets/read-along-step-3.svg" alt="Theo dõi nội dung và đồng bộ từng trang sách" loading="lazy" width="132" height="132"><div><h4>Bước 3 — Đồng bộ âm thanh và trang</h4><p>Gán thời điểm bắt đầu đọc cho từng trang. Khi âm thanh đến mốc đã thiết lập, Read Along có thể tự chuyển trang hoặc dừng để người đọc tự lật trang.</p></div></article>
+          <article class="tutorial-step"><img src="./assets/read-along-step-4.svg" alt="Nghe lời đọc và luyện tập cùng sách" loading="lazy" width="132" height="132"><div><h4>Bước 4 — Nghe, đọc và luyện tập</h4><p>Tua âm thanh, thay đổi tốc độ, đến trang bất kỳ hoặc nghe lại trang hiện tại để theo kịp lời đọc.</p></div></article>
+        </div>
+        <div class="tutorial-note"><strong>Lưu mốc đồng bộ:</strong> Có thể tải mốc thời gian thành tệp JSON hoặc đồng bộ lên GitHub. Tệp PDF và âm thanh vẫn nằm trên thiết bị của bạn.</div>
+        <div class="usage-guide"><h3>Hướng dẫn nhanh</h3><ol><li>Nhấn <strong>Bắt đầu</strong> để chọn cách mở nội dung.</li><li>Chọn <strong>Thư mục</strong> để duyệt danh sách tập, hoặc chọn <strong>PDF</strong> rồi nạp file <strong>MP3 tương ứng</strong>.</li><li>Nhấn <strong>Play</strong> để nghe; dùng các nút điều khiển để tua, lật trang hoặc đọc lại trang.</li><li>Ghim mốc thời gian cho từng trang nếu muốn tự động đồng bộ trang với âm thanh.</li><li>Dùng <strong>Menu</strong> để ẩn/hiện thanh chọn tệp và thanh mốc trang.</li></ol></div>
+      </section>
+    </div>
+
+    <!-- PDF Canvas Container (Hỗ trợ 1 hoặc 2 trang song song) -->
+    <div id="canvasWrapper" class="canvas-wrapper hidden">
+      <div class="canvas-page" id="pageLeftWrapper">
+        <canvas id="pdfCanvasLeft"></canvas>
+      </div>
+      <div class="canvas-page hidden" id="pageRightWrapper">
+        <canvas id="pdfCanvasRight"></canvas>
+      </div>
+    </div>
+  </main>
+
+  <!-- BOTTOM FLOATING AUDIO & SYNC CONTROLLER -->
+  <footer class="app-footer">
+    <div class="sync-banner" id="syncBanner">
+      <div class="sync-info">
+        <span class="page-badge"><span id="lblPagePrefix">Trang</span> <b id="lblCurrentPage">0</b> / <span id="lblTotalPages">0</span></span>
+        <label class="page-jump-control" title="Nhập số trang cần mở">
+          <span>Đến trang</span>
+          <input id="pageJumpInput" type="number" min="1" step="1" inputmode="numeric" aria-label="Số trang cần mở" placeholder="Số">
+          <button id="btnPageJump" type="button">Đi</button>
+        </label>
+        <span id="lblPageTimestamp" class="page-time-badge">Mốc: Chưa gán</span>
+        <span id="lblSaveStatus" class="save-status-badge">💾 Sẵn sàng</span>
+      </div>
+      
+      <div class="sync-actions-mini">
+        <button id="btnPinCurrentTime" class="btn-pin" title="Gán giây hiện tại cho trang này">
+          📍 Ghim mốc giây này cho trang
+        </button>
+        <button id="btnSaveToFolder" class="btn-save-mini" title="Lưu tệp mốc vào thư mục hoặc tải về máy">
+          💾 Lưu mốc
+        </button>
+      </div>
+    </div>
+
+    <div class="audio-scrubber-row">
+      <span id="lblAudioCurrentTime">00:00</span>
+      <input type="range" id="audioSeeker" min="0" max="100" value="0" step="0.1" class="audio-slider">
+      <span id="lblAudioDuration">00:00</span>
+    </div>
+
+    <div class="controls-row">
+      <button id="btnPrevPage" class="ctrl-btn page-ctrl" type="button" title="Trang trước" aria-label="Trang trước">
+        ◀
+      </button>
+      <button id="btnRewind5" class="ctrl-btn" type="button" title="Tua lùi 5 giây" aria-label="Tua lùi 5 giây">
+        ↶
+      </button>
+      <button id="btnPlayPause" class="ctrl-btn play-btn" type="button" title="Phát" aria-label="Phát" aria-pressed="false">
+        <span id="playPauseIcon" aria-hidden="true">▶</span>
+      </button>
+      <button id="btnForward5" class="ctrl-btn" type="button" title="Tua tới 5 giây" aria-label="Tua tới 5 giây">
+        ↷
+      </button>
+      <button id="btnNextPage" class="ctrl-btn page-ctrl" type="button" title="Trang sau" aria-label="Trang sau">
+        ▶
+      </button>
+      <button id="btnReplayPage" class="ctrl-btn replay-page-btn" type="button" title="Đọc lại trang hiện tại từ mốc thời gian" aria-label="Đọc lại trang hiện tại"><span class="replay-page-icon" aria-hidden="true">↺</span></button>
+      <label class="speed-select-wrap" title="Chọn tốc độ phát âm thanh">
+        <span class="sr-only">Tốc độ phát</span>
+        <select id="speedSelect" class="ctrl-btn speed-select" aria-label="Tốc độ phát âm thanh">
+          <option value="0.5">0,5×</option>
+          <option value="0.75">0,75×</option>
+          <option value="1" selected>1×</option>
+          <option value="1.25">1,25×</option>
+          <option value="1.5">1,5×</option>
+          <option value="1.75">1,75×</option>
+          <option value="2">2×</option>
+          <option value="2.5">2,5×</option>
+          <option value="3">3×</option>
+        </select>
+      </label>
+    </div>
+
+    <audio id="audioElement" preload="metadata"></audio>
+  </footer>
+
+  <!-- MODAL NÚT 1: CHỌN THƯ MỤC CỤC BỘ -->
+  <div id="node1Modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🚀 Bắt đầu</h3>
+        <button id="btnCloseNode1Modal" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="option-block">
+          <h4>☁️ Mở sách từ Cloudflare R2</h4>
+          <p class="option-desc">Tải danh sách sách trực tuyến; PDF, MP3 và mốc đồng bộ được đọc từ R2.</p>
+          <button id="btnLoadR2Catalog" class="btn-primary-large" type="button">☁️ Sách trên Cloudflare R2</button>
+          <div class="divider-text">HOẶC MỞ TỪ MÁY TÍNH</div>
+          <h4>📁 Mở cả thư mục truyện</h4>
+          <p class="option-desc">Nạp danh sách các tập PDF/MP3 trong thư mục để bạn chọn tập muốn nghe. Tệp truyện vẫn nằm trên thiết bị.</p>
+          <button id="btnTriggerFolderPicker" class="btn-primary-large">📂 Chọn thư mục</button>
+          <div class="divider-text">HOẶC</div>
+          <h4>📄 Mở một file PDF</h4>
+          <p class="option-desc">Sau khi chọn PDF, bấm “Chọn MP3” để ghép âm thanh tương ứng.</p>
+          <button id="btnTriggerPdfPicker" class="btn-success-large">📄 Chọn PDF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL / DRAWER: DANH SÁCH TẬP TRUYỆN CHỌN NHANH (PLAYLIST DRAWER) -->
+  <div id="playlistModal" class="modal-overlay hidden">
+    <div class="modal-content playlist-modal-content">
+      <div class="modal-header">
+        <div class="playlist-header-title">
+          <h3>📚 Danh sách tập truyện</h3>
+          <span id="lblPlaylistSubtitle" class="playlist-subtitle">Đang tải...</span>
+        </div>
+        <button id="btnClosePlaylist" class="close-btn">&times;</button>
+      </div>
+
+      <div class="playlist-search-bar">
+        <input type="text" id="txtPlaylistSearch" class="search-input" placeholder="🔍 Tìm kiếm tập truyện...">
+        <div class="playlist-filter-tabs">
+          <button class="filter-tab active" data-filter="paired">📖 Đủ PDF và MP3</button>
+          <button class="filter-tab" data-filter="all">Tất cả</button>
+        </div>
+        <div class="playlist-export-row" style="padding: 10px 0; display: grid; gap: 8px;">
+          <label for="r2PublicBaseInput"><strong>URL công khai gốc của bucket R2</strong></label>
+          <input id="r2PublicBaseInput" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://pub-xxxxxxxx.r2.dev" style="width:100%;box-sizing:border-box;padding:10px;border-radius:6px;">
+          <button id="btnExportR2Catalog" class="btn-secondary" type="button" title="Xuất danh mục JSON với URL công khai của các tệp trên Cloudflare R2">📤 Xuất danh sách books.json cho R2</button>
+          <p class="modal-desc" style="margin: 0;">Nhập URL cho mỗi lần xuất. Địa chỉ không được lưu. Tải books.json lên thư mục gốc của bucket, cùng cấp với PDF và MP3.</p>
+        </div>
+      </div>
+
+      <div class="modal-body playlist-body">
+        <div id="playlistLoading" class="loading-spinner-inline hidden">
+          <div class="spinner"></div>
+          <p>Đang quét các tập truyện trong thư mục...</p>
+        </div>
+        <div id="playlistItemsList" class="playlist-items-list">
+          <!-- Render danh sách tập truyện tự động -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SYNC MANAGEMENT MODAL -->
+  <div id="syncModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>⏱️ Quản lý mốc thời gian theo trang</h3>
+        <button id="btnCloseSyncModal" class="close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-desc">
+          Khi audio chạy đến số giây này, truyện sẽ tự động chuyển sang trang tương ứng:
+        </p>
+
+        <div class="sync-actions-row">
+          <button id="btnExportSync" class="btn-secondary" title="Xuất tệp mốc để lưu cùng thư mục truyện trên máy">📥 Tải tệp mốc (.json)</button>
+          <button id="btnSaveToGithubFolder" class="btn-primary" title="Đồng bộ tất cả tệp JSON trong thư mục đã chọn lên GitHub">☁️ Đồng bộ JSON lên GitHub</button>
+          <button id="btnLoadFromGithub" class="btn-secondary" title="Tải lại mốc thời gian mới nhất từ GitHub">⬇️ Tải mốc từ GitHub</button>
+          <p class="modal-desc">Khi đã chọn thư mục, ứng dụng chỉ tải lên các tệp .json có nội dung thay đổi; tệp không đổi sẽ được bỏ qua. Mốc của PDF đang mở được tự động kiểm tra và đồng bộ tối đa mỗi 1 phút khi có thay đổi và đã cấu hình token. Tệp PDF và âm thanh vẫn nằm trên thiết bị của bạn.</p>
+          <div class="github-token-panel" style="border:1px solid #475569;border-radius:10px;padding:12px;margin:10px 0;display:grid;gap:8px;">
+            <strong>🔐 GitHub Token</strong>
+            <p id="githubTokenStatus" class="modal-desc" style="margin:0;">Chưa có token trong phiên này.</p>
+            <label for="githubTokenInput">Nhập token mới (quyền Contents: Read and write)</label>
+            <input id="githubTokenInput" type="password" autocomplete="new-password" placeholder="github_pat_..." style="width:100%;box-sizing:border-box;padding:10px;border-radius:6px;">
+            <div class="sync-actions-row">
+              <button id="btnSaveGithubToken" type="button" class="btn-primary">🔑 Lưu / thay token</button>
+              <button id="btnClearGithubToken" type="button" class="btn-danger">🗑️ Xóa token đang lưu</button>
+            </div>
+            <p class="modal-desc" style="margin:0;">Token chỉ lưu trong sessionStorage của tab/phiên trình duyệt hiện tại, không ghi vào mã nguồn hay GitHub. Xóa token ở đây chỉ xóa token khỏi phiên trình duyệt; muốn thu hồi quyền truy cập, hãy thu hồi token trên trang cài đặt GitHub.</p>
+          </div>
+          <label for="importSyncInput" class="btn-secondary">
+            📂 Nhập file mốc từ máy
+          </label>
+          <input type="file" id="importSyncInput" accept=".json" style="display:none;">
+          <button id="btnClearSync" class="btn-danger">🗑️ Xóa hết mốc của truyện này</button>
+        </div>
+
+        <div class="sync-table-container">
+          <table class="sync-table">
+            <thead>
+              <tr>
+                <th>Trang</th>
+                <th>Thời điểm bắt đầu</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="syncTableBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST THÔNG BÁO -->
+  <div id="toastMessage" class="toast-message hidden"></div>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed: ', err));
+      });
+    }
+  </script>
+</body>
+</html>
