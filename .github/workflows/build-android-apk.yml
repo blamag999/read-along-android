@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Web Local + Android APK
 
 on:
   push:
@@ -10,32 +10,56 @@ permissions:
   contents: read
 
 jobs:
-  build-apk:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
-      - name: Install dependencies
-        run: npm install
+
       - name: Prepare web assets
         run: npm run prepare:web
+
+      - name: Package Web Local for PC
+        run: |
+          mkdir -p dist/read-along-web-local
+          cp -R www/. dist/read-along-web-local/
+          cp run_local.bat README-WEB-LOCAL.txt dist/read-along-web-local/
+          cd dist
+          zip -r read-along-web-local.zip read-along-web-local
+
+      - name: Upload Web Local package
+        uses: actions/upload-artifact@v4
+        with:
+          name: read-along-web-local
+          path: dist/read-along-web-local.zip
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Install dependencies
+        run: npm install
+
       - name: Add Android platform
         run: npx cap add android
+
       - name: Sync Capacitor
         run: npx cap sync android
+
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug
-      - name: Upload APK
+
+      - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
           name: read-along-debug-apk
