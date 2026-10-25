@@ -1,0 +1,24 @@
+{
+  "name": "Read Along - Sách kèm lời đọc",
+  "short_name": "Read Along",
+  "description": "Kết hợp sách PDF với lời đọc âm thanh để người đọc vừa nghe vừa theo dõi nội dung.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#1e293b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
