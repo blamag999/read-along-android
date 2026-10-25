@@ -1,0 +1,17 @@
+{
+  "name": "read-along-android",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Read Along Android app wrapping the PDF/audio reader",
+  "scripts": {
+    "prepare:web": "node scripts/prepare-web.js",
+    "android:sync": "npm run prepare:web && cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3"
+  }
+}
