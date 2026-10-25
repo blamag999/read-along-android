@@ -1,0 +1,11 @@
+{
+  "appId": "com.blamag999.readalong",
+  "appName": "Read Along",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
