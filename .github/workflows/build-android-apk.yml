@@ -1,20 +1,41 @@
-name: Build Web Local + Android APK
+name: Build and Release Read Along
 
 on:
-  push:
-    branches:
-      - feature/android-r2
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version without v prefix (example: 1.0.1)"
+        required: true
+        type: string
+      changelog:
+        description: "Change log for this release"
+        required: true
+        type: string
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  build:
+  build-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
+      - name: Checkout main
         uses: actions/checkout@v6
+        with:
+          ref: main
+
+      - name: Validate release version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Version must look like 1.0.1 or 1.0.1-rc.1"
+            exit 1
+          fi
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "Release v$VERSION already exists"
+            exit 1
+          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -30,39 +51,68 @@ jobs:
       - name: Prepare web assets
         run: npm run prepare:web
 
-      - name: Package Web Local for PC
+      - name: Package versioned Web Local ZIP
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
           mkdir -p dist/read-along-web-local
           cp -R www/. dist/read-along-web-local/
           cp run_local.bat README-WEB-LOCAL.txt dist/read-along-web-local/
           cd dist
-          zip -r read-along-web-local.zip read-along-web-local
+          zip -r "read-along-v${VERSION}-web-local.zip" read-along-web-local
 
-      - name: Upload Web Local package
-        uses: actions/upload-artifact@v6
-        with:
-          name: read-along-web-local
-          path: dist/read-along-web-local.zip
-          if-no-files-found: error
-          retention-days: 14
+      - name: Install dependencies and create Android project
+        run: |
+          npm install
+          npx cap add android
+          npx cap sync android
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Add Android platform
-        run: npx cap add android
-
-      - name: Sync Capacitor
-        run: npx cap sync android
+      - name: Set Android version
+        env:
+          VERSION: ${{ inputs.version }}
+          VERSION_CODE: ${{ github.run_number }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          path = Path("android/app/build.gradle")
+          text = path.read_text()
+          text, code_count = re.subn(r'versionCode\s+\d+', f'versionCode {os.environ["VERSION_CODE"]}', text, count=1)
+          text, name_count = re.subn(r'versionName\s+["\'][^"\']+["\']', f'versionName "{os.environ["VERSION"]}"', text, count=1)
+          if code_count != 1 or name_count != 1:
+              raise SystemExit("Could not set Android versionCode/versionName in generated build.gradle")
+          path.write_text(text)
+          print(f"Set Android versionName={os.environ['VERSION']}, versionCode={os.environ['VERSION_CODE']}")
+          PY
 
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug
 
-      - name: Upload Android APK
+      - name: Rename versioned APK
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk "read-along-v${VERSION}-android-debug.apk"
+
+      - name: Upload versioned workflow artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: read-along-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: read-along-v${{ inputs.version }}-build
+          path: |
+            read-along-v${{ inputs.version }}-android-debug.apk
+            dist/read-along-v${{ inputs.version }}-web-local.zip
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30
+
+      - name: Create GitHub Release and attach files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+          CHANGELOG: ${{ inputs.changelog }}
+        run: |
+          gh release create "v${VERSION}" \
+            "read-along-v${VERSION}-android-debug.apk" \
+            "dist/read-along-v${VERSION}-web-local.zip" \
+            --title "Read Along v${VERSION}" \
+            --notes "$CHANGELOG"
