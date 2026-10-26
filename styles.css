@@ -2197,7 +2197,14 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
 .apk-mode .card-audio-parts { margin-top: 4px; }
 .apk-mode .card-part-btn { padding: 4px 8px; min-height: 30px; }
 .apk-mode .empty-state { padding: 14px; }
-.apk-mode .empty-state > p { display: block; font-size: .86rem; line-height: 1.4; margin: 6px 0; }\n.apk-mode .readalong-tutorial { display: block !important; margin-top: 8px; }\n.apk-mode .readalong-tutorial h3, .apk-mode .readalong-tutorial .tutorial-intro { display: none; }\n.apk-mode .tutorial-steps { display: grid; gap: 6px; }\n.apk-mode .tutorial-step { display: block; padding: 5px 0; border: 0; }\n.apk-mode .tutorial-step img { display: none; }\n.apk-mode .tutorial-step h4 { font-size: .84rem; margin: 0 0 2px; }\n.apk-mode .tutorial-step p { font-size: .78rem; line-height: 1.35; margin: 0; }
+.apk-mode .empty-state > p { display: block; font-size: .86rem; line-height: 1.4; margin: 6px 0; }
+.apk-mode .readalong-tutorial { display: block !important; margin-top: 8px; }
+.apk-mode .readalong-tutorial h3, .apk-mode .readalong-tutorial .tutorial-intro { display: none; }
+.apk-mode .tutorial-steps { display: grid; gap: 6px; }
+.apk-mode .tutorial-step { display: block; padding: 5px 0; border: 0; }
+.apk-mode .tutorial-step img { display: none; }
+.apk-mode .tutorial-step h4 { font-size: .84rem; margin: 0 0 2px; }
+.apk-mode .tutorial-step p { font-size: .78rem; line-height: 1.35; margin: 0; }
 .apk-mode .empty-state h2 { font-size: 1rem; }
 .apk-mode #btnReloadMarkers { display: inline-flex; }
 .apk-mode .sync-modal-content { max-width: 100%; }
