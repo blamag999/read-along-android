@@ -2228,7 +2228,7 @@ function installTvRemoteControls() {
 
 
 // Kiểm tra bản phát hành mới nhất trên GitHub Releases (chỉ hiển thị trong APK).
-const READ_ALONG_RELEASES_API = 'https://api.github.com/repos/blamag999/read-along-android/releases/latest';
+const READ_ALONG_RELEASES_API = 'https://api.github.com/repos/blamag999/read-along-android/releases?per_page=20';
 function compareReleaseVersions(a, b) {
   const parse = (v) => String(v || '').replace(/^v/i, '').split(/[.-]/).slice(0, 3).map(n => Number.parseInt(n, 10) || 0);
   const av = parse(a), bv = parse(b);
@@ -2241,10 +2241,18 @@ async function checkReadAlongUpdates() {
   try {
     const response = await fetch(READ_ALONG_RELEASES_API, { headers: { Accept: 'application/vnd.github+json' }, cache: 'no-store' });
     if (!response.ok) throw new Error('GitHub trả về HTTP ' + response.status);
-    const release = await response.json();
-    if (release.draft || release.prerelease) throw new Error('Bản phát hành mới nhất không phải bản ổn định.');
+    const releases = await response.json();
+    if (!Array.isArray(releases)) throw new Error('Dữ liệu Release từ GitHub không hợp lệ.');
+    const release = releases.find(item =>
+      !item.draft && !item.prerelease &&
+      (item.assets || []).some(asset => /-android\.apk$/i.test(asset.name))
+    );
+    if (!release) {
+      showToast('Chưa có bản Release ổn định kèm APK để cập nhật.');
+      alert('Chưa tìm thấy bản phát hành ổn định có APK Android. Hãy chạy thành công workflow Build and Release trước.');
+      return;
+    }
     const asset = (release.assets || []).find(item => /-android\.apk$/i.test(item.name));
-    if (!asset) throw new Error('Release chưa có tệp APK Android.');
     const currentVersion = document.querySelector('meta[name="app-version"]')?.content || '0.0.0';
     if (compareReleaseVersions(release.tag_name, currentVersion) <= 0) {
       showToast('Bạn đang dùng phiên bản mới nhất (' + currentVersion + ').');
