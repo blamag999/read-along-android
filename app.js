@@ -1068,9 +1068,8 @@ function initEvents() {
   if (dom.menuAutoFlip) dom.menuAutoFlip.addEventListener('click', () => {
     if (dom.btnAutoFlipToggle) dom.btnAutoFlipToggle.click();
     else {
-      state.pageTurnMode = state.pageTurnMode === 'next' ? 'off' : 'next';
-      dom.selPageTurnMode.value = state.pageTurnMode;
-  updateReadMenuState();
+      dom.selPageTurnMode.value = state.pageTurnMode === 'next' ? 'off' : 'next';
+      dom.selPageTurnMode.dispatchEvent(new Event('change', { bubbles: true }));
     }
     updateReadMenuState();
   });
