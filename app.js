@@ -1580,6 +1580,8 @@ function setViewMode(mode) {
 
   dom.btnFitHeight.classList.toggle('active', mode === 'fit-height');
   dom.btnTwoPages.classList.toggle('active', mode === 'two-pages');
+  dom.btnTwoPages.setAttribute('aria-pressed', String(mode === 'two-pages'));
+  updateReadMenuState();
 
   if (mode === 'two-pages') {
     dom.canvasWrapper.classList.add('two-page-mode');
