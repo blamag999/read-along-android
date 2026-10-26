@@ -67,6 +67,21 @@ jobs:
       - name: Prepare web assets
         run: npm run prepare:web
 
+      - name: Embed release version in app
+        env:
+          VERSION: ${{ steps.release_info.outputs.version }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          path = Path('www/index.html')
+          html = path.read_text()
+          html, count = re.subn(r'(<meta name="app-version" content=")[^"]*(">)', rf'\g<1>{os.environ["VERSION"]}\g<2>', html, count=1)
+          if count != 1:
+              raise SystemExit('app-version meta tag not found in www/index.html')
+          path.write_text(html)
+          PY
+
       - name: Package versioned Web Local ZIP
         env:
           VERSION: ${{ steps.release_info.outputs.version }}
