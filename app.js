@@ -2243,7 +2243,7 @@ async function checkReadAlongUpdates() {
     if (!response.ok) throw new Error('GitHub trả về HTTP ' + response.status);
     const release = await response.json();
     if (release.draft || release.prerelease) throw new Error('Bản phát hành mới nhất không phải bản ổn định.');
-    const asset = (release.assets || []).find(item => /-android-debug\.apk$/i.test(item.name));
+    const asset = (release.assets || []).find(item => /-android\.apk$/i.test(item.name));
     if (!asset) throw new Error('Release chưa có tệp APK Android.');
     const currentVersion = document.querySelector('meta[name="app-version"]')?.content || '0.0.0';
     if (compareReleaseVersions(release.tag_name, currentVersion) <= 0) {
