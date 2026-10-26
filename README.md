@@ -40,6 +40,12 @@ Nếu build thành công, workflow tạo GitHub Release có tag `vVERSION` và �
 
 Tên artifact cũng có số phiên bản. APK là bản release đã ký bằng khóa riêng của dự án, dùng để cài thử và cập nhật đè giữa các bản build có cùng khóa. Đây chưa phải bản phát hành Google Play. Không mất hoặc thay đổi keystore vì Android sẽ từ chối cập nhật đè.
 
+## Release log
+
+Xem lịch sử phiên bản, thay đổi và tệp cài đặt tại [GitHub Releases](https://github.com/blamag999/read-along-android/releases).
+
+Mỗi lần chạy workflow phát hành thành công, GitHub Release sẽ tự tạo ghi chú phát hành từ các commit kể từ Release trước và đính kèm APK Android cùng gói Web Local. README không ghi cứng từng phiên bản để tránh thông tin bị lỗi thời; danh sách Release là nguồn lịch sử chính thức.
+
 ## Bảo mật R2
 
 Không nhúng khóa bí mật vào APK. Danh mục và tệp ở URL công khai có thể được truy cập bởi bất kỳ ai biết URL; không lưu dữ liệu riêng tư trong bucket công khai.
