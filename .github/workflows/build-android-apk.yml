@@ -166,14 +166,14 @@ jobs:
       - name: Rename versioned APK
         env:
           VERSION: ${{ steps.release_info.outputs.version }}
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk "read-along-v${VERSION}-android-debug.apk"
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk "read-along-v${VERSION}-android.apk"
 
       - name: Upload versioned workflow artifacts
         uses: actions/upload-artifact@v6
         with:
           name: read-along-v${{ steps.release_info.outputs.version }}-build
           path: |
-            read-along-v${{ steps.release_info.outputs.version }}-android-debug.apk
+            read-along-v${{ steps.release_info.outputs.version }}-android.apk
             dist/read-along-v${{ steps.release_info.outputs.version }}-web-local.zip
           if-no-files-found: error
           retention-days: 30
@@ -185,7 +185,83 @@ jobs:
           CHANGELOG: ${{ steps.release_info.outputs.changelog }}
         run: |
           gh release create "v${VERSION}" \
-            "read-along-v${VERSION}-android-debug.apk" \
+            "read-along-v${VERSION}-android.apk" \
+            "dist/read-along-v${VERSION}-web-local.zip" \
+            --title "Read Along v${VERSION}" \
+            --notes "$CHANGELOG      - name: Configure stable Android signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEYSTORE_FILE: ${{ runner.temp }}/read-along-release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [[ -z "$ANDROID_KEYSTORE_BASE64" || -z "$ANDROID_KEYSTORE_PASSWORD" || -z "$ANDROID_KEY_ALIAS" || -z "$ANDROID_KEY_PASSWORD" ]]; then
+            echo "Missing signing secrets. Configure ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD in repository Actions secrets."
+            exit 1
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_FILE"
+          test -s "$KEYSTORE_FILE"
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path('android/app/build.gradle')
+          text = p.read_text()
+          if 'signingConfigs {' not in text:
+              text = text.replace('android {', '''android {
+              signingConfigs {
+                  release {
+                      storeFile file(System.getenv("KEYSTORE_FILE"))
+                      storePassword System.getenv("KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("KEY_ALIAS")
+                      keyPassword System.getenv("KEY_PASSWORD")
+                  }
+              }
+          ''', 1)
+          if not re.search(r'buildTypes\s*\{', text):
+              raise SystemExit('buildTypes block not found')
+          if not re.search(r'buildTypes\s*\{[\s\S]*?release\s*\{\s*signingConfig\s+signingConfigs\.release', text):
+              text, count = re.subn(r'(buildTypes\s*\{[\s\S]*?release\s*\{)', r'\1\n            signingConfig signingConfigs.release', text, count=1)
+              if count != 1:
+                  raise SystemExit('Could not configure release signing')
+          p.write_text(text)
+          PY
+
+      - name: Build signed release APK
+        working-directory: android
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/read-along-release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease
+
+      - name: Rename versioned APK
+        env:
+          VERSION: ${{ steps.release_info.outputs.version }}
+        run: cp android/app/build/outputs/apk/release/app-release.apk "read-along-v${VERSION}-android.apk"
+
+      - name: Upload versioned workflow artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: read-along-v${{ steps.release_info.outputs.version }}-build
+          path: |
+            read-along-v${{ steps.release_info.outputs.version }}-android.apk
+            dist/read-along-v${{ steps.release_info.outputs.version }}-web-local.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Create GitHub Release and attach files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release_info.outputs.version }}
+          CHANGELOG: ${{ steps.release_info.outputs.changelog }}
+        run: |
+          gh release create "v${VERSION}" \
+            "read-along-v${VERSION}-android.apk" \
             "dist/read-along-v${VERSION}-web-local.zip" \
             --title "Read Along v${VERSION}" \
             --notes "$CHANGELOG"
