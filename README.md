@@ -8,7 +8,8 @@
 - Hiển thị vị trí trang hiện tại / tổng số trang.
 - Điều khiển bằng remote Android TV: Play/Pause, trái/phải đổi trang, lên/xuống tua âm thanh 5 giây, và phím Rewind/Fast Forward nếu thiết bị phát ra key event tương ứng.
 - Giao diện gọn dùng chung cho APK và Web Local.
-- Trong APK có mục **Kiểm tra cập nhật** để kiểm tra GitHub Releases, xem changelog và xác nhận trước khi tải APK mới. Android vẫn yêu cầu xác nhận cài đặt; cập nhật đè yêu cầu APK cùng khóa ký.
+- Trong APK có mục **Kiểm tra cập nhật** để kiểm tra GitHub Releases, xem changelog, tải APK qua cầu nối Android native và mở trình cài đặt hệ thống. Người dùng tự xác nhận cài đặt; cập nhật đè yêu cầu APK cùng khóa ký.
+- Quy trình build yêu cầu cấu hình khóa ký Android cố định trong GitHub Actions Secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
 
 ## Build và phát hành
 
