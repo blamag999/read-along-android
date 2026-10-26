@@ -77,6 +77,37 @@ jobs:
           cp run_local.bat README-WEB-LOCAL.txt dist/read-along-web-local/
           cd dist && zip -r "read-along-v${VERSION}-web-local.zip" read-along-web-local
 
+      - name: Install dependencies and integrate native updater
+        run: |
+          npm install
+          npx cap add android
+          mkdir -p android/app/src/main/java/com/blamag999/readalong android/app/src/main/res/xml
+          cp native/android/ApkUpdaterPlugin.java android/app/src/main/java/com/blamag999/readalong/ApkUpdaterPlugin.java
+          cp native/android/file_paths.xml android/app/src/main/res/xml/file_paths.xml
+          python3 - <<'PY'
+          from pathlib import Path
+          main = Path('android/app/src/main/java/com/blamag999/readalong/MainActivity.java')
+          if not main.exists():
+              candidates = list(Path('android/app/src/main/java').rglob('MainActivity.java'))
+              if len(candidates) != 1: raise SystemExit('Could not locate generated MainActivity.java')
+              main = candidates[0]
+          source = main.read_text()
+          if 'ApkUpdaterPlugin.class' not in source:
+              marker = 'public class MainActivity extends BridgeActivity {'
+              if marker not in source: raise SystemExit('Could not register ApkUpdaterPlugin in MainActivity')
+              source = source.replace(marker, marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        super.onCreate(savedInstanceState);\n    }', 1)
+              main.write_text(source)
+          manifest = Path('android/app/src/main/AndroidManifest.xml')
+          xml = manifest.read_text()
+          if 'REQUEST_INSTALL_PACKAGES' not in xml:
+              xml = xml.replace('<application', '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n    <application', 1)
+          if '.fileprovider' not in xml:
+              provider = '''<provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.fileprovider" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" /></provider>'''
+              xml = xml.replace('</application>', provider + '\n    </application>', 1)
+          manifest.write_text(xml)
+          PY
+          npx cap sync android
+
       - name: Generate Android launcher icons from repository icon
         run: |
           python3 -m pip install --quiet pillow
@@ -122,36 +153,6 @@ jobs:
           manifest_file.write_text(xml, encoding='utf-8')
           print(f'Generated Android launcher icons from {source} ({image.width}x{image.height})')
           PY
-      - name: Install dependencies and integrate native updater
-        run: |
-          npm install
-          npx cap add android
-          mkdir -p android/app/src/main/java/com/blamag999/readalong android/app/src/main/res/xml
-          cp native/android/ApkUpdaterPlugin.java android/app/src/main/java/com/blamag999/readalong/ApkUpdaterPlugin.java
-          cp native/android/file_paths.xml android/app/src/main/res/xml/file_paths.xml
-          python3 - <<'PY'
-          from pathlib import Path
-          main = Path('android/app/src/main/java/com/blamag999/readalong/MainActivity.java')
-          if not main.exists():
-              candidates = list(Path('android/app/src/main/java').rglob('MainActivity.java'))
-              if len(candidates) != 1: raise SystemExit('Could not locate generated MainActivity.java')
-              main = candidates[0]
-          source = main.read_text()
-          if 'ApkUpdaterPlugin.class' not in source:
-              marker = 'public class MainActivity extends BridgeActivity {'
-              if marker not in source: raise SystemExit('Could not register ApkUpdaterPlugin in MainActivity')
-              source = source.replace(marker, marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        super.onCreate(savedInstanceState);\n    }', 1)
-              main.write_text(source)
-          manifest = Path('android/app/src/main/AndroidManifest.xml')
-          xml = manifest.read_text()
-          if 'REQUEST_INSTALL_PACKAGES' not in xml:
-              xml = xml.replace('<application', '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n    <application', 1)
-          if '.fileprovider' not in xml:
-              provider = '''<provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.fileprovider" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" /></provider>'''
-              xml = xml.replace('</application>', provider + '\n    </application>', 1)
-          manifest.write_text(xml)
-          PY
-          npx cap sync android
 
       - name: Set Android version
         env:
