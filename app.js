@@ -2332,6 +2332,14 @@ function installTvRemoteControls() {
 }
 
 
+// Xóa bộ nhớ đệm giao diện trước khi cập nhật, không xóa dữ liệu sách/mốc đọc.
+async function clearReadAlongWebCachesForUpdate() {
+  if ('caches' in window) {
+    const cacheNames = await caches.keys();
+    await Promise.all(cacheNames.map(name => caches.delete(name)));
+  }
+}
+
 // Kiểm tra bản phát hành mới nhất trên GitHub Releases (chỉ hiển thị trong APK).
 const READ_ALONG_RELEASES_API = 'https://api.github.com/repos/blamag999/read-along-android/releases?per_page=20';
 function compareReleaseVersions(a, b) {
@@ -2370,6 +2378,8 @@ async function checkReadAlongUpdates() {
     if (!confirm(message)) return;
     const nativeUpdater = window.Capacitor?.Plugins?.ApkUpdater;
     if (nativeUpdater?.downloadAndInstall) {
+      showToast('Đang xóa bộ nhớ đệm cũ…');
+      await clearReadAlongWebCachesForUpdate();
       showToast('Đang tải APK cập nhật…');
       await nativeUpdater.downloadAndInstall({
         url: asset.browser_download_url,
