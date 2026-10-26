@@ -51,7 +51,16 @@ public class ApkUpdaterPlugin extends Plugin {
                     out.getFD().sync();
                 }
                 if (!apk.isFile() || apk.length() < 1024) throw new Exception("Tệp APK tải về không hợp lệ.");
-                getActivity().runOnUiThread(() -> beginInstall(apk, call));
+                // Xóa HTTP/resource cache của WebView sau khi tải APK thành công,
+                // ngay trước khi mở trình cài đặt. Không xóa dữ liệu ứng dụng.
+                getActivity().runOnUiThread(() -> {
+                    try {
+                        if (getBridge() != null && getBridge().getWebView() != null) {
+                            getBridge().getWebView().clearCache(true);
+                        }
+                    } catch (Exception ignored) { }
+                    beginInstall(apk, call);
+                });
             } catch (Exception e) {
                 call.reject("Tải/cài đặt APK thất bại: " + e.getMessage(), e);
             } finally {
