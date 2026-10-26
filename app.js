@@ -138,6 +138,8 @@ async function getBookFromLibrary(key) {
 const dom = {
   btnFitHeight: document.getElementById('btnFitHeight'),
   btnTwoPages: document.getElementById('btnTwoPages'),
+  btnAutoFlipToggle: document.getElementById('btnAutoFlipToggle'),
+  btnReloadMarkers: document.getElementById('btnReloadMarkers'),
   btnZoomOut: document.getElementById('btnZoomOut'),
   btnZoomIn: document.getElementById('btnZoomIn'),
   lblZoomLevel: document.getElementById('lblZoomLevel'),
@@ -391,6 +393,7 @@ async function reloadCurrentBookFromGitHub() {
   }
   const button = dom.btnLoadFromGithub;
   if (button) { button.disabled = true; button.textContent = '⏳ Đang tải...'; }
+  if (dom.btnReloadMarkers) { dom.btnReloadMarkers.disabled = true; dom.btnReloadMarkers.textContent = '…'; }
   updateSaveStatusBadge('☁️ Đang tải mốc từ GitHub...');
   try {
     const loaded = await loadCloudSyncForBook();
@@ -403,6 +406,7 @@ async function reloadCurrentBookFromGitHub() {
     }
   } finally {
     if (button) { button.disabled = false; button.textContent = '⬇️ Tải mốc từ GitHub'; }
+    if (dom.btnReloadMarkers) { dom.btnReloadMarkers.disabled = false; dom.btnReloadMarkers.textContent = '⟳'; }
   }
 }
 
@@ -789,6 +793,8 @@ function renderPlaylistView() {
     return true;
   });
 
+  filtered.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'vi', { sensitivity: 'base', numeric: true }));
+
   if (filtered.length === 0) {
     const empty = document.createElement('div');
     empty.style.cssText = 'text-align:center;padding:30px;color:#94a3b8;';
@@ -797,7 +803,7 @@ function renderPlaylistView() {
     return;
   }
 
-  filtered.forEach((story) => {
+  filtered.forEach((story, index) => {
     const card = document.createElement('div');
     const isPlaying = (state.currentBookKey === story.id);
     card.className = `playlist-card ${isPlaying ? 'active-playing' : ''}`;
@@ -830,6 +836,7 @@ function renderPlaylistView() {
 
     card.innerHTML =
       coverHtml +
+      '<span class="apk-story-number">' + (index + 1) + '</span>' +
       '<div class="card-title-col">' +
         '<h4>' + (isPlaying ? '&#9654; ' : '') + story.title + '</h4>' +
         '<div class="card-tags">' + tagsHtml + '</div>' +
@@ -1032,8 +1039,25 @@ function initEvents() {
   dom.pdfFileInput.addEventListener('change', handlePdfFileSelect);
   dom.audioFileInput.addEventListener('change', handleAudioFileSelect);
 
-  dom.btnFitHeight.addEventListener('click', () => setViewMode('fit-height'));
-  dom.btnTwoPages.addEventListener('click', () => setViewMode('two-pages'));
+  dom.btnFitHeight.addEventListener('click', () => setViewMode(state.viewMode === 'two-pages' ? 'fit-height' : 'two-pages'));
+  dom.btnTwoPages.addEventListener('click', () => setViewMode(state.viewMode === 'two-pages' ? 'fit-height' : 'two-pages'));
+  if (dom.btnAutoFlipToggle) {
+    dom.btnAutoFlipToggle.addEventListener('click', () => {
+      const enabled = state.pageTurnMode !== 'next';
+      state.pageTurnMode = enabled ? 'next' : 'off';
+      dom.selPageTurnMode.value = state.pageTurnMode;
+  if (dom.btnAutoFlipToggle) {
+    const autoFlipOn = state.pageTurnMode === 'next';
+    dom.btnAutoFlipToggle.classList.toggle('active', autoFlipOn);
+    dom.btnAutoFlipToggle.setAttribute('aria-pressed', String(autoFlipOn));
+  }
+      dom.btnAutoFlipToggle.classList.toggle('active', enabled);
+      dom.btnAutoFlipToggle.setAttribute('aria-pressed', String(enabled));
+      dom.btnAutoFlipToggle.title = enabled ? 'Tự động lật trang: bật' : 'Tự động lật trang: tắt';
+      showToast(enabled ? 'Đã bật tự động lật trang theo mốc.' : 'Đã tắt tự động lật trang.');
+    });
+  }
+  if (dom.btnReloadMarkers) dom.btnReloadMarkers.addEventListener('click', reloadCurrentBookFromGitHub);
   dom.btnZoomIn.addEventListener('click', () => changeZoom(0.15));
   dom.btnZoomOut.addEventListener('click', () => changeZoom(-0.15));
 
