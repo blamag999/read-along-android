@@ -108,6 +108,22 @@ jobs:
           PY
           npx cap sync android
 
+      - name: Set Android version
+        env:
+          VERSION: ${{ steps.release_info.outputs.version }}
+          VERSION_CODE: ${{ github.run_number }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          path = Path('android/app/build.gradle')
+          text = path.read_text()
+          text, a = re.subn(r'versionCode\s+\d+', f'versionCode {os.environ["VERSION_CODE"]}', text, count=1)
+          text, b = re.subn(r'versionName\s+["\'][^"\']+["\']', f'versionName "{os.environ["VERSION"]}"', text, count=1)
+          if a != 1 or b != 1: raise SystemExit('Could not set Android versionCode/versionName')
+          path.write_text(text)
+          PY
+
       - name: Generate Android launcher icons from repository icon
         run: |
           python3 -m pip install --quiet pillow
@@ -152,22 +168,6 @@ jobs:
               xml = xml.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"', 1)
           manifest_file.write_text(xml, encoding='utf-8')
           print(f'Generated Android launcher icons from {source} ({image.width}x{image.height})')
-          PY
-
-      - name: Set Android version
-        env:
-          VERSION: ${{ steps.release_info.outputs.version }}
-          VERSION_CODE: ${{ github.run_number }}
-        run: |
-          python3 - <<'PY'
-          import os, re
-          from pathlib import Path
-          path = Path('android/app/build.gradle')
-          text = path.read_text()
-          text, a = re.subn(r'versionCode\s+\d+', f'versionCode {os.environ["VERSION_CODE"]}', text, count=1)
-          text, b = re.subn(r'versionName\s+["\'][^"\']+["\']', f'versionName "{os.environ["VERSION"]}"', text, count=1)
-          if a != 1 or b != 1: raise SystemExit('Could not set Android versionCode/versionName')
-          path.write_text(text)
           PY
 
       - name: Configure stable Android signing
