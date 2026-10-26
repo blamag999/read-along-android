@@ -196,6 +196,7 @@ const dom = {
 
   lblPagePrefix: document.getElementById('lblPagePrefix'),
   lblCurrentPage: document.getElementById('lblCurrentPage'),
+  readerPageStatus: document.getElementById('readerPageStatus'),
   pageJumpInput: document.getElementById('pageJumpInput'),
   btnPageJump: document.getElementById('btnPageJump'),
   lblTotalPages: document.getElementById('lblTotalPages'),
@@ -1136,6 +1137,9 @@ dom.selPageTurnMode.value = state.pageTurnMode;
   dom.btnForward5.addEventListener('click', () => {
     dom.audioElement.currentTime = Math.min(dom.audioElement.duration || 0, dom.audioElement.currentTime + 5);
   });
+
+  // Android TV remote support: IR and Bluetooth remotes that emit Android key events.
+  installTvRemoteControls();
   dom.audioElement.addEventListener('timeupdate', onAudioTimeUpdate);
   dom.audioElement.addEventListener('loadedmetadata', onAudioMetadataLoaded);
   dom.audioElement.addEventListener('play', updatePlayButtonState);
@@ -1497,9 +1501,13 @@ async function renderCurrentSpread() {
   if (isTwoPages && rightPageNum) {
     dom.lblPagePrefix.textContent = 'Trang';
     dom.lblCurrentPage.textContent = `${leftPageNum} - ${rightPageNum}`;
+    dom.readerPageStatus.textContent = `Trang ${leftPageNum}–${rightPageNum} / ${state.totalPages}`;
+    dom.readerPageStatus.classList.remove('hidden');
   } else {
     dom.lblPagePrefix.textContent = 'Trang';
     dom.lblCurrentPage.textContent = `${leftPageNum}`;
+    dom.readerPageStatus.textContent = `Trang ${leftPageNum} / ${state.totalPages}`;
+    dom.readerPageStatus.classList.remove('hidden');
   }
   updatePageTimestampBadge();
 
@@ -2153,4 +2161,91 @@ function updateReadMenuState() {
     dom.menuAutoFlip.setAttribute('aria-pressed', String(enabled));
     if (dom.menuAutoFlipState) dom.menuAutoFlipState.textContent = enabled ? 'Bật' : 'Tắt';
   }
+}
+
+
+function installTvRemoteControls() {
+  const editableTarget = (target) => {
+    if (!target || !(target instanceof Element)) return false;
+    return Boolean(target.closest('input, textarea, select, [contenteditable="true"], .playlist-search-bar'));
+  };
+  const interactiveTarget = (target) => {
+    if (!target || !(target instanceof Element)) return false;
+    return Boolean(target.closest('button, a, input, textarea, select, [role="button"], [contenteditable="true"]'));
+  };
+  const seekAudio = (delta) => {
+    const audio = dom.audioElement;
+    const duration = Number.isFinite(audio.duration) ? audio.duration : Number.MAX_SAFE_INTEGER;
+    audio.currentTime = Math.max(0, Math.min(duration, (audio.currentTime || 0) + delta));
+  };
+  document.addEventListener('keydown', (event) => {
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || editableTarget(event.target)) return;
+    const key = event.key;
+    const code = event.keyCode;
+    const mediaPlayPause = key === 'MediaPlayPause' || key === 'PlayPause' || code === 179;
+    const mediaPlay = key === 'MediaPlay' || code === 250;
+    const mediaPause = key === 'MediaPause' || code === 251;
+    const rewind = key === 'MediaRewind' || key === 'Rewind' || code ===  mediaKeyCode('rewind');
+    const fastForward = key === 'MediaFastForward' || key === 'FastForward' || code === mediaKeyCode('fastForward');
+    if (mediaPlayPause) {
+      event.preventDefault(); togglePlayPause(); return;
+    }
+    if (mediaPlay) {
+      event.preventDefault();
+      if (dom.audioElement.paused) togglePlayPause();
+      return;
+    }
+    if (mediaPause) {
+      event.preventDefault();
+      dom.audioElement.pause();
+      return;
+    }
+    if (rewind) {
+      event.preventDefault(); seekAudio(-5); return;
+    }
+    if (fastForward) {
+      event.preventDefault(); seekAudio(5); return;
+    }
+    // Standard TV navigation arrows double as page/seek controls when focus is not on a control.
+    if (interactiveTarget(event.target)) return;
+    if (key === 'ArrowLeft' || code === 37) {
+      event.preventDefault(); if (!event.repeat) changePage(-1); return;
+    }
+    if (key === 'ArrowRight' || code === 39) {
+      event.preventDefault(); if (!event.repeat) changePage(1); return;
+    }
+    if (key === 'ArrowUp' || code === 38) {
+      event.preventDefault(); seekAudio(-5); return;
+    }
+    if (key === 'ArrowDown' || code === 40) {
+      event.preventDefault(); seekAudio(5); return;
+    }
+    if (key === ' ' || key === 'Spacebar' || code === 32) {
+      event.preventDefault(); togglePlayPause(); return;
+    }
+    if (key === 'Backspace' || key === 'Escape' || key === 'BrowserBack') {
+      const playlist = document.getElementById('playlistModal');
+      const menu = dom.readOptionsMenu;
+      if (menu && !menu.classList.contains('hidden')) {
+        event.preventDefault();
+        menu.classList.add('hidden');
+        dom.btnOpenReadMenu?.setAttribute('aria-expanded', 'false');
+      } else if (playlist && !playlist.classList.contains('hidden')) {
+        event.preventDefault();
+        document.getElementById('btnClosePlaylist')?.click();
+      }
+    }
+  });
+  // Keep native media key codes centralized; key strings are preferred when Android exposes them.
+  function mediaKeyCode(kind) {
+    return kind === 'rewind' ?  RewindKeyCode : FastForwardKeyCode;
+  }
+}
+const RewindKeyCode =  RewindKeyCodeFallback();
+const FastForwardKeyCode = FastForwardKeyCodeFallback();
+function RewindKeyCodeFallback() { return  mediaCodeLookup('rewind'); }
+function FastForwardKeyCodeFallback() { return mediaCodeLookup('fastForward'); }
+function mediaCodeLookup(kind) {
+  // Android KEYCODE_MEDIA_REWIND=89, KEYCODE_MEDIA_FAST_FORWARD=90.
+  return kind === 'rewind' ? 89 : 90;
 }
