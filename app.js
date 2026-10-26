@@ -547,8 +547,7 @@ async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl 
 // =======================================================
 // XÂY DỰNG VÀ QUẢN LÝ DANH SÁCH TẬP TRUYỆN (PLAYLIST)
 // =======================================================
-// DANH MỤC SÁCH CÔNG KHAI TRÊN CLOUDFLARE R2
-// Không lưu URL bucket hoặc danh sách sách mẫu cố định trong mã nguồn.
+// Danh mục trực tuyến dùng địa chỉ công khai đã cấu hình; không đặt token hay khóa bí mật trong mã nguồn.
 
 function fileNameFromUrl(url, fallback) {
   try { return decodeURIComponent(new URL(url).pathname.split('/').pop()) || fallback; }
@@ -813,7 +812,6 @@ function updatePlaylistPagination(totalPages, totalItems) {
 
 function renderPlaylistView() {
   dom.playlistItemsList.replaceChildren();
-  const fragment = document.createDocumentFragment();
   const query = state.searchQuery.toLowerCase().trim();
   const filter = state.activeFilter;
 
