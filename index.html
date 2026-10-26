@@ -24,8 +24,8 @@
 
     <!-- VIEW MODE CONTROLS -->
     <div class="view-controls-bar">
-      <button id="btnFitHeight" class="view-btn active" title="Vừa chiều dọc màn hình (xem trọn trang)">
-        ↕ <span class="hide-mobile">Vừa dọc</span>
+      <button id="btnFitHeight" class="view-btn active" title="Bật: hiển thị 2 trang; tắt: vừa trang">
+        <span aria-hidden="true">↕</span><span class="hide-mobile">Vừa trang</span>
       </button>
       <button id="btnTwoPages" class="view-btn" title="Hiển thị 2 trang cùng lúc (chế độ sách)">
         📖 <span class="hide-mobile">2 Trang</span>
@@ -45,6 +45,7 @@
         <span id="lblPlaylistCount" class="badge-count hidden">0</span>
       </button>
 
+      <button id="btnReloadMarkers" class="icon-btn apk-icon-button" type="button" title="Tải mốc thời gian mới nhất từ GitHub" aria-label="Tải mốc thời gian mới nhất từ GitHub">⟳</button>
       <button id="btnOpenSyncModal" class="icon-btn" title="Quản lý mốc đồng bộ thời gian">
         ⚙️ <span class="hide-mobile">Mốc thời gian</span>
       </button>
@@ -184,6 +185,7 @@
         ▶
       </button>
       <button id="btnReplayPage" class="ctrl-btn replay-page-btn" type="button" title="Đọc lại trang hiện tại từ mốc thời gian" aria-label="Đọc lại trang hiện tại"><span class="replay-page-icon" aria-hidden="true">↺</span></button>
+      <button id="btnAutoFlipToggle" class="ctrl-btn apk-icon-button" type="button" title="Tự động lật trang: bật" aria-label="Bật hoặc tắt tự động lật trang" aria-pressed="true">⤓</button>
       <label class="speed-select-wrap" title="Chọn tốc độ phát âm thanh">
         <span class="sr-only">Tốc độ phát</span>
         <select id="speedSelect" class="ctrl-btn speed-select" aria-label="Tốc độ phát âm thanh">
@@ -321,6 +323,12 @@
   <!-- TOAST THÔNG BÁO -->
   <div id="toastMessage" class="toast-message hidden"></div>
 
+  <script>
+    // Tinh chỉnh giao diện riêng cho APK Android; bản Web Local trên PC giữ nguyên giao diện đầy đủ.
+    if (/Android/i.test(navigator.userAgent) && (navigator.userAgent.includes(' wv') || /Capacitor/i.test(navigator.userAgent))) {
+      document.documentElement.classList.add('apk-mode');
+    }
+  </script>
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
