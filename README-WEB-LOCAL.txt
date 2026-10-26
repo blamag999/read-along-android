@@ -1,16 +1,14 @@
-READ ALONG - WEB LOCAL (PC)
-===========================
+READ ALONG — WEB LOCAL
+======================
 
-CACH CHAY
-1. Giai nen read-along-web-local.zip vao mot thu muc.
-2. May tinh can co Python 3.
-3. Nhan dup run_local.bat.
-4. Trinh duyet se mo http://127.0.0.1:8765.
-5. De dung may chu, dong cua so terminal dang chay server.
+CÁCH CHẠY TRÊN WINDOWS
+1. Giải nén gói Web Local vào một thư mục.
+2. Cài Python 3 nếu máy chưa có.
+3. Chạy tệp run_local.bat đi kèm.
+4. Trình duyệt sẽ mở ứng dụng tại địa chỉ cục bộ được thông báo.
+5. Giữ cửa sổ dòng lệnh mở trong khi sử dụng; đóng cửa sổ đó để dừng máy chủ.
 
-LUU Y
-- Can ket noi Internet de tai danh muc R2, PDF/MP3 va thu vien PDF.js tu CDN.
-- Ung dung tu dong tai danh muc tu URL R2 da cau hinh san.
-- Khong can cai Node.js de chay ban Web Local.
-- Neu Windows hien canh bao firewall, chi cho phep truy cap mang rieng/local khi can.
-- Ban Web Local dung server localhost vi trinh duyet co the chan fetch khi mo truc tiep bang file://.
+LƯU Ý
+- Một số nội dung trực tuyến và thư viện cần kết nối Internet.
+- Chạy qua máy chủ cục bộ giúp tránh các giới hạn của trình duyệt khi mở trực tiếp bằng file://.
+- Không đưa token, mật khẩu hoặc tệp cá nhân vào thư mục công khai.
