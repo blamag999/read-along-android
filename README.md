@@ -1,51 +1,33 @@
-# Read Along Android
+# Read Along
 
-Ứng dụng đọc sách PDF kết hợp âm thanh MP3, hỗ trợ tải danh mục sách công khai từ Cloudflare R2.
+Ứng dụng hỗ trợ đọc tài liệu PDF kết hợp lời đọc bằng âm thanh.
 
-## Tính năng
+## Tính năng chính
 
-- Tải danh mục sách từ Cloudflare R2; PDF và MP3 cần Internet.
-- Hiển thị vị trí trang hiện tại / tổng số trang.
-- Điều khiển bằng remote Android TV: Play/Pause, trái/phải đổi trang, lên/xuống tua âm thanh 5 giây, và phím Rewind/Fast Forward nếu thiết bị phát ra key event tương ứng.
-- Giao diện gọn dùng chung cho APK và Web Local.
-- Trong APK có mục **Kiểm tra cập nhật** để kiểm tra GitHub Releases, xem changelog, tải APK qua cầu nối Android native và mở trình cài đặt hệ thống. Người dùng tự xác nhận cài đặt; cập nhật đè yêu cầu APK cùng khóa ký.
-- Quy trình build tạo APK release có chữ ký cố định. Trước lần build đầu tiên, phải thiết lập 4 GitHub Actions Secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
+- Mở nội dung từ danh mục trực tuyến được cấu hình hoặc từ tệp trên thiết bị.
+- Theo dõi trang đọc cùng âm thanh, đổi trang và điều chỉnh tốc độ phát.
+- Hỗ trợ điều khiển bằng bàn phím và remote trên thiết bị tương thích.
+- Lưu và đồng bộ mốc thời gian đọc khi người dùng chủ động cấu hình tính năng này.
 
-### Thiết lập khóa ký một lần (Windows)
+## Hướng dẫn sử dụng
 
-1. Mở PowerShell trong máy có JDK và chạy:
-   ```powershell
-   keytool -genkeypair -v -keystore read-along-release.jks -alias readalong -keyalg RSA -keysize 2048 -validity 10000
-   [Convert]::ToBase64String([IO.File]::ReadAllBytes("$PWD\read-along-release.jks")) | Set-Clipboard
-   ```
-   Hãy giữ an toàn tệp `read-along-release.jks`, mật khẩu keystore, alias và mật khẩu key. Không commit tệp keystore vào Git.
-2. Trong GitHub repo, mở **Settings → Secrets and variables → Actions → New repository secret** và tạo:
-   - `ANDROID_KEYSTORE_BASE64`: nội dung Base64 vừa sao chép.
-   - `ANDROID_KEYSTORE_PASSWORD`: mật khẩu keystore.
-   - `ANDROID_KEY_ALIAS`: `readalong` (hoặc alias bạn đã chọn).
-   - `ANDROID_KEY_PASSWORD`: mật khẩu key.
-3. Từ đó mọi bản build phải dùng đúng keystore này. Nếu mất khóa hoặc đổi khóa, các bản đã cài có thể không cập nhật đè được.
+1. Mở danh sách nội dung hoặc chọn tệp/thư mục trên thiết bị.
+2. Chọn tập cần đọc và nhấn phát.
+3. Dùng các nút điều khiển để đổi trang, tua âm thanh và điều chỉnh tốc độ.
+4. Có thể tạo hoặc nhập tệp mốc thời gian để đồng bộ trang với âm thanh.
 
-Khi người dùng đồng ý cập nhật, APK tải xuống bằng cầu nối Android native rồi mở trình cài đặt hệ thống. Android có thể yêu cầu cho phép cài ứng dụng từ nguồn này và luôn yêu cầu người dùng xác nhận cài đặt.
+## Chạy bản Web Local
 
-## Build và phát hành
+Trên Windows, giải nén gói Web Local, cài Python 3 nếu máy chưa có, sau đó chạy tệp khởi động đi kèm. Giữ cửa sổ dòng lệnh mở trong khi sử dụng. Một số nội dung trực tuyến cần kết nối Internet.
 
-Workflow không tự chạy khi push hoặc sửa mã nguồn. Để tạo bản build, mở **Actions → Build and Release Read Along → Run workflow** trên nhánh `main` và chạy workflow; không cần nhập version hoặc changelog.
+## Build và cập nhật
 
-Workflow tự tăng số phiên bản vá dựa trên Release gần nhất (ví dụ `1.0.2` → `1.0.3`) và tạo changelog từ các commit kể từ Release trước. Nếu chưa có Release, phiên bản đầu tiên là `1.0.0`.
+Sử dụng quy trình build/phát hành được cung cấp trong kho mã. Thông tin xác thực và khóa ký phải được cấu hình trong kho lưu trữ bí mật của hệ thống build; không đưa token, mật khẩu, khóa ký hoặc tệp cá nhân vào mã nguồn.
 
-Nếu build thành công, workflow tạo GitHub Release có tag `vVERSION` và đính kèm:
-- `read-along-vVERSION-android.apk` (APK release đã ký bằng khóa cố định)
-- `read-along-vVERSION-web-local.zip`
+Các bản Android cập nhật đè cần được ký bằng cùng khóa phát hành. Hãy sao lưu khóa ký an toàn và giới hạn quyền truy cập.
 
-Tên artifact cũng có số phiên bản. APK là bản release đã ký bằng khóa riêng của dự án, dùng để cài thử và cập nhật đè giữa các bản build có cùng khóa. Đây chưa phải bản phát hành Google Play. Không mất hoặc thay đổi keystore vì Android sẽ từ chối cập nhật đè.
+## Lưu ý bảo mật
 
-## Release log
-
-Xem lịch sử phiên bản, thay đổi và tệp cài đặt tại [GitHub Releases](https://github.com/blamag999/read-along-android/releases).
-
-Mỗi lần chạy workflow phát hành thành công, GitHub Release sẽ tự tạo ghi chú phát hành từ các commit kể từ Release trước và đính kèm APK Android cùng gói Web Local. README không ghi cứng từng phiên bản để tránh thông tin bị lỗi thời; danh sách Release là nguồn lịch sử chính thức.
-
-## Bảo mật R2
-
-Không nhúng khóa bí mật vào APK. Danh mục và tệp ở URL công khai có thể được truy cập bởi bất kỳ ai biết URL; không lưu dữ liệu riêng tư trong bucket công khai.
+- Không commit dữ liệu cá nhân, thông tin xác thực hoặc nội dung chưa được phép công khai.
+- Các tệp và danh mục đặt tại nguồn công khai có thể được người khác truy cập.
+- Không nhúng khóa bí mật vào ứng dụng.
