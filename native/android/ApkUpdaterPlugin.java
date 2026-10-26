@@ -73,7 +73,7 @@ public class ApkUpdaterPlugin extends Plugin {
     }
 
     @ActivityCallback
-    private void onInstallPermissionResult(PluginCall call, com.getcapacitor.ActivityResult result) {
+    private void onInstallPermissionResult(PluginCall call, androidx.activity.result.ActivityResult result) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && getContext().getPackageManager().canRequestPackageInstalls()) {
             if (pendingApk != null && pendingApk.exists()) launchInstaller(pendingApk, call);
             else call.reject("Không tìm thấy APK đã tải.");
