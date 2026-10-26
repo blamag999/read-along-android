@@ -5,7 +5,7 @@
 ## Hành vi
 
 - Tự tải danh mục sách từ Cloudflare R2 khi mở ứng dụng.
-- URL danh mục được đóng gói sẵn: `https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/books.json`.
+- URL danh mục được đóng gói sẵn:
 - Không yêu cầu đăng nhập hoặc nhập URL thủ công.
 - PDF và MP3 vẫn được tải từ các URL trong danh mục; cần kết nối Internet.
 - Không nhúng khóa bí mật R2 vào APK.
