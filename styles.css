@@ -2214,3 +2214,60 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
   .apk-mode .view-btn { min-width: 32px; padding: 5px; }
   .apk-mode .apk-icon-button { min-width: 32px; }
 }
+
+
+/* Giao diện thống nhất cho APK và Web Local: thanh đầu gọn, menu vuông bo góc. */
+.app-ui-mode body { overflow: hidden; }
+.app-ui-mode .app-header { position: relative; z-index: 30; min-height: 48px; padding: 6px clamp(8px, 1.6vw, 18px); gap: 10px; flex-wrap: nowrap; }
+.app-ui-mode .app-title { font-size: clamp(.92rem, 1.8vw, 1.12rem); margin: 0; white-space: nowrap; }
+.app-ui-mode .header-left { flex: 0 1 auto; min-width: 0; }
+.app-ui-mode .header-right { position: relative; display: flex; align-items: center; justify-content: flex-end; gap: 7px; min-width: 0; }
+.app-ui-mode .view-controls-bar, .app-ui-mode #btnToggleSettings, .app-ui-mode #filePickerSection,
+.app-ui-mode #syncBanner, .app-ui-mode #btnOpenSyncModal, .app-ui-mode .zoom-group,
+.app-ui-mode #btnFitHeight, .app-ui-mode #btnTwoPages, .app-ui-mode .quick-options,
+.app-ui-mode .file-status-row, .app-ui-mode #btnNode1FolderOnline, .app-ui-mode #btnChooseAudio,
+.app-ui-mode .playlist-filter-tabs, .app-ui-mode .playlist-export-row, .app-ui-mode #btnExportR2Catalog,
+.app-ui-mode #btnReloadMarkers, .app-ui-mode #btnAutoFlipToggle { display: none !important; }
+.app-ui-mode #btnOpenPlaylist { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; min-width: 0; padding: 8px 13px; gap: 7px; border-radius: 9px; font-size: clamp(.78rem, 1.4vw, .92rem); font-weight: 700; white-space: nowrap; }
+.app-ui-mode #btnOpenPlaylist .hide-mobile { display: inline !important; }
+.app-ui-mode .read-menu-button { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; min-width: 38px; padding: 0; border-radius: 9px; font-size: 1.1rem; line-height: 1; }
+.app-ui-mode .read-options-menu { position: absolute; top: calc(100% + 7px); right: 0; z-index: 100; width: min(290px, calc(100vw - 16px)); padding: 6px; display: grid; gap: 4px; background: #111e30; border: 1px solid rgba(148,163,184,.35); border-radius: 12px; box-shadow: 0 14px 36px rgba(0,0,0,.42); }
+.app-ui-mode .read-options-menu.hidden { display: none !important; }
+.app-ui-mode .read-menu-option { display: grid; grid-template-columns: 28px minmax(0,1fr) auto; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 8px 10px; text-align: left; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #e2e8f0; font-size: .9rem; cursor: pointer; }
+.app-ui-mode .read-menu-option:hover, .app-ui-mode .read-menu-option:focus-visible { background: #1e334d; outline: 2px solid #60a5fa; outline-offset: -2px; }
+.app-ui-mode .read-menu-option.is-on { background: rgba(16,185,129,.12); border-color: rgba(52,211,153,.35); }
+.app-ui-mode .menu-option-icon { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 7px; background: #263a52; font-size: 1rem; }
+.app-ui-mode .menu-option-state { color: #94a3b8; font-size: .76rem; font-weight: 700; }
+.app-ui-mode .read-menu-option.is-on .menu-option-state { color: #6ee7b7; }
+.app-ui-mode .viewer-container { display: flex; align-items: center; justify-content: center; height: calc(100dvh - 150px); min-height: 0; padding: 12px; box-sizing: border-box; overflow: auto; }
+.app-ui-mode .canvas-wrapper { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; min-width: 0; min-height: 0; margin: auto; gap: clamp(8px, 1.2vw, 18px); }
+.app-ui-mode .canvas-page { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; max-width: 100%; max-height: 100%; overflow: hidden; }
+.app-ui-mode .canvas-page canvas { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
+.app-ui-mode .canvas-wrapper.two-page-mode { align-items: center; justify-content: center; }
+.app-ui-mode .app-footer { position: relative; z-index: 10; padding: 5px 8px max(5px, env(safe-area-inset-bottom)); gap: 4px; min-height: 44px; }
+.app-ui-mode .controls-row { gap: clamp(5px, 1vw, 10px); flex-wrap: nowrap; justify-content: center; }
+.app-ui-mode .controls-row #btnAutoFlipToggle { display: none !important; }
+.app-ui-mode .modal-overlay { padding: 0; align-items: stretch; }
+.app-ui-mode .playlist-modal-content { width: 100%; max-width: none; height: 100dvh; max-height: 100dvh; border-radius: 0; display: flex; flex-direction: column; padding: 8px; }
+.app-ui-mode .playlist-modal-content .modal-header { padding: 4px 0 8px; flex-shrink: 0; }
+.app-ui-mode .playlist-modal-content .modal-header h3 { font-size: 1rem; }
+.app-ui-mode .playlist-search-bar { padding: 0 0 6px; flex-shrink: 0; }
+.app-ui-mode #txtPlaylistSearch { width: 100%; min-height: 42px; font-size: 1rem; padding: 8px 10px; }
+.app-ui-mode #playlistItemsList { flex: 1; min-height: 0; overflow-y: auto; padding: 0; }
+.app-ui-mode .playlist-card { display: flex; align-items: center; gap: 8px; padding: 8px 4px; margin: 0; border-radius: 0; border-left: 0; border-right: 0; border-top: 0; border-bottom: 1px solid rgba(148,163,184,.2); }
+.app-ui-mode .playlist-card .card-cover, .app-ui-mode .playlist-card .card-tags, .app-ui-mode .playlist-card .card-play-btn { display: none !important; }
+.app-ui-mode .playlist-card .card-title-col { min-width: 0; flex: 1; }
+.app-ui-mode .playlist-card .card-title-col h4 { font-size: .92rem; line-height: 1.25; margin: 0; font-weight: 500; }
+.app-ui-mode .apk-story-number { width: 2.1rem; flex: 0 0 2.1rem; text-align: center; font-weight: 700; color: #93c5fd; font-variant-numeric: tabular-nums; }
+.app-ui-mode .playlist-card.active-playing .apk-story-number { color: #34d399; }
+@media (max-width: 560px) {
+ .app-ui-mode .app-header { gap: 5px; padding: 5px 6px; }
+ .app-ui-mode .app-title { font-size: .86rem; }
+ .app-ui-mode #btnOpenPlaylist { min-height: 36px; padding: 7px 9px; font-size: .76rem; }
+ .app-ui-mode .read-menu-button { width: 36px; height: 36px; min-width: 36px; }
+ .app-ui-mode .viewer-container { height: calc(100dvh - 142px); padding: 5px; }
+ .app-ui-mode .app-footer { padding-inline: 4px; }
+}
+@media (min-width: 900px) {
+ .app-ui-mode .viewer-container { height: calc(100dvh - 154px); padding: 18px; }
+}
