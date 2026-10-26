@@ -129,8 +129,7 @@ jobs:
           python3 -m pip install --quiet pillow
           python3 - <<'PY'
           from pathlib import Path
-          from PIL import Image, ImageOps, ImageDraw
-          import xml.etree.ElementTree as ET
+          from PIL import Image, ImageOps
 
           source = Path('icon.png')
           if not source.is_file():
@@ -143,15 +142,17 @@ jobs:
           for density, size in [('mdpi', 48), ('hdpi', 72), ('xhdpi', 96), ('xxhdpi', 144), ('xxxhdpi', 192)]:
               folder = res / f'mipmap-{density}'
               folder.mkdir(parents=True, exist_ok=True)
-              # Preserve the square logo and resize to the standard launcher size.
-              fitted = ImageOps.fit(image, (size, size), method=Image.Resampling.LANCZOS)
-              fitted.save(folder / 'ic_launcher.png', optimize=True)
-              fitted.save(folder / 'ic_launcher_round.png', optimize=True)
+              # Keep the full source artwork visible rather than cropping the wordmark.
+              fitted = ImageOps.contain(image, (size, size), method=Image.Resampling.LANCZOS)
+              canvas = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+              canvas.alpha_composite(fitted, ((size-fitted.width)//2, (size-fitted.height)//2))
+              canvas.save(folder / 'ic_launcher.png', optimize=True)
+              canvas.save(folder / 'ic_launcher_round.png', optimize=True)
 
-              # Adaptive foreground: keep artwork inside a safe central area.
+              # Adaptive foreground: maintain transparency and keep logo inside safe zone.
               safe_size = round(size * 0.64)
-              foreground = Image.new('RGBA', (size, size), (0, 0, 0, 0))
               artwork = ImageOps.contain(image, (safe_size, safe_size), method=Image.Resampling.LANCZOS)
+              foreground = Image.new('RGBA', (size, size), (0, 0, 0, 0))
               foreground.alpha_composite(artwork, ((size-artwork.width)//2, (size-artwork.height)//2))
               foreground.save(folder / 'ic_launcher_foreground.png', optimize=True)
 
@@ -163,8 +164,11 @@ jobs:
           # Configure the generated Android manifest to use the generated launcher icons.
           manifest_file = Path('android/app/src/main/AndroidManifest.xml')
           xml = manifest_file.read_text(encoding='utf-8')
-          xml = xml.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/ic_launcher"')
-          if 'android:roundIcon=' not in xml:
+          import re
+          if 'android:icon="@mipmap/ic_launcher"' not in xml:
+              xml, count = re.subn(r'<application\b', '<application android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"', xml, count=1)
+              if count != 1: raise SystemExit('Could not configure Android launcher icon')
+          elif 'android:roundIcon=' not in xml:
               xml = xml.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"', 1)
           manifest_file.write_text(xml, encoding='utf-8')
           print(f'Generated Android launcher icons from {source} ({image.width}x{image.height})')
