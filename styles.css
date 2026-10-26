@@ -2313,3 +2313,110 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
   .app-ui-mode .read-menu-button,
   .app-ui-mode #btnOpenPlaylist { min-height: 44px; }
 }
+
+
+/* Safe-area and paged playlist layout for phones with notches and Android TV remotes. */
+.app-ui-mode .modal-overlay {
+  padding: max(28px, env(safe-area-inset-top, 28px))
+           max(0px, env(safe-area-inset-right, 0px))
+           max(8px, env(safe-area-inset-bottom, 8px))
+           max(0px, env(safe-area-inset-left, 0px));
+  box-sizing: border-box;
+}
+.app-ui-mode .playlist-modal-content {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 8px;
+}
+.app-ui-mode .playlist-modal-content .modal-header,
+.app-ui-mode .playlist-search-bar {
+  flex: 0 0 auto;
+}
+.app-ui-mode .playlist-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  padding: 4px 0;
+  gap: 4px;
+}
+.app-ui-mode #playlistItemsList {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  gap: 0;
+}
+.app-ui-mode .playlist-card {
+  flex: 0 0 auto;
+  min-height: 42px;
+  box-sizing: border-box;
+}
+.app-ui-mode .playlist-card .card-title-col {
+  min-width: 0;
+  overflow: hidden;
+}
+.app-ui-mode .playlist-card .card-title-col h4 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-ui-mode .card-audio-parts {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  overflow: hidden;
+}
+.app-ui-mode .card-part-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.app-ui-mode .playlist-card:focus-visible {
+  outline: 3px solid #7dd3fc;
+  outline-offset: -3px;
+  background: #31465f;
+}
+.app-ui-mode .playlist-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  gap: 8px;
+  padding: 8px 2px 4px;
+  border-top: 1px solid rgba(148, 163, 184, .22);
+  color: #cbd5e1;
+}
+.app-ui-mode .playlist-page-btn {
+  flex: 0 0 auto;
+  min-width: 84px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid rgba(148, 163, 184, .28);
+  border-radius: 9px;
+  background: #1e334d;
+  color: #f8fafc;
+  font-weight: 700;
+  cursor: pointer;
+}
+.app-ui-mode .playlist-page-btn:disabled {
+  opacity: .38;
+  cursor: default;
+}
+.app-ui-mode .playlist-page-btn:focus-visible {
+  outline: 3px solid #7dd3fc;
+  outline-offset: 1px;
+}
+.app-ui-mode .playlist-page-indicator {
+  min-width: 0;
+  text-align: center;
+  font-size: .82rem;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 560px) {
+  .app-ui-mode .playlist-modal-content { padding: 6px; }
+  .app-ui-mode .playlist-page-btn { min-width: 72px; padding-inline: 8px; font-size: .82rem; }
+  .app-ui-mode .playlist-page-indicator { font-size: .76rem; }
+}
