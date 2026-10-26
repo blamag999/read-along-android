@@ -11,9 +11,9 @@
 
 ## Build và phát hành
 
-Workflow không tự chạy khi push hoặc sửa mã nguồn. Để tạo bản build, mở **Actions → Build and Release Read Along → Run workflow** trên nhánh `main`, rồi nhập:
-1. **Version**: ví dụ `1.0.1` (mỗi bản phải dùng số mới).
-2. **Changelog**: nội dung thay đổi của bản phát hành.
+Workflow không tự chạy khi push hoặc sửa mã nguồn. Để tạo bản build, mở **Actions → Build and Release Read Along → Run workflow** trên nhánh `main` và chạy workflow; không cần nhập version hoặc changelog.
+
+Workflow tự tăng số phiên bản vá dựa trên Release gần nhất (ví dụ `1.0.2` → `1.0.3`) và tạo changelog từ các commit kể từ Release trước. Nếu chưa có Release, phiên bản đầu tiên là `1.0.0`.
 
 Nếu build thành công, workflow tạo GitHub Release có tag `vVERSION` và đính kèm:
 - `read-along-vVERSION-android-debug.apk`
