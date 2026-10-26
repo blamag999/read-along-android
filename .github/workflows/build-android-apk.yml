@@ -77,6 +77,45 @@ jobs:
           cp run_local.bat README-WEB-LOCAL.txt dist/read-along-web-local/
           cd dist && zip -r "read-along-v${VERSION}-web-local.zip" read-along-web-local
 
+      - name: Generate Android launcher icons from repository icon
+        run: |
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageOps, ImageDraw
+          import xml.etree.ElementTree as ET
+
+          source = Path('icon.png')
+          if not source.is_file():
+              raise SystemExit('Repository icon.png is missing at the repository root')
+          image = Image.open(source).convert('RGBA')
+          if image.width < 1 or image.height < 1:
+              raise SystemExit('icon.png is empty or invalid')
+
+          res = Path('android/app/src/main/res')
+          for density, size in [('mdpi', 48), ('hdpi', 72), ('xhdpi', 96), ('xxhdpi', 144), ('xxxhdpi', 192)]:
+              folder = res / f'mipmap-{density}'
+              folder.mkdir(parents=True, exist_ok=True)
+              # Preserve the square logo and resize to the standard launcher size.
+              fitted = ImageOps.fit(image, (size, size), method=Image.Resampling.LANCZOS)
+              fitted.save(folder / 'ic_launcher.png', optimize=True)
+              fitted.save(folder / 'ic_launcher_round.png', optimize=True)
+
+              # Adaptive foreground: keep artwork inside a safe central area.
+              safe_size = round(size * 0.64)
+              foreground = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+              artwork = ImageOps.contain(image, (safe_size, safe_size), method=Image.Resampling.LANCZOS)
+              foreground.alpha_composite(artwork, ((size-artwork.width)//2, (size-artwork.height)//2))
+              foreground.save(folder / 'ic_launcher_foreground.png', optimize=True)
+
+          # Update PWA icon metadata to make the uploaded icon available in web builds.
+          manifest_path = Path('manifest.json')
+          manifest = manifest_path.read_text(encoding='utf-8')
+          if 'icon.png' not in manifest:
+              raise SystemExit('manifest.json no longer references icon.png')
+          # Update generated Android resources to use the same launcher assets.
+          print(f'Generated Android launcher icons from {source} ({image.width}x{image.height})')
+          PY
       - name: Install dependencies and integrate native updater
         run: |
           npm install
