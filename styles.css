@@ -2176,7 +2176,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
 .apk-mode .apk-icon-button { min-width: 36px; min-height: 36px; padding: 5px 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; }
 .apk-mode .viewer-container { height: calc(100dvh - 98px); min-height: 0; padding: 0; }
 .apk-mode .app-footer { padding: 4px 6px; gap: 4px; min-height: 44px; }
-.apk-mode .footer-controls { gap: 4px; flex-wrap: nowrap; }
+.apk-mode .controls-row { gap: 4px; flex-wrap: nowrap; }
 .apk-mode .ctrl-btn { min-width: 34px; min-height: 34px; padding: 4px 7px; }
 .apk-mode .speed-select { min-width: 54px; }
 .apk-mode #lblZoomLevel { display: none !important; }
@@ -2197,7 +2197,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
 .apk-mode .card-audio-parts { margin-top: 4px; }
 .apk-mode .card-part-btn { padding: 4px 8px; min-height: 30px; }
 .apk-mode .empty-state { padding: 14px; }
-.apk-mode .empty-state > p, .apk-mode .readalong-tutorial { display: none !important; }
+.apk-mode .empty-state > p { display: block; font-size: .86rem; line-height: 1.4; margin: 6px 0; }\n.apk-mode .readalong-tutorial { display: block !important; margin-top: 8px; }\n.apk-mode .readalong-tutorial h3, .apk-mode .readalong-tutorial .tutorial-intro { display: none; }\n.apk-mode .tutorial-steps { display: grid; gap: 6px; }\n.apk-mode .tutorial-step { display: block; padding: 5px 0; border: 0; }\n.apk-mode .tutorial-step img { display: none; }\n.apk-mode .tutorial-step h4 { font-size: .84rem; margin: 0 0 2px; }\n.apk-mode .tutorial-step p { font-size: .78rem; line-height: 1.35; margin: 0; }
 .apk-mode .empty-state h2 { font-size: 1rem; }
 .apk-mode #btnReloadMarkers { display: inline-flex; }
 .apk-mode .sync-modal-content { max-width: 100%; }
