@@ -2271,3 +2271,40 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
 @media (min-width: 900px) {
  .app-ui-mode .viewer-container { height: calc(100dvh - 154px); padding: 18px; }
 }
+
+
+/* Persistent page position and Android TV focus affordances */
+.reader-page-status {
+  position: absolute;
+  top: max(10px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(147,197,253,.48);
+  background: rgba(15,23,42,.92);
+  color: #f1f5f9;
+  box-shadow: 0 4px 14px rgba(0,0,0,.24);
+  font-size: clamp(.78rem, 1.4vw, .95rem);
+  line-height: 1.25;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.reader-page-status.hidden { display: none !important; }
+.app-ui-mode .viewer-container { position: relative; }
+.app-ui-mode .reader-page-status { top: 8px; }
+.app-ui-mode button:focus-visible,
+.app-ui-mode select:focus-visible,
+.app-ui-mode input:focus-visible,
+.app-ui-mode [tabindex]:focus-visible {
+  outline: 3px solid #fbbf24;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px rgba(251,191,36,.18);
+}
+@media (min-width: 900px) and (pointer: coarse) {
+  .app-ui-mode .read-menu-button,
+  .app-ui-mode #btnOpenPlaylist { min-height: 44px; }
+}
