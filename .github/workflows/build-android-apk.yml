@@ -96,6 +96,49 @@ jobs:
         run: |
           npm install
           npx cap add android
+          mkdir -p android/app/src/main/java/com/blamag999/readalong
+          cp native/android/ApkUpdaterPlugin.java android/app/src/main/java/com/blamag999/readalong/ApkUpdaterPlugin.java
+          mkdir -p android/app/src/main/res/xml
+          cp native/android/file_paths.xml android/app/src/main/res/xml/file_paths.xml
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          main = Path('android/app/src/main/java/com/blamag999/readalong/MainActivity.java')
+          if not main.exists():
+              candidates = list(Path('android/app/src/main/java').rglob('MainActivity.java'))
+              if len(candidates) != 1:
+                  raise SystemExit('Could not locate generated MainActivity.java')
+              main = candidates[0]
+          source = main.read_text()
+          if 'ApkUpdaterPlugin.class' not in source:
+              source = source.replace('public class MainActivity extends BridgeActivity {',
+                  'public class MainActivity extends BridgeActivity {\n'
+                  '    @Override\n'
+                  '    public void onCreate(android.os.Bundle savedInstanceState) {\n'
+                  '        registerPlugin(ApkUpdaterPlugin.class);\n'
+                  '        super.onCreate(savedInstanceState);\n'
+                  '    }')
+              main.write_text(source)
+          manifest = Path('android/app/src/main/AndroidManifest.xml')
+          xml = manifest.read_text()
+          if 'REQUEST_INSTALL_PACKAGES' not in xml:
+              xml = xml.replace('<manifest ', '<manifest xmlns:android="http://schemas.android.com/apk/res/android" ', 1) if 'xmlns:android=' not in xml else xml
+              xml = xml.replace('<application', '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n    <application', 1)
+          if '.fileprovider' not in xml:
+              provider = '''
+                  <provider
+                      android:name="androidx.core.content.FileProvider"
+                      android:authorities="${applicationId}.fileprovider"
+                      android:exported="false"
+                      android:grantUriPermissions="true">
+                      <meta-data
+                          android:name="android.support.FILE_PROVIDER_PATHS"
+                          android:resource="@xml/file_paths" />
+                  </provider>
+              '''
+              xml = xml.replace('</application>', provider + '\n    </application>', 1)
+          manifest.write_text(xml)
+          PY
           npx cap sync android
 
       - name: Set Android version
