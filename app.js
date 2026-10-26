@@ -2208,6 +2208,9 @@ function installTvRemoteControls() {
     if (key === ' ' || key === 'Spacebar' || code === 32) {
       event.preventDefault(); togglePlayPause(); return;
     }
+    if ((key === 'Enter' || code === 13) && (event.target === document.body || event.target === document.documentElement || event.target === dom.viewerContainer)) {
+      event.preventDefault(); togglePlayPause(); return;
+    }
     if (key === 'Backspace' || key === 'Escape' || key === 'BrowserBack' || code === 4) {
       const playlist = document.getElementById('playlistModal');
       if (dom.readOptionsMenu && !dom.readOptionsMenu.classList.contains('hidden')) {
