@@ -1,7 +1,21 @@
 # Read Along Android
 
-Android-first reader for PDF books with synchronized MP3 audio, using a protected Cloudflare R2 catalog.
+Ứng dụng Android đọc sách PDF kết hợp MP3, dựa trên mã nguồn nhánh `feature/r2-catalog` của repository gốc.
 
-Source baseline: `blamag999/pdf-audio-sync` branch `feature/r2-catalog`.
+## Hành vi
 
-The application is being adapted for phones, tablets, and Android TV / Google TV. Do not put R2 credentials or signing secrets in client code.
+- Tự tải danh mục sách từ Cloudflare R2 khi mở ứng dụng.
+- URL danh mục được đóng gói sẵn: `https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/books.json`.
+- Không yêu cầu đăng nhập hoặc nhập URL thủ công.
+- PDF và MP3 vẫn được tải từ các URL trong danh mục; cần kết nối Internet.
+- Không nhúng khóa bí mật R2 vào APK.
+
+## Quyền truy cập
+
+Ứng dụng không xác thực người dùng. Danh mục và mọi tệp được phục vụ qua URL công khai có thể được truy cập bởi bất kỳ ai biết URL. Không đưa dữ liệu riêng tư vào bucket công khai.
+
+## Build APK
+
+Mỗi lần push lên nhánh `feature/android-r2`, GitHub Actions sẽ đóng gói APK debug. Có thể chạy thủ công tại tab **Actions** bằng workflow **Build Android APK**. Sau khi chạy thành công, tải `app-debug.apk` trong phần Artifacts của lần chạy.
+
+APK này là bản debug để cài trực tiếp và kiểm thử, chưa phải bản phát hành ký số cho Google Play.

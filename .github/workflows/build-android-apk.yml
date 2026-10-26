@@ -1,0 +1,68 @@
+name: Build Web Local + Android APK
+
+on:
+  push:
+    branches:
+      - feature/android-r2
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Prepare web assets
+        run: npm run prepare:web
+
+      - name: Package Web Local for PC
+        run: |
+          mkdir -p dist/read-along-web-local
+          cp -R www/. dist/read-along-web-local/
+          cp run_local.bat README-WEB-LOCAL.txt dist/read-along-web-local/
+          cd dist
+          zip -r read-along-web-local.zip read-along-web-local
+
+      - name: Upload Web Local package
+        uses: actions/upload-artifact@v6
+        with:
+          name: read-along-web-local
+          path: dist/read-along-web-local.zip
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: read-along-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14

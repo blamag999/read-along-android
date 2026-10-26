@@ -5,7 +5,6 @@ const ASSETS_TO_CACHE = [
   './styles.css',
   './app.js',
   './manifest.json',
-  './icon.png',
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
 ];

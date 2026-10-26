@@ -2157,3 +2157,117 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
 .tutorial-step p{color:#cbd5e1;font-size:.92rem;line-height:1.65;margin:0}
 .tutorial-note{margin-top:10px;padding:12px 14px;border-left:3px solid #10b981;border-radius:6px;background:rgba(16,185,129,.08);color:#cbd5e1;font-size:.88rem;line-height:1.6}
 @media(max-width:600px){.readalong-tutorial{padding:16px 13px;border-radius:16px}.tutorial-step{grid-template-columns:84px minmax(0,1fr);gap:12px;padding:14px 0}.tutorial-step img{width:84px;height:84px;border-radius:14px}.tutorial-step h4{font-size:.9rem;margin-top:0}.tutorial-step p{font-size:.82rem;line-height:1.5}}
+
+
+/* APK compact interface: activated only inside Android WebView. */
+.apk-mode body { overflow: hidden; }
+.apk-mode .app-header { min-height: 42px; padding: 4px 8px; gap: 6px; flex-wrap: nowrap; }
+.apk-mode .app-title { font-size: 1rem; margin: 0; white-space: nowrap; }
+.apk-mode .header-left { min-width: 0; }
+.apk-mode .header-right { gap: 4px; }
+.apk-mode .hide-mobile, .apk-mode #btnToggleSettings, .apk-mode #filePickerSection,
+.apk-mode #syncBanner, .apk-mode #btnOpenSyncModal, .apk-mode .zoom-group,
+.apk-mode #btnTwoPages, .apk-mode .quick-options, .apk-mode .file-status-row,
+.apk-mode #btnNode1FolderOnline, .apk-mode #btnChooseAudio, .apk-mode .playlist-filter-tabs,
+.apk-mode .playlist-export-row, .apk-mode #btnExportR2Catalog { display: none !important; }
+.apk-mode .view-controls-bar { gap: 4px; }
+.apk-mode .view-btn { min-width: 36px; padding: 6px 8px; }
+.apk-mode #btnFitHeight { font-size: 1rem; }
+.apk-mode .apk-icon-button { min-width: 36px; min-height: 36px; padding: 5px 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.apk-mode .viewer-container { height: calc(100dvh - 98px); min-height: 0; padding: 0; }
+.apk-mode .app-footer { padding: 4px 6px; gap: 4px; min-height: 44px; }
+.apk-mode .controls-row { gap: 4px; flex-wrap: nowrap; }
+.apk-mode .ctrl-btn { min-width: 34px; min-height: 34px; padding: 4px 7px; }
+.apk-mode .speed-select { min-width: 54px; }
+.apk-mode #lblZoomLevel { display: none !important; }
+.apk-mode .modal-overlay { padding: 0; align-items: stretch; }
+.apk-mode .playlist-modal-content { width: 100%; max-width: none; height: 100dvh; max-height: 100dvh; border-radius: 0; display: flex; flex-direction: column; padding: 8px; }
+.apk-mode .playlist-modal-content .modal-header { padding: 4px 0 8px; flex-shrink: 0; }
+.apk-mode .playlist-modal-content .modal-header h3 { font-size: 1rem; }
+.apk-mode .playlist-search-bar { padding: 0 0 6px; flex-shrink: 0; }
+.apk-mode #txtPlaylistSearch { width: 100%; min-height: 42px; font-size: 1rem; padding: 8px 10px; }
+.apk-mode #playlistItemsList { flex: 1; min-height: 0; overflow-y: auto; padding: 0; }
+.apk-mode .playlist-card { display: flex; align-items: center; gap: 8px; padding: 8px 4px; margin: 0; border-radius: 0; border-left: 0; border-right: 0; border-top: 0; border-bottom: 1px solid rgba(148,163,184,.2); }
+.apk-mode .playlist-card .card-cover, .apk-mode .playlist-card .card-tags,
+.apk-mode .playlist-card .card-play-btn { display: none !important; }
+.apk-mode .playlist-card .card-title-col { min-width: 0; flex: 1; }
+.apk-mode .playlist-card .card-title-col h4 { font-size: .92rem; line-height: 1.25; margin: 0; font-weight: 500; }
+.apk-mode .apk-story-number { width: 2.1rem; flex: 0 0 2.1rem; text-align: center; font-weight: 700; color: #93c5fd; font-variant-numeric: tabular-nums; }
+.apk-mode .playlist-card.active-playing .apk-story-number { color: #34d399; }
+.apk-mode .card-audio-parts { margin-top: 4px; }
+.apk-mode .card-part-btn { padding: 4px 8px; min-height: 30px; }
+.apk-mode .empty-state { padding: 14px; }
+.apk-mode .empty-state > p { display: block; font-size: .86rem; line-height: 1.4; margin: 6px 0; }
+.apk-mode .readalong-tutorial { display: block !important; margin-top: 8px; }
+.apk-mode .readalong-tutorial h3, .apk-mode .readalong-tutorial .tutorial-intro { display: none; }
+.apk-mode .tutorial-steps { display: grid; gap: 6px; }
+.apk-mode .tutorial-step { display: block; padding: 5px 0; border: 0; }
+.apk-mode .tutorial-step img { display: none; }
+.apk-mode .tutorial-step h4 { font-size: .84rem; margin: 0 0 2px; }
+.apk-mode .tutorial-step p { font-size: .78rem; line-height: 1.35; margin: 0; }
+.apk-mode .empty-state h2 { font-size: 1rem; }
+.apk-mode #btnReloadMarkers { display: inline-flex; }
+.apk-mode .sync-modal-content { max-width: 100%; }
+@media (max-width: 420px) {
+  .apk-mode .app-title { font-size: .88rem; }
+  .apk-mode .app-header { padding: 3px 5px; }
+  .apk-mode .view-btn { min-width: 32px; padding: 5px; }
+  .apk-mode .apk-icon-button { min-width: 32px; }
+}
+
+
+/* Giao diện thống nhất cho APK và Web Local: thanh đầu gọn, menu vuông bo góc. */
+.app-ui-mode body { overflow: hidden; }
+.app-ui-mode .app-header { position: relative; z-index: 30; min-height: 48px; padding: 6px clamp(8px, 1.6vw, 18px); gap: 10px; flex-wrap: nowrap; }
+.app-ui-mode .app-title { font-size: clamp(.92rem, 1.8vw, 1.12rem); margin: 0; white-space: nowrap; }
+.app-ui-mode .header-left { flex: 0 1 auto; min-width: 0; }
+.app-ui-mode .header-right { position: relative; display: flex; align-items: center; justify-content: flex-end; gap: 7px; min-width: 0; }
+.app-ui-mode .view-controls-bar, .app-ui-mode #btnToggleSettings, .app-ui-mode #filePickerSection,
+.app-ui-mode #syncBanner, .app-ui-mode #btnOpenSyncModal, .app-ui-mode .zoom-group,
+.app-ui-mode #btnFitHeight, .app-ui-mode #btnTwoPages, .app-ui-mode .quick-options,
+.app-ui-mode .file-status-row, .app-ui-mode #btnNode1FolderOnline, .app-ui-mode #btnChooseAudio,
+.app-ui-mode .playlist-filter-tabs, .app-ui-mode .playlist-export-row, .app-ui-mode #btnExportR2Catalog,
+.app-ui-mode #btnReloadMarkers, .app-ui-mode #btnAutoFlipToggle { display: none !important; }
+.app-ui-mode #btnOpenPlaylist { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; min-width: 0; padding: 8px 13px; gap: 7px; border-radius: 9px; font-size: clamp(.78rem, 1.4vw, .92rem); font-weight: 700; white-space: nowrap; }
+.app-ui-mode #btnOpenPlaylist .hide-mobile { display: inline !important; }
+.app-ui-mode .read-menu-button { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; min-width: 38px; padding: 0; border-radius: 9px; font-size: 1.1rem; line-height: 1; }
+.app-ui-mode .read-options-menu { position: absolute; top: calc(100% + 7px); right: 0; z-index: 100; width: min(290px, calc(100vw - 16px)); padding: 6px; display: grid; gap: 4px; background: #111e30; border: 1px solid rgba(148,163,184,.35); border-radius: 12px; box-shadow: 0 14px 36px rgba(0,0,0,.42); }
+.app-ui-mode .read-options-menu.hidden { display: none !important; }
+.app-ui-mode .read-menu-option { display: grid; grid-template-columns: 28px minmax(0,1fr) auto; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 8px 10px; text-align: left; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #e2e8f0; font-size: .9rem; cursor: pointer; }
+.app-ui-mode .read-menu-option:hover, .app-ui-mode .read-menu-option:focus-visible { background: #1e334d; outline: 2px solid #60a5fa; outline-offset: -2px; }
+.app-ui-mode .read-menu-option.is-on { background: rgba(16,185,129,.12); border-color: rgba(52,211,153,.35); }
+.app-ui-mode .menu-option-icon { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 7px; background: #263a52; font-size: 1rem; }
+.app-ui-mode .menu-option-state { color: #94a3b8; font-size: .76rem; font-weight: 700; }
+.app-ui-mode .read-menu-option.is-on .menu-option-state { color: #6ee7b7; }
+.app-ui-mode .viewer-container { display: flex; align-items: center; justify-content: center; height: calc(100dvh - 150px); min-height: 0; padding: 12px; box-sizing: border-box; overflow: auto; }
+.app-ui-mode .canvas-wrapper { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; min-width: 0; min-height: 0; margin: auto; gap: clamp(8px, 1.2vw, 18px); }
+.app-ui-mode .canvas-page { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; max-width: 100%; max-height: 100%; overflow: hidden; }
+.app-ui-mode .canvas-page canvas { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
+.app-ui-mode .canvas-wrapper.two-page-mode { align-items: center; justify-content: center; }
+.app-ui-mode .app-footer { position: relative; z-index: 10; padding: 5px 8px max(5px, env(safe-area-inset-bottom)); gap: 4px; min-height: 44px; }
+.app-ui-mode .controls-row { gap: clamp(5px, 1vw, 10px); flex-wrap: nowrap; justify-content: center; }
+.app-ui-mode .controls-row #btnAutoFlipToggle { display: none !important; }
+.app-ui-mode .modal-overlay { padding: 0; align-items: stretch; }
+.app-ui-mode .playlist-modal-content { width: 100%; max-width: none; height: 100dvh; max-height: 100dvh; border-radius: 0; display: flex; flex-direction: column; padding: 8px; }
+.app-ui-mode .playlist-modal-content .modal-header { padding: 4px 0 8px; flex-shrink: 0; }
+.app-ui-mode .playlist-modal-content .modal-header h3 { font-size: 1rem; }
+.app-ui-mode .playlist-search-bar { padding: 0 0 6px; flex-shrink: 0; }
+.app-ui-mode #txtPlaylistSearch { width: 100%; min-height: 42px; font-size: 1rem; padding: 8px 10px; }
+.app-ui-mode #playlistItemsList { flex: 1; min-height: 0; overflow-y: auto; padding: 0; }
+.app-ui-mode .playlist-card { display: flex; align-items: center; gap: 8px; padding: 8px 4px; margin: 0; border-radius: 0; border-left: 0; border-right: 0; border-top: 0; border-bottom: 1px solid rgba(148,163,184,.2); }
+.app-ui-mode .playlist-card .card-cover, .app-ui-mode .playlist-card .card-tags, .app-ui-mode .playlist-card .card-play-btn { display: none !important; }
+.app-ui-mode .playlist-card .card-title-col { min-width: 0; flex: 1; }
+.app-ui-mode .playlist-card .card-title-col h4 { font-size: .92rem; line-height: 1.25; margin: 0; font-weight: 500; }
+.app-ui-mode .apk-story-number { width: 2.1rem; flex: 0 0 2.1rem; text-align: center; font-weight: 700; color: #93c5fd; font-variant-numeric: tabular-nums; }
+.app-ui-mode .playlist-card.active-playing .apk-story-number { color: #34d399; }
+@media (max-width: 560px) {
+ .app-ui-mode .app-header { gap: 5px; padding: 5px 6px; }
+ .app-ui-mode .app-title { font-size: .86rem; }
+ .app-ui-mode #btnOpenPlaylist { min-height: 36px; padding: 7px 9px; font-size: .76rem; }
+ .app-ui-mode .read-menu-button { width: 36px; height: 36px; min-width: 36px; }
+ .app-ui-mode .viewer-container { height: calc(100dvh - 142px); padding: 5px; }
+ .app-ui-mode .app-footer { padding-inline: 4px; }
+}
+@media (min-width: 900px) {
+ .app-ui-mode .viewer-container { height: calc(100dvh - 154px); padding: 18px; }
+}
