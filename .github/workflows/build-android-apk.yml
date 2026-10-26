@@ -192,11 +192,11 @@ jobs:
                   }
               }
           ''', 1)
-          if not re.search(r'buildTypes\\s*\\{', text):
+          if not re.search(r'buildTypes\s*\{', text):
               raise SystemExit('buildTypes block not found')
-          pattern = r'(buildTypes\\s*\\{[\\s\\S]*?release\\s*\\{)'
-          if not re.search(pattern + r'\\s*signingConfig\\s+signingConfigs\\.release', text):
-              text, count = re.subn(pattern, r'\\1\\n            signingConfig signingConfigs.release', text, count=1)
+          pattern = r'(buildTypes\s*\{[\s\S]*?release\s*\{)'
+          if not re.search(pattern + r'\s*signingConfig\s+signingConfigs\.release', text):
+              text, count = re.subn(pattern, r'\1\n            signingConfig signingConfigs.release', text, count=1)
               if count != 1:
                   raise SystemExit('Could not configure release signing')
           p.write_text(text)
@@ -271,7 +271,7 @@ jobs:
           ''', 1)
           if not re.search(r'buildTypes\s*\{', text):
               raise SystemExit('buildTypes block not found')
-          if not re.search(r'buildTypes\s*\{[\s\S]*?release\s*\{\s*signingConfig\s+signingConfigs\.release', text):
+          if not re.search(r'buildTypes\s*\{', text):
               text, count = re.subn(r'(buildTypes\s*\{[\s\S]*?release\s*\{)', r'\1\n            signingConfig signingConfigs.release', text, count=1)
               if count != 1:
                   raise SystemExit('Could not configure release signing')
