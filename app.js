@@ -2164,50 +2164,35 @@ function updateReadMenuState() {
 }
 
 
+
 function installTvRemoteControls() {
-  const editableTarget = (target) => {
-    if (!target || !(target instanceof Element)) return false;
-    return Boolean(target.closest('input, textarea, select, [contenteditable="true"], .playlist-search-bar'));
-  };
-  const interactiveTarget = (target) => {
-    if (!target || !(target instanceof Element)) return false;
-    return Boolean(target.closest('button, a, input, textarea, select, [role="button"], [contenteditable="true"]'));
-  };
+  const isEditable = (target) => target instanceof Element &&
+    Boolean(target.closest('input, textarea, select, [contenteditable="true"], .playlist-search-bar'));
+  const isReadMenuOpen = () => dom.readOptionsMenu && !dom.readOptionsMenu.classList.contains('hidden');
   const seekAudio = (delta) => {
     const audio = dom.audioElement;
     const duration = Number.isFinite(audio.duration) ? audio.duration : Number.MAX_SAFE_INTEGER;
     audio.currentTime = Math.max(0, Math.min(duration, (audio.currentTime || 0) + delta));
   };
+
   document.addEventListener('keydown', (event) => {
-    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || editableTarget(event.target)) return;
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || isEditable(event.target)) return;
     const key = event.key;
     const code = event.keyCode;
-    const mediaPlayPause = key === 'MediaPlayPause' || key === 'PlayPause' || code === 179;
-    const mediaPlay = key === 'MediaPlay' || code === 250;
-    const mediaPause = key === 'MediaPause' || code === 251;
-    const rewind = key === 'MediaRewind' || key === 'Rewind' || code ===  mediaKeyCode('rewind');
-    const fastForward = key === 'MediaFastForward' || key === 'FastForward' || code === mediaKeyCode('fastForward');
-    if (mediaPlayPause) {
-      event.preventDefault(); togglePlayPause(); return;
-    }
-    if (mediaPlay) {
-      event.preventDefault();
-      if (dom.audioElement.paused) togglePlayPause();
-      return;
-    }
-    if (mediaPause) {
-      event.preventDefault();
-      dom.audioElement.pause();
-      return;
-    }
-    if (rewind) {
-      event.preventDefault(); seekAudio(-5); return;
-    }
-    if (fastForward) {
-      event.preventDefault(); seekAudio(5); return;
-    }
-    // Standard TV navigation arrows double as page/seek controls when focus is not on a control.
-    if (interactiveTarget(event.target)) return;
+    const playPause = ['MediaPlayPause', 'PlayPause'].includes(key) || code === 85 || code === 179;
+    const play = key === 'MediaPlay' || code === 126 || code === 250;
+    const pause = key === 'MediaPause' || code === 127 || code === 251;
+    const rewind = ['MediaRewind', 'Rewind'].includes(key) || code === 89;
+    const fastForward = ['MediaFastForward', 'FastForward'].includes(key) || code === 90;
+
+    if (playPause) { event.preventDefault(); togglePlayPause(); return; }
+    if (play) { event.preventDefault(); if (dom.audioElement.paused) togglePlayPause(); return; }
+    if (pause) { event.preventDefault(); dom.audioElement.pause(); return; }
+    if (rewind) { event.preventDefault(); seekAudio(-5); return; }
+    if (fastForward) { event.preventDefault(); seekAudio(5); return; }
+
+    // When the menu is open, retain arrow-key navigation between its options.
+    if (isReadMenuOpen()) return;
     if (key === 'ArrowLeft' || code === 37) {
       event.preventDefault(); if (!event.repeat) changePage(-1); return;
     }
@@ -2223,12 +2208,11 @@ function installTvRemoteControls() {
     if (key === ' ' || key === 'Spacebar' || code === 32) {
       event.preventDefault(); togglePlayPause(); return;
     }
-    if (key === 'Backspace' || key === 'Escape' || key === 'BrowserBack') {
+    if (key === 'Backspace' || key === 'Escape' || key === 'BrowserBack' || code === 4) {
       const playlist = document.getElementById('playlistModal');
-      const menu = dom.readOptionsMenu;
-      if (menu && !menu.classList.contains('hidden')) {
+      if (dom.readOptionsMenu && !dom.readOptionsMenu.classList.contains('hidden')) {
         event.preventDefault();
-        menu.classList.add('hidden');
+        dom.readOptionsMenu.classList.add('hidden');
         dom.btnOpenReadMenu?.setAttribute('aria-expanded', 'false');
       } else if (playlist && !playlist.classList.contains('hidden')) {
         event.preventDefault();
@@ -2236,16 +2220,4 @@ function installTvRemoteControls() {
       }
     }
   });
-  // Keep native media key codes centralized; key strings are preferred when Android exposes them.
-  function mediaKeyCode(kind) {
-    return kind === 'rewind' ?  RewindKeyCode : FastForwardKeyCode;
-  }
-}
-const RewindKeyCode =  RewindKeyCodeFallback();
-const FastForwardKeyCode = FastForwardKeyCodeFallback();
-function RewindKeyCodeFallback() { return  mediaCodeLookup('rewind'); }
-function FastForwardKeyCodeFallback() { return mediaCodeLookup('fastForward'); }
-function mediaCodeLookup(kind) {
-  // Android KEYCODE_MEDIA_REWIND=89, KEYCODE_MEDIA_FAST_FORWARD=90.
-  return kind === 'rewind' ? 89 : 90;
 }
