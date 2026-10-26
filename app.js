@@ -145,6 +145,7 @@ const dom = {
   menuTwoPages: document.getElementById('menuTwoPages'),
   menuAutoFlip: document.getElementById('menuAutoFlip'),
   menuReloadMarkers: document.getElementById('menuReloadMarkers'),
+  menuCheckUpdates: document.getElementById('menuCheckUpdates'),
   menuTwoPagesState: document.getElementById('menuTwoPagesState'),
   menuAutoFlipState: document.getElementById('menuAutoFlipState'),
   btnZoomOut: document.getElementById('btnZoomOut'),
@@ -2224,3 +2225,48 @@ function installTvRemoteControls() {
     }
   });
 }
+
+
+// Kiểm tra bản phát hành mới nhất trên GitHub Releases (chỉ hiển thị trong APK).
+const READ_ALONG_RELEASES_API = 'https://api.github.com/repos/blamag999/read-along-android/releases/latest';
+function compareReleaseVersions(a, b) {
+  const parse = (v) => String(v || '').replace(/^v/i, '').split(/[.-]/).slice(0, 3).map(n => Number.parseInt(n, 10) || 0);
+  const av = parse(a), bv = parse(b);
+  for (let i = 0; i < 3; i++) { if (av[i] > bv[i]) return 1; if (av[i] < bv[i]) return -1; }
+  return 0;
+}
+async function checkReadAlongUpdates() {
+  const btn = dom.menuCheckUpdates;
+  if (btn) { btn.disabled = true; btn.querySelector('span:last-child').textContent = 'Đang kiểm tra…'; }
+  try {
+    const response = await fetch(READ_ALONG_RELEASES_API, { headers: { Accept: 'application/vnd.github+json' }, cache: 'no-store' });
+    if (!response.ok) throw new Error('GitHub trả về HTTP ' + response.status);
+    const release = await response.json();
+    if (release.draft || release.prerelease) throw new Error('Bản phát hành mới nhất không phải bản ổn định.');
+    const asset = (release.assets || []).find(item => /-android-debug\.apk$/i.test(item.name));
+    if (!asset) throw new Error('Release chưa có tệp APK Android.');
+    const currentVersion = document.querySelector('meta[name="app-version"]')?.content || '0.0.0';
+    if (compareReleaseVersions(release.tag_name, currentVersion) <= 0) {
+      showToast('Bạn đang dùng phiên bản mới nhất (' + currentVersion + ').');
+      return;
+    }
+    const notes = String(release.body || '').replace(/[#*_\x60]/g, '').trim().slice(0, 600);
+    const message = 'Có phiên bản Read Along mới: ' + release.tag_name + '\nPhiên bản hiện tại: ' + currentVersion +
+      (notes ? '\n\nThay đổi:\n' + notes : '') +
+      '\n\nTải APK mới? Android sẽ yêu cầu xác nhận cài đặt. Bản mới cần cùng khóa ký với bản đang cài để cập nhật đè.';
+    if (!confirm(message)) return;
+    window.location.href = asset.browser_download_url;
+  } catch (error) {
+    console.error('Update check failed:', error);
+    alert('Không thể kiểm tra cập nhật: ' + (error.message || 'Lỗi mạng') + '\nHãy thử lại khi có kết nối Internet.');
+  } finally {
+    if (btn) { btn.disabled = false; btn.querySelector('span:last-child').textContent = 'Kiểm tra cập nhật'; }
+  }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const isNativeAndroid = Boolean(window.Capacitor?.isNativePlatform?.() || window.Capacitor?.getPlatform?.() === 'android');
+  if (dom.menuCheckUpdates && isNativeAndroid) {
+    dom.menuCheckUpdates.classList.remove('hidden');
+    dom.menuCheckUpdates.addEventListener('click', checkReadAlongUpdates);
+  }
+});
