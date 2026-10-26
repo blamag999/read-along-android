@@ -21,6 +21,7 @@ const state = {
   searchQuery: '',
   playlistPage: 1,
   playlistPageSize: 0,
+  playlistTotalPages: 1,
 
   // Mốc thời gian: { [pageNumber]: timestampInSeconds } (CHỈ DÀNH RIÊNG CHO CUỐN HIỆN TẠI)
   pageTimestamps: {},
@@ -805,6 +806,7 @@ function updatePlaylistPagination(totalPages, totalItems) {
   dom.playlistPagination.classList.toggle('hidden', totalItems === 0);
   dom.btnPlaylistPrevPage.disabled = state.playlistPage <= 1;
   dom.btnPlaylistNextPage.disabled = state.playlistPage >= totalPages;
+  state.playlistTotalPages = totalPages;
   dom.lblPlaylistPage.textContent = `Trang ${state.playlistPage} / ${totalPages} · ${totalItems} tập`;
   dom.lblPlaylistPage.setAttribute('aria-label', `Trang ${state.playlistPage} trên ${totalPages}, ${totalItems} tập`);
 }
@@ -1068,16 +1070,39 @@ function initEvents() {
     renderPlaylistView();
   });
 
-  dom.btnPlaylistPrevPage.addEventListener('click', () => {
-    if (state.playlistPage <= 1) return;
-    state.playlistPage -= 1;
+  function changePlaylistPage(delta) {
+    const nextPage = Math.max(1, Math.min(state.playlistTotalPages, state.playlistPage + delta));
+    if (nextPage === state.playlistPage) return;
+    state.playlistPage = nextPage;
     renderPlaylistView();
-    dom.btnPlaylistPrevPage.focus({ preventScroll: true });
-  });
-  dom.btnPlaylistNextPage.addEventListener('click', () => {
-    state.playlistPage += 1;
-    renderPlaylistView();
-    dom.btnPlaylistNextPage.focus({ preventScroll: true });
+    requestAnimationFrame(() => dom.playlistItemsList.querySelector('.playlist-card')?.focus({ preventScroll: true }));
+  }
+  dom.btnPlaylistPrevPage.addEventListener('click', () => changePlaylistPage(-1));
+  dom.btnPlaylistNextPage.addEventListener('click', () => changePlaylistPage(1));
+  dom.playlistModal.addEventListener('keydown', (e) => {
+    if (e.defaultPrevented || e.target.closest('button, input, select, textarea')) return;
+    const card = e.target.closest('.playlist-card');
+    if (!card) return;
+    const cards = Array.from(dom.playlistItemsList.querySelectorAll('.playlist-card'));
+    const index = cards.indexOf(card);
+    if (e.key === 'ArrowUp' && index > 0) {
+      e.preventDefault();
+      cards[index - 1].focus({ preventScroll: true });
+    } else if (e.key === 'ArrowDown') {
+      if (index < cards.length - 1) {
+        e.preventDefault();
+        cards[index + 1].focus({ preventScroll: true });
+      } else if (state.playlistPage < state.playlistTotalPages) {
+        e.preventDefault();
+        changePlaylistPage(1);
+      }
+    } else if (e.key === 'ArrowLeft' && state.playlistPage > 1) {
+      e.preventDefault();
+      changePlaylistPage(-1);
+    } else if (e.key === 'ArrowRight' && state.playlistPage < state.playlistTotalPages) {
+      e.preventDefault();
+      changePlaylistPage(1);
+    }
   });
   window.addEventListener('resize', () => {
     if (!dom.playlistModal.classList.contains('hidden')) renderPlaylistView();
