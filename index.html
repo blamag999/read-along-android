@@ -22,15 +22,10 @@
       <h1 class="app-title">📖 Read Along</h1>
     </div>
 
-    <!-- VIEW MODE CONTROLS -->
-    <div class="view-controls-bar">
-      <button id="btnFitHeight" class="view-btn active" title="Bật: hiển thị 2 trang; tắt: vừa trang">
-        <span aria-hidden="true">↕</span><span class="hide-mobile">Vừa trang</span>
-      </button>
-      <button id="btnTwoPages" class="view-btn" title="Hiển thị 2 trang cùng lúc (chế độ sách)">
-        📖 <span class="hide-mobile">2 Trang</span>
-      </button>
-      
+    <!-- Thu gọn các chế độ xem vào menu để dành không gian cho trang sách. -->
+    <div class="view-controls-bar" aria-label="Điều khiển hiển thị">
+      <button id="btnFitHeight" class="view-btn active" type="button" title="Vừa trang">↔</button>
+      <button id="btnTwoPages" class="view-btn" type="button" title="Bật/tắt hiển thị 2 trang" aria-pressed="false">▣</button>
       <div class="zoom-group">
         <button id="btnZoomOut" class="view-btn-mini" title="Thu nhỏ">➖</button>
         <span id="lblZoomLevel" class="zoom-label">100%</span>
@@ -41,17 +36,19 @@
     <div class="header-right">
       <!-- NÚT MỞ DANH SÁCH TẬP TRUYỆN (PLAYLIST) -->
       <button id="btnOpenPlaylist" class="icon-btn playlist-btn" title="Chọn thư mục hoặc tải danh sách sách R2 để mở danh sách tập" disabled aria-disabled="true">
-        📚 <span class="hide-mobile">Danh sách tập</span>
+        📚 <span>Danh sách truyện</span>
         <span id="lblPlaylistCount" class="badge-count hidden">0</span>
       </button>
 
-      <button id="btnReloadMarkers" class="icon-btn apk-icon-button" type="button" title="Tải mốc thời gian mới nhất từ GitHub" aria-label="Tải mốc thời gian mới nhất từ GitHub">⟳</button>
-      <button id="btnOpenSyncModal" class="icon-btn" title="Quản lý mốc đồng bộ thời gian">
-        ⚙️ <span class="hide-mobile">Mốc thời gian</span>
-      </button>
-      <button id="btnToggleSettings" class="icon-btn menu-toggle-btn" type="button" aria-controls="filePickerSection syncBanner" aria-expanded="true" title="Ẩn/hiện dòng chọn tệp và tùy chọn">
-        ☰ <span>Menu</span>
-      </button>
+      <button id="btnOpenReadMenu" class="icon-btn read-menu-button" type="button" aria-label="Mở menu đọc sách" aria-controls="readOptionsMenu" aria-expanded="false" title="Tùy chọn đọc">☰</button>
+      <div id="readOptionsMenu" class="read-options-menu hidden" role="group" aria-label="Tùy chọn đọc sách">
+        <button id="menuTwoPages" class="read-menu-option" type="button" aria-pressed="false"><span class="menu-option-icon">▣</span><span>Hiện 2 trang</span><span class="menu-option-state" id="menuTwoPagesState">Tắt</span></button>
+        <button id="menuAutoFlip" class="read-menu-option" type="button" aria-pressed="true"><span class="menu-option-icon">⤓</span><span>Tự lật trang</span><span class="menu-option-state" id="menuAutoFlipState">Bật</span></button>
+        <button id="menuReloadMarkers" class="read-menu-option" type="button"><span class="menu-option-icon">⟳</span><span>Cập nhật mốc thời gian</span></button>
+      </div>
+      <button id="btnReloadMarkers" class="icon-btn apk-icon-button hidden" type="button" title="Tải mốc thời gian mới nhất từ GitHub" aria-label="Tải mốc thời gian mới nhất từ GitHub">⟳</button>
+      <button id="btnOpenSyncModal" class="icon-btn" title="Quản lý mốc đồng bộ thời gian">⚙️ <span class="hide-mobile">Mốc thời gian</span></button>
+      <button id="btnToggleSettings" class="icon-btn menu-toggle-btn" type="button" aria-controls="filePickerSection syncBanner" aria-expanded="true" title="Ẩn/hiện dòng chọn tệp và tùy chọn">☰ <span>Menu</span></button>
     </div>
   </header>
 
@@ -185,7 +182,6 @@
         ▶
       </button>
       <button id="btnReplayPage" class="ctrl-btn replay-page-btn" type="button" title="Đọc lại trang hiện tại từ mốc thời gian" aria-label="Đọc lại trang hiện tại"><span class="replay-page-icon" aria-hidden="true">↺</span></button>
-      <button id="btnAutoFlipToggle" class="ctrl-btn apk-icon-button" type="button" title="Tự động lật trang: bật" aria-label="Bật hoặc tắt tự động lật trang" aria-pressed="true">⤓</button>
       <label class="speed-select-wrap" title="Chọn tốc độ phát âm thanh">
         <span class="sr-only">Tốc độ phát</span>
         <select id="speedSelect" class="ctrl-btn speed-select" aria-label="Tốc độ phát âm thanh">
@@ -324,10 +320,8 @@
   <div id="toastMessage" class="toast-message hidden"></div>
 
   <script>
-    // Tinh chỉnh giao diện riêng cho APK Android; bản Web Local trên PC giữ nguyên giao diện đầy đủ.
-    if (/Android/i.test(navigator.userAgent) && (navigator.userAgent.includes(' wv') || /Capacitor/i.test(navigator.userAgent))) {
-      document.documentElement.classList.add('apk-mode');
-    }
+    // Dùng cùng giao diện gọn trên APK và Web Local để dễ kiểm tra nhất quán.
+    document.documentElement.classList.add('app-ui-mode');
   </script>
   <script src="app.js"></script>
   <script>
