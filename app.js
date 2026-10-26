@@ -1046,11 +1046,6 @@ function initEvents() {
       const enabled = state.pageTurnMode !== 'next';
       state.pageTurnMode = enabled ? 'next' : 'off';
       dom.selPageTurnMode.value = state.pageTurnMode;
-  if (dom.btnAutoFlipToggle) {
-    const autoFlipOn = state.pageTurnMode === 'next';
-    dom.btnAutoFlipToggle.classList.toggle('active', autoFlipOn);
-    dom.btnAutoFlipToggle.setAttribute('aria-pressed', String(autoFlipOn));
-  }
       dom.btnAutoFlipToggle.classList.toggle('active', enabled);
       dom.btnAutoFlipToggle.setAttribute('aria-pressed', String(enabled));
       dom.btnAutoFlipToggle.title = enabled ? 'Tự động lật trang: bật' : 'Tự động lật trang: tắt';
@@ -1064,6 +1059,11 @@ function initEvents() {
   initDragAndDrop();
 
 dom.selPageTurnMode.value = state.pageTurnMode;
+  if (dom.btnAutoFlipToggle) {
+    const autoFlipOn = state.pageTurnMode === 'next';
+    dom.btnAutoFlipToggle.classList.toggle('active', autoFlipOn);
+    dom.btnAutoFlipToggle.setAttribute('aria-pressed', String(autoFlipOn));
+  }
   dom.selPageTurnMode.addEventListener('change', (e) => {
     state.pageTurnMode = e.target.value;
     state.waitingForManualPageTurn = false;
