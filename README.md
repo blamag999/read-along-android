@@ -9,7 +9,24 @@
 - Điều khiển bằng remote Android TV: Play/Pause, trái/phải đổi trang, lên/xuống tua âm thanh 5 giây, và phím Rewind/Fast Forward nếu thiết bị phát ra key event tương ứng.
 - Giao diện gọn dùng chung cho APK và Web Local.
 - Trong APK có mục **Kiểm tra cập nhật** để kiểm tra GitHub Releases, xem changelog, tải APK qua cầu nối Android native và mở trình cài đặt hệ thống. Người dùng tự xác nhận cài đặt; cập nhật đè yêu cầu APK cùng khóa ký.
-- Quy trình build yêu cầu cấu hình khóa ký Android cố định trong GitHub Actions Secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
+- Quy trình build tạo APK release có chữ ký cố định. Trước lần build đầu tiên, phải thiết lập 4 GitHub Actions Secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
+
+### Thiết lập khóa ký một lần (Windows)
+
+1. Mở PowerShell trong máy có JDK và chạy:
+   ```powershell
+   keytool -genkeypair -v -keystore read-along-release.jks -alias readalong -keyalg RSA -keysize 2048 -validity 10000
+   [Convert]::ToBase64String([IO.File]::ReadAllBytes("$PWD\read-along-release.jks")) | Set-Clipboard
+   ```
+   Hãy giữ an toàn tệp `read-along-release.jks`, mật khẩu keystore, alias và mật khẩu key. Không commit tệp keystore vào Git.
+2. Trong GitHub repo, mở **Settings → Secrets and variables → Actions → New repository secret** và tạo:
+   - `ANDROID_KEYSTORE_BASE64`: nội dung Base64 vừa sao chép.
+   - `ANDROID_KEYSTORE_PASSWORD`: mật khẩu keystore.
+   - `ANDROID_KEY_ALIAS`: `readalong` (hoặc alias bạn đã chọn).
+   - `ANDROID_KEY_PASSWORD`: mật khẩu key.
+3. Từ đó mọi bản build phải dùng đúng keystore này. Nếu mất khóa hoặc đổi khóa, các bản đã cài có thể không cập nhật đè được.
+
+Khi người dùng đồng ý cập nhật, APK tải xuống bằng cầu nối Android native rồi mở trình cài đặt hệ thống. Android có thể yêu cầu cho phép cài ứng dụng từ nguồn này và luôn yêu cầu người dùng xác nhận cài đặt.
 
 ## Build và phát hành
 
