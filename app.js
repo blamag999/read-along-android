@@ -2255,7 +2255,17 @@ async function checkReadAlongUpdates() {
       (notes ? '\n\nThay đổi:\n' + notes : '') +
       '\n\nTải APK mới? Android sẽ yêu cầu xác nhận cài đặt. Bản mới cần cùng khóa ký với bản đang cài để cập nhật đè.';
     if (!confirm(message)) return;
-    window.location.href = asset.browser_download_url;
+    const nativeUpdater = window.Capacitor?.Plugins?.ApkUpdater;
+    if (nativeUpdater?.downloadAndInstall) {
+      showToast('Đang tải APK cập nhật…');
+      await nativeUpdater.downloadAndInstall({
+        url: asset.browser_download_url,
+        filename: asset.name
+      });
+    } else {
+      // Fallback for builds that do not include the native updater bridge.
+      window.location.href = asset.browser_download_url;
+    }
   } catch (error) {
     console.error('Update check failed:', error);
     alert('Không thể kiểm tra cập nhật: ' + (error.message || 'Lỗi mạng') + '\nHãy thử lại khi có kết nối Internet.');
