@@ -113,7 +113,13 @@ jobs:
           manifest = manifest_path.read_text(encoding='utf-8')
           if 'icon.png' not in manifest:
               raise SystemExit('manifest.json no longer references icon.png')
-          # Update generated Android resources to use the same launcher assets.
+          # Configure the generated Android manifest to use the generated launcher icons.
+          manifest_file = Path('android/app/src/main/AndroidManifest.xml')
+          xml = manifest_file.read_text(encoding='utf-8')
+          xml = xml.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/ic_launcher"')
+          if 'android:roundIcon=' not in xml:
+              xml = xml.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"', 1)
+          manifest_file.write_text(xml, encoding='utf-8')
           print(f'Generated Android launcher icons from {source} ({image.width}x{image.height})')
           PY
       - name: Install dependencies and integrate native updater
