@@ -17,8 +17,10 @@ const state = {
   // DANH SÁCH TẬP TRUYỆN (PLAYLIST)
   playlist: [],
   currentStoryIndex: -1,
-  activeFilter: 'paired', // Mac dinh chi hien tab co ca PDF & MP3
+  activeFilter: 'paired', // Mặc định chỉ hiện mục đủ PDF và MP3
   searchQuery: '',
+  playlistPage: 1,
+  playlistPageSize: 0,
 
   // Mốc thời gian: { [pageNumber]: timestampInSeconds } (CHỈ DÀNH RIÊNG CHO CUỐN HIỆN TẠI)
   pageTimestamps: {},
@@ -160,6 +162,10 @@ const dom = {
   txtPlaylistSearch: document.getElementById('txtPlaylistSearch'),
   playlistItemsList: document.getElementById('playlistItemsList'),
   playlistLoading: document.getElementById('playlistLoading'),
+  btnPlaylistPrevPage: document.getElementById('btnPlaylistPrevPage'),
+  btnPlaylistNextPage: document.getElementById('btnPlaylistNextPage'),
+  lblPlaylistPage: document.getElementById('lblPlaylistPage'),
+  playlistPagination: document.getElementById('playlistPagination'),
   btnExportR2Catalog: document.getElementById('btnExportR2Catalog'),
   r2PublicBaseInput: document.getElementById('r2PublicBaseInput'),
 
@@ -581,10 +587,11 @@ async function loadR2Catalog() {
     if (!stories.length) throw new Error('Danh mục books.json không có mục nào gồm PDF và MP3 hợp lệ.');
     state.playlist = stories;
     state.activeFilter = 'paired';
+    state.playlistPage = 1;
     updatePlaylistBadgeCount();
     renderPlaylistView();
-    dom.lblPlaylistSubtitle.textContent = stories.length + ' sách trên Cloudflare R2';
-    dom.playlistModal.classList.remove('hidden');
+    dom.lblPlaylistSubtitle.textContent = stories.length + ' mục trực tuyến';
+    openPlaylistModal();
     showToast('Đã tải ' + stories.length + ' sách từ R2.');
   } catch (error) {
     console.error('Không thể tải danh sách sách R2:', error);
@@ -755,6 +762,7 @@ function buildPlaylistFromItems(rawItems) {
   });
 
   state.playlist = playlistArray;
+  state.playlistPage = 1;
   updatePlaylistBadgeCount();
   renderPlaylistView();
 
@@ -763,7 +771,7 @@ function buildPlaylistFromItems(rawItems) {
     if (dom.lblPlaylistSubtitle) {
       dom.lblPlaylistSubtitle.textContent = 'Tìm thấy ' + playlistArray.length + ' tập truyện trong thư mục';
     }
-    dom.playlistModal.classList.remove('hidden');
+    openPlaylistModal();
     showToast('Đã nạp danh sách ' + playlistArray.length + ' tập truyện!');
   }
 }
@@ -783,6 +791,24 @@ function updatePlaylistBadgeCount() {
   }
 }
 
+function openPlaylistModal() {
+  dom.playlistModal.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    renderPlaylistView();
+    const firstCard = dom.playlistItemsList.querySelector('.playlist-card');
+    (firstCard || dom.btnClosePlaylist)?.focus({ preventScroll: true });
+  });
+}
+
+function updatePlaylistPagination(totalPages, totalItems) {
+  if (!dom.playlistPagination) return;
+  dom.playlistPagination.classList.toggle('hidden', totalItems === 0);
+  dom.btnPlaylistPrevPage.disabled = state.playlistPage <= 1;
+  dom.btnPlaylistNextPage.disabled = state.playlistPage >= totalPages;
+  dom.lblPlaylistPage.textContent = `Trang ${state.playlistPage} / ${totalPages} · ${totalItems} tập`;
+  dom.lblPlaylistPage.setAttribute('aria-label', `Trang ${state.playlistPage} trên ${totalPages}, ${totalItems} tập`);
+}
+
 function renderPlaylistView() {
   dom.playlistItemsList.replaceChildren();
   const fragment = document.createDocumentFragment();
@@ -795,7 +821,6 @@ function renderPlaylistView() {
       (story.audios.some(a => a.name.toLowerCase().includes(query)));
 
     if (!matchQuery) return false;
-
     if (filter === 'paired') return story.pdf && story.audios.length > 0;
     if (filter === 'pdf') return !!story.pdf;
     if (filter === 'mp3') return story.audios.length > 0;
@@ -806,70 +831,110 @@ function renderPlaylistView() {
 
   if (filtered.length === 0) {
     const empty = document.createElement('div');
-    empty.style.cssText = 'text-align:center;padding:30px;color:#94a3b8;';
+    empty.style.cssText = 'text-align:center;padding:30px 12px;color:#94a3b8;';
     empty.textContent = 'Không tìm thấy tập truyện nào phù hợp!';
     dom.playlistItemsList.appendChild(empty);
+    state.playlistPage = 1;
+    state.playlistPageSize = 0;
+    updatePlaylistPagination(1, 0);
     return;
   }
 
-  filtered.forEach((story, index) => {
-    const card = document.createElement('div');
-    const isPlaying = (state.currentBookKey === story.id);
-    card.className = `playlist-card ${isPlaying ? 'active-playing' : ''}`;
+  // Ước lượng số hàng theo chiều cao thực tế, sau đó giảm tiếp nếu nội dung tràn.
+  const listHeight = dom.playlistItemsList.clientHeight || Math.max(240, window.innerHeight - 240);
+  const compactLayout = window.innerWidth <= 560 || window.matchMedia('(orientation: portrait)').matches;
+  let pageSize = Math.max(1, Math.floor(listHeight / (compactLayout ? 58 : 48)));
+  let totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  state.playlistPage = Math.max(1, Math.min(state.playlistPage || 1, totalPages));
 
-    let tagsHtml = '';
-    if (story.pdf) {
-      tagsHtml += `<span class="mini-badge badge-pdf">📄 ${story.pdf.name}</span>`;
-    }
-    if (story.audios && story.audios.length > 0) {
-      story.audios.forEach((aud) => {
-        tagsHtml += `<span class="mini-badge badge-mp3">🎵 ${aud.name}</span>`;
-      });
-    }
+  function renderCurrentPage() {
+    dom.playlistItemsList.replaceChildren();
+    const pageStart = (state.playlistPage - 1) * pageSize;
+    const pageStories = filtered.slice(pageStart, pageStart + pageSize);
+    const pageFragment = document.createDocumentFragment();
 
-    // Audio parts buttons for multi-audio stories
-    var audioPartBtnsHtml = '';
-    if (story.audios && story.audios.length > 1) {
-      audioPartBtnsHtml = '<div class="card-audio-parts">';
-      story.audios.forEach(function(a, i) {
-        var lbl = a.partLabel || ('Phần ' + (i + 1));
-        audioPartBtnsHtml += '<button class="card-part-btn" data-partidx="' + i + '" title="' + a.name + '">' + lbl + '</button>';
-      });
-      audioPartBtnsHtml += '</div>';
-    }
+    pageStories.forEach((story, pageOffset) => {
+      const index = pageStart + pageOffset;
+      const card = document.createElement('div');
+      const isPlaying = (state.currentBookKey === story.id);
+      card.className = `playlist-card ${isPlaying ? 'active-playing' : ''}`;
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', `${index + 1}. ${story.title}. Mở tập`);
 
-    let coverHtml = '';
-    if (story.coverUrl) {
-      coverHtml = `<img src="${story.coverUrl}" class="card-cover" alt="Bìa" loading="lazy" onerror="this.style.display='none'">`;
-    }
+      let tagsHtml = '';
+      if (story.pdf) tagsHtml += `<span class="mini-badge badge-pdf">📄 ${story.pdf.name}</span>`;
+      if (story.audios && story.audios.length > 0) {
+        story.audios.forEach((aud) => {
+          tagsHtml += `<span class="mini-badge badge-mp3">🎵 ${aud.name}</span>`;
+        });
+      }
 
-    card.innerHTML =
-      coverHtml +
-      '<span class="apk-story-number">' + (index + 1) + '</span>' +
-      '<div class="card-title-col">' +
-        '<h4>' + (isPlaying ? '&#9654; ' : '') + story.title + '</h4>' +
-        '<div class="card-tags">' + tagsHtml + '</div>' +
-        audioPartBtnsHtml +
-      '</div>' +
-      '<button class="card-play-btn">' + (isPlaying ? 'Đang đọc' : '&#9654; Mở') + '</button>';
+      let audioPartBtnsHtml = '';
+      if (story.audios && story.audios.length > 1) {
+        audioPartBtnsHtml = '<div class="card-audio-parts">';
+        story.audios.forEach(function(a, i) {
+          const lbl = a.partLabel || ('Phần ' + (i + 1));
+          audioPartBtnsHtml += '<button class="card-part-btn" data-partidx="' + i + '" title="' + a.name + '">' + lbl + '</button>';
+        });
+        audioPartBtnsHtml += '</div>';
+      }
 
-    card.addEventListener('click', function(e) {
-      if (e.target.classList.contains('card-part-btn')) return;
-      loadStoryFromPlaylist(story, 0);
-      dom.playlistModal.classList.add('hidden');
-    });
-    card.querySelectorAll('.card-part-btn').forEach(function(btn) {
-      btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        var partIdx = parseInt(btn.getAttribute('data-partidx'), 10);
-        loadStoryFromPlaylist(story, partIdx);
+      let coverHtml = '';
+      if (story.coverUrl) {
+        coverHtml = `<img src="${story.coverUrl}" class="card-cover" alt="Bìa" loading="lazy" onerror="this.style.display='none'">`;
+      }
+
+      card.innerHTML =
+        coverHtml +
+        '<span class="apk-story-number">' + (index + 1) + '</span>' +
+        '<div class="card-title-col">' +
+          '<h4>' + (isPlaying ? '&#9654; ' : '') + story.title + '</h4>' +
+          '<div class="card-tags">' + tagsHtml + '</div>' +
+          audioPartBtnsHtml +
+        '</div>' +
+        '<button class="card-play-btn" type="button">' + (isPlaying ? 'Đang đọc' : '&#9654; Mở') + '</button>';
+
+      function openStory(partIndex) {
+        loadStoryFromPlaylist(story, partIndex || 0);
         dom.playlistModal.classList.add('hidden');
+      }
+      card.addEventListener('click', function(e) {
+        if (e.target.closest('.card-part-btn')) return;
+        openStory(0);
       });
-    });
+      card.addEventListener('keydown', function(e) {
+        if (e.target.closest('.card-part-btn')) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openStory(0);
+        }
+      });
+      card.querySelectorAll('.card-part-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          openStory(parseInt(btn.getAttribute('data-partidx'), 10));
+        });
+      });
 
-    fragment.appendChild(card);
-  });
-  dom.playlistItemsList.appendChild(fragment);
+      pageFragment.appendChild(card);
+    });
+    dom.playlistItemsList.appendChild(pageFragment);
+
+    // Một số hàng có nhiều phần âm thanh hoặc tiêu đề dài; tự giảm số mục để vừa khung.
+    if (dom.playlistItemsList.clientHeight > 0 &&
+        dom.playlistItemsList.scrollHeight > dom.playlistItemsList.clientHeight + 2 &&
+        pageSize > 1) {
+      pageSize -= 1;
+      totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+      state.playlistPage = Math.min(state.playlistPage, totalPages);
+      renderCurrentPage();
+    }
+  }
+
+  renderCurrentPage();
+  state.playlistPageSize = pageSize;
+  updatePlaylistPagination(totalPages, filtered.length);
 }
 
 // MỞ TRUYỆN TỪ PLAYLIST (TỰ ĐỘNG NẠP MỐC ĐÚNG CUỐN ĐÓ)
@@ -987,7 +1052,7 @@ function initEvents() {
 
   dom.btnOpenPlaylist.addEventListener('click', () => {
     if (state.playlist.length === 0) return;
-    dom.playlistModal.classList.remove('hidden');
+    openPlaylistModal();
   });
 
   if (dom.btnExportR2Catalog) dom.btnExportR2Catalog.addEventListener('click', exportR2CatalogFromPlaylist);
@@ -999,7 +1064,23 @@ function initEvents() {
 
   dom.txtPlaylistSearch.addEventListener('input', (e) => {
     state.searchQuery = e.target.value;
+    state.playlistPage = 1;
     renderPlaylistView();
+  });
+
+  dom.btnPlaylistPrevPage.addEventListener('click', () => {
+    if (state.playlistPage <= 1) return;
+    state.playlistPage -= 1;
+    renderPlaylistView();
+    dom.btnPlaylistPrevPage.focus({ preventScroll: true });
+  });
+  dom.btnPlaylistNextPage.addEventListener('click', () => {
+    state.playlistPage += 1;
+    renderPlaylistView();
+    dom.btnPlaylistNextPage.focus({ preventScroll: true });
+  });
+  window.addEventListener('resize', () => {
+    if (!dom.playlistModal.classList.contains('hidden')) renderPlaylistView();
   });
 
   document.querySelectorAll('.filter-tab').forEach(tab => {
@@ -1007,6 +1088,7 @@ function initEvents() {
       document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
       e.target.classList.add('active');
       state.activeFilter = e.target.getAttribute('data-filter');
+      state.playlistPage = 1;
       renderPlaylistView();
     });
   });
