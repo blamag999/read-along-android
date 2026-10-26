@@ -35,10 +35,10 @@ Workflow không tự chạy khi push hoặc sửa mã nguồn. Để tạo bản
 Workflow tự tăng số phiên bản vá dựa trên Release gần nhất (ví dụ `1.0.2` → `1.0.3`) và tạo changelog từ các commit kể từ Release trước. Nếu chưa có Release, phiên bản đầu tiên là `1.0.0`.
 
 Nếu build thành công, workflow tạo GitHub Release có tag `vVERSION` và đính kèm:
-- `read-along-vVERSION-android-debug.apk`
+- `read-along-vVERSION-android.apk` (APK release đã ký bằng khóa cố định)
 - `read-along-vVERSION-web-local.zip`
 
-Tên artifact cũng có số phiên bản. APK hiện là bản debug để cài thử, chưa phải APK ký phát hành cho Google Play. Không chạy lại cùng số phiên bản nếu release đã tồn tại.
+Tên artifact cũng có số phiên bản. APK là bản release đã ký bằng khóa riêng của dự án, dùng để cài thử và cập nhật đè giữa các bản build có cùng khóa. Đây chưa phải bản phát hành Google Play. Không mất hoặc thay đổi keystore vì Android sẽ từ chối cập nhật đè.
 
 ## Bảo mật R2
 
