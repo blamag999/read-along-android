@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pdf-audio-sync-v36-icon1';
+const CACHE_NAME = 'pdf-audio-sync-v37-playlist-pages';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
