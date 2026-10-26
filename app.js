@@ -140,6 +140,13 @@ const dom = {
   btnTwoPages: document.getElementById('btnTwoPages'),
   btnAutoFlipToggle: document.getElementById('btnAutoFlipToggle'),
   btnReloadMarkers: document.getElementById('btnReloadMarkers'),
+  btnOpenReadMenu: document.getElementById('btnOpenReadMenu'),
+  readOptionsMenu: document.getElementById('readOptionsMenu'),
+  menuTwoPages: document.getElementById('menuTwoPages'),
+  menuAutoFlip: document.getElementById('menuAutoFlip'),
+  menuReloadMarkers: document.getElementById('menuReloadMarkers'),
+  menuTwoPagesState: document.getElementById('menuTwoPagesState'),
+  menuAutoFlipState: document.getElementById('menuAutoFlipState'),
   btnZoomOut: document.getElementById('btnZoomOut'),
   btnZoomIn: document.getElementById('btnZoomIn'),
   lblZoomLevel: document.getElementById('lblZoomLevel'),
@@ -1039,8 +1046,39 @@ function initEvents() {
   dom.pdfFileInput.addEventListener('change', handlePdfFileSelect);
   dom.audioFileInput.addEventListener('change', handleAudioFileSelect);
 
-  dom.btnFitHeight.addEventListener('click', () => setViewMode(state.viewMode === 'two-pages' ? 'fit-height' : 'two-pages'));
+  dom.btnFitHeight.addEventListener('click', () => setViewMode('fit-height'));
   dom.btnTwoPages.addEventListener('click', () => setViewMode(state.viewMode === 'two-pages' ? 'fit-height' : 'two-pages'));
+  if (dom.btnOpenReadMenu && dom.readOptionsMenu) {
+    dom.btnOpenReadMenu.addEventListener('click', () => {
+      const isOpen = !dom.readOptionsMenu.classList.contains('hidden');
+      dom.readOptionsMenu.classList.toggle('hidden', isOpen);
+      dom.btnOpenReadMenu.setAttribute('aria-expanded', String(!isOpen));
+    });
+    document.addEventListener('click', (event) => {
+      if (!dom.readOptionsMenu.contains(event.target) && !dom.btnOpenReadMenu.contains(event.target)) {
+        dom.readOptionsMenu.classList.add('hidden');
+        dom.btnOpenReadMenu.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+  if (dom.menuTwoPages) dom.menuTwoPages.addEventListener('click', () => {
+    setViewMode(state.viewMode === 'two-pages' ? 'fit-height' : 'two-pages');
+    updateReadMenuState();
+  });
+  if (dom.menuAutoFlip) dom.menuAutoFlip.addEventListener('click', () => {
+    if (dom.btnAutoFlipToggle) dom.btnAutoFlipToggle.click();
+    else {
+      state.pageTurnMode = state.pageTurnMode === 'next' ? 'off' : 'next';
+      dom.selPageTurnMode.value = state.pageTurnMode;
+  updateReadMenuState();
+    }
+    updateReadMenuState();
+  });
+  if (dom.menuReloadMarkers) dom.menuReloadMarkers.addEventListener('click', () => {
+    reloadCurrentBookFromGitHub();
+    dom.readOptionsMenu.classList.add('hidden');
+    dom.btnOpenReadMenu.setAttribute('aria-expanded', 'false');
+  });
   if (dom.btnAutoFlipToggle) {
     dom.btnAutoFlipToggle.addEventListener('click', () => {
       const enabled = state.pageTurnMode !== 'next';
@@ -1049,6 +1087,7 @@ function initEvents() {
       dom.btnAutoFlipToggle.classList.toggle('active', enabled);
       dom.btnAutoFlipToggle.setAttribute('aria-pressed', String(enabled));
       dom.btnAutoFlipToggle.title = enabled ? 'Tự động lật trang: bật' : 'Tự động lật trang: tắt';
+      updateReadMenuState();
       showToast(enabled ? 'Đã bật tự động lật trang theo mốc.' : 'Đã tắt tự động lật trang.');
     });
   }
@@ -2097,3 +2136,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // Tự tải danh sách sách ngay khi mở ứng dụng.
   loadR2Catalog();
 });
+
+
+// Đồng bộ trạng thái hiển thị của các lựa chọn trong menu đọc sách.
+function updateReadMenuState() {
+  if (dom.menuTwoPages) {
+    const enabled = state.viewMode === 'two-pages';
+    dom.menuTwoPages.classList.toggle('is-on', enabled);
+    dom.menuTwoPages.setAttribute('aria-pressed', String(enabled));
+    if (dom.menuTwoPagesState) dom.menuTwoPagesState.textContent = enabled ? 'Bật' : 'Tắt';
+  }
+  if (dom.menuAutoFlip) {
+    const enabled = state.pageTurnMode === 'next';
+    dom.menuAutoFlip.classList.toggle('is-on', enabled);
+    dom.menuAutoFlip.setAttribute('aria-pressed', String(enabled));
+    if (dom.menuAutoFlipState) dom.menuAutoFlipState.textContent = enabled ? 'Bật' : 'Tắt';
+  }
+}
