@@ -1107,7 +1107,12 @@ function loadAudioPart(index, options = {}) {
     dom.audioElement.addEventListener('loadedmetadata', function restoreSelectedPart() {
       dom.audioElement.removeEventListener('loadedmetadata', restoreSelectedPart);
       if (state.audioLoadRequestId !== requestId || state.currentAudioIndex !== clampedIdx) return;
-      applyPendingAudioSessionRestore();
+      // Let the source's own loadedmetadata handler finish resetting time first.
+      setTimeout(() => {
+        if (state.audioLoadRequestId === requestId && state.currentAudioIndex === clampedIdx) {
+          applyPendingAudioSessionRestore();
+        }
+      }, 0);
     });
   }
 
