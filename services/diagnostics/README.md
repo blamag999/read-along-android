@@ -14,15 +14,25 @@ This service creates a public GitHub Issue only after an explicit user action an
 
 ## Deploy
 
-1. Create a Cloudflare Turnstile widget for the app's actual origins. Use managed mode. Copy its **site key** (public) and **secret key** (private).
-2. Install Wrangler and authenticate with the Cloudflare account that owns the Worker.
-3. From this directory run `npx wrangler deploy`.
-4. Set the GitHub fine-grained token: `npx wrangler secret put GITHUB_TOKEN`.
-5. Set the Turnstile secret: `npx wrangler secret put TURNSTILE_SECRET`.
-6. In Worker Settings > Variables, set `TURNSTILE_SITE_KEY` to the public site key and `RATE_LIMIT_SALT` to a long random value. Keep the Turnstile secret and GitHub token in Secrets, not Variables.
-7. In repository root `diagnostics-config.js`, set `window.READ_ALONG_DIAGNOSTICS_API` to the deployed Worker base URL, e.g. `https://read-along-diagnostics.<your-subdomain>.workers.dev`. This is a public URL, not a credential.
-8. Test first with a test repository/token if desired, because each successful report creates a public Issue. The service deliberately does not apply labels, so issue creation does not depend on label configuration.
-9. Build the APK using GitHub Actions on branch `beta`, channel `beta`.
+### Automated deployment (recommended)
+
+1. Create a Cloudflare Turnstile widget for the app's actual origins. Use managed mode. Copy its **site key** and **secret key**.
+2. Create a Cloudflare API token with the minimum Workers deployment permissions described in the repository's deployment instructions, and obtain the Cloudflare Account ID.
+3. In GitHub repository **Settings → Secrets and variables → Actions**, add these repository secrets (never commit or paste their values into source files):
+   - `CLOUDFLARE_API_TOKEN`: Cloudflare API token.
+   - `CLOUDFLARE_ACCOUNT_ID`: Cloudflare Account ID.
+   - `READ_ALONG_ISSUES_TOKEN`: GitHub fine-grained token scoped to this repository with **Issues: Read and write** only.
+   - `TURNSTILE_SECRET`: Turnstile secret key.
+   - `TURNSTILE_SITE_KEY`: Turnstile site key (public, but stored as a secret here to simplify setup).
+   - `RATE_LIMIT_SALT`: a long random deployment-specific value.
+4. Open **Actions → Deploy diagnostics Worker → Run workflow**. Select branch `beta` and run it. It deploys the Worker and Durable Object, then configures the four Worker secrets.
+5. Copy the deployed Worker URL from the deployment log. In repository root `diagnostics-config.js`, set `window.READ_ALONG_DIAGNOSTICS_API` to that base URL, e.g. `https://read-along-diagnostics.<your-subdomain>.workers.dev`. This is a public URL, not a credential.
+6. Commit that URL change to `beta`, then build the APK using GitHub Actions on branch `beta`, channel `beta`.
+7. Test report submission carefully: every successful report creates a public Issue. The service deliberately does not apply labels, so issue creation does not depend on label configuration.
+
+### Manual deployment
+
+If you prefer not to use GitHub Actions, install Wrangler, authenticate with the Cloudflare account that owns the Worker, and run `npx wrangler deploy` from this directory. Configure the Worker secrets and variables before testing.
 
 ## Local tests
 
