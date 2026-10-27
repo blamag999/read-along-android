@@ -2638,6 +2638,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const apiBase = String(window.READ_ALONG_DIAGNOSTICS_API || '').trim().replace(/\/$/, '');
   const modal = document.getElementById('diagnosticsModal');
   const status = document.getElementById('diagnosticsStatus');
+  const serviceCard = document.getElementById('diagnosticsServiceCard');
+  const serviceStatus = document.getElementById('diagnosticsServiceStatus');
+  const serviceIcon = document.getElementById('diagnosticsServiceIcon');
   const submit = document.getElementById('btnSubmitDiagnostics');
   const consent = document.getElementById('chkDiagnosticsConsent');
   const turnstileBox = document.getElementById('diagnosticsTurnstile');
@@ -2691,6 +2694,15 @@ document.addEventListener('DOMContentLoaded', () => {
   record('app.started');
   try { window.Capacitor?.Plugins?.Diagnostics?.markWebViewReady?.(); } catch (_) {}
 
+  function setServiceStatus(message, stateName = 'checking') {
+    if (serviceStatus) serviceStatus.textContent = message;
+    if (serviceCard) {
+      serviceCard.classList.remove('is-checking', 'is-connected', 'is-error');
+      serviceCard.classList.add(stateName === 'connected' ? 'is-connected' : stateName === 'error' ? 'is-error' : 'is-checking');
+    }
+    if (serviceIcon) serviceIcon.textContent = stateName === 'connected' ? '✓' : stateName === 'error' ? '!' : '…';
+  }
+
   function safeNativePlugin() { return window.Capacitor?.Plugins?.Diagnostics || null; }
   async function getNativeLogs() {
     const plugin = safeNativePlugin();
@@ -2726,7 +2738,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function loadTurnstile() {
     if (!apiBase) {
-      status.textContent = 'Dịch vụ chưa được cấu hình. Bạn vẫn có thể xuất log ra tệp.';
+      setServiceStatus('Chưa cấu hình địa chỉ dịch vụ. Bạn vẫn có thể xuất log ra tệp.', 'error');
+      status.textContent = 'Không thể gửi báo lỗi trực tuyến cho đến khi cấu hình dịch vụ.';
       return Promise.resolve(false);
     }
     if (turnstileLoading) return turnstileLoading;
@@ -2744,7 +2757,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 'expired-callback': () => { status.textContent = 'Xác minh đã hết hạn. Hãy hoàn thành thử thách lại trước khi gửi.'; },
                 'error-callback': () => { status.textContent = 'Không thể xác minh. Hãy thử lại thử thách hoặc xuất log ra tệp.'; }
               });
-              status.textContent = 'Đã tải bảo vệ chống spam. Hoàn thành xác minh rồi chọn đồng ý gửi.';
+              setServiceStatus('Đã kết nối dịch vụ và tải được bảo vệ chống spam.', 'connected');
+              status.textContent = 'Hoàn thành xác minh chống spam, đánh dấu đồng ý gửi log rồi nhấn nút gửi.';
               resolve(true);
             } catch (e) { reject(e); }
           };
@@ -2760,12 +2774,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }).catch((error) => {
         const reason = String(error?.message || '');
         if (reason.startsWith('config_http_')) {
-          status.textContent = 'Dịch vụ chẩn đoán phản hồi HTTP ' + reason.slice('config_http_'.length) + '. Hãy kiểm tra cấu hình Worker.';
+          setServiceStatus('Dịch vụ phản hồi HTTP ' + reason.slice('config_http_'.length) + '. Cần kiểm tra cấu hình Worker.', 'error');
         } else if (reason === 'turnstile_script_load_failed') {
-          status.textContent = 'Dịch vụ chẩn đoán đã phản hồi nhưng không tải được Cloudflare Turnstile. Hãy kiểm tra kết nối mạng hoặc chặn nội dung.';
+          setServiceStatus('Worker phản hồi nhưng không tải được Cloudflare Turnstile. Kiểm tra mạng, CSP hoặc trình chặn nội dung.', 'error');
         } else {
-          status.textContent = 'Không kết nối được dịch vụ chẩn đoán (' + (reason || 'lỗi mạng/CORS') + '). Bạn vẫn có thể xuất log ra tệp.';
+          setServiceStatus('Không kết nối được dịch vụ (' + (reason || 'lỗi mạng/CORS') + '). Bạn vẫn có thể xuất log ra tệp.', 'error');
         }
+        status.textContent = 'Chưa thể gửi báo lỗi trực tuyến. Hãy thử lại sau hoặc xuất log ra tệp.';
         return false;
       });
     return turnstileLoading;
@@ -2774,6 +2789,8 @@ document.addEventListener('DOMContentLoaded', () => {
     snapshot('diagnostics.open');
     modal?.classList.remove('hidden');
     if (submit) submit.disabled = false;
+    setServiceStatus('Đang kiểm tra kết nối dịch vụ…', 'checking');
+    status.textContent = 'Hoàn thành xác minh chống spam, đánh dấu đồng ý gửi log rồi nhấn nút gửi.';
     await loadTurnstile();
   });
   document.getElementById('btnCloseDiagnostics')?.addEventListener('click', () => modal?.classList.add('hidden'));
