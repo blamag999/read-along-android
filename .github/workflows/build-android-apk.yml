@@ -156,21 +156,17 @@ jobs:
           source = main.read_text()
           marker = 'public class MainActivity extends BridgeActivity {'
           if marker not in source: raise SystemExit('Could not locate MainActivity class declaration')
-          # Register plugins and record creation only. BridgeActivity lifecycle hooks
-          # are final in this Capacitor version, so don't override resume/pause/destroy.
+          # Keep only onCreate. BridgeActivity makes resume/pause/destroy final.
           if 'ApkUpdaterPlugin.class' not in source:
-              injected = marker + """
-              @Override
-              public void onCreate(android.os.Bundle savedInstanceState) {
-                  registerPlugin(ApkUpdaterPlugin.class);
-                  registerPlugin(DiagnosticsPlugin.class);
-                  DiagnosticsPlugin.recordLifecycle(this, "Activity.onCreate");
-                  super.onCreate(savedInstanceState);
-              }"""
+              injected = marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);\n        DiagnosticsPlugin.recordLifecycle(this, "Activity.onCreate");\n        super.onCreate(savedInstanceState);\n    }'
               source = source.replace(marker, injected, 1)
               main.write_text(source)
-          elif 'DiagnosticsPlugin.class' not in source:
-              source = source.replace('registerPlugin(ApkUpdaterPlugin.class);', 'registerPlugin(ApkUpdaterPlugin.class);\\n        registerPlugin(DiagnosticsPlugin.class);', 1)
+          else:
+              # Remove old lifecycle override injection if this generator block is reused.
+              import re
+              source = re.sub(r'\s*@Override\s+protected void onResume\(\)\s*\{[^}]*\}\s*@Override\s+protected void onPause\(\)\s*\{[^}]*\}\s*@Override\s+protected void onDestroy\(\)\s*\{[^}]*\}', '', source, flags=re.S)
+              if 'DiagnosticsPlugin.class' not in source:
+                  source = source.replace('registerPlugin(ApkUpdaterPlugin.class);', 'registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);', 1)
               main.write_text(source)
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           xml = manifest.read_text()
