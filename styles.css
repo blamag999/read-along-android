@@ -2550,3 +2550,99 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
   .controls-row #btnReplayPage { height: 30px; min-height: 30px; }
   .controls-row #btnPlayPause { height: 34px; min-height: 34px; font-size: 1.05rem; }
 }
+
+
+/*
+ * Beta fix: keep the six audio controls in one row and restore circular buttons.
+ * These final rules intentionally override older responsive rules above.
+ */
+.app-ui-mode .controls-row,
+.apk-mode .controls-row,
+.controls-row {
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  align-items: center !important;
+  justify-items: center !important;
+  justify-content: center !important;
+  flex-wrap: nowrap !important;
+  width: 100%;
+  max-width: 420px;
+  margin-inline: auto;
+  gap: clamp(3px, 1.2vw, 8px) !important;
+  padding: 2px 0 !important;
+  overflow: visible;
+}
+
+.controls-row .ctrl-btn,
+.controls-row #btnPrevPage,
+.controls-row #btnNextPage,
+.controls-row #btnRewind5,
+.controls-row #btnForward5,
+.controls-row #btnReplayPage {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  justify-self: center !important;
+  width: clamp(32px, 9vw, 46px) !important;
+  min-width: 0 !important;
+  max-width: 46px !important;
+  height: clamp(32px, 9vw, 46px) !important;
+  min-height: 0 !important;
+  max-height: 46px !important;
+  aspect-ratio: 1 / 1 !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  white-space: nowrap !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  font-size: clamp(.9rem, 3.5vw, 1.2rem) !important;
+}
+
+.controls-row #btnPlayPause,
+.controls-row #btnPlayPause.is-playing {
+  width: clamp(36px, 10vw, 48px) !important;
+  min-width: 0 !important;
+  max-width: 48px !important;
+  height: clamp(36px, 10vw, 48px) !important;
+  min-height: 0 !important;
+  max-height: 48px !important;
+  border-radius: 50% !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  justify-self: center !important;
+  padding: 0 !important;
+}
+
+.controls-row #btnReplayPage .replay-page-text {
+  display: none !important;
+}
+
+.controls-row #btnReplayPage .replay-page-icon {
+  display: inline !important;
+  font-size: inherit !important;
+}
+
+@media (max-width: 360px) {
+  .controls-row,
+  .app-ui-mode .controls-row,
+  .apk-mode .controls-row {
+    gap: 2px !important;
+  }
+
+  .controls-row .ctrl-btn,
+  .controls-row #btnPrevPage,
+  .controls-row #btnNextPage,
+  .controls-row #btnRewind5,
+  .controls-row #btnForward5,
+  .controls-row #btnReplayPage {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .controls-row #btnPlayPause,
+  .controls-row #btnPlayPause.is-playing {
+    width: 34px !important;
+    height: 34px !important;
+  }
+}
