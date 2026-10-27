@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pdf-audio-sync-v40-security-render-stability';
+const CACHE_NAME = 'pdf-audio-sync-v41-diagnostics';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

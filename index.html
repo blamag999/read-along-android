@@ -55,6 +55,7 @@
         <div class="read-menu-version" aria-label="Phiên bản ứng dụng đang cài">
           <span class="menu-option-icon">ⓘ</span><span>Phiên bản đang cài</span><strong id="installedAppVersion">Đang tải…</strong>
         </div>
+        <button id="menuDiagnostics" class="read-menu-option" type="button"><span class="menu-option-icon">🛡️</span><span>Chẩn đoán / Báo lỗi</span></button>
         <button id="menuCheckUpdates" class="read-menu-option hidden" type="button"><span class="menu-option-icon">⬇</span><span>Kiểm tra cập nhật</span></button>
       </div>
       <button id="btnReloadMarkers" class="icon-btn apk-icon-button hidden" type="button" title="Tải mốc thời gian mới nhất từ GitHub" aria-label="Tải mốc thời gian mới nhất từ GitHub">⟳</button>
@@ -321,6 +322,30 @@
     </div>
   </div>
 
+  <!-- MODAL CHẨN ĐOÁN: chỉ gửi sau khi người dùng chủ động xác nhận -->
+  <div id="diagnosticsModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="diagnosticsTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="diagnosticsTitle">🛡️ Chẩn đoán và báo lỗi</h3>
+        <button id="btnCloseDiagnostics" class="close-btn" type="button" aria-label="Đóng">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">Ghi nhận sự kiện audio, PDF, xoay màn hình và vòng đời Activity/WebView để tìm nguyên nhân lỗi. Không ghi nội dung sách, tên tệp, đường dẫn, URL audio, token hoặc thông tin tài khoản.</p>
+        <p id="diagnosticsStatus" class="modal-desc" role="status">Đang kiểm tra dịch vụ…</p>
+        <div id="diagnosticsTurnstile" style="margin:12px 0;"></div>
+        <label style="display:flex;gap:8px;align-items:flex-start;margin:12px 0;">
+          <input id="chkDiagnosticsConsent" type="checkbox">
+          <span>Tôi đồng ý gửi log đã lọc tới dịch vụ chẩn đoán và tạo một GitHub Issue công khai. Không gửi nếu log có thông tin riêng tư.</span>
+        </label>
+        <div class="sync-actions-row">
+          <button id="btnExportDiagnostics" class="btn-secondary" type="button">📥 Xuất log ra tệp</button>
+          <button id="btnSubmitDiagnostics" class="btn-primary" type="button" disabled>🔒 Xác minh và gửi báo lỗi</button>
+        </div>
+        <p class="modal-desc">Chống spam bằng Turnstile và giới hạn gửi theo IP ở dịch vụ trung gian. Log được lọc lại lần nữa trên máy chủ trước khi đưa vào Issue. GitHub Issue của kho này công khai.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST THÔNG BÁO -->
   <div id="toastMessage" class="toast-message hidden"></div>
 
@@ -328,6 +353,7 @@
     // Dùng cùng giao diện gọn trên APK và Web Local để dễ kiểm tra nhất quán.
     document.documentElement.classList.add('app-ui-mode');
   </script>
+  <script src="diagnostics-config.js"></script>
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

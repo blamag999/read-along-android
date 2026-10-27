@@ -2620,3 +2620,188 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.menuCheckUpdates.addEventListener('click', checkReadAlongUpdates);
   }
 });
+
+
+// =======================================================
+// CHẨN ĐOÁN BẢO MẬT: chỉ ghi metadata tối thiểu, không ghi nội dung/tên tệp/URL
+// =======================================================
+(() => {
+  const MAX_EVENTS = 350;
+  const events = [];
+  let lastOrientation = '';
+  let turnstileWidgetId = null;
+  let turnstileLoading = null;
+  let diagnosticsConfig = null;
+  const apiBase = String(window.READ_ALONG_DIAGNOSTICS_API || '').trim().replace(/\/$/, '');
+  const modal = document.getElementById('diagnosticsModal');
+  const status = document.getElementById('diagnosticsStatus');
+  const submit = document.getElementById('btnSubmitDiagnostics');
+  const consent = document.getElementById('chkDiagnosticsConsent');
+  const turnstileBox = document.getElementById('diagnosticsTurnstile');
+  const safeEventNames = new Set([
+    'app.started','audio.play','audio.pause','audio.ended','audio.waiting','audio.stalled',
+    'audio.seeking','audio.seeked','audio.error','audio.metadata','pdf.render.start',
+    'pdf.render.end','pdf.render.error','viewport.change','orientation.change',
+    'document.hidden','window.error','promise.rejection','diagnostics.open'
+  ]);
+  function record(name, details = {}) {
+    if (!safeEventNames.has(name)) return;
+    const item = { at: new Date().toISOString(), event: name };
+    if (Number.isFinite(details.page)) item.page = Math.max(0, Math.min(100000, Math.trunc(details.page)));
+    if (Number.isFinite(details.time)) item.audioTime = Math.round(Math.max(0, Math.min(864000, details.time)) * 10) / 10;
+    if (typeof details.paused === 'boolean') item.paused = details.paused;
+    if (typeof details.readyState === 'number') item.readyState = Math.max(0, Math.min(4, details.readyState));
+    if (typeof details.duration === 'number' && Number.isFinite(details.duration)) item.duration = Math.round(Math.max(0, Math.min(864000, details.duration)) * 10) / 10;
+    if (details.orientation) item.orientation = details.orientation;
+    events.push(item);
+    if (events.length > MAX_EVENTS) events.splice(0, events.length - MAX_EVENTS);
+  }
+  function audioState() {
+    const a = document.getElementById('audioElement');
+    const pageEl = document.getElementById('lblCurrentPage');
+    const page = Number(pageEl?.textContent);
+    return {
+      page: Number.isFinite(page) ? page : 0,
+      time: Number.isFinite(a?.currentTime) ? a.currentTime : 0,
+      paused: a ? a.paused : true,
+      readyState: a ? a.readyState : 0,
+      duration: Number.isFinite(a?.duration) ? a.duration : 0
+    };
+  }
+  function snapshot(name, extra = {}) { record(name, { ...audioState(), ...extra }); }
+  const audio = document.getElementById('audioElement');
+  if (audio) {
+    for (const name of ['play','pause','ended','waiting','stalled','seeking','seeked','error','loadedmetadata']) {
+      audio.addEventListener(name, () => snapshot(name === 'loadedmetadata' ? 'audio.metadata' : 'audio.' + name), { passive: true });
+    }
+  }
+  window.addEventListener('orientationchange', () => {
+    lastOrientation = (screen.orientation && screen.orientation.type) || 'unknown';
+    snapshot('orientation.change', { orientation: lastOrientation });
+  }, { passive: true });
+  window.addEventListener('resize', () => snapshot('viewport.change', { orientation: (screen.orientation && screen.orientation.type) || 'unknown' }), { passive: true });
+  window.visualViewport?.addEventListener('resize', () => snapshot('viewport.change', { orientation: (screen.orientation && screen.orientation.type) || 'unknown' }), { passive: true });
+  document.addEventListener('visibilitychange', () => snapshot('document.hidden', { orientation: document.hidden ? 'hidden' : 'visible' }));
+  window.addEventListener('error', () => record('window.error'));
+  window.addEventListener('unhandledrejection', () => record('promise.rejection'));
+  record('app.started');
+
+  function safeNativePlugin() { return window.Capacitor?.Plugins?.Diagnostics || null; }
+  async function getNativeLogs() {
+    const plugin = safeNativePlugin();
+    if (!plugin?.getLogs) return { available: false, lines: [] };
+    try {
+      const result = await plugin.getLogs();
+      return { available: true, lines: Array.isArray(result.lines) ? result.lines.slice(-250).map(String) : [] };
+    } catch (_) { return { available: false, lines: [] }; }
+  }
+  function makeReport(nativeResult) {
+    const version = document.querySelector('meta[name="app-version"]')?.content || 'unknown';
+    const platform = window.Capacitor?.getPlatform?.() || 'web';
+    return {
+      schemaVersion: 1,
+      app: 'Read Along',
+      version: /^[0-9A-Za-z.+-]{1,40}$/.test(version) ? version : 'unknown',
+      platform: ['android','ios','web'].includes(platform) ? platform : 'other',
+      generatedAt: new Date().toISOString(),
+      viewport: { width: Math.min(10000, window.innerWidth || 0), height: Math.min(10000, window.innerHeight || 0), orientation: (screen.orientation && screen.orientation.type) || 'unknown' },
+      current: audioState(),
+      events: events.slice(-MAX_EVENTS),
+      nativeLifecycleAvailable: nativeResult.available,
+      nativeLifecycle: nativeResult.lines
+    };
+  }
+  function downloadText(name, content) {
+    const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  function loadTurnstile() {
+    if (!apiBase) {
+      status.textContent = 'Dịch vụ chưa được cấu hình. Bạn vẫn có thể xuất log ra tệp.';
+      return Promise.resolve(false);
+    }
+    if (turnstileLoading) return turnstileLoading;
+    turnstileLoading = fetch(apiBase + '/config', { method: 'GET', mode: 'cors', cache: 'no-store' })
+      .then(r => { if (!r.ok) throw new Error('config'); return r.json(); })
+      .then(cfg => {
+        if (!cfg.siteKey) throw new Error('sitekey');
+        diagnosticsConfig = cfg;
+        return new Promise((resolve, reject) => {
+          const render = () => {
+            try {
+              turnstileWidgetId = window.turnstile.render(turnstileBox, {
+                sitekey: cfg.siteKey, action: 'read_along_diagnostics',
+                callback: () => { if (submit) submit.disabled = !consent?.checked; },
+                'expired-callback': () => { if (submit) submit.disabled = true; },
+                'error-callback': () => { status.textContent = 'Không thể xác minh. Hãy thử tải lại thử thách.'; if (submit) submit.disabled = true; }
+              });
+              status.textContent = 'Đã tải bảo vệ chống spam. Hoàn thành xác minh rồi chọn đồng ý gửi.';
+              resolve(true);
+            } catch (e) { reject(e); }
+          };
+          if (window.turnstile) render();
+          else {
+            const script = document.createElement('script');
+            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+            script.async = true; script.defer = true;
+            script.onload = render; script.onerror = () => reject(new Error('turnstile'));
+            document.head.appendChild(script);
+          }
+        });
+      }).catch(() => {
+        status.textContent = 'Không kết nối được dịch vụ chẩn đoán. Bạn vẫn có thể xuất log ra tệp.';
+        return false;
+      });
+    return turnstileLoading;
+  }
+  document.getElementById('menuDiagnostics')?.addEventListener('click', async () => {
+    snapshot('diagnostics.open');
+    modal?.classList.remove('hidden');
+    if (submit) submit.disabled = true;
+    await loadTurnstile();
+  });
+  document.getElementById('btnCloseDiagnostics')?.addEventListener('click', () => modal?.classList.add('hidden'));
+  modal?.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
+  consent?.addEventListener('change', () => {
+    if (submit) submit.disabled = !(consent.checked && turnstileWidgetId !== null && window.turnstile?.getResponse?.(turnstileWidgetId));
+  });
+  document.getElementById('btnExportDiagnostics')?.addEventListener('click', async () => {
+    const report = makeReport(await getNativeLogs());
+    downloadText('read-along-diagnostics-' + new Date().toISOString().replace(/[:.]/g,'-') + '.json', JSON.stringify(report, null, 2));
+    status.textContent = 'Đã tạo tệp log. Kiểm tra lại nội dung trước khi chia sẻ.';
+  });
+  submit?.addEventListener('click', async () => {
+    if (!apiBase || !diagnosticsConfig || !consent?.checked || !window.turnstile?.getResponse?.(turnstileWidgetId)) {
+      status.textContent = 'Cần cấu hình dịch vụ, hoàn thành xác minh và đồng ý gửi.';
+      return;
+    }
+    submit.disabled = true;
+    status.textContent = 'Đang lọc và gửi log đã xác nhận…';
+    try {
+      const report = makeReport(await getNativeLogs());
+      const response = await fetch(apiBase + '/report', {
+        method: 'POST', mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ turnstileToken: window.turnstile.getResponse(turnstileWidgetId), report })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'Gửi báo lỗi thất bại (HTTP ' + response.status + ').');
+      status.textContent = 'Đã tạo Issue: ' + result.issueUrl;
+      if (result.issueUrl && /^https:\/\/github\.com\/blamag999\/read-along-android\/issues\/\d+$/.test(result.issueUrl)) {
+        const link = document.createElement('a'); link.href = result.issueUrl; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'Mở GitHub Issue';
+        status.appendChild(document.createTextNode(' ')); status.appendChild(link);
+      }
+      if (window.turnstile && turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId);
+      consent.checked = false;
+    } catch (error) {
+      status.textContent = String(error.message || 'Không thể gửi báo lỗi. Hãy xuất log ra tệp.');
+      if (window.turnstile && turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId);
+    } finally {
+      submit.disabled = true;
+    }
+  });
+})();

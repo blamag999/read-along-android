@@ -144,6 +144,7 @@ jobs:
           npx cap add android
           mkdir -p android/app/src/main/java/com/blamag999/readalong android/app/src/main/res/xml
           cp native/android/ApkUpdaterPlugin.java android/app/src/main/java/com/blamag999/readalong/ApkUpdaterPlugin.java
+          cp native/android/DiagnosticsPlugin.java android/app/src/main/java/com/blamag999/readalong/DiagnosticsPlugin.java
           cp native/android/file_paths.xml android/app/src/main/res/xml/file_paths.xml
           python3 - <<'PY'
           from pathlib import Path
@@ -156,7 +157,12 @@ jobs:
           if 'ApkUpdaterPlugin.class' not in source:
               marker = 'public class MainActivity extends BridgeActivity {'
               if marker not in source: raise SystemExit('Could not register ApkUpdaterPlugin in MainActivity')
-              source = source.replace(marker, marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        super.onCreate(savedInstanceState);\n    }', 1)
+              source = source.replace(marker, marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);\n        DiagnosticsPlugin.recordLifecycle(this, \'Activity.onCreate\');\n        super.onCreate(savedInstanceState);\n    }', 1)
+              main.write_text(source)
+          # Add Activity lifecycle markers without logging user content or file paths.
+          source = main.read_text()
+          if 'Activity.onResume' not in source:
+              source = source.replace('public class MainActivity extends BridgeActivity {', 'public class MainActivity extends BridgeActivity {\n    @Override protected void onResume() { super.onResume(); DiagnosticsPlugin.recordLifecycle(this, "Activity.onResume"); }\n    @Override protected void onPause() { DiagnosticsPlugin.recordLifecycle(this, "Activity.onPause"); super.onPause(); }\n    @Override protected void onDestroy() { DiagnosticsPlugin.recordLifecycle(this, "Activity.onDestroy"); super.onDestroy(); }', 1)
               main.write_text(source)
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           xml = manifest.read_text()
