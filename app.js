@@ -40,12 +40,85 @@ const state = {
   // MULTI-AUDIO STATE
   currentAudioIndex: 0,   // Phần âm thanh đang phát trong currentStoryAudios
   currentStoryAudios: [], // Danh sách các phần âm thanh của truyện đang mở
-  pdfSelectionInProgress: false
+  pdfSelectionInProgress: false,
+  sessionRestorePending: false,
+  lastSessionSaveAt: 0
 };
 
 // =======================================================
 // INDEXEDDB THƯ VIỆN SÁCH (CÁCH LY DỮ LIỆU TỪNG CUỐN)
 // =======================================================
+const READING_SESSION_KEY = 'read_along_reading_session_v1';
+const FAVORITES_KEY = 'read_along_favorites_v1';
+
+function readJsonStorage(key, fallback) {
+  try { const value = JSON.parse(localStorage.getItem(key) || 'null'); return value == null ? fallback : value; }
+  catch (_) { return fallback; }
+}
+function getFavoriteBooks() {
+  const value = readJsonStorage(FAVORITES_KEY, []);
+  return Array.isArray(value) ? value.filter(item => typeof item === 'string') : [];
+}
+function toggleFavoriteBook(bookId) {
+  if (!bookId) return;
+  const favorites = getFavoriteBooks();
+  const next = favorites.includes(bookId) ? favorites.filter(id => id !== bookId) : [...favorites, bookId];
+  try { localStorage.setItem(FAVORITES_KEY, JSON.stringify(next)); } catch (_) {}
+  renderPlaylistView();
+}
+function saveReadingSession(force = false) {
+  if (!state.currentBookKey || !state.pdfDoc) return;
+  const now = Date.now();
+  if (!force && now - state.lastSessionSaveAt < 5000) return;
+  state.lastSessionSaveAt = now;
+  const session = {
+    bookKey: state.currentBookKey, page: state.pageNum, audioIndex: state.currentAudioIndex,
+    audioTime: Number.isFinite(dom.audioElement.currentTime) ? Math.max(0, dom.audioElement.currentTime) : 0,
+    viewMode: state.viewMode, zoomScale: state.zoomScale, pageTurnMode: state.pageTurnMode,
+    autoSeekAudio: state.autoSeekAudio, updatedAt: now
+  };
+  try { localStorage.setItem(READING_SESSION_KEY, JSON.stringify(session)); } catch (_) {}
+}
+function restoreReadingSessionForCurrentBook() {
+  const session = readJsonStorage(READING_SESSION_KEY, null);
+  if (!session || session.bookKey !== state.currentBookKey) return null;
+  if (Number.isInteger(session.page) && session.page >= 1 && session.page <= state.totalPages) state.pageNum = session.page;
+  if (['fit-height', 'fit-width', 'two-pages'].includes(session.viewMode)) {
+    state.viewMode = session.viewMode;
+    dom.canvasWrapper.classList.toggle('two-page-mode', state.viewMode === 'two-pages');
+    dom.btnFitHeight?.classList.toggle('active', state.viewMode === 'fit-height');
+    dom.btnTwoPages?.classList.toggle('active', state.viewMode === 'two-pages');
+    dom.btnTwoPages?.setAttribute('aria-pressed', String(state.viewMode === 'two-pages'));
+  }
+  if (Number.isFinite(session.zoomScale)) state.zoomScale = Math.max(0.5, Math.min(3, session.zoomScale));
+  if (['next', 'markers', 'off'].includes(session.pageTurnMode)) state.pageTurnMode = session.pageTurnMode;
+  if (typeof session.autoSeekAudio === 'boolean') state.autoSeekAudio = session.autoSeekAudio;
+  if (dom.selPageTurnMode) dom.selPageTurnMode.value = state.pageTurnMode;
+  if (dom.chkAutoSeekAudio) dom.chkAutoSeekAudio.checked = state.autoSeekAudio;
+  updateZoomLabel();
+  updateReadMenuState();
+  state.sessionRestorePending = true;
+  return session;
+}
+function applyPendingAudioSessionRestore() {
+  if (!state.sessionRestorePending) return;
+  const session = readJsonStorage(READING_SESSION_KEY, null);
+  if (!session || session.bookKey !== state.currentBookKey) { state.sessionRestorePending = false; return; }
+  if (Number.isInteger(session.audioIndex) && state.currentStoryAudios[session.audioIndex] && session.audioIndex !== state.currentAudioIndex) {
+    const nextIndex = session.audioIndex;
+    state.sessionRestorePending = false;
+    loadAudioPart(nextIndex, { restoreSession: true });
+    return;
+  }
+  state.sessionRestorePending = false;
+  if (Number.isFinite(session.audioTime) && session.audioTime > 0) {
+    try { dom.audioElement.currentTime = Math.min(session.audioTime, Number.isFinite(dom.audioElement.duration) ? dom.audioElement.duration : session.audioTime); } catch (_) {}
+  }
+  dom.audioElement.pause();
+  saveReadingSession(true);
+  showToast('Đã khôi phục vị trí đọc gần nhất. Nhấn Phát để tiếp tục nghe.');
+}
+
 const DB_NAME = 'PdfAudioSyncDB';
 const DB_STORE = 'book_library';
 let dbInstance = null;
@@ -833,12 +906,14 @@ function renderPlaylistView() {
   const query = state.searchQuery.toLowerCase().trim();
   const filter = state.activeFilter;
 
+  const favorites = getFavoriteBooks();
   const filtered = state.playlist.filter(story => {
     const matchQuery = !query || story.title.toLowerCase().includes(query) ||
       (story.pdf && story.pdf.name.toLowerCase().includes(query)) ||
       (story.audios.some(a => a.name.toLowerCase().includes(query)));
 
     if (!matchQuery) return false;
+    if (filter === 'favorites') return favorites.includes(story.id);
     if (filter === 'paired') return story.pdf && story.audios.length > 0;
     if (filter === 'pdf') return !!story.pdf;
     if (filter === 'mp3') return story.audios.length > 0;
@@ -932,6 +1007,17 @@ function renderPlaylistView() {
       }
       card.appendChild(titleCol);
 
+      const favoriteButton = document.createElement('button');
+      const isFavorite = favorites.includes(story.id);
+      favoriteButton.className = 'card-favorite-btn';
+      favoriteButton.type = 'button';
+      favoriteButton.textContent = isFavorite ? '★' : '☆';
+      favoriteButton.title = isFavorite ? 'Bỏ khỏi yêu thích' : 'Thêm vào yêu thích';
+      favoriteButton.setAttribute('aria-label', favoriteButton.title);
+      favoriteButton.setAttribute('aria-pressed', String(isFavorite));
+      favoriteButton.addEventListener('click', (event) => { event.stopPropagation(); toggleFavoriteBook(story.id); });
+      card.appendChild(favoriteButton);
+
       const playButton = document.createElement('button');
       playButton.className = 'card-play-btn';
       playButton.type = 'button';
@@ -1017,6 +1103,14 @@ function loadAudioPart(index, options = {}) {
 
   // Switching parts always loads the new source paused first. If the user was
   // listening, resume only after the new source has metadata; otherwise preserve pause.
+  if (options.restoreSession === true) {
+    dom.audioElement.addEventListener('loadedmetadata', function restoreSelectedPart() {
+      dom.audioElement.removeEventListener('loadedmetadata', restoreSelectedPart);
+      if (state.audioLoadRequestId !== requestId || state.currentAudioIndex !== clampedIdx) return;
+      applyPendingAudioSessionRestore();
+    });
+  }
+
   if (options.resumePlayback === true) {
     dom.audioElement.addEventListener('loadedmetadata', function resumeSelectedPart() {
       dom.audioElement.removeEventListener('loadedmetadata', resumeSelectedPart);
@@ -1309,6 +1403,9 @@ dom.selPageTurnMode.value = state.pageTurnMode;
 
   // Android TV remote support: IR and Bluetooth remotes that emit Android key events.
   installTvRemoteControls();
+  dom.audioElement.addEventListener('timeupdate', () => saveReadingSession(false));
+  dom.audioElement.addEventListener('pause', () => saveReadingSession(true));
+  window.addEventListener('pagehide', () => saveReadingSession(true));
   dom.audioElement.addEventListener('timeupdate', onAudioTimeUpdate);
   dom.audioElement.addEventListener('loadedmetadata', onAudioMetadataLoaded);
   dom.audioElement.addEventListener('play', updatePlayButtonState);
@@ -1551,6 +1648,7 @@ async function loadPdfFromUrl(url, fileName, shouldResetSync = true) {
     state.pdfDoc = nextDoc;
     state.totalPages = nextDoc.numPages;
     state.pageNum = 1;
+    restoreReadingSessionForCurrentBook();
     dom.lblTotalPages.textContent = state.totalPages;
     dom.emptyState.classList.add('hidden');
     dom.canvasWrapper.classList.remove('hidden');
@@ -1606,6 +1704,7 @@ async function loadPdfFromBlob(file, shouldResetSync = true) {
     state.pdfDoc = nextDoc;
     state.totalPages = nextDoc.numPages;
     state.pageNum = 1;
+    restoreReadingSessionForCurrentBook();
 
     dom.lblTotalPages.textContent = state.totalPages;
     dom.emptyState.classList.add('hidden');
@@ -1789,12 +1888,14 @@ function setViewMode(mode) {
     dom.canvasWrapper.classList.remove('two-page-mode');
   }
 
+  saveReadingSession(true);
   if (state.pdfDoc) renderCurrentSpread();
 }
 
 function changeZoom(delta) {
   const newZoom = Math.max(0.5, Math.min(3.0, state.zoomScale + delta));
   state.zoomScale = Math.round(newZoom * 100) / 100;
+  saveReadingSession(true);
   updateZoomLabel();
   if (state.pdfDoc) renderCurrentSpread();
 }
@@ -1820,6 +1921,7 @@ function changePage(delta) {
   }
 
   state.isAudioDrivenChange = false;
+  saveReadingSession(true);
   window.__raDiagRecord?.('page.turn.manual', {
     fromPage: previousPage,
     toPage: state.pageNum,
@@ -2016,61 +2118,57 @@ function getCurrentPageTimestamp(page) {
   }
   return null;
 }
-function replayCurrentPage() {
+function waitForAudioMetadata(audio, timeoutMs = 15000) {
+  if (audio.readyState >= 1) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    let timeoutId;
+    const cleanup = () => {
+      clearTimeout(timeoutId);
+      audio.removeEventListener('loadedmetadata', onReady);
+      audio.removeEventListener('error', onError);
+    };
+    const onReady = () => { cleanup(); resolve(); };
+    const onError = () => { cleanup(); reject(new Error('Audio không tải được metadata.')); };
+    audio.addEventListener('loadedmetadata', onReady);
+    audio.addEventListener('error', onError);
+    timeoutId = setTimeout(() => { cleanup(); reject(new Error('Hết thời gian chờ audio tải metadata.')); }, timeoutMs);
+    if (audio.readyState >= 1) onReady();
+  });
+}
+
+async function replayCurrentPage() {
   if (!state.pdfDoc) { showToast('Vui lòng mở PDF trước.'); return; }
-  const marker = getCurrentPageTimestamp(state.pageNum);
+  const page = state.pageNum;
+  const marker = getCurrentPageTimestamp(page);
   window.__raDiagRecord?.('page.replay', {
-    page: state.pageNum,
-    time: Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0,
-    targetTime: marker ? marker.time : -1,
-    part: marker ? marker.part : state.currentAudioIndex,
+    page, time: Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0,
+    targetTime: marker ? marker.time : -1, part: marker ? marker.part : state.currentAudioIndex,
     reason: marker ? 'marker-found' : 'marker-missing'
   });
-  if (!marker) {
-    showToast('Trang này chưa có mốc thời gian.');
-    return;
-  }
+  if (!marker) { showToast('Trang này chưa có mốc thời gian.'); return; }
   if (!dom.audioElement.currentSrc && !(state.currentStoryAudios && state.currentStoryAudios.length)) {
-    showToast('Chưa có audio.');
-    return;
+    showToast('Chưa có audio.'); return;
   }
-  const seekAndPlay = async () => {
-    try {
-      if (dom.audioElement.readyState < 1) {
-        await new Promise((resolve, reject) => {
-          const cleanup = () => {
-            dom.audioElement.removeEventListener('loadedmetadata', onReady);
-            dom.audioElement.removeEventListener('error', onError);
-          };
-          const onReady = () => { cleanup(); resolve(); };
-          const onError = () => { cleanup(); reject(new Error('Audio không tải được.')); };
-          dom.audioElement.addEventListener('loadedmetadata', onReady, { once: true });
-          dom.audioElement.addEventListener('error', onError, { once: true });
-        });
-      }
-      dom.audioElement.currentTime = Math.min(Math.max(0, marker.time),
-        Number.isFinite(dom.audioElement.duration) ? dom.audioElement.duration : marker.time);
-      await dom.audioElement.play();
-    } catch (error) {
-      window.__raDiagRecord?.('page.replay.error', {
-        page: state.pageNum,
-        time: Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0,
-        targetTime: marker.time,
-        part: marker.part,
-        errorName: error?.name || 'Error',
-        errorMessage: error?.message || String(error)
-      });
-      console.warn('Không thể đọc lại trang:', error);
-      showToast('Không thể đọc lại trang. Hãy thử bấm Phát.');
+  try {
+    if (state.currentStoryAudios && state.currentStoryAudios.length > 1 &&
+        marker.part !== state.currentAudioIndex && state.currentStoryAudios[marker.part]) {
+      dom.audioElement.pause();
+      loadAudioPart(marker.part);
     }
-  };
-  if (state.currentStoryAudios && state.currentStoryAudios.length > 1 &&
-      marker.part !== state.currentAudioIndex && state.currentStoryAudios[marker.part]) {
-    dom.audioElement.pause();
-    loadAudioPart(marker.part);
-    seekAndPlay();
-  } else {
-    seekAndPlay();
+    await waitForAudioMetadata(dom.audioElement);
+    if (page !== state.pageNum) return;
+    const duration = dom.audioElement.duration;
+    dom.audioElement.currentTime = Math.min(Math.max(0, marker.time),
+      Number.isFinite(duration) ? duration : marker.time);
+    await dom.audioElement.play();
+  } catch (error) {
+    window.__raDiagRecord?.('page.replay.error', {
+      page, time: Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0,
+      targetTime: marker.time, part: marker.part,
+      errorName: error?.name || 'Error', errorMessage: error?.message || String(error)
+    });
+    console.warn('Không thể đọc lại trang:', error);
+    showToast('Không thể đọc lại trang. Hãy thử bấm Phát.');
   }
 }
 
