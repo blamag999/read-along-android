@@ -413,7 +413,7 @@ async function reloadCurrentBookFromGitHub() {
     const loaded = await loadCloudSyncForBook();
     if (loaded) {
       renderSyncTable();
-      showToast('☁️ Đã tải mốc mới nhất từ GitHub.');
+      showToast('Đã cập nhật mốc thời gian.');
     } else {
       updateSaveStatusBadge('⚠️ Không tìm thấy JSON trên GitHub');
       showToast('Không tìm thấy JSON trên GitHub cho tên PDF này.');
@@ -532,7 +532,7 @@ async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl 
     }
   }
 // 3. THỨ TỰ ƯU TIÊN 2: Kiểm tra trong bộ nhớ LocalStorage của trình duyệt
-  if (await loadCloudSyncForBook()) { showToast('☁️ Đã tải mốc thời gian từ GitHub'); return; }
+  if (await loadCloudSyncForBook()) { showToast('Đã tải mốc thời gian.'); return; }
   const storageKey = `sync_${bookKey}`;
   try { const raw=localStorage.getItem(storageKey); if(raw){const parsed=JSON.parse(raw);if(parsed&&typeof parsed==='object'&&Object.keys(parsed).length){state.pageTimestamps=parsed;updatePageTimestampBadge();updateSyncCountBadge();updateSaveStatusBadge('💾 Đã nạp từ bộ nhớ máy');return;}} } catch(e) {}
 
@@ -1364,7 +1364,7 @@ async function handleAudioFileSelect(e) {
   updateAudioPartUI();
 
   if (audioItems.length > 1) {
-    showToast(`🎵 Đã nạp ${audioItems.length} phần âm thanh!`);
+    showToast('Đã tải audio.');
   }
 
   // Tìm kiếm PDF tương ứng nếu chưa mở PDF
@@ -1385,7 +1385,7 @@ async function handleAudioFileSelect(e) {
     audioBlob: audioItems[0].blob,
     audios: audioItems
   });
-  showToast(`Đã nạp ${audioItems.length} tệp âm thanh. Nhấn Play để bắt đầu nghe.`);
+  showToast('Đã tải audio. Nhấn Phát để nghe.');
   } catch (error) {
     console.error('Lỗi khi nạp MP3:', error);
     showToast('Không thể nạp MP3: ' + (error && error.message ? error.message : 'Lỗi không xác định'));
@@ -2511,7 +2511,7 @@ async function checkReadAlongUpdates() {
     if (nativeUpdater?.downloadAndInstall) {
       showToast('Đang xóa bộ nhớ đệm cũ…');
       await clearReadAlongWebCachesForUpdate();
-      showToast('Đang tải APK ' + channelLabel + '…');
+      showToast('Đang tải bản cập nhật…');
       await nativeUpdater.downloadAndInstall({
         url: asset.browser_download_url,
         filename: asset.name
@@ -2544,7 +2544,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.updateChannelSelect.addEventListener('change', () => {
       const channel = dom.updateChannelSelect.value === 'beta' ? 'beta' : 'official';
       try { localStorage.setItem(READ_ALONG_UPDATE_CHANNEL_KEY, channel); } catch (_) {}
-      showToast('Đã chọn kênh OTA ' + (channel === 'beta' ? 'Beta' : 'Official') + '.');
+      showToast('Đã đổi kênh cập nhật.');
     });
   }
 
