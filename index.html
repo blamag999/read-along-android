@@ -322,30 +322,25 @@
     </div>
   </div>
 
-  <!-- MODAL CHẨN ĐOÁN: chỉ gửi sau khi người dùng chủ động xác nhận -->
+  <!-- MODAL CHẨN ĐOÁN: tạo Issue thủ công, không cần dịch vụ trung gian -->
   <div id="diagnosticsModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="diagnosticsTitle">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="diagnosticsTitle">🛡️ Chẩn đoán và báo lỗi</h3>
+        <h3 id="diagnosticsTitle">🛠️ Chẩn đoán và báo lỗi</h3>
         <button id="btnCloseDiagnostics" class="close-btn" type="button" aria-label="Đóng">×</button>
       </div>
       <div class="modal-body">
-        <p class="modal-desc">Ghi nhận sự kiện audio, PDF, xoay màn hình và vòng đời Activity/WebView để tìm nguyên nhân lỗi. Không ghi nội dung sách, tên tệp, đường dẫn, URL audio, token hoặc thông tin tài khoản.</p>
-        <section id="diagnosticsServiceCard" class="diagnostics-service-card is-checking" aria-live="polite">
-          <div class="diagnostics-service-heading"><span id="diagnosticsServiceIcon" aria-hidden="true">●</span><strong>Tình trạng dịch vụ báo lỗi</strong></div>
-          <p id="diagnosticsServiceStatus">Đang kiểm tra kết nối dịch vụ…</p>
-        </section>
-        <p id="diagnosticsStatus" class="modal-desc diagnostics-action-status" role="status">Hoàn thành xác minh chống spam và đồng ý gửi log trước khi gửi báo lỗi.</p>
-        <div id="diagnosticsTurnstile" style="margin:12px 0;"></div>
+        <p class="modal-desc">Log ghi nhận sự kiện audio, PDF, xoay màn hình và vòng đời Activity/WebView. Không ghi nội dung sách, tên tệp, đường dẫn hay URL audio.</p>
+        <p id="diagnosticsStatus" class="modal-desc diagnostics-action-status" role="status">Không cần dịch vụ trung gian. Khi báo lỗi, ứng dụng sẽ sao chép log và mở trang tạo GitHub Issue.</p>
         <label class="diagnostics-consent">
           <input id="chkDiagnosticsConsent" type="checkbox">
-          <span>Tôi đồng ý gửi log đã lọc tới dịch vụ chẩn đoán và tạo một GitHub Issue công khai. Không gửi nếu log có thông tin riêng tư.</span>
+          <span>Tôi đồng ý chia sẻ log chẩn đoán trong GitHub Issue công khai. Tôi sẽ kiểm tra log trước khi gửi.</span>
         </label>
         <div class="diagnostics-actions">
           <button id="btnExportDiagnostics" class="btn-secondary" type="button">📥 Xuất log ra tệp</button>
-          <button id="btnSubmitDiagnostics" class="btn-primary" type="button">🔒 Xác minh và gửi báo lỗi</button>
+          <button id="btnSubmitDiagnostics" class="btn-primary" type="button">📋 Sao chép log &amp; mở GitHub Issue</button>
         </div>
-        <p class="modal-desc">Chống spam bằng Turnstile và giới hạn gửi theo IP ở dịch vụ trung gian. Log được lọc lại lần nữa trên máy chủ trước khi đưa vào Issue. GitHub Issue của kho này công khai.</p>
+        <p class="modal-desc">Sau khi trang GitHub mở ra, dán log vào phần “Log chẩn đoán” rồi nhấn <strong>Submit new issue</strong>. Nếu không sao chép được, ứng dụng sẽ tải tệp JSON để bạn đính kèm. Issue là công khai.</p>
       </div>
     </div>
   </div>
@@ -357,7 +352,6 @@
     // Dùng cùng giao diện gọn trên APK và Web Local để dễ kiểm tra nhất quán.
     document.documentElement.classList.add('app-ui-mode');
   </script>
-  <script src="diagnostics-config.js"></script>
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
