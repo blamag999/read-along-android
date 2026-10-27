@@ -19,7 +19,6 @@ import java.net.URL;
 @CapacitorPlugin(name = "ApkUpdater")
 public class ApkUpdaterPlugin extends Plugin {
     private File pendingApk;
-    private PluginCall pendingCall;
 
     @PluginMethod
     public void downloadAndInstall(PluginCall call) {
@@ -51,16 +50,7 @@ public class ApkUpdaterPlugin extends Plugin {
                     out.getFD().sync();
                 }
                 if (!apk.isFile() || apk.length() < 1024) throw new Exception("Tệp APK tải về không hợp lệ.");
-                // Xóa HTTP/resource cache của WebView sau khi tải APK thành công,
-                // ngay trước khi mở trình cài đặt. Không xóa dữ liệu ứng dụng.
-                getActivity().runOnUiThread(() -> {
-                    try {
-                        if (getBridge() != null && getBridge().getWebView() != null) {
-                            getBridge().getWebView().clearCache(true);
-                        }
-                    } catch (Exception ignored) { }
-                    beginInstall(apk, call);
-                });
+                getActivity().runOnUiThread(() -> beginInstall(apk, call));
             } catch (Exception e) {
                 call.reject("Tải/cài đặt APK thất bại: " + e.getMessage(), e);
             } finally {
@@ -71,7 +61,6 @@ public class ApkUpdaterPlugin extends Plugin {
 
     private void beginInstall(File apk, PluginCall call) {
         pendingApk = apk;
-        pendingCall = call;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !getContext().getPackageManager().canRequestPackageInstalls()) {
             Intent settings = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
                 Uri.parse("package:" + getContext().getPackageName()));

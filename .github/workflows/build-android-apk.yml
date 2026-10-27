@@ -66,18 +66,24 @@ jobs:
               version = f"{stable_major}.{stable_minor + 1}.0"
               prerelease = "false"
           else:
-              # Beta uses the current stable minor line and increments the patch:
-              # after 1.2.0 Official: 1.2.1, 1.2.2, ...
-              # GitHub's prerelease flag distinguishes Beta from Official.
-              beta_candidates = [
+              # Continue the newest prerelease minor line if it is ahead of stable.
+              # Beta versions are plain x.y.z; GitHub's prerelease flag marks the channel.
+              prerelease_releases = [
                   r for r in parsed
-                  if r.get("isPrerelease")
-                  and r["version"][0] == stable_major
-                  and r["version"][1] == stable_minor
+                  if r.get("isPrerelease") and r["version"][0] == stable_major
               ]
-              max_beta_patch = max((r["version"][2] for r in beta_candidates), default=stable_patch)
-              next_patch = max(stable_patch, max_beta_patch) + 1
-              version = f"{stable_major}.{stable_minor}.{next_patch}"
+              ahead_minors = [
+                  r["version"][1] for r in prerelease_releases
+                  if r["version"][1] > stable_minor
+              ]
+              beta_minor = max(ahead_minors) if ahead_minors else stable_minor
+              beta_candidates = [
+                  r for r in prerelease_releases if r["version"][1] == beta_minor
+              ]
+              baseline_patch = stable_patch if beta_minor == stable_minor else -1
+              max_beta_patch = max((r["version"][2] for r in beta_candidates), default=baseline_patch)
+              next_patch = max(baseline_patch, max_beta_patch) + 1
+              version = f"{stable_major}.{beta_minor}.{next_patch}"
               prerelease = "true"
 
           print(f"version={version}")
@@ -139,6 +145,7 @@ jobs:
           mkdir -p android/app/src/main/java/com/blamag999/readalong android/app/src/main/res/xml
           cp native/android/ApkUpdaterPlugin.java android/app/src/main/java/com/blamag999/readalong/ApkUpdaterPlugin.java
           cp native/android/file_paths.xml android/app/src/main/res/xml/file_paths.xml
+          cp native/android/DiagnosticsPlugin.java android/app/src/main/java/com/blamag999/readalong/DiagnosticsPlugin.java
           python3 - <<'PY'
           from pathlib import Path
           main = Path('android/app/src/main/java/com/blamag999/readalong/MainActivity.java')
@@ -147,11 +154,19 @@ jobs:
               if len(candidates) != 1: raise SystemExit('Could not locate generated MainActivity.java')
               main = candidates[0]
           source = main.read_text()
+          marker = 'public class MainActivity extends BridgeActivity {'
+          if marker not in source: raise SystemExit('Could not locate MainActivity class declaration')
+          # Remove previous Activity lifecycle overrides if this script is run on older generated source.
+          import re
+          source = re.sub(r'(?m)^\s*@Override\s+protected void onResume\(\)\s*\{\s*super\.onResume\(\);\s*DiagnosticsPlugin\.recordLifecycle\(this,\s*"Activity\.onResume"\);\s*\}\s*$', '', source)
+          source = re.sub(r'(?m)^\s*@Override\s+protected void onPause\(\)\s*\{\s*DiagnosticsPlugin\.recordLifecycle\(this,\s*"Activity\.onPause"\);\s*super\.onPause\(\);\s*\}\s*$', '', source)
+          source = re.sub(r'(?m)^\s*@Override\s+protected void onDestroy\(\)\s*\{\s*DiagnosticsPlugin\.recordLifecycle\(this,\s*"Activity\.onDestroy"\);\s*super\.onDestroy\(\);\s*\}\s*$', '', source)
           if 'ApkUpdaterPlugin.class' not in source:
-              marker = 'public class MainActivity extends BridgeActivity {'
-              if marker not in source: raise SystemExit('Could not register ApkUpdaterPlugin in MainActivity')
-              source = source.replace(marker, marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        super.onCreate(savedInstanceState);\n    }', 1)
-              main.write_text(source)
+              injected = marker + '\\n    @Override\\n    public void onCreate(android.os.Bundle savedInstanceState) {\\n        registerPlugin(ApkUpdaterPlugin.class);\\n        registerPlugin(DiagnosticsPlugin.class);\\n        DiagnosticsPlugin.recordLifecycle(this, "Activity.onCreate");\\n        super.onCreate(savedInstanceState);\\n    }'
+              source = source.replace(marker, injected, 1)
+          if re.search(r'protected void on(?:Resume|Pause|Destroy)\s*\(', source):
+              raise SystemExit('Obsolete Activity lifecycle override remained in MainActivity')
+          main.write_text(source)
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           xml = manifest.read_text()
           # Keep the Capacitor WebView alive across orientation/size changes. If
@@ -176,8 +191,6 @@ jobs:
           else:
               updated_tag = activity_tag[:-1] + ' android:configChanges="' + config_value + '">'
           xml = xml.replace(activity_tag, updated_tag, 1)
-          if 'REQUEST_INSTALL_PACKAGES' not in xml:
-              xml = xml.replace('<application', '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n    <application', 1)
           # One APK for touch and non-touch devices, including Android TV/Google TV.
           features = [
               '<uses-feature android:name="android.hardware.touchscreen" android:required="false" />',
@@ -197,9 +210,11 @@ jobs:
                   launcher_category + '\n                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />',
                   1
               )
+          if 'REQUEST_INSTALL_PACKAGES' not in xml:
+              xml = xml.replace('<application', '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\\n    <application', 1)
           if '.fileprovider' not in xml:
               provider = '''<provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.fileprovider" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" /></provider>'''
-              xml = xml.replace('</application>', provider + '\n    </application>', 1)
+              xml = xml.replace('</application>', provider + '\\n    </application>', 1)
           manifest.write_text(xml)
           PY
           npx cap sync android
@@ -313,10 +328,16 @@ jobs:
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: ./gradlew assembleRelease
 
-      - name: Rename versioned APK
+      - name: Rename and verify signed APK
         env:
           VERSION: ${{ steps.release_info.outputs.version }}
-        run: cp android/app/build/outputs/apk/release/app-release.apk "read-along-v${VERSION}-android.apk"
+        run: |
+          APK="read-along-v${VERSION}-android.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "$APK"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          test -x "$APKSIGNER"
+          "$APKSIGNER" verify --verbose --print-certs "$APK"
+          sha256sum "$APK" > "$APK.sha256"
 
       - name: Upload versioned workflow artifacts
         uses: actions/upload-artifact@v6
@@ -324,6 +345,7 @@ jobs:
           name: read-along-v${{ steps.release_info.outputs.version }}-build
           path: |
             read-along-v${{ steps.release_info.outputs.version }}-android.apk
+            read-along-v${{ steps.release_info.outputs.version }}-android.apk.sha256
             dist/read-along-v${{ steps.release_info.outputs.version }}-web-local.zip
           if-no-files-found: error
           retention-days: 30
@@ -336,13 +358,35 @@ jobs:
           CHANNEL: ${{ inputs.channel }}
           CHANGELOG: ${{ steps.release_info.outputs.changelog }}
         run: |
+          set -euo pipefail
+          TAG="v$VERSION"
           TITLE="Read Along v$VERSION"
           if [[ "$CHANNEL" == "beta" ]]; then TITLE="Read Along Beta v$VERSION"; fi
+
           ARGS=()
           if [[ "$PRERELEASE" == "true" ]]; then ARGS+=(--prerelease); fi
-          gh release create "v$VERSION" \
-            "read-along-v$VERSION-android.apk" \
-            "dist/read-along-v$VERSION-web-local.zip" \
-            --title "$TITLE" \
-            --notes "$CHANGELOG" \
-            "${ARGS[@]}"
+
+          # Retry transient GitHub API errors. Before each retry, check whether
+          # the previous request actually created the release despite returning an error.
+          for attempt in 1 2 3; do
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              echo "Release $TAG already exists; skip creation to avoid duplicates."
+              exit 0
+            fi
+
+            if gh release create "$TAG" \
+              "read-along-v$VERSION-android.apk" \
+              "read-along-v$VERSION-android.apk.sha256" \
+              "dist/read-along-v$VERSION-web-local.zip" \
+              --title "$TITLE" \
+              --notes "$CHANGELOG" \
+              "${ARGS[@]}"; then
+              exit 0
+            fi
+
+            echo "GitHub Release creation attempt $attempt failed."
+            if [[ "$attempt" -lt 3 ]]; then sleep $((attempt * 10)); fi
+          done
+
+          echo "Failed to create $TAG after 3 attempts." >&2
+          exit 1

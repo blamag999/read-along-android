@@ -40,12 +40,87 @@ const state = {
   // MULTI-AUDIO STATE
   currentAudioIndex: 0,   // Phần âm thanh đang phát trong currentStoryAudios
   currentStoryAudios: [], // Danh sách các phần âm thanh của truyện đang mở
-  pdfSelectionInProgress: false
+  pdfSelectionInProgress: false,
+  sessionRestorePending: false,
+  lastSessionSaveAt: 0,
+  lastAudioObservedTime: null,
+  allowBackwardAudioSync: false
 };
 
 // =======================================================
 // INDEXEDDB THƯ VIỆN SÁCH (CÁCH LY DỮ LIỆU TỪNG CUỐN)
 // =======================================================
+const READING_SESSION_KEY = 'read_along_reading_session_v1';
+const FAVORITES_KEY = 'read_along_favorites_v1';
+
+function readJsonStorage(key, fallback) {
+  try { const value = JSON.parse(localStorage.getItem(key) || 'null'); return value == null ? fallback : value; }
+  catch (_) { return fallback; }
+}
+function getFavoriteBooks() {
+  const value = readJsonStorage(FAVORITES_KEY, []);
+  return Array.isArray(value) ? value.filter(item => typeof item === 'string') : [];
+}
+function toggleFavoriteBook(bookId) {
+  if (!bookId) return;
+  const favorites = getFavoriteBooks();
+  const next = favorites.includes(bookId) ? favorites.filter(id => id !== bookId) : [...favorites, bookId];
+  try { localStorage.setItem(FAVORITES_KEY, JSON.stringify(next)); } catch (_) {}
+  renderPlaylistView();
+}
+function saveReadingSession(force = false) {
+  if (!state.currentBookKey || !state.pdfDoc) return;
+  const now = Date.now();
+  if (!force && now - state.lastSessionSaveAt < 5000) return;
+  state.lastSessionSaveAt = now;
+  const session = {
+    bookKey: state.currentBookKey, page: state.pageNum, audioIndex: state.currentAudioIndex,
+    audioTime: Number.isFinite(dom.audioElement.currentTime) ? Math.max(0, dom.audioElement.currentTime) : 0,
+    viewMode: state.viewMode, zoomScale: state.zoomScale, pageTurnMode: state.pageTurnMode,
+    autoSeekAudio: state.autoSeekAudio, updatedAt: now
+  };
+  try { localStorage.setItem(READING_SESSION_KEY, JSON.stringify(session)); } catch (_) {}
+}
+function restoreReadingSessionForCurrentBook() {
+  const session = readJsonStorage(READING_SESSION_KEY, null);
+  if (!session || session.bookKey !== state.currentBookKey) return null;
+  if (Number.isInteger(session.page) && session.page >= 1 && session.page <= state.totalPages) state.pageNum = session.page;
+  if (['fit-height', 'fit-width', 'two-pages'].includes(session.viewMode)) {
+    state.viewMode = session.viewMode;
+    dom.canvasWrapper.classList.toggle('two-page-mode', state.viewMode === 'two-pages');
+    dom.btnFitHeight?.classList.toggle('active', state.viewMode === 'fit-height');
+    dom.btnTwoPages?.classList.toggle('active', state.viewMode === 'two-pages');
+    dom.btnTwoPages?.setAttribute('aria-pressed', String(state.viewMode === 'two-pages'));
+  }
+  if (Number.isFinite(session.zoomScale)) state.zoomScale = Math.max(0.5, Math.min(3, session.zoomScale));
+  if (['next', 'markers', 'off'].includes(session.pageTurnMode)) state.pageTurnMode = session.pageTurnMode;
+  if (typeof session.autoSeekAudio === 'boolean') state.autoSeekAudio = session.autoSeekAudio;
+  if (dom.selPageTurnMode) dom.selPageTurnMode.value = state.pageTurnMode;
+  if (dom.chkAutoSeekAudio) dom.chkAutoSeekAudio.checked = state.autoSeekAudio;
+  updateZoomLabel();
+  updateReadMenuState();
+  state.sessionRestorePending = true;
+  return session;
+}
+function applyPendingAudioSessionRestore() {
+  if (!state.sessionRestorePending) return;
+  const session = readJsonStorage(READING_SESSION_KEY, null);
+  if (!session || session.bookKey !== state.currentBookKey) { state.sessionRestorePending = false; return; }
+  if (Number.isInteger(session.audioIndex) && state.currentStoryAudios[session.audioIndex] && session.audioIndex !== state.currentAudioIndex) {
+    const nextIndex = session.audioIndex;
+    state.sessionRestorePending = false;
+    loadAudioPart(nextIndex, { restoreSession: true });
+    return;
+  }
+  state.sessionRestorePending = false;
+  if (Number.isFinite(session.audioTime) && session.audioTime > 0) {
+    try { dom.audioElement.currentTime = Math.min(session.audioTime, Number.isFinite(dom.audioElement.duration) ? dom.audioElement.duration : session.audioTime); } catch (_) {}
+  }
+  dom.audioElement.pause();
+  saveReadingSession(true);
+  showToast('Đã khôi phục vị trí đọc gần nhất. Nhấn Phát để tiếp tục nghe.');
+}
+
 const DB_NAME = 'PdfAudioSyncDB';
 const DB_STORE = 'book_library';
 let dbInstance = null;
@@ -147,7 +222,7 @@ const dom = {
   menuAutoFlip: document.getElementById('menuAutoFlip'),
   menuReloadMarkers: document.getElementById('menuReloadMarkers'),
   menuCheckUpdates: document.getElementById('menuCheckUpdates'),
-  updateChannelSelect: document.getElementById('updateChannelSelect'),
+  chkBetaOta: document.getElementById('chkBetaOta'),
   menuTwoPagesState: document.getElementById('menuTwoPagesState'),
   menuAutoFlipState: document.getElementById('menuAutoFlipState'),
   btnZoomOut: document.getElementById('btnZoomOut'),
@@ -271,179 +346,6 @@ function updateSyncCountBadge() {
   }
 }
 
-// GitHub stores only marker JSON; PDF and audio remain local.
-const GITHUB_OWNER='blamag999',GITHUB_REPO='pdf-audio-sync',GITHUB_BRANCH='main',GITHUB_SYNC_DIR='sync_data';
-const GITHUB_TOKEN_SESSION_KEY='pdf_audio_sync_github_token';let githubSyncTimer=null;
-function getSyncStem(){
-  const n = state.pdfFileName || state.currentBookKey || 'truyen';
-  return n.replace(/\.[^/.]+$/, '').replace(/[\\/:*?"<>|]/g, '_').trim() || 'truyen';
-}
-function getCloudSyncPath(){return GITHUB_SYNC_DIR+'/'+getSyncStem()+'.json';}
-function getGithubToken(){return(sessionStorage.getItem(GITHUB_TOKEN_SESSION_KEY)||'').trim();}
-function updateGithubTokenStatus(){
- const token=getGithubToken();
- if(dom.githubTokenStatus)dom.githubTokenStatus.textContent=token?'Đã có token trong phiên hiện tại ('+token.slice(0,8)+'…'+token.slice(-4)+').':'Chưa có token trong phiên này.';
- if(dom.githubTokenInput)dom.githubTokenInput.value='';
-}
-function saveGithubTokenFromInput(){
- const token=(dom.githubTokenInput?.value||'').trim();
- if(!token){showToast('Hãy nhập token mới trước khi lưu.');dom.githubTokenInput?.focus();return;}
- if(!/^(github_pat_|gh[pousr]_[A-Za-z0-9_]+)/.test(token)){
-  if(!confirm('Token không giống định dạng token GitHub thông dụng. Bạn vẫn muốn lưu token này?'))return;
- }
- try{sessionStorage.setItem(GITHUB_TOKEN_SESSION_KEY,token);updateGithubTokenStatus();showToast('Đã lưu/thay GitHub token trong phiên hiện tại.');}
- catch(e){showToast('Không thể lưu token trong phiên trình duyệt.');}
-}
-function clearGithubToken(){
- if(!getGithubToken()){updateGithubTokenStatus();showToast('Không có token nào đang lưu trong phiên này.');return;}
- if(!confirm('Xóa token khỏi phiên trình duyệt hiện tại? Thao tác này không thu hồi token trên GitHub.'))return;
- sessionStorage.removeItem(GITHUB_TOKEN_SESSION_KEY);
- if(githubSyncTimer){clearTimeout(githubSyncTimer);githubSyncTimer=null;}
- updateGithubTokenStatus();showToast('Đã xóa token khỏi phiên trình duyệt.');
-}
-function encodeBase64Utf8(v){const b=new TextEncoder().encode(v);let x='';for(let i=0;i<b.length;i+=0x8000)x+=String.fromCharCode(...b.subarray(i,i+0x8000));return btoa(x);}
-async function getGithubWriteToken(askForToken=false){
- let token=getGithubToken();
- if(!token&&askForToken){
-  token=prompt('Nhập GitHub Personal Access Token có quyền Contents: Read and write cho blamag999/pdf-audio-sync. Token chỉ được giữ trong phiên trình duyệt hiện tại.');
-  if(token){token=token.trim();if(token)sessionStorage.setItem(GITHUB_TOKEN_SESSION_KEY,token);}
- }
- if(!token&&askForToken)alert('Chưa có GitHub token. Cần quyền Contents: Read and write.');
- return token||'';
-}
-async function getGitBlobSha(content){
- const bytes=new TextEncoder().encode(content);
- const prefix=new TextEncoder().encode('blob '+bytes.length+'\0');
- const all=new Uint8Array(prefix.length+bytes.length);all.set(prefix);all.set(bytes,prefix.length);
- const digest=await crypto.subtle.digest('SHA-1',all);
- return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
-}
-async function putJsonFileOnGitHub(filename,content,token){
- const safeName=filename.split('/').pop();
- if(!safeName||safeName==='.'||safeName==='..')throw Error('Tên tệp JSON không hợp lệ: '+filename);
- const path=GITHUB_SYNC_DIR+'/'+safeName;
- const url='https://api.github.com/repos/'+GITHUB_OWNER+'/'+GITHUB_REPO+'/contents/'+path.split('/').map(encodeURIComponent).join('/');
- const headers={'Accept':'application/vnd.github+json','Authorization':'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'};
- const localSha=await getGitBlobSha(content);
- const old=await fetch(url+'?ref='+encodeURIComponent(GITHUB_BRANCH),{headers});
- let sha=null;
- if(old.ok){
-  const oldData=await old.json();sha=oldData.sha||null;
-  if(sha===localSha)return {path,changed:false};
- }else if(old.status!==404)throw Error(filename+': không đọc được tệp hiện có trên GitHub ('+old.status+').');
- const body={message:'Sync changed JSON file '+safeName,content:encodeBase64Utf8(content),branch:GITHUB_BRANCH};
- if(sha)body.sha=sha;
- const res=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});
- if(!res.ok)throw Error(filename+': GitHub từ chối lưu ('+res.status+'): '+(await res.text()).slice(0,300));
- return {path,changed:true};
-}
-async function syncAllFolderJsonToGitHub({askForToken=false}={}){
- let token=await getGithubWriteToken(askForToken);
- if(!token)return false;
- let files=[];
- try{
-  if(state.dirHandle){
-   for await(const entry of state.dirHandle.values()){
-    if(entry.kind==='file'&&entry.name.toLowerCase().endsWith('.json')){
-     files.push({name:entry.name,blob:await entry.getFile()});
-    }
-   }
-  }else{
-   files=(state.folderJsonFiles||[]).slice();
-  }
- }catch(e){
-  alert('Không thể đọc các tệp JSON trong thư mục đã chọn. Hãy chọn lại thư mục và cấp quyền đọc.\\n\\n'+e.message);
-  return false;
- }
- if(!files.length){
-  showToast('Không tìm thấy tệp JSON trong thư mục đã chọn. Hãy mở thư mục trước khi đồng bộ hàng loạt.');
-  return false;
- }
- let changed=0,unchanged=0,failed=[];
- updateSaveStatusBadge('☁️ Đang kiểm tra thay đổi các tệp JSON...');
- for(const item of files){
-  try{
-   const content=await item.blob.text();
-   JSON.parse(content);
-   const result=await putJsonFileOnGitHub(item.name,content,token);
-   if(result.changed)changed++;else unchanged++;
-  }catch(e){failed.push(item.name+': '+e.message);console.error('Lỗi đồng bộ JSON',item.name,e);}
- }
- if(failed.length){
-  updateSaveStatusBadge('⚠️ Có '+failed.length+' tệp JSON lỗi');
-  alert('Kết quả: '+changed+' tệp đã cập nhật, '+unchanged+' tệp không thay đổi, '+failed.length+' tệp lỗi.\\n\\nTệp lỗi:\\n'+failed.slice(0,10).join('\\n')+(failed.length>10?'\\n...':''));
-  return false;
- }
- updateSaveStatusBadge('☁️ '+changed+' tệp cập nhật, '+unchanged+' tệp không đổi');
- showToast(changed?'Đã cập nhật '+changed+' tệp JSON; bỏ qua '+unchanged+' tệp không thay đổi.':'Không có tệp JSON nào thay đổi; không cần tải lên.');
- return true;
-}
-async function syncCurrentBookToGitHub({askForToken=false}={}){
- if(!state.currentBookKey||!state.pdfFileName){if(askForToken)alert('Vui lòng mở PDF trước khi đồng bộ mốc.');return false;}
- let token=getGithubToken();if(!token&&askForToken){token=prompt('Nhập GitHub Personal Access Token có quyền Contents: Read and write cho blamag999/pdf-audio-sync. Token chỉ được giữ trong phiên trình duyệt hiện tại.');if(token){token=token.trim();sessionStorage.setItem(GITHUB_TOKEN_SESSION_KEY,token);}}
- if(!token){if(askForToken)alert('Chưa có GitHub token. Cần quyền Contents: Read and write.');return false;}
- const path=getCloudSyncPath(),url='https://api.github.com/repos/'+GITHUB_OWNER+'/'+GITHUB_REPO+'/contents/'+path.split('/').map(encodeURIComponent).join('/');
- const headers={'Accept':'application/vnd.github+json','Authorization':'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'};
- try{const content=JSON.stringify(state.pageTimestamps,null,2);const localSha=await getGitBlobSha(content);
- const old=await fetch(url+'?ref='+encodeURIComponent(GITHUB_BRANCH),{headers});let sha=null;if(old.ok)sha=(await old.json()).sha||null;else if(old.status!==404)throw Error('Không đọc được file GitHub ('+old.status+').');
- if(sha&&sha===localSha){updateSaveStatusBadge('☁️ Mốc GitHub đã mới nhất');return true;}
- const body={message:'Sync reading markers for '+getSyncStem(),content:encodeBase64Utf8(content),branch:GITHUB_BRANCH};if(sha)body.sha=sha;
- const res=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});if(!res.ok)throw Error('GitHub từ chối lưu ('+res.status+'): '+await res.text());
- updateSaveStatusBadge('☁️ Đã đồng bộ GitHub');showToast('☁️ Đã đồng bộ mốc lên GitHub: '+path);return true;
- }catch(e){console.error(e);updateSaveStatusBadge('⚠️ Đồng bộ GitHub lỗi');if(askForToken)alert('Không thể đồng bộ. Kiểm tra token và quyền Contents: Read and write.\\n\\n'+e.message);return false;}
-}
-function scheduleGitHubSync(){
- if(!getGithubToken()||!state.currentBookKey||githubSyncTimer)return;
- // Chờ tối đa 1 phút kể từ thay đổi đầu tiên; không khởi động lại bộ đếm khi tiếp tục sửa.
- githubSyncTimer=setTimeout(async()=>{
-  githubSyncTimer=null;
-  await syncCurrentBookToGitHub();
- },60000);
-}
-async function reloadCurrentBookFromGitHub() {
-  if (!state.pdfFileName || !state.currentBookKey) {
-    showToast('Trước tiên hãy mở PDF cần đồng bộ.');
-    return;
-  }
-  const button = dom.btnLoadFromGithub;
-  if (button) { button.disabled = true; button.textContent = '⏳ Đang tải...'; }
-  if (dom.btnReloadMarkers) { dom.btnReloadMarkers.disabled = true; dom.btnReloadMarkers.textContent = '…'; }
-  updateSaveStatusBadge('☁️ Đang tải mốc từ GitHub...');
-  try {
-    const loaded = await loadCloudSyncForBook();
-    if (loaded) {
-      renderSyncTable();
-      showToast('☁️ Đã tải mốc mới nhất từ GitHub.');
-    } else {
-      updateSaveStatusBadge('⚠️ Không tìm thấy JSON trên GitHub');
-      showToast('Không tìm thấy JSON trên GitHub cho tên PDF này.');
-    }
-  } finally {
-    if (button) { button.disabled = false; button.textContent = '⬇️ Tải mốc từ GitHub'; }
-    if (dom.btnReloadMarkers) { dom.btnReloadMarkers.disabled = false; dom.btnReloadMarkers.textContent = '⟳'; }
-  }
-}
-
-async function loadCloudSyncForBook(){
-  const stems=[...new Set([getSyncStem(),state.currentBookKey].filter(Boolean))];
-  for(const stem of stems){
-    // Ưu tiên tên chuẩn mới, sau đó thử tên cũ có hậu tố _sync.
-    for(const filename of [stem+'.json',stem+'_sync.json']){
-      try{
-        const url='https://raw.githubusercontent.com/'+GITHUB_OWNER+'/'+GITHUB_REPO+'/'+GITHUB_BRANCH+'/'+GITHUB_SYNC_DIR+'/'+encodeURIComponent(filename);
-        const res=await fetch(url,{cache:'no-store'});
-        if(!res.ok)continue;
-        const data=await res.json();
-        if(data&&typeof data==='object'&&!Array.isArray(data)){
-          state.pageTimestamps=data;saveSyncToStorage();updatePageTimestampBadge();updateSyncCountBadge();
-          updateSaveStatusBadge('☁️ Đã nạp mốc từ GitHub');return true;
-        }
-      }catch(e){console.warn('Không thể nạp mốc GitHub:',e);}
-    }
-  }
-  return false;
-}
-
 // =======================================================
 // RESET VÀ NẠP MỐC CHUẨN XÁC THEO TỪNG CUỐN (FIX TRIỆT ĐỂ LỖI DỮ LIỆU LẠ)
 // =======================================================
@@ -495,16 +397,16 @@ async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl 
           saveSyncToStorage();
           updatePageTimestampBadge();
           updateSyncCountBadge();
-          updateSaveStatusBadge('☁️ Đã nạp mốc từ Cloudflare R2');
+          updateSaveStatusBadge('☁️ Đã nạp mốc đọc');
           if (await loadCloudSyncForBook()) {
-            updateSaveStatusBadge('☁️ Đã nạp mốc mới nhất từ GitHub');
+            updateSaveStatusBadge('☁️ Đã nạp mốc đọc mới nhất');
           }
           return;
         }
       }
-      console.warn('Không nạp được JSON mốc từ R2:', response.status);
+      console.warn('Không nạp được tệp mốc trực tuyến:', response.status);
     } catch (error) {
-      console.warn('Không thể nạp JSON mốc từ R2 (kiểm tra URL/CORS):', error);
+      console.warn('Không thể nạp tệp mốc trực tuyến (kiểm tra địa chỉ và quyền truy cập):', error);
     }
   }
 
@@ -532,7 +434,7 @@ async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl 
     }
   }
 // 3. THỨ TỰ ƯU TIÊN 2: Kiểm tra trong bộ nhớ LocalStorage của trình duyệt
-  if (await loadCloudSyncForBook()) { showToast('☁️ Đã tải mốc thời gian từ GitHub'); return; }
+  if (await loadCloudSyncForBook()) { showToast('Đã tải mốc thời gian.'); return; }
   const storageKey = `sync_${bookKey}`;
   try { const raw=localStorage.getItem(storageKey); if(raw){const parsed=JSON.parse(raw);if(parsed&&typeof parsed==='object'&&Object.keys(parsed).length){state.pageTimestamps=parsed;updatePageTimestampBadge();updateSyncCountBadge();updateSaveStatusBadge('💾 Đã nạp từ bộ nhớ máy');return;}} } catch(e) {}
 
@@ -549,7 +451,17 @@ async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl 
 
 function fileNameFromUrl(url, fallback) {
   try { return decodeURIComponent(new URL(url).pathname.split('/').pop()) || fallback; }
-  catch (error) { return fallback || url; }
+  catch (error) { return fallback || String(url || ''); }
+}
+
+function isSafeHttpsUrl(value) {
+  if (typeof value !== 'string' || !value.trim()) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && Boolean(url.hostname) && !url.username && !url.password;
+  } catch (_) {
+    return false;
+  }
 }
 
 async function loadR2Catalog() {
@@ -571,14 +483,24 @@ async function loadR2Catalog() {
         const audioList = Array.isArray(audioEntries) ? audioEntries : [audioEntries];
         const pdfUrl = typeof item.pdf === 'string' ? item.pdf : item.pdf.url;
         const syncUrl = item.sync || item.json || '';
-        const urls = audioList.map(value => typeof value === 'string' ? value : value && value.url).filter(Boolean);
-        if (!pdfUrl || !urls.length) return null;
+        const urls = audioList
+          .map(value => typeof value === 'string' ? value : value && value.url)
+          .filter(isSafeHttpsUrl);
+        if (!isSafeHttpsUrl(pdfUrl) || !urls.length) return null;
+        const safeSyncUrl = isSafeHttpsUrl(syncUrl) ? syncUrl : '';
+        const coverCandidate = item.coverUrl || item.cover || '';
+        const safeTitle = typeof item.title === 'string' && item.title.trim()
+          ? item.title.trim().slice(0, 300)
+          : normalizeStoryTitle(fileNameFromUrl(pdfUrl, 'book.pdf'));
         return {
-          id: item.id || getBookUniqueKey(fileNameFromUrl(pdfUrl, 'book.pdf')),
-          title: item.title || normalizeStoryTitle(fileNameFromUrl(pdfUrl, 'book.pdf')),
+          id: typeof item.id === 'string' || typeof item.id === 'number'
+            ? String(item.id).slice(0, 200)
+            : getBookUniqueKey(fileNameFromUrl(pdfUrl, 'book.pdf')),
+          title: safeTitle,
           pdf: { name: fileNameFromUrl(pdfUrl, 'book.pdf'), url: pdfUrl },
           audios: urls.map(url => ({ name: fileNameFromUrl(url, 'audio.mp3'), url })),
-          json: syncUrl ? { name: fileNameFromUrl(syncUrl, 'sync.json'), url: syncUrl } : null,
+          json: safeSyncUrl ? { name: fileNameFromUrl(safeSyncUrl, 'sync.json'), url: safeSyncUrl } : null,
+          coverUrl: isSafeHttpsUrl(coverCandidate) ? coverCandidate : '',
           source: 'r2'
         };
       }).filter(Boolean);
@@ -590,13 +512,13 @@ async function loadR2Catalog() {
     renderPlaylistView();
     dom.lblPlaylistSubtitle.textContent = stories.length + ' mục trực tuyến';
     openPlaylistModal();
-    showToast('Đã tải ' + stories.length + ' sách từ R2.');
+    showToast('Đã tải ' + stories.length + ' truyện.');
   } catch (error) {
-    console.error('Không thể tải danh sách sách R2:', error);
-    alert('Không thể tải danh sách sách từ R2. Kiểm tra URL, định dạng books.json và CORS. ' + error.message);
+    console.error('Không thể tải danh sách truyện:', error);
+    alert('Không thể tải danh sách truyện. Hãy kiểm tra kết nối và cấu hình danh mục. ' + error.message);
   } finally {
     dom.playlistLoading.classList.add('hidden');
-    if (button) { button.disabled = false; button.textContent = '☁️ Sách trên Cloudflare R2'; }
+    if (button) { button.disabled = false; button.textContent = '☁️ Truyện trực tuyến'; }
   }
 }
 
@@ -604,7 +526,7 @@ function getManualR2PublicBase() {
   const input = dom.r2PublicBaseInput;
   const raw = input ? input.value.trim() : '';
   if (!raw) {
-    alert('Vui lòng nhập URL công khai gốc của bucket R2 trước khi xuất books.json. Ví dụ: https://pub-xxxxxxxx.r2.dev');
+    alert('Vui lòng nhập địa chỉ gốc của kho tệp trước khi xuất danh mục.');
     input?.focus();
     return '';
   }
@@ -612,12 +534,12 @@ function getManualR2PublicBase() {
   try {
     parsed = new URL(raw);
   } catch (error) {
-    alert('URL R2 không hợp lệ. Hãy nhập URL đầy đủ, bắt đầu bằng https://');
+    alert('Địa chỉ kho tệp không hợp lệ. Hãy nhập địa chỉ HTTPS đầy đủ.');
     input?.focus();
     return '';
   }
   if (parsed.protocol !== 'https:' || !parsed.hostname.endsWith('.r2.dev') || parsed.pathname !== '/' || parsed.search || parsed.hash) {
-    alert('Hãy nhập URL gốc dạng https://pub-xxxxxxxx.r2.dev, không thêm tên tệp, đường dẫn, tham số hoặc dấu #.');
+    alert('Hãy nhập địa chỉ gốc HTTPS, không thêm tên tệp, đường dẫn, tham số hoặc dấu #.');
     input?.focus();
     return '';
   }
@@ -813,12 +735,14 @@ function renderPlaylistView() {
   const query = state.searchQuery.toLowerCase().trim();
   const filter = state.activeFilter;
 
+  const favorites = getFavoriteBooks();
   const filtered = state.playlist.filter(story => {
     const matchQuery = !query || story.title.toLowerCase().includes(query) ||
       (story.pdf && story.pdf.name.toLowerCase().includes(query)) ||
       (story.audios.some(a => a.name.toLowerCase().includes(query)));
 
     if (!matchQuery) return false;
+    if (filter === 'favorites') return favorites.includes(story.id);
     if (filter === 'paired') return story.pdf && story.audios.length > 0;
     if (filter === 'pdf') return !!story.pdf;
     if (filter === 'mp3') return story.audios.length > 0;
@@ -838,12 +762,15 @@ function renderPlaylistView() {
     return;
   }
 
-  // Ước lượng số hàng theo chiều cao thực tế, sau đó giảm tiếp nếu nội dung tràn.
-  const listHeight = dom.playlistItemsList.clientHeight || Math.max(240, window.innerHeight - 240);
-  const compactLayout = window.innerWidth <= 560 || window.matchMedia('(orientation: portrait)').matches;
-  let pageSize = Math.max(1, Math.floor(listHeight / (compactLayout ? 58 : 48)));
+  // Derive page size from the actual visible list height; card measurements below
+  // shrink it further when titles/audio-part controls make rows taller than expected.
+  const availableHeight = dom.playlistItemsList.clientHeight || Math.max(180, window.innerHeight * 0.48);
+  const hasMultiPartStories = filtered.some(story => Array.isArray(story.audios) && story.audios.length > 1);
+  let pageSize = window.ReadAlongPlaylistLayout.calculatePageSize(
+    availableHeight, hasMultiPartStories ? 78 : 48, filtered.length
+  );
   let totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  state.playlistPage = Math.max(1, Math.min(state.playlistPage || 1, totalPages));
+  state.playlistPage = window.ReadAlongPlaylistLayout.clampPage(state.playlistPage, totalPages);
 
   function renderCurrentPage() {
     dom.playlistItemsList.replaceChildren();
@@ -860,38 +787,76 @@ function renderPlaylistView() {
       card.setAttribute('role', 'button');
       card.setAttribute('aria-label', `${index + 1}. ${story.title}. Mở tập`);
 
-      let tagsHtml = '';
-      if (story.pdf) tagsHtml += `<span class="mini-badge badge-pdf">📄 ${story.pdf.name}</span>`;
-      if (story.audios && story.audios.length > 0) {
-        story.audios.forEach((aud) => {
-          tagsHtml += `<span class="mini-badge badge-mp3">🎵 ${aud.name}</span>`;
-        });
+      // Dữ liệu catalog từ xa không đáng tin cậy: dùng textContent thay vì ghép HTML.
+      if (isSafeHttpsUrl(story.coverUrl)) {
+        const cover = document.createElement('img');
+        cover.className = 'card-cover';
+        cover.alt = 'Bìa';
+        cover.loading = 'lazy';
+        cover.src = story.coverUrl;
+        cover.addEventListener('error', () => { cover.style.display = 'none'; }, { once: true });
+        card.appendChild(cover);
       }
 
-      let audioPartBtnsHtml = '';
+      const number = document.createElement('span');
+      number.className = 'apk-story-number';
+      number.textContent = String(index + 1);
+      card.appendChild(number);
+
+      const titleCol = document.createElement('div');
+      titleCol.className = 'card-title-col';
+      const title = document.createElement('h4');
+      title.textContent = (isPlaying ? '▶ ' : '') + String(story.title || 'Không có tiêu đề');
+      titleCol.appendChild(title);
+
+      const tags = document.createElement('div');
+      tags.className = 'card-tags';
+      if (story.pdf) {
+        const pdfTag = document.createElement('span');
+        pdfTag.className = 'mini-badge badge-pdf';
+        pdfTag.textContent = '📄 ' + String(story.pdf.name || 'PDF');
+        tags.appendChild(pdfTag);
+      }
+      (Array.isArray(story.audios) ? story.audios : []).forEach((aud) => {
+        const audioTag = document.createElement('span');
+        audioTag.className = 'mini-badge badge-mp3';
+        audioTag.textContent = '🎵 ' + String(aud.name || 'Audio');
+        tags.appendChild(audioTag);
+      });
+      titleCol.appendChild(tags);
+
       if (story.audios && story.audios.length > 1) {
-        audioPartBtnsHtml = '<div class="card-audio-parts">';
-        story.audios.forEach(function(a, i) {
-          const lbl = a.partLabel || ('Phần ' + (i + 1));
-          audioPartBtnsHtml += '<button class="card-part-btn" data-partidx="' + i + '" title="' + a.name + '">' + lbl + '</button>';
+        const partButtons = document.createElement('div');
+        partButtons.className = 'card-audio-parts';
+        story.audios.forEach((audio, partIndex) => {
+          const partButton = document.createElement('button');
+          partButton.type = 'button';
+          partButton.className = 'card-part-btn';
+          partButton.dataset.partidx = String(partIndex);
+          partButton.title = String(audio.name || '');
+          partButton.textContent = String(audio.partLabel || ('Phần ' + (partIndex + 1)));
+          partButtons.appendChild(partButton);
         });
-        audioPartBtnsHtml += '</div>';
+        titleCol.appendChild(partButtons);
       }
+      card.appendChild(titleCol);
 
-      let coverHtml = '';
-      if (story.coverUrl) {
-        coverHtml = `<img src="${story.coverUrl}" class="card-cover" alt="Bìa" loading="lazy" onerror="this.style.display='none'">`;
-      }
+      const favoriteButton = document.createElement('button');
+      const isFavorite = favorites.includes(story.id);
+      favoriteButton.className = 'card-favorite-btn';
+      favoriteButton.type = 'button';
+      favoriteButton.textContent = isFavorite ? '★' : '☆';
+      favoriteButton.title = isFavorite ? 'Bỏ khỏi yêu thích' : 'Thêm vào yêu thích';
+      favoriteButton.setAttribute('aria-label', favoriteButton.title);
+      favoriteButton.setAttribute('aria-pressed', String(isFavorite));
+      favoriteButton.addEventListener('click', (event) => { event.stopPropagation(); toggleFavoriteBook(story.id); });
+      card.appendChild(favoriteButton);
 
-      card.innerHTML =
-        coverHtml +
-        '<span class="apk-story-number">' + (index + 1) + '</span>' +
-        '<div class="card-title-col">' +
-          '<h4>' + (isPlaying ? '&#9654; ' : '') + story.title + '</h4>' +
-          '<div class="card-tags">' + tagsHtml + '</div>' +
-          audioPartBtnsHtml +
-        '</div>' +
-        '<button class="card-play-btn" type="button">' + (isPlaying ? 'Đang đọc' : '&#9654; Mở') + '</button>';
+      const playButton = document.createElement('button');
+      playButton.className = 'card-play-btn';
+      playButton.type = 'button';
+      playButton.textContent = isPlaying ? 'Đang đọc' : '▶ Mở';
+      card.appendChild(playButton);
 
       function openStory(partIndex) {
         loadStoryFromPlaylist(story, partIndex || 0);
@@ -919,18 +884,19 @@ function renderPlaylistView() {
     });
     dom.playlistItemsList.appendChild(pageFragment);
 
-    // Một số hàng có nhiều phần âm thanh hoặc tiêu đề dài; tự giảm số mục để vừa khung.
-    if (dom.playlistItemsList.clientHeight > 0 &&
-        dom.playlistItemsList.scrollHeight > dom.playlistItemsList.clientHeight + 2 &&
-        pageSize > 1) {
-      pageSize -= 1;
-      totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-      state.playlistPage = Math.min(state.playlistPage, totalPages);
-      renderCurrentPage();
-    }
   }
 
   renderCurrentPage();
+  let fitAttempts = 0;
+  while (dom.playlistItemsList.clientHeight > 0 &&
+         dom.playlistItemsList.scrollHeight > dom.playlistItemsList.clientHeight + 2 &&
+         pageSize > 1 && fitAttempts < 20) {
+    pageSize -= 1;
+    totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    state.playlistPage = window.ReadAlongPlaylistLayout.clampPage(state.playlistPage, totalPages);
+    renderCurrentPage();
+    fitAttempts += 1;
+  }
   state.playlistPageSize = pageSize;
   updatePlaylistPagination(totalPages, filtered.length);
 }
@@ -970,12 +936,42 @@ async function loadStoryFromPlaylist(story, audioPartIndex) {
 }
 
 // NAP MOT PART AUDIO CU THE
-function loadAudioPart(index) {
+function loadAudioPart(index, options = {}) {
   const audios = state.currentStoryAudios;
   if (!audios || audios.length === 0) return;
   const clampedIdx = Math.max(0, Math.min(index, audios.length - 1));
+  const requestId = (state.audioLoadRequestId || 0) + 1;
+  state.audioLoadRequestId = requestId;
   state.currentAudioIndex = clampedIdx;
   const audio = audios[clampedIdx];
+
+  // Switching parts always loads the new source paused first. If the user was
+  // listening, resume only after the new source has metadata; otherwise preserve pause.
+  if (options.restoreSession === true || state.sessionRestorePending) {
+    dom.audioElement.addEventListener('loadedmetadata', function restoreSelectedPart() {
+      dom.audioElement.removeEventListener('loadedmetadata', restoreSelectedPart);
+      if (state.audioLoadRequestId !== requestId || state.currentAudioIndex !== clampedIdx) return;
+      // Let the source's own loadedmetadata handler finish resetting time first.
+      setTimeout(() => {
+        if (state.audioLoadRequestId === requestId && state.currentAudioIndex === clampedIdx) {
+          applyPendingAudioSessionRestore();
+        }
+      }, 0);
+    });
+  }
+
+  if (options.resumePlayback === true) {
+    dom.audioElement.addEventListener('loadedmetadata', function resumeSelectedPart() {
+      dom.audioElement.removeEventListener('loadedmetadata', resumeSelectedPart);
+      if (state.audioLoadRequestId !== requestId || state.currentAudioIndex !== clampedIdx) return;
+      dom.audioElement.play().catch((error) => {
+        console.warn('Không thể tự phát phần audio mới:', error);
+        showToast('Đã chuyển phần audio nhưng chưa thể tự phát. Hãy bấm Play để thử lại.');
+        updatePlayButtonState();
+      });
+    });
+  }
+
   if (audio.blob) loadAudioFromBlob(audio.blob);
   else if (audio.url) loadAudioFromUrl(audio.url, audio.name);
   updateAudioPartUI();
@@ -1026,19 +1022,32 @@ function updateAudioPartUI() {
   }
 
   container.classList.remove('hidden');
-  var html = '<span class="audio-part-label">Phan audio:</span>';
+  container.replaceChildren();
+  const label = document.createElement('span');
+  label.className = 'audio-part-label';
+  label.textContent = 'Phần audio:';
+  container.appendChild(label);
   audios.forEach(function(a, i) {
-    var lbl = a.partLabel || ('Phần ' + (i + 1));
-    var isActive = (i === state.currentAudioIndex) ? ' active' : '';
-    html += '<button class="audio-part-btn' + isActive + '" onclick="selectAudioPart(' + i + ')" title="' + a.name + '">' + lbl + '</button>';
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'audio-part-btn' + (i === state.currentAudioIndex ? ' active' : '');
+    button.title = String(a.name || '');
+    button.textContent = String(a.partLabel || ('Phần ' + (i + 1)));
+    button.addEventListener('click', () => window.selectAudioPart(i));
+    container.appendChild(button);
   });
-  container.innerHTML = html;
 }
 
 // CHON AUDIO PART
 window.selectAudioPart = function(index) {
-  loadAudioPart(index);
-  showToast('Đã chuyển sang phần ' + (index + 1));
+  if (!Number.isInteger(index) || !state.currentStoryAudios || !state.currentStoryAudios[index]) return;
+  if (index === state.currentAudioIndex) return;
+
+  // Preserve the transport intent: playing -> continue playing after source load;
+  // paused -> switch source but remain paused.
+  const shouldResume = !dom.audioElement.paused && !dom.audioElement.ended;
+  loadAudioPart(index, { resumePlayback: shouldResume });
+  showToast('Đã chuyển sang phần ' + (index + 1) + (shouldResume ? ' — tiếp tục phát' : ' — đang tạm dừng'));
 };
 
 // Nguồn nội dung: tệp PDF và âm thanh cục bộ; chỉ đồng bộ JSON mốc đọc qua GitHub.
@@ -1066,12 +1075,18 @@ function initEvents() {
     renderPlaylistView();
   });
 
+  function focusPlaylistCard(card) {
+    if (!card) return;
+    card.focus({ preventScroll: true });
+    card.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+
   function changePlaylistPage(delta) {
     const nextPage = Math.max(1, Math.min(state.playlistTotalPages, state.playlistPage + delta));
     if (nextPage === state.playlistPage) return;
     state.playlistPage = nextPage;
     renderPlaylistView();
-    requestAnimationFrame(() => dom.playlistItemsList.querySelector('.playlist-card')?.focus({ preventScroll: true }));
+    requestAnimationFrame(() => focusPlaylistCard(dom.playlistItemsList.querySelector('.playlist-card')));
   }
   dom.btnPlaylistPrevPage.addEventListener('click', () => changePlaylistPage(-1));
   dom.btnPlaylistNextPage.addEventListener('click', () => changePlaylistPage(1));
@@ -1083,11 +1098,18 @@ function initEvents() {
     const index = cards.indexOf(card);
     if (e.key === 'ArrowUp' && index > 0) {
       e.preventDefault();
-      cards[index - 1].focus({ preventScroll: true });
+      focusPlaylistCard(cards[index - 1]);
+    } else if (e.key === 'ArrowUp' && index === 0 && state.playlistPage > 1) {
+      e.preventDefault();
+      changePlaylistPage(-1);
+      requestAnimationFrame(() => {
+        const previousCards = dom.playlistItemsList.querySelectorAll('.playlist-card');
+        focusPlaylistCard(previousCards[previousCards.length - 1]);
+      });
     } else if (e.key === 'ArrowDown') {
       if (index < cards.length - 1) {
         e.preventDefault();
-        cards[index + 1].focus({ preventScroll: true });
+        focusPlaylistCard(cards[index + 1]);
       } else if (state.playlistPage < state.playlistTotalPages) {
         e.preventDefault();
         changePlaylistPage(1);
@@ -1243,6 +1265,17 @@ dom.selPageTurnMode.value = state.pageTurnMode;
 
   // Android TV remote support: IR and Bluetooth remotes that emit Android key events.
   installTvRemoteControls();
+  dom.audioElement.addEventListener('timeupdate', () => saveReadingSession(false));
+  dom.audioElement.addEventListener('seeking', () => {
+    const nextTime = Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0;
+    const previousTime = state.lastAudioObservedTime;
+    state.allowBackwardAudioSync = Number.isFinite(previousTime) && nextTime < previousTime - 0.25;
+  });
+  dom.audioElement.addEventListener('seeked', () => {
+    state.lastAudioObservedTime = Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0;
+  });
+  dom.audioElement.addEventListener('pause', () => saveReadingSession(true));
+  window.addEventListener('pagehide', () => saveReadingSession(true));
   dom.audioElement.addEventListener('timeupdate', onAudioTimeUpdate);
   dom.audioElement.addEventListener('loadedmetadata', onAudioMetadataLoaded);
   dom.audioElement.addEventListener('play', updatePlayButtonState);
@@ -1285,9 +1318,15 @@ dom.selPageTurnMode.value = state.pageTurnMode;
 
   initTouchGestures();
 
-  window.addEventListener('resize', debounce(() => {
-    if (state.pdfDoc) renderCurrentSpread();
-  }, 300));
+  // Xoay màn hình chỉ thay đổi kích thước vùng vẽ; không pause/load/seek audio.
+  const rerenderAfterViewportChange = debounce(() => {
+    if (state.pdfDoc) renderCurrentSpread(false);
+  }, 300);
+  window.addEventListener('resize', rerenderAfterViewportChange);
+  window.addEventListener('orientationchange', rerenderAfterViewportChange);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', rerenderAfterViewportChange);
+  }
 }
 
 // =======================================================
@@ -1364,7 +1403,7 @@ async function handleAudioFileSelect(e) {
   updateAudioPartUI();
 
   if (audioItems.length > 1) {
-    showToast(`🎵 Đã nạp ${audioItems.length} phần âm thanh!`);
+    showToast('Đã tải audio.');
   }
 
   // Tìm kiếm PDF tương ứng nếu chưa mở PDF
@@ -1385,7 +1424,7 @@ async function handleAudioFileSelect(e) {
     audioBlob: audioItems[0].blob,
     audios: audioItems
   });
-  showToast(`Đã nạp ${audioItems.length} tệp âm thanh. Nhấn Play để bắt đầu nghe.`);
+  showToast('Đã tải audio. Nhấn Phát để nghe.');
   } catch (error) {
     console.error('Lỗi khi nạp MP3:', error);
     showToast('Không thể nạp MP3: ' + (error && error.message ? error.message : 'Lỗi không xác định'));
@@ -1454,7 +1493,7 @@ async function loadPdfFromUrl(url, fileName, shouldResetSync = true) {
   state.pdfFileName = fileName || url.split('/').pop() || 'book.pdf';
   dom.pdfFileName.textContent = '📄 ' + state.pdfFileName;
   dom.pdfFileName.classList.remove('empty');
-  dom.lblLoadingText.textContent = 'Đang tải sách từ Cloudflare R2...';
+  dom.lblLoadingText.textContent = 'Đang tải truyện trực tuyến...';
   dom.pdfLoadingIndicator.classList.remove('hidden');
 
   const key = state.currentBookKey || getBookUniqueKey(state.pdfFileName);
@@ -1479,12 +1518,13 @@ async function loadPdfFromUrl(url, fileName, shouldResetSync = true) {
     state.pdfDoc = nextDoc;
     state.totalPages = nextDoc.numPages;
     state.pageNum = 1;
+    restoreReadingSessionForCurrentBook();
     dom.lblTotalPages.textContent = state.totalPages;
     dom.emptyState.classList.add('hidden');
     dom.canvasWrapper.classList.remove('hidden');
   } catch (error) {
     state.pdfDoc = null;
-    throw new Error('Không tải được PDF từ R2. Hãy kiểm tra URL và CORS của bucket. ' + error.message);
+    throw new Error('Không tải được PDF trực tuyến. Hãy kiểm tra địa chỉ tệp và quyền truy cập. ' + error.message);
   } finally {
     state.pdfLoading = false;
     dom.pdfLoadingIndicator.classList.add('hidden');
@@ -1499,7 +1539,7 @@ async function loadPdfFromBlob(file, shouldResetSync = true) {
   dom.lblLoadingText.textContent = 'Đang tải trang sách...';
   dom.pdfLoadingIndicator.classList.remove('hidden');
 
-  const key = getBookUniqueKey(file.name);
+  const key = state.currentBookKey || getBookUniqueKey(file.name);
   state.currentBookKey = key;
 
   if (shouldResetSync) {
@@ -1534,6 +1574,7 @@ async function loadPdfFromBlob(file, shouldResetSync = true) {
     state.pdfDoc = nextDoc;
     state.totalPages = nextDoc.numPages;
     state.pageNum = 1;
+    restoreReadingSessionForCurrentBook();
 
     dom.lblTotalPages.textContent = state.totalPages;
     dom.emptyState.classList.add('hidden');
@@ -1601,6 +1642,7 @@ async function renderCurrentSpread(syncAudioToPage = false) {
 
   let leftPageNum = state.pageNum;
   let rightPageNum = isTwoPages && (leftPageNum + 1 <= state.totalPages) ? leftPageNum + 1 : null;
+  window.__raDiagRecord?.('pdf.render.start', { page: leftPageNum });
 
   if (isTwoPages && rightPageNum) {
     dom.lblPagePrefix.textContent = 'Trang';
@@ -1615,6 +1657,7 @@ async function renderCurrentSpread(syncAudioToPage = false) {
   }
   updatePageTimestampBadge();
 
+  let renderSucceeded = false;
   try {
     const pageLeft = await state.pdfDoc.getPage(leftPageNum);
     const unscaledLeft = pageLeft.getViewport({ scale: 1 });
@@ -1657,8 +1700,15 @@ async function renderCurrentSpread(syncAudioToPage = false) {
     } else {
       dom.pageRightWrapper.classList.add('hidden');
     }
+    renderSucceeded = true;
+    window.__raDiagRecord?.('pdf.render.end', { page: leftPageNum });
 
   } catch (err) {
+    window.__raDiagRecord?.('pdf.render.error', {
+      page: leftPageNum,
+      errorName: err?.name || 'Error',
+      errorMessage: err?.message || String(err)
+    });
     console.error('Lỗi khi render trang:', err);
   } finally {
     state.pageRendering = false;
@@ -1672,9 +1722,10 @@ async function renderCurrentSpread(syncAudioToPage = false) {
     }
   }
 
-  // Chỉ tua audio khi người dùng chủ động chuyển trang. Resize/xoay màn hình,
-  // zoom hoặc đổi kiểu hiển thị chỉ render lại PDF, tuyệt đối không seek audio.
-  if (syncAudioToPage && state.autoSeekAudio && !state.isAudioDrivenChange) {
+  // Chỉ tua audio nếu render thành công và vẫn tương ứng với trang đang chọn.
+  // Render cũ hoàn tất muộn sau resize không được kéo audio về mốc trang cũ.
+  if (renderSucceeded && syncAudioToPage && state.pageNum === leftPageNum &&
+      state.autoSeekAudio && !state.isAudioDrivenChange) {
     const rawTarget = state.pageTimestamps[leftPageNum];
     if (typeof rawTarget === 'number') {
       dom.audioElement.currentTime = rawTarget;
@@ -1707,12 +1758,14 @@ function setViewMode(mode) {
     dom.canvasWrapper.classList.remove('two-page-mode');
   }
 
+  saveReadingSession(true);
   if (state.pdfDoc) renderCurrentSpread();
 }
 
 function changeZoom(delta) {
   const newZoom = Math.max(0.5, Math.min(3.0, state.zoomScale + delta));
   state.zoomScale = Math.round(newZoom * 100) / 100;
+  saveReadingSession(true);
   updateZoomLabel();
   if (state.pdfDoc) renderCurrentSpread();
 }
@@ -1738,6 +1791,14 @@ function changePage(delta) {
   }
 
   state.isAudioDrivenChange = false;
+  saveReadingSession(true);
+  window.__raDiagRecord?.('page.turn.manual', {
+    fromPage: previousPage,
+    toPage: state.pageNum,
+    time: Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0,
+    reason: 'manual-navigation',
+    mode: state.pageTurnMode
+  });
   renderCurrentSpread(true);
 
   // Nếu audio đang chờ người đọc lật đến trang kế tiếp, tiếp tục tại đúng mốc.
@@ -1885,6 +1946,12 @@ async function togglePlayPause() {
     // Đưa nút về trạng thái tạm dừng trong khi trình duyệt bắt đầu phát.
     await dom.audioElement.play();
   } catch (error) {
+    window.__raDiagRecord?.('audio.play.failure', {
+      page: state.pageNum,
+      time: Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0,
+      errorName: error?.name || 'Error',
+      errorMessage: error?.message || String(error)
+    });
     updatePlayButtonState();
     console.error('Không thể phát âm thanh:', error);
     const message = error && error.name === 'NotAllowedError'
@@ -1914,38 +1981,62 @@ function jumpToEnteredPage() {
   dom.pageJumpInput.value = '';
 }
 function getCurrentPageTimestamp(page) {
-  const raw = state.pageTimestamps[page];
-  if (typeof raw === 'number' && Number.isFinite(raw)) return { time: raw, part: 0 };
-  if (raw && typeof raw === 'object' && Number.isFinite(raw.time)) {
-    return { time: raw.time, part: Number.isInteger(raw.part) ? raw.part : 0 };
-  }
-  return null;
+  return window.ReadAlongPageSync.normalizeMarker((state.pageTimestamps || {})[page]);
 }
-function replayCurrentPage() {
+function waitForAudioMetadata(audio, timeoutMs = 15000) {
+  if (audio.readyState >= 1) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    let timeoutId;
+    const cleanup = () => {
+      clearTimeout(timeoutId);
+      audio.removeEventListener('loadedmetadata', onReady);
+      audio.removeEventListener('error', onError);
+    };
+    const onReady = () => { cleanup(); resolve(); };
+    const onError = () => { cleanup(); reject(new Error('Audio không tải được metadata.')); };
+    audio.addEventListener('loadedmetadata', onReady);
+    audio.addEventListener('error', onError);
+    timeoutId = setTimeout(() => { cleanup(); reject(new Error('Hết thời gian chờ audio tải metadata.')); }, timeoutMs);
+    if (audio.readyState >= 1) onReady();
+  });
+}
+
+async function replayCurrentPage() {
   if (!state.pdfDoc) { showToast('Vui lòng mở PDF trước.'); return; }
-  const marker = getCurrentPageTimestamp(state.pageNum);
-  if (!marker) { showToast('Trang hiện tại chưa có mốc thời gian.'); return; }
-  if (!dom.audioElement.src && !(state.currentStoryAudios && state.currentStoryAudios.length)) {
-    showToast('Vui lòng mở tệp MP3 trước.');
-    return;
+  const page = state.pageNum;
+  const marker = getCurrentPageTimestamp(page);
+  window.__raDiagRecord?.('page.replay', {
+    page, time: Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0,
+    targetTime: marker ? marker.time : -1, part: marker ? marker.part : state.currentAudioIndex,
+    reason: marker ? 'marker-found' : 'marker-missing'
+  });
+  if (!marker) { showToast('Trang này chưa có mốc thời gian.'); return; }
+  if (!dom.audioElement.currentSrc && !(state.currentStoryAudios && state.currentStoryAudios.length)) {
+    showToast('Chưa có audio.'); return;
   }
-  const seekAndPlay = () => {
-    dom.audioElement.currentTime = Math.max(0, marker.time);
-    dom.audioElement.playbackRate = 1.0;
-    dom.audioElement.play().catch(() => showToast('Không thể phát audio. Hãy bấm Phát để thử lại.'));
-  };
-  if (state.currentStoryAudios && state.currentStoryAudios.length > 1 &&
-      marker.part !== state.currentAudioIndex && state.currentStoryAudios[marker.part]) {
-    dom.audioElement.pause();
-    dom.audioElement.addEventListener('loadedmetadata', function onReplayMetadata() {
-      dom.audioElement.removeEventListener('loadedmetadata', onReplayMetadata);
-      seekAndPlay();
-    }, { once: true });
-    loadAudioPart(marker.part);
-  } else {
-    seekAndPlay();
+  try {
+    if (state.currentStoryAudios && state.currentStoryAudios.length > 1 &&
+        marker.part !== state.currentAudioIndex && state.currentStoryAudios[marker.part]) {
+      dom.audioElement.pause();
+      loadAudioPart(marker.part);
+    }
+    await waitForAudioMetadata(dom.audioElement);
+    if (page !== state.pageNum) return;
+    const duration = dom.audioElement.duration;
+    dom.audioElement.currentTime = Math.min(Math.max(0, marker.time),
+      Number.isFinite(duration) ? duration : marker.time);
+    await dom.audioElement.play();
+  } catch (error) {
+    window.__raDiagRecord?.('page.replay.error', {
+      page, time: Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0,
+      targetTime: marker.time, part: marker.part,
+      errorName: error?.name || 'Error', errorMessage: error?.message || String(error)
+    });
+    console.warn('Không thể đọc lại trang:', error);
+    showToast('Không thể đọc lại trang. Hãy thử bấm Phát.');
   }
 }
+
 function initPdfClickNavigation() {
   dom.canvasWrapper.addEventListener('click', (event) => {
     if (!state.pdfDoc || event.button !== 0 || event.target.tagName !== 'CANVAS') return;
@@ -1966,49 +2057,102 @@ function onAudioMetadataLoaded() {
 }
 
 function onAudioTimeUpdate() {
-  const curr = dom.audioElement.currentTime;
+  const audio = dom.audioElement;
+  const curr = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
+  const allowBackwardSync = state.allowBackwardAudioSync === true;
+  state.allowBackwardAudioSync = false;
+  state.lastAudioObservedTime = curr;
+
   dom.audioSeeker.value = curr;
   dom.lblAudioCurrentTime.textContent = formatTime(curr);
-
-  const hasPageMarkers = Object.keys(state.pageTimestamps).length > 0;
-  if (!hasPageMarkers && state.pageTurnMode === 'next') {
-    // Không có mốc thời gian: tự chuyển sang chế độ chờ lật trang.
-    // Chế độ này chỉ dừng khi có mốc hợp lệ; vì không có mốc nên audio vẫn chạy liên tục.
-    state.pageTurnMode = 'markers';
-    dom.selPageTurnMode.value = 'markers';
-  }
-  if (!state.pdfDoc || state.pageTurnMode === 'off' || !hasPageMarkers) return;
+  const markers = state.pageTimestamps || {};
+  if (!state.pdfDoc || state.pageTurnMode === 'off' || !Object.keys(markers).length) return;
 
   const currentPart = state.currentAudioIndex || 0;
-  const matchesCurrentPart = (marker) =>
-    !state.currentStoryAudios || state.currentStoryAudios.length <= 1 || marker.part === currentPart;
+  const audioCount = Array.isArray(state.currentStoryAudios) ? state.currentStoryAudios.length : 0;
+  const markerMatchesPart = marker => window.ReadAlongPageSync.markerMatchesPart(
+    marker, currentPart, audioCount
+  );
   const step = state.viewMode === 'two-pages' ? 2 : 1;
-  const nextPage = state.pageNum + step;
-  const nextMarker = nextPage <= state.totalPages ? getCurrentPageTimestamp(nextPage) : null;
 
-  // Chế độ chờ lật trang: chỉ dừng nếu trang kế tiếp có mốc hợp lệ.
-  // Tệp không có mốc cho trang kế tiếp sẽ tiếp tục phát bình thường.
   if (state.pageTurnMode === 'markers') {
-    if (state.waitingForManualPageTurn || !nextMarker || !matchesCurrentPart(nextMarker)) return;
+    const nextPage = state.pageNum + step;
+    const nextMarker = nextPage <= state.totalPages ? getCurrentPageTimestamp(nextPage) : null;
+    if (state.waitingForManualPageTurn || !nextMarker || !markerMatchesPart(nextMarker)) {
+      if (!state.waitingForManualPageTurn && nextPage <= state.totalPages) {
+        window.__raDiagRecord?.('page.turn.no-marker', {
+          page: state.pageNum, toPage: nextPage, time: curr, part: currentPart,
+          mode: state.pageTurnMode,
+          reason: !nextMarker ? 'missing-next-marker' : 'marker-in-different-audio-part'
+        });
+      }
+      return;
+    }
     if (curr >= nextMarker.time) {
       state.waitingForManualPageTurn = true;
       state.pendingManualPage = nextPage;
-      state.resumeAfterManualTurn = !dom.audioElement.paused;
-      dom.audioElement.currentTime = nextMarker.time;
-      dom.audioElement.pause();
-      showToast('Đã hết phần audio của trang này. Lật sang trang kế tiếp để đọc tiếp.');
+      state.resumeAfterManualTurn = !audio.paused;
+      window.__raDiagRecord?.('page.turn.waiting', {
+        fromPage: state.pageNum, toPage: nextPage, time: curr,
+        targetTime: nextMarker.time, part: currentPart,
+        mode: state.pageTurnMode, reason: 'next-marker-reached'
+      });
+      audio.currentTime = nextMarker.time;
+      audio.pause();
+      showToast('Đến cuối trang. Lật trang để tiếp tục.');
     }
     return;
   }
 
-  // Chế độ tự chuyển trang: chuyển đến trang có mốc khi audio chạm mốc đó.
-  if (state.pageTurnMode === 'next' && nextMarker && matchesCurrentPart(nextMarker) && curr >= nextMarker.time) {
-    state.isAudioDrivenChange = true;
-    state.pageNum = nextPage;
-    renderCurrentSpread();
-    setTimeout(() => { state.isAudioDrivenChange = false; }, 400);
+  const nextPageForDiagnostics = state.pageNum + step;
+  if (nextPageForDiagnostics <= state.totalPages) {
+    const nextMarker = getCurrentPageTimestamp(nextPageForDiagnostics);
+    if (!nextMarker || !markerMatchesPart(nextMarker)) {
+      window.__raDiagRecord?.('page.turn.no-marker', {
+        page: state.pageNum, toPage: nextPageForDiagnostics, time: curr,
+        part: currentPart, mode: state.pageTurnMode,
+        reason: !nextMarker ? 'missing-next-marker' : 'marker-in-different-audio-part'
+      });
+    }
   }
+
+  const target = window.ReadAlongPageSync.findTargetPage({
+    pageTimestamps: markers,
+    totalPages: state.totalPages,
+    currentTime: curr,
+    currentPart,
+    audioCount,
+    duration: audio.duration
+  });
+  if (!target) return;
+
+  const alignedPage = window.ReadAlongPageSync.alignPage(target.page, state.viewMode);
+  if (alignedPage === state.pageNum) return;
+
+  // A stale timeupdate must never undo a manual page turn. Backward alignment is
+  // permitted only after an actual backward media seek (including an intentional replay).
+  if (!window.ReadAlongPageSync.shouldAllowPageChange(state.pageNum, alignedPage, allowBackwardSync)) {
+    window.__raDiagRecord?.('page.turn.ignored-stale-marker', {
+      fromPage: state.pageNum, toPage: alignedPage, time: curr,
+      targetTime: target.time, part: currentPart,
+      mode: state.pageTurnMode, reason: 'backward-page-without-backward-seek'
+    });
+    return;
+  }
+
+  const previousPage = state.pageNum;
+  state.isAudioDrivenChange = true;
+  state.pageNum = alignedPage;
+  saveReadingSession(true);
+  window.__raDiagRecord?.('page.turn.auto', {
+    fromPage: previousPage, toPage: alignedPage, time: curr,
+    targetTime: target.time, part: currentPart,
+    mode: state.pageTurnMode, reason: 'audio-marker'
+  });
+  renderCurrentSpread();
+  requestAnimationFrame(() => { state.isAudioDrivenChange = false; });
 }
+
 function getStorageKey() {
   return `sync_${state.currentBookKey || 'default'}`;
 }
@@ -2028,24 +2172,59 @@ function openSyncModal() {
 }
 
 function renderSyncTable() {
-  dom.syncTableBody.innerHTML = '';
+  dom.syncTableBody.replaceChildren();
   const total = state.totalPages || 10;
 
   for (let p = 1; p <= total; p++) {
     const tr = document.createElement('tr');
     const rawTs = state.pageTimestamps[p];
-    const hasTime = (typeof rawTs === 'number') || (rawTs && typeof rawTs === 'object' && typeof rawTs.time === 'number');
+    const hasTime = (typeof rawTs === 'number' && Number.isFinite(rawTs) && rawTs >= 0) ||
+      (rawTs && typeof rawTs === 'object' && typeof rawTs.time === 'number' && Number.isFinite(rawTs.time) && rawTs.time >= 0);
     const sec = typeof rawTs === 'number' ? rawTs : (hasTime ? rawTs.time : 0);
-    const partNum = (hasTime && rawTs && rawTs.part !== undefined) ? rawTs.part : null;
-    const partTxt = (partNum !== null) ? (' <span style="font-size:0.75rem;color:#38bdf8;">(Phần ' + (partNum + 1) + ')</span>') : '';
+    const partNum = (hasTime && rawTs && Number.isInteger(rawTs.part) && rawTs.part >= 0) ? rawTs.part : null;
 
-    tr.innerHTML = '<td><b>Trang ' + p + '</b></td>' +
-      '<td>' + (hasTime ? (formatTime(sec) + partTxt) : '<span style="color:#64748b;">(Chưa có)</span>') + '</td>' +
-      '<td>' +
-        (hasTime ? ('<button class="btn-mini-play" onclick="seekAndPlayTo(' + sec + ', ' + p + ', ' + (partNum !== null ? partNum : 'null') + ')">▶ Nghe</button>') : '') +
-        (hasTime ? ('<button class="btn-mini-del" onclick="deleteSync(' + p + ')">✕ Xóa</button>') : '') +
-        '<button class="btn-mini-play" onclick="setManualSync(' + p + ')">✏️ Đặt</button>' +
-      '</td>';
+    const pageCell = document.createElement('td');
+    const pageBold = document.createElement('b');
+    pageBold.textContent = 'Trang ' + p;
+    pageCell.appendChild(pageBold);
+    tr.appendChild(pageCell);
+
+    const timeCell = document.createElement('td');
+    const timeLabel = document.createElement('span');
+    timeLabel.textContent = hasTime
+      ? formatTime(sec) + (partNum !== null ? ' (Phần ' + (partNum + 1) + ')' : '')
+      : '(Chưa có)';
+    if (!hasTime) timeLabel.style.color = '#64748b';
+    if (partNum !== null) {
+      timeLabel.style.fontSize = '0.75rem';
+      timeLabel.style.color = '#38bdf8';
+    }
+    timeCell.appendChild(timeLabel);
+    tr.appendChild(timeCell);
+
+    const actionsCell = document.createElement('td');
+    if (hasTime) {
+      const playButton = document.createElement('button');
+      playButton.type = 'button';
+      playButton.className = 'btn-mini-play';
+      playButton.textContent = '▶ Nghe';
+      playButton.addEventListener('click', () => window.seekAndPlayTo(sec, p, partNum));
+      actionsCell.appendChild(playButton);
+
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.className = 'btn-mini-del';
+      deleteButton.textContent = '✕ Xóa';
+      deleteButton.addEventListener('click', () => window.deleteSync(p));
+      actionsCell.appendChild(deleteButton);
+    }
+    const setButton = document.createElement('button');
+    setButton.type = 'button';
+    setButton.className = 'btn-mini-play';
+    setButton.textContent = '✏️ Đặt';
+    setButton.addEventListener('click', () => window.setManualSync(p));
+    actionsCell.appendChild(setButton);
+    tr.appendChild(actionsCell);
     dom.syncTableBody.appendChild(tr);
   }
 }
@@ -2366,14 +2545,6 @@ function installTvRemoteControls() {
   if (dom.canvasWrapper && !dom.canvasWrapper.hasAttribute('tabindex')) dom.canvasWrapper.setAttribute('tabindex', '0');
 }
 
-// Xóa bộ nhớ đệm giao diện trước khi cập nhật, không xóa dữ liệu sách/mốc đọc.
-async function clearReadAlongWebCachesForUpdate() {
-  if ('caches' in window) {
-    const cacheNames = await caches.keys();
-    await Promise.all(cacheNames.map(name => caches.delete(name)));
-  }
-}
-
 // Kiểm tra bản phát hành mới nhất theo kênh OTA được người dùng chọn.
 const READ_ALONG_RELEASES_API = 'https://api.github.com/repos/blamag999/read-along-android/releases?per_page=100';
 const READ_ALONG_UPDATE_CHANNEL_KEY = 'readAlongUpdateChannel';
@@ -2383,8 +2554,12 @@ function getSelectedUpdateChannel() {
   try {
     saved = localStorage.getItem(READ_ALONG_UPDATE_CHANNEL_KEY) || 'official';
   } catch (_) {}
-  const selected = dom.updateChannelSelect?.value || saved;
+  const selected = dom.chkBetaOta ? (dom.chkBetaOta.checked ? 'beta' : 'official') : saved;
   return selected === 'beta' ? 'beta' : 'official';
+}
+
+function isValidReleaseVersion(value) {
+  return /^v?\d+\.\d+\.\d+(?:-beta\.\d+)?$/i.test(String(value || '').trim());
 }
 
 function compareReleaseVersions(a, b) {
@@ -2427,15 +2602,20 @@ async function checkReadAlongUpdates() {
       headers: { Accept: 'application/vnd.github+json' },
       cache: 'no-store'
     });
-    if (!response.ok) throw new Error('GitHub trả về HTTP ' + response.status);
+    if (!response.ok) throw new Error('Máy chủ cập nhật trả về HTTP ' + response.status);
     const releases = await response.json();
-    if (!Array.isArray(releases)) throw new Error('Dữ liệu Release từ GitHub không hợp lệ.');
+    if (!Array.isArray(releases)) throw new Error('Dữ liệu bản cập nhật không hợp lệ.');
 
     // Không dựa vào thứ tự API: lấy phiên bản SemVer cao nhất trong đúng kênh.
     const eligibleReleases = releases.filter(item =>
       !item.draft &&
       (channel === 'beta' ? item.prerelease === true : item.prerelease === false) &&
-      (item.assets || []).some(asset => /-android\.apk$/i.test(asset.name)) &&
+      isValidReleaseVersion(item.tag_name) &&
+      (item.assets || []).some(asset =>
+        /-android\.apk$/i.test(asset.name) &&
+        isSafeHttpsUrl(asset.browser_download_url) &&
+        new URL(asset.browser_download_url).hostname === 'github.com'
+      ) &&
       compareReleaseVersions(item.tag_name, '0.0.0') > 0
     );
     eligibleReleases.sort((a, b) => compareReleaseVersions(b.tag_name, a.tag_name));
@@ -2446,11 +2626,16 @@ async function checkReadAlongUpdates() {
         ? 'Chưa có bản Beta kèm APK để cập nhật.'
         : 'Chưa có bản Official ổn định kèm APK để cập nhật.';
       showToast(message);
-      alert(message + '\nHãy kiểm tra GitHub Releases hoặc chạy thành công workflow Build and Release.');
+      alert(message + '\nHãy kiểm tra danh sách bản phát hành và quy trình tạo APK.');
       return;
     }
 
-    const asset = (release.assets || []).find(item => /-android\.apk$/i.test(item.name));
+    const asset = (release.assets || []).find(item =>
+      /-android\.apk$/i.test(item.name) &&
+      isSafeHttpsUrl(item.browser_download_url) &&
+      new URL(item.browser_download_url).hostname === 'github.com'
+    );
+    if (!asset) throw new Error('Bản phát hành không có tệp cài đặt Android hợp lệ.');
     const currentVersion = document.querySelector('meta[name="app-version"]')?.content || '0.0.0';
     if (compareReleaseVersions(release.tag_name, currentVersion) <= 0) {
       const message = 'Kênh ' + channelLabel + ' mới nhất là ' + release.tag_name +
@@ -2465,14 +2650,14 @@ async function checkReadAlongUpdates() {
       '\nBản mới nhất: ' + release.tag_name +
       '\nPhiên bản hiện tại: ' + currentVersion +
       (notes ? '\n\nThay đổi:\n' + notes : '') +
-      '\n\nTải APK mới? Android sẽ yêu cầu xác nhận cài đặt. APK phải được ký bằng cùng khóa với ứng dụng đang cài.';
+      '\n\nTải và cài đặt bản cập nhật OTA ngay trong ứng dụng? Android có thể yêu cầu xác nhận cài đặt. APK phải được ký bằng cùng khóa với ứng dụng đang cài. APK phải được ký bằng cùng khóa với ứng dụng đang cài.';
     if (!confirm(message)) return;
 
     const nativeUpdater = window.Capacitor?.Plugins?.ApkUpdater;
     if (nativeUpdater?.downloadAndInstall) {
       showToast('Đang xóa bộ nhớ đệm cũ…');
       await clearReadAlongWebCachesForUpdate();
-      showToast('Đang tải APK ' + channelLabel + '…');
+      showToast('Đang tải bản cập nhật…');
       await nativeUpdater.downloadAndInstall({
         url: asset.browser_download_url,
         filename: asset.name
@@ -2496,14 +2681,19 @@ async function checkReadAlongUpdates() {
 document.addEventListener('DOMContentLoaded', () => {
   const isNativeAndroid = Boolean(window.Capacitor?.isNativePlatform?.() || window.Capacitor?.getPlatform?.() === 'android');
 
-  if (dom.updateChannelSelect) {
+  const versionMeta = document.querySelector('meta[name="app-version"]');
+  if (document.getElementById('installedAppVersion')) {
+    document.getElementById('installedAppVersion').textContent = versionMeta?.content || 'Không xác định';
+  }
+
+  if (dom.chkBetaOta) {
     let savedChannel = 'official';
     try {
       savedChannel = localStorage.getItem(READ_ALONG_UPDATE_CHANNEL_KEY) || 'official';
     } catch (_) {}
-    dom.updateChannelSelect.value = savedChannel === 'beta' ? 'beta' : 'official';
-    dom.updateChannelSelect.addEventListener('change', () => {
-      const channel = dom.updateChannelSelect.value === 'beta' ? 'beta' : 'official';
+    dom.chkBetaOta.checked = savedChannel === 'beta';
+    dom.chkBetaOta.addEventListener('change', () => {
+      const channel = dom.chkBetaOta.checked ? 'beta' : 'official';
       try { localStorage.setItem(READ_ALONG_UPDATE_CHANNEL_KEY, channel); } catch (_) {}
       showToast('Đã chọn kênh OTA ' + (channel === 'beta' ? 'Beta' : 'Official') + '.');
     });
@@ -2514,3 +2704,6 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.menuCheckUpdates.addEventListener('click', checkReadAlongUpdates);
   }
 });
+
+
+// =======================================================

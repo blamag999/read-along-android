@@ -881,6 +881,21 @@ body {
   border: 1px solid rgba(16, 185, 129, 0.4);
 }
 
+.card-favorite-btn {
+  flex: 0 0 auto;
+  min-width: 38px;
+  min-height: 38px;
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  border-radius: var(--radius-md);
+  background: rgba(250, 204, 21, 0.08);
+  color: #facc15;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.card-favorite-btn[aria-pressed="true"] { background: rgba(250, 204, 21, 0.18); }
+.card-favorite-btn:focus-visible { outline: 3px solid #facc15; outline-offset: 2px; }
+
 .card-play-btn {
   background: linear-gradient(135deg, #0284c7, #0369a1);
   color: #fff;
@@ -2347,7 +2362,10 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
   flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
   gap: 0;
 }
 .app-ui-mode .playlist-card {
@@ -2645,4 +2663,181 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
     width: 34px !important;
     height: 34px !important;
   }
+}
+
+
+/* Read Along v1.2.1 beta UX updates */
+.app-ui-mode .update-channel-row { grid-template-columns: 28px minmax(0,1fr) 28px; cursor: pointer; }
+.app-ui-mode .update-channel-label { display: flex; flex-direction: column; gap: 2px; }
+.app-ui-mode .update-channel-label small { color: #94a3b8; font-size: .72rem; font-weight: 500; }
+.app-ui-mode .update-channel-row input[type="checkbox"] {
+  width: 22px; height: 22px; margin: 0; justify-self: center;
+  accent-color: #34d399; cursor: pointer;
+}
+.app-ui-mode .update-channel-row input[type="checkbox"]:focus-visible {
+  outline: 3px solid #60a5fa; outline-offset: 3px;
+}
+.app-ui-mode .read-menu-version {
+  display: grid; grid-template-columns: 28px minmax(0,1fr) auto; align-items: center;
+  gap: 8px; min-height: 42px; padding: 7px 10px; color: #cbd5e1;
+  border-top: 1px solid rgba(148,163,184,.2); font-size: .82rem;
+}
+.app-ui-mode .read-menu-version strong {
+  color: #f8fafc; font-size: .82rem; font-variant-numeric: tabular-nums;
+}
+.tutorial-basic-steps {
+  margin: 12px 0 0; padding-left: 1.5rem; display: grid; gap: 12px;
+  color: #cbd5e1; font-size: .94rem; line-height: 1.65;
+}
+.tutorial-basic-steps li { padding-left: 4px; }
+.tutorial-basic-steps strong { color: #f1f5f9; }
+@media(max-width:600px) {
+  .tutorial-basic-steps { font-size: .86rem; line-height: 1.55; gap: 10px; }
+}
+
+
+/* Large, touch-friendly controls for diagnostics/reporting modal. */
+.diagnostics-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid rgba(148,163,184,.32);
+  border-radius: 12px;
+  background: rgba(15,23,42,.45);
+  font-size: .95rem;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.diagnostics-consent input {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin: 2px 0 0;
+  accent-color: #2563eb;
+}
+.diagnostics-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 18px 0;
+}
+.diagnostics-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 56px;
+  padding: 14px 18px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: #fff;
+  font: inherit;
+  font-size: 1.02rem;
+  font-weight: 750;
+  line-height: 1.35;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(255,255,255,.18);
+}
+.diagnostics-actions .btn-secondary {
+  background: linear-gradient(135deg, #475569, #334155);
+  border-color: rgba(203,213,225,.42);
+}
+.diagnostics-actions .btn-primary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border-color: rgba(147,197,253,.55);
+  box-shadow: 0 4px 14px rgba(37,99,235,.25);
+}
+.diagnostics-actions button:active { transform: scale(.99); }
+.diagnostics-actions button:disabled {
+  opacity: .62;
+  cursor: wait;
+}
+#diagnosticsTurnstile { min-height: 66px; overflow: visible; }
+@media (min-width: 560px) {
+  .diagnostics-actions { flex-direction: row; align-items: stretch; }
+  .diagnostics-actions button { flex: 1 1 0; min-width: 0; }
+}
+
+
+/* Dedicated, high-visibility service status for diagnostics. */
+.diagnostics-service-card {
+  margin: 14px 0 10px;
+  padding: 14px 16px;
+  border: 2px solid rgba(148,163,184,.45);
+  border-radius: 14px;
+  background: rgba(30,41,59,.72);
+  color: #f8fafc;
+  box-shadow: 0 4px 14px rgba(0,0,0,.16);
+}
+.diagnostics-service-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+.diagnostics-service-heading span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 25px;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: rgba(148,163,184,.2);
+  font-weight: 900;
+}
+.diagnostics-service-card p {
+  margin: 9px 0 0;
+  font-size: .94rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.diagnostics-service-card.is-checking {
+  border-color: #64748b;
+  background: rgba(51,65,85,.58);
+}
+.diagnostics-service-card.is-connected {
+  border-color: #10b981;
+  background: rgba(6,78,59,.38);
+}
+.diagnostics-service-card.is-connected .diagnostics-service-heading span {
+  color: #a7f3d0;
+  background: rgba(16,185,129,.22);
+}
+.diagnostics-service-card.is-error {
+  border-color: #f87171;
+  background: rgba(127,29,29,.3);
+}
+.diagnostics-service-card.is-error .diagnostics-service-heading span {
+  color: #fecaca;
+  background: rgba(248,113,113,.2);
+}
+.diagnostics-action-status {
+  padding: 10px 12px;
+  border-left: 3px solid rgba(96,165,250,.75);
+  border-radius: 6px;
+  background: rgba(30,41,59,.35);
+}
+
+
+/* Dynamic story-list pagination: keep overflow reachable on touch and TV devices. */
+.app-ui-mode .playlist-body { min-height: 0; }
+.app-ui-mode #playlistItemsList { scroll-padding-block: 8px; }
+.app-ui-mode #playlistItemsList:focus-within { scrollbar-gutter: stable; }
+.app-ui-mode .playlist-card { scroll-margin-block: 8px; }
+.app-ui-mode .playlist-page-btn { min-height: 46px; }
+@media (max-height: 560px) {
+  .app-ui-mode .playlist-modal-content { padding: 4px; }
+  .app-ui-mode .playlist-modal-content .modal-header { padding: 2px 0 4px; }
+  .app-ui-mode .playlist-search-bar { padding-bottom: 4px; }
+  .app-ui-mode #txtPlaylistSearch { min-height: 36px; padding-block: 5px; }
+  .app-ui-mode .playlist-page-btn { min-height: 38px; padding-block: 5px; }
+  .app-ui-mode .playlist-pagination { padding-block: 4px 2px; }
 }
