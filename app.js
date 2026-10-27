@@ -1735,7 +1735,11 @@ async function renderCurrentSpread(syncAudioToPage = false) {
     window.__raDiagRecord?.('pdf.render.end', { page: leftPageNum });
 
   } catch (err) {
-    window.__raDiagRecord?.('pdf.render.error', { page: leftPageNum });
+    window.__raDiagRecord?.('pdf.render.error', {
+      page: leftPageNum,
+      errorName: err?.name || 'Error',
+      errorMessage: err?.message || String(err)
+    });
     console.error('Lỗi khi render trang:', err);
   } finally {
     state.pageRendering = false;
@@ -2094,7 +2098,19 @@ function onAudioTimeUpdate() {
   if (state.pageTurnMode === 'markers') {
     const nextPage = state.pageNum + step;
     const nextMarker = nextPage <= state.totalPages ? getCurrentPageTimestamp(nextPage) : null;
-    if (state.waitingForManualPageTurn || !nextMarker || !markerMatchesPart(nextMarker)) return;
+    if (state.waitingForManualPageTurn || !nextMarker || !markerMatchesPart(nextMarker)) {
+      if (!state.waitingForManualPageTurn && nextPage <= state.totalPages) {
+        window.__raDiagRecord?.('page.turn.no-marker', {
+          page: state.pageNum,
+          toPage: nextPage,
+          time: curr,
+          part: currentPart,
+          mode: state.pageTurnMode,
+          reason: !nextMarker ? 'missing-next-marker' : 'marker-in-different-audio-part'
+        });
+      }
+      return;
+    }
     if (curr >= nextMarker.time) {
       state.waitingForManualPageTurn = true;
       state.pendingManualPage = nextPage;
@@ -2113,6 +2129,22 @@ function onAudioTimeUpdate() {
       showToast('Đến cuối trang. Lật trang để tiếp tục.');
     }
     return;
+  }
+
+  // Ghi nhận thiếu mốc trang kế tiếp (mỗi trang/phần chỉ ghi một lần).
+  const nextPageForDiagnostics = state.pageNum + step;
+  if (nextPageForDiagnostics <= state.totalPages) {
+    const nextMarkerForDiagnostics = getCurrentPageTimestamp(nextPageForDiagnostics);
+    if (!nextMarkerForDiagnostics || !markerMatchesPart(nextMarkerForDiagnostics)) {
+      window.__raDiagRecord?.('page.turn.no-marker', {
+        page: state.pageNum,
+        toPage: nextPageForDiagnostics,
+        time: curr,
+        part: currentPart,
+        mode: state.pageTurnMode,
+        reason: !nextMarkerForDiagnostics ? 'missing-next-marker' : 'marker-in-different-audio-part'
+      });
+    }
   }
 
   // Bắt kịp trang tương ứng ngay cả khi tua nhanh vượt qua nhiều mốc.
@@ -2727,8 +2759,9 @@ document.addEventListener('DOMContentLoaded', () => {
     'audio.seeking','audio.seeked','audio.error','audio.metadata','pdf.render.start',
     'pdf.render.end','pdf.render.error','viewport.change','orientation.change',
     'orientation.settled','document.hidden','window.error','promise.rejection',
-    'page.turn.manual','page.turn.auto','page.turn.waiting','page.replay','diagnostics.open'
+    'page.turn.manual','page.turn.auto','page.turn.waiting','page.turn.no-marker','page.replay','diagnostics.open'
   ]);
+  const diagnosticDedupeKeys = new Set();
   function sanitizeDiagnosticText(value) {
     return String(value || '')
       .replace(/https?:\/\/[^\s"'<>]+/gi, '[url]')
@@ -2738,6 +2771,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function record(name, details = {}) {
     if (!safeEventNames.has(name)) return;
+    if (name === 'page.turn.no-marker') {
+      const key = [details.page, details.toPage, details.part, details.reason].join(':');
+      if (diagnosticDedupeKeys.has(key)) return;
+      diagnosticDedupeKeys.add(key);
+    }
     const item = { at: new Date().toISOString(), event: name };
     for (const key of ['page','fromPage','toPage','part','targetTime','fromTime','toTime','width','height','code','line','column']) {
       if (Number.isFinite(details[key])) {
