@@ -6,6 +6,8 @@ const APP_SHELL = [
   './app.js',
   './modules/page-sync.js',
   './modules/playlist-layout.js',
+  './modules/remote-sync.js',
+  './modules/diagnostics.js',
   './manifest.json',
   './icon.png',
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
