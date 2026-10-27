@@ -2868,7 +2868,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const version = document.querySelector('meta[name="app-version"]')?.content || 'unknown';
     const platform = window.Capacitor?.getPlatform?.() || 'web';
     return {
-      schemaVersion: 2,
+      schemaVersion: 1,
       app: 'Read Along',
       version: /^[0-9A-Za-z.+-]{1,40}$/.test(version) ? version : 'unknown',
       platform: ['android','ios','web'].includes(platform) ? platform : 'other',
