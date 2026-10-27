@@ -85,7 +85,7 @@ async function verifyTurnstile(token, request, env) {
   if (ip) form.append('remoteip', ip);
   const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {method:'POST',body:form});
   const result = await res.json().catch(() => ({}));
-  return result.success === true && (!result.action || result.action === 'read_along_diagnostics');
+  return result.success === true && result.action === 'read_along_diagnostics';
 }
 export default {
   async fetch(request, env) {

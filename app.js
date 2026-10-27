@@ -1650,6 +1650,7 @@ async function renderCurrentSpread(syncAudioToPage = false) {
 
   let leftPageNum = state.pageNum;
   let rightPageNum = isTwoPages && (leftPageNum + 1 <= state.totalPages) ? leftPageNum + 1 : null;
+  window.__raDiagRecord?.('pdf.render.start', { page: leftPageNum });
 
   if (isTwoPages && rightPageNum) {
     dom.lblPagePrefix.textContent = 'Trang';
@@ -1708,8 +1709,10 @@ async function renderCurrentSpread(syncAudioToPage = false) {
       dom.pageRightWrapper.classList.add('hidden');
     }
     renderSucceeded = true;
+    window.__raDiagRecord?.('pdf.render.end', { page: leftPageNum });
 
   } catch (err) {
+    window.__raDiagRecord?.('pdf.render.error', { page: leftPageNum });
     console.error('Lỗi khi render trang:', err);
   } finally {
     state.pageRendering = false;
@@ -2656,6 +2659,7 @@ document.addEventListener('DOMContentLoaded', () => {
     events.push(item);
     if (events.length > MAX_EVENTS) events.splice(0, events.length - MAX_EVENTS);
   }
+  window.__raDiagRecord = record;
   function audioState() {
     const a = document.getElementById('audioElement');
     const pageEl = document.getElementById('lblCurrentPage');

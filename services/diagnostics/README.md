@@ -21,7 +21,7 @@ This service creates a public GitHub Issue only after an explicit user action an
 5. Set the Turnstile secret: `npx wrangler secret put TURNSTILE_SECRET`.
 6. In Worker Settings > Variables, set `TURNSTILE_SITE_KEY` to the public site key and `RATE_LIMIT_SALT` to a long random value. Keep the Turnstile secret and GitHub token in Secrets, not Variables.
 7. In repository root `diagnostics-config.js`, set `window.READ_ALONG_DIAGNOSTICS_API` to the deployed Worker base URL, e.g. `https://read-along-diagnostics.<your-subdomain>.workers.dev`. This is a public URL, not a credential.
-8. The GitHub repository must have labels `diagnostics` and `bug`; create them before testing if they do not exist. Test first with a test repository/token if desired, because each successful report creates a public Issue.
+8. Test first with a test repository/token if desired, because each successful report creates a public Issue. The service deliberately does not apply labels, so issue creation does not depend on label configuration.
 9. Build the APK using GitHub Actions on branch `beta`, channel `beta`.
 
 ## Local tests
