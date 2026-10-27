@@ -2649,11 +2649,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // =======================================================
-// CHẨN ĐOÁN: lưu log cục bộ, người dùng chủ động sao chép và tạo GitHub Issue
-// Không cần Cloudflare Worker, Turnstile hay API token.
+// CHẨN ĐOÁN: gửi log qua Worker trung gian, người dùng không cần đăng nhập GitHub
+// GitHub token chỉ được lưu trong secret của Cloudflare Worker.
 // =======================================================
 (() => {
   const MAX_EVENTS = 350;
+  const SUBMIT_URL = 'https://read-along-diagnostics.ndhung475.workers.dev/submit';
   const events = [];
   let lastOrientation = '';
   const modal = document.getElementById('diagnosticsModal');
@@ -2691,33 +2692,7 @@ document.addEventListener('DOMContentLoaded', () => {
       duration: Number.isFinite(a?.duration) ? a.duration : 0
     };
   }
-  function snapshot(name, extra = {}) { record(name, { ...audioState(), ...extra }); }
-  const audio = document.getElementById('audioElement');
-  if (audio) {
-    for (const name of ['play','pause','ended','waiting','stalled','seeking','seeked','error','loadedmetadata']) {
-      audio.addEventListener(name, () => snapshot(name === 'loadedmetadata' ? 'audio.metadata' : 'audio.' + name), { passive: true });
-    }
-  }
-  window.addEventListener('orientationchange', () => {
-    lastOrientation = (screen.orientation && screen.orientation.type) || 'unknown';
-    snapshot('orientation.change', { orientation: lastOrientation });
-  }, { passive: true });
-  window.addEventListener('resize', () => snapshot('viewport.change', { orientation: (screen.orientation && screen.orientation.type) || 'unknown' }), { passive: true });
-  window.visualViewport?.addEventListener('resize', () => snapshot('viewport.change', { orientation: (screen.orientation && screen.orientation.type) || 'unknown' }), { passive: true });
-  document.addEventListener('visibilitychange', () => snapshot('document.hidden', { orientation: document.hidden ? 'hidden' : 'visible' }));
-  window.addEventListener('error', () => record('window.error'));
-  window.addEventListener('unhandledrejection', () => record('promise.rejection'));
-  record('app.started');
-  try { window.Capacitor?.Plugins?.Diagnostics?.markWebViewReady?.(); } catch (_) {}
-
-  async function getNativeLogs() {
-    const plugin = window.Capacitor?.Plugins?.Diagnostics || null;
-    if (!plugin?.getLogs) return { available: false, lines: [] };
-    try {
-      const result = await plugin.getLogs();
-      return { available: true, lines: Array.isArray(result.lines) ? result.lines.slice(-250).map(String) : [] };
-    } catch (_) { return { available: false, lines: [] }; }
-  }
+  function snapshot(name) { record(name, audioState()); }
   function makeReport(nativeResult) {
     const version = document.querySelector('meta[name="app-version"]')?.content || 'unknown';
     const platform = window.Capacitor?.getPlatform?.() || 'web';
@@ -2734,6 +2709,14 @@ document.addEventListener('DOMContentLoaded', () => {
       nativeLifecycle: nativeResult.lines
     };
   }
+  async function getNativeLogs() {
+    const plugin = window.Capacitor?.Plugins?.Diagnostics;
+    if (!plugin?.getLogs) return { available: false, lines: [] };
+    try {
+      const result = await plugin.getLogs();
+      return { available: true, lines: Array.isArray(result.lines) ? result.lines.slice(-250).map(String) : [] };
+    } catch (_) { return { available: false, lines: [] }; }
+  }
   function downloadText(name, content) {
     const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -2742,48 +2725,32 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
-  async function copyText(text) {
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(text);
-        return true;
-      }
-    } catch (_) {}
-    try {
-      const area = document.createElement('textarea');
-      area.value = text;
-      area.setAttribute('readonly', '');
-      area.style.position = 'fixed';
-      area.style.opacity = '0';
-      document.body.appendChild(area);
-      area.select();
-      const copied = document.execCommand('copy');
-      area.remove();
-      return copied;
-    } catch (_) { return false; }
-  }
-  function addIssueLink() {
-    const title = '[Diagnostics] Báo lỗi Read Along';
-    const body = '## Mô tả lỗi\nMô tả ngắn lỗi gặp phải và cách tái hiện.\n\n## Log chẩn đoán\nDán log JSON đã sao chép vào đây. Nếu không dán được, hãy đính kèm tệp JSON đã xuất.';
-    return 'https://github.com/blamag999/read-along-android/issues/new?title=' +
-      encodeURIComponent(title) + '&body=' + encodeURIComponent(body);
+  function showIssueLink(url) {
+    if (!status) return;
+    status.textContent = 'Đã gửi log thành công. ';
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = 'Mở GitHub Issue vừa tạo';
+    status.appendChild(link);
   }
 
   document.getElementById('menuDiagnostics')?.addEventListener('click', () => {
     snapshot('diagnostics.open');
     modal?.classList.remove('hidden');
     if (submit) submit.disabled = false;
-    if (status) status.textContent = 'Không cần dịch vụ trung gian. Chọn “Sao chép log & mở GitHub Issue” để báo lỗi.';
+    if (status) status.textContent = 'Log sẽ được gửi tự động lên GitHub qua dịch vụ trung gian; bạn không cần đăng nhập GitHub.';
   });
   document.getElementById('btnCloseDiagnostics')?.addEventListener('click', () => modal?.classList.add('hidden'));
   modal?.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
   consent?.addEventListener('change', () => {
-    if (consent.checked && status) status.textContent = 'Đã đồng ý. Nhấn “Sao chép log & mở GitHub Issue”; log sẽ được sao chép để bạn dán vào Issue công khai.';
+    if (consent.checked && status) status.textContent = 'Đã đồng ý. Khi nhấn gửi, log sẽ được đưa vào GitHub Issue công khai.';
   });
   document.getElementById('btnExportDiagnostics')?.addEventListener('click', async () => {
     const report = makeReport(await getNativeLogs());
     downloadText('read-along-diagnostics-' + new Date().toISOString().replace(/[:.]/g,'-') + '.json', JSON.stringify(report, null, 2));
-    if (status) status.textContent = 'Đã xuất tệp log JSON. Kiểm tra nội dung trước khi đính kèm vào GitHub Issue công khai.';
+    if (status) status.textContent = 'Đã xuất tệp log JSON. Kiểm tra nội dung trước khi chia sẻ.';
   });
   submit?.addEventListener('click', async () => {
     if (!consent?.checked) {
@@ -2791,35 +2758,27 @@ document.addEventListener('DOMContentLoaded', () => {
       consent?.focus();
       return;
     }
-    // Mở trang GitHub ngay trong thao tác bấm để giảm khả năng trình duyệt chặn cửa sổ mới.
-    const issueUrl = addIssueLink();
-    const issueWindow = window.open(issueUrl, '_blank');
-    if (issueWindow) {
-      try { issueWindow.opener = null; } catch (_) {}
-    }
     submit.disabled = true;
-    if (status) status.textContent = 'Đang chuẩn bị log để sao chép…';
+    if (status) status.textContent = 'Đang gửi log lên GitHub…';
+    let json = '';
     try {
       const report = makeReport(await getNativeLogs());
-      const json = JSON.stringify(report, null, 2);
-      const copied = await copyText(json);
-      if (!copied) {
-        downloadText('read-along-diagnostics-' + new Date().toISOString().replace(/[:.]/g,'-') + '.json', json);
+      json = JSON.stringify(report, null, 2);
+      const response = await fetch(SUBMIT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ report })
+      });
+      let result = {};
+      try { result = await response.json(); } catch (_) {}
+      if (!response.ok || !result.success || !result.issueUrl) {
+        const message = result.error || ('Máy chủ trả về HTTP ' + response.status);
+        throw new Error(message);
       }
-      if (status) {
-        status.textContent = copied
-          ? 'Đã sao chép log. Trong GitHub Issue vừa mở, dán log vào mục “Log chẩn đoán” rồi nhấn Submit new issue.'
-          : 'Không thể tự sao chép log nên đã tải tệp JSON. Đính kèm tệp này vào GitHub Issue vừa mở rồi nhấn Submit new issue.';
-        if (!issueWindow) {
-          const link = document.createElement('a');
-          link.href = issueUrl; link.target = '_blank'; link.rel = 'noopener noreferrer';
-          link.textContent = 'Mở trang tạo GitHub Issue';
-          status.appendChild(document.createTextNode(' '));
-          status.appendChild(link);
-        }
-      }
+      showIssueLink(result.issueUrl);
     } catch (error) {
-      if (status) status.textContent = 'Không tạo được log: ' + String(error?.message || 'lỗi không xác định') + '. Bạn có thể dùng “Xuất log ra tệp”.';
+      if (json) downloadText('read-along-diagnostics-' + new Date().toISOString().replace(/[:.]/g,'-') + '.json', json);
+      if (status) status.textContent = 'Chưa gửi được log (' + String(error?.message || 'lỗi mạng') + '). Đã tải log JSON để bạn có thể gửi thủ công.';
     } finally {
       submit.disabled = false;
     }
