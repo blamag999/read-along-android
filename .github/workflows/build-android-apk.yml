@@ -156,10 +156,17 @@ jobs:
           source = main.read_text()
           marker = 'public class MainActivity extends BridgeActivity {'
           if marker not in source: raise SystemExit('Could not locate MainActivity class declaration')
-          # Register both Capacitor plugins once. Avoid overriding BridgeActivity lifecycle
-          # methods because the selected Capacitor version marks these methods final.
+          # Use normal Python newlines in the generated Java source.
           if 'ApkUpdaterPlugin.class' not in source:
-              source = source.replace(marker, marker + '\\n    @Override\\n    public void onCreate(android.os.Bundle savedInstanceState) {\\n        registerPlugin(ApkUpdaterPlugin.class);\\n        registerPlugin(DiagnosticsPlugin.class);\\n        DiagnosticsPlugin.recordLifecycle(this, \\"Activity.onCreate\\");\\n        super.onCreate(savedInstanceState);\\n    }', 1)
+              injected = """public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(android.os.Bundle savedInstanceState) {
+                  registerPlugin(ApkUpdaterPlugin.class);
+                  registerPlugin(DiagnosticsPlugin.class);
+                  DiagnosticsPlugin.recordLifecycle(this, "Activity.onCreate");
+                  super.onCreate(savedInstanceState);
+              }"""
+              source = source.replace(marker, injected, 1)
               main.write_text(source)
           elif 'DiagnosticsPlugin.class' not in source:
               source = source.replace('registerPlugin(ApkUpdaterPlugin.class);', 'registerPlugin(ApkUpdaterPlugin.class);\\n        registerPlugin(DiagnosticsPlugin.class);', 1)
