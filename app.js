@@ -31,6 +31,10 @@ const state = {
   resumeAfterManualTurn: false,
   autoSeekAudio: true,
   isAudioDrivenChange: false,
+  // Layout-only redraws (orientation/resize) must never seek the audio.
+  suppressAudioSyncOnRender: false,
+  pendingRenderSyncAudio: true,
+  repeatAudio: false,
 
   // CHẾ ĐỘ HIỂN THỊ
   viewMode: 'fit-height',
@@ -223,8 +227,8 @@ const dom = {
   playPauseIcon: document.getElementById('playPauseIcon'),
   btnRewind5: document.getElementById('btnRewind5'),
   btnForward5: document.getElementById('btnForward5'),
-  speedSelect: document.getElementById('speedSelect'),
   btnReplayPage: document.getElementById('btnReplayPage'),
+  btnRepeatAudio: document.getElementById('btnRepeatAudio'),
   selPageTurnMode: document.getElementById('selPageTurnMode'),
   chkAutoSeekAudio: document.getElementById('chkAutoSeekAudio'),
 
@@ -1226,8 +1230,8 @@ dom.selPageTurnMode.value = state.pageTurnMode;
   dom.btnPageJump.addEventListener('click', jumpToEnteredPage);
   dom.pageJumpInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') jumpToEnteredPage(); });
   dom.btnReplayPage.addEventListener('click', replayCurrentPage);
-  dom.speedSelect.addEventListener('change', (e) => setPlaybackSpeed(parseFloat(e.target.value), true));
-  initPlaybackSpeed();
+  dom.btnRepeatAudio.addEventListener('click', toggleRepeatAudio);
+  updateRepeatButtonState();
   initPdfClickNavigation();
 
   dom.btnPrevPage.addEventListener('click', () => changePage(-1));
@@ -1289,7 +1293,11 @@ dom.selPageTurnMode.value = state.pageTurnMode;
   initTouchGestures();
 
   window.addEventListener('resize', debounce(() => {
-    if (state.pdfDoc) renderCurrentSpread();
+    if (state.pdfDoc) {
+      // Rotation changes the PDF viewport, not the user's playback position.
+      state.suppressAudioSyncOnRender = true;
+      renderCurrentSpread({ syncAudio: false });
+    }
   }, 300));
 }
 
@@ -1589,10 +1597,11 @@ function loadAudioFromBlob(file) {
   return true;
 }
 
-async function renderCurrentSpread() {
+async function renderCurrentSpread({ syncAudio = true } = {}) {
   if (!state.pdfDoc || state.pdfLoading) return;
   if (state.pageRendering) {
     state.pageNumPending = state.pageNum;
+    state.pendingRenderSyncAudio = syncAudio;
     return;
   }
   state.pageRendering = true;
@@ -1666,11 +1675,13 @@ async function renderCurrentSpread() {
     state.pageRendering = false;
     if (state.pageNumPending !== null) {
       state.pageNumPending = null;
-      renderCurrentSpread();
+      const nextSyncAudio = state.pendingRenderSyncAudio && !state.suppressAudioSyncOnRender;
+      state.pendingRenderSyncAudio = true;
+      renderCurrentSpread({ syncAudio: nextSyncAudio });
     }
   }
 
-  if (state.autoSeekAudio && !state.isAudioDrivenChange) {
+  if (syncAudio && !state.suppressAudioSyncOnRender && state.autoSeekAudio && !state.isAudioDrivenChange) {
     const rawTarget = state.pageTimestamps[leftPageNum];
     if (typeof rawTarget === 'number') {
       dom.audioElement.currentTime = rawTarget;
@@ -1685,6 +1696,8 @@ async function renderCurrentSpread() {
       }
     }
   }
+  // Clear only after the current render has decided whether audio sync is allowed.
+  state.suppressAudioSyncOnRender = false;
 }
 
 function setViewMode(mode) {
@@ -1863,6 +1876,22 @@ function updatePlayButtonState() {
   dom.btnPlayPause.classList.toggle('is-playing', isPlaying);
 }
 
+function updateRepeatButtonState() {
+  const enabled = Boolean(state.repeatAudio);
+  dom.btnRepeatAudio.classList.toggle('is-on', enabled);
+  dom.btnRepeatAudio.setAttribute('aria-pressed', String(enabled));
+  dom.btnRepeatAudio.title = enabled ? 'Tắt lặp audio hiện tại' : 'Lặp audio hiện tại';
+  const label = dom.btnRepeatAudio.querySelector('.repeat-label');
+  if (label) label.textContent = enabled ? 'Lặp audio: Bật' : 'Lặp audio';
+}
+
+function toggleRepeatAudio() {
+  state.repeatAudio = !state.repeatAudio;
+  dom.audioElement.loop = state.repeatAudio;
+  updateRepeatButtonState();
+  showToast(state.repeatAudio ? 'Đã bật lặp lại audio hiện tại.' : 'Đã tắt lặp lại audio.');
+}
+
 async function togglePlayPause() {
   const hasAudioSource = Boolean(dom.audioElement.currentSrc || dom.audioElement.src);
   if (!hasAudioSource || !state.currentStoryAudios || state.currentStoryAudios.length === 0) {
@@ -1897,7 +1926,6 @@ function setPlaybackSpeed(speed, persist = false) {
   const safeSpeed = state.speeds.includes(speed) ? speed : 1.0;
   state.speedIndex = state.speeds.indexOf(safeSpeed);
   dom.audioElement.playbackRate = safeSpeed;
-  dom.speedSelect.value = String(safeSpeed);
   if (persist) {
     try { localStorage.setItem(PLAYBACK_SPEED_STORAGE_KEY, String(safeSpeed)); } catch (e) {}
   }
