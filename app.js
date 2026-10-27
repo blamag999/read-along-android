@@ -367,14 +367,14 @@ function saveGithubTokenFromInput(){
   if(!confirm('Mã truy cập có định dạng không quen thuộc. Bạn vẫn muốn lưu mã này?'))return;
  }
  try{sessionStorage.setItem(GITHUB_TOKEN_SESSION_KEY,token);updateGithubTokenStatus();showToast('Đã lưu mã truy cập trong phiên hiện tại.');}
- catch(e){showToast('Không thể lưu token trong phiên trình duyệt.');}
+ catch(e){showToast('Không thể lưu mã truy cập trong phiên trình duyệt.');}
 }
 function clearGithubToken(){
  if(!getGithubToken()){updateGithubTokenStatus();showToast('Không có token nào đang lưu trong phiên này.');return;}
  if(!confirm('Xóa mã truy cập khỏi phiên trình duyệt hiện tại? Thao tác này không thu hồi quyền đã cấp.'))return;
  sessionStorage.removeItem(GITHUB_TOKEN_SESSION_KEY);
  if(githubSyncTimer){clearTimeout(githubSyncTimer);githubSyncTimer=null;}
- updateGithubTokenStatus();showToast('Đã xóa token khỏi phiên trình duyệt.');
+ updateGithubTokenStatus();showToast('Đã xóa mã truy cập khỏi phiên trình duyệt.');
 }
 function encodeBase64Utf8(v){const b=new TextEncoder().encode(v);let x='';for(let i=0;i<b.length;i+=0x8000)x+=String.fromCharCode(...b.subarray(i,i+0x8000));return btoa(x);}
 async function getGithubWriteToken(askForToken=false){
@@ -405,11 +405,11 @@ async function putJsonFileOnGitHub(filename,content,token){
  if(old.ok){
   const oldData=await old.json();sha=oldData.sha||null;
   if(sha===localSha)return {path,changed:false};
- }else if(old.status!==404)throw Error(filename+': không đọc được tệp hiện có trên GitHub ('+old.status+').');
+ }else if(old.status!==404)throw Error(filename+': không đọc được tệp mốc hiện có ('+old.status+').');
  const body={message:'Sync changed JSON file '+safeName,content:encodeBase64Utf8(content),branch:GITHUB_BRANCH};
  if(sha)body.sha=sha;
  const res=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});
- if(!res.ok)throw Error(filename+': GitHub từ chối lưu ('+res.status+'): '+(await res.text()).slice(0,300));
+ if(!res.ok)throw Error(filename+': máy chủ từ chối lưu tệp ('+res.status+').');
  return {path,changed:true};
 }
 async function syncAllFolderJsonToGitHub({askForToken=false}={}){
@@ -460,11 +460,11 @@ async function syncCurrentBookToGitHub({askForToken=false}={}){
  const path=getCloudSyncPath(),url='https://api.github.com/repos/'+GITHUB_OWNER+'/'+GITHUB_REPO+'/contents/'+path.split('/').map(encodeURIComponent).join('/');
  const headers={'Accept':'application/vnd.github+json','Authorization':'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'};
  try{const content=JSON.stringify(state.pageTimestamps,null,2);const localSha=await getGitBlobSha(content);
- const old=await fetch(url+'?ref='+encodeURIComponent(GITHUB_BRANCH),{headers});let sha=null;if(old.ok)sha=(await old.json()).sha||null;else if(old.status!==404)throw Error('Không đọc được file GitHub ('+old.status+').');
+ const old=await fetch(url+'?ref='+encodeURIComponent(GITHUB_BRANCH),{headers});let sha=null;if(old.ok)sha=(await old.json()).sha||null;else if(old.status!==404)throw Error('Không đọc được tệp mốc hiện có ('+old.status+').');
  if(sha&&sha===localSha){updateSaveStatusBadge('☁️ Mốc đọc đã mới nhất');return true;}
  const body={message:'Sync reading markers for '+getSyncStem(),content:encodeBase64Utf8(content),branch:GITHUB_BRANCH};if(sha)body.sha=sha;
- const res=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});if(!res.ok)throw Error('GitHub từ chối lưu ('+res.status+'): '+await res.text());
- updateSaveStatusBadge('☁️ Đã đồng bộ mốc đọc');showToast('☁️ Đã đồng bộ mốc lên GitHub: '+path);return true;
+ const res=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});if(!res.ok)throw Error('Máy chủ từ chối lưu mốc đọc ('+res.status+').');
+ updateSaveStatusBadge('☁️ Đã đồng bộ mốc đọc');showToast('☁️ Đã đồng bộ mốc đọc: '+path);return true;
  }catch(e){console.error(e);updateSaveStatusBadge('⚠️ Đồng bộ mốc đọc lỗi');if(askForToken)alert('Không thể đồng bộ mốc đọc. Hãy kiểm tra mã truy cập và quyền ghi.\\n\\n'+e.message);return false;}
 }
 function scheduleGitHubSync(){
@@ -513,7 +513,7 @@ async function loadCloudSyncForBook(){
           state.pageTimestamps=data;saveSyncToStorage();updatePageTimestampBadge();updateSyncCountBadge();
           updateSaveStatusBadge('☁️ Đã nạp mốc đọc');return true;
         }
-      }catch(e){console.warn('Không thể nạp mốc GitHub:',e);}
+      }catch(e){console.warn('Không thể nạp mốc đọc:',e);}
     }
   }
   return false;
@@ -577,9 +577,9 @@ async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl 
           return;
         }
       }
-      console.warn('Không nạp được JSON mốc từ R2:', response.status);
+      console.warn('Không nạp được tệp mốc trực tuyến:', response.status);
     } catch (error) {
-      console.warn('Không thể nạp JSON mốc từ R2 (kiểm tra URL/CORS):', error);
+      console.warn('Không thể nạp tệp mốc trực tuyến (kiểm tra địa chỉ và quyền truy cập):', error);
     }
   }
 
@@ -687,7 +687,7 @@ async function loadR2Catalog() {
     openPlaylistModal();
     showToast('Đã tải ' + stories.length + ' truyện.');
   } catch (error) {
-    console.error('Không thể tải danh sách sách R2:', error);
+    console.error('Không thể tải danh sách truyện:', error);
     alert('Không thể tải danh sách truyện. Hãy kiểm tra kết nối và cấu hình danh mục. ' + error.message);
   } finally {
     dom.playlistLoading.classList.add('hidden');
@@ -2802,7 +2802,7 @@ async function checkReadAlongUpdates() {
         ? 'Chưa có bản Beta kèm APK để cập nhật.'
         : 'Chưa có bản Official ổn định kèm APK để cập nhật.';
       showToast(message);
-      alert(message + '\nHãy kiểm tra GitHub Releases hoặc chạy thành công workflow Build and Release.');
+      alert(message + '\nHãy kiểm tra danh sách bản phát hành và quy trình tạo APK.');
       return;
     }
 
