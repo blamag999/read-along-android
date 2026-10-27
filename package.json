@@ -6,7 +6,7 @@
   "scripts": {
     "prepare:web": "node scripts/prepare-web.js",
     "android:sync": "npm run prepare:web && cap sync android",
-    "check:js": "node --check app.js && node --check sw.js && node --check modules/page-sync.js && node --check modules/playlist-layout.js",
+    "check:js": "node --check app.js && node --check sw.js && node --check modules/page-sync.js && node --check modules/playlist-layout.js && node --check modules/remote-sync.js && node --check modules/diagnostics.js",
     "test": "npm run check:js"
   },
   "dependencies": {
