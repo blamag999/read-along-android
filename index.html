@@ -37,7 +37,7 @@
 
     <div class="header-right">
       <!-- NÚT MỞ DANH SÁCH TẬP TRUYỆN (PLAYLIST) -->
-      <button id="btnOpenPlaylist" class="icon-btn playlist-btn" title="Chọn thư mục hoặc tải danh sách sách R2 để mở danh sách tập" disabled aria-disabled="true">
+      <button id="btnOpenPlaylist" class="icon-btn playlist-btn" title="Chọn thư mục hoặc mở danh sách truyện trực tuyến" disabled aria-disabled="true">
         📚 <span>Danh sách truyện</span>
         <span id="lblPlaylistCount" class="badge-count hidden">0</span>
       </button>
@@ -58,7 +58,7 @@
         <button id="menuDiagnostics" class="read-menu-option" type="button"><span class="menu-option-icon">🛡️</span><span>Chẩn đoán / Báo lỗi</span></button>
         <button id="menuCheckUpdates" class="read-menu-option hidden" type="button"><span class="menu-option-icon" aria-hidden="true">⬆️</span><span>Kiểm tra cập nhật</span></button>
       </div>
-      <button id="btnReloadMarkers" class="icon-btn apk-icon-button hidden" type="button" title="Tải mốc thời gian mới nhất từ GitHub" aria-label="Tải mốc thời gian mới nhất từ GitHub">⟳</button>
+      <button id="btnReloadMarkers" class="icon-btn apk-icon-button hidden" type="button" title="Tải mốc thời gian mới nhất" aria-label="Tải mốc thời gian mới nhất">⟳</button>
       <button id="btnOpenSyncModal" class="icon-btn" title="Quản lý mốc đồng bộ thời gian">⚙️ <span class="hide-mobile">Mốc thời gian</span></button>
       <button id="btnToggleSettings" class="icon-btn menu-toggle-btn" type="button" aria-controls="filePickerSection syncBanner" aria-expanded="true" title="Ẩn/hiện dòng chọn tệp và tùy chọn">☰ <span>Menu</span></button>
     </div>
@@ -128,7 +128,7 @@
         <p class="tutorial-intro">Bạn chỉ cần làm theo các bước dưới đây để mở truyện và nghe đọc. Không cần thiết lập mốc thời gian nếu truyện đã được đồng bộ sẵn.</p>
         <ol class="tutorial-basic-steps">
           <li><strong>Mở danh sách truyện:</strong> nhấn <strong>📚 Danh sách truyện</strong>, tìm tên truyện bằng ô tìm kiếm rồi chọn truyện muốn đọc.</li>
-          <li><strong>Nếu chưa có danh sách:</strong> nhấn <strong>Bắt đầu</strong>, chọn sách trên Cloudflare R2 hoặc chọn thư mục có PDF và MP3. Nếu mở riêng một PDF, hãy nhấn <strong>Chọn MP3</strong> để ghép âm thanh.</li>
+          <li><strong>Nếu chưa có danh sách:</strong> nhấn <strong>Bắt đầu</strong>, chọn truyện trực tuyến hoặc chọn thư mục có PDF và MP3. Nếu mở riêng một PDF, hãy nhấn <strong>Chọn MP3</strong> để ghép âm thanh.</li>
           <li><strong>Nghe và theo dõi:</strong> nhấn nút <strong>▶ Phát</strong> ở thanh điều khiển phía dưới. Dùng nút tua lùi/tiến 5 giây hoặc nút trang trước/trang sau khi cần.</li>
           <li><strong>Điều chỉnh cách đọc:</strong> mở menu <strong>☰</strong> để bật/tắt tự lật trang hoặc hiển thị hai trang. Dùng điều khiển trên màn hình hoặc các phím điều hướng trên remote.</li>
           <li><strong>Cập nhật ứng dụng:</strong> trong menu, bỏ tích <strong>Kênh OTA Beta</strong> để nhận bản Official; tích vào để nhận bản Beta thử nghiệm. Chọn <strong>Kiểm tra cập nhật</strong> để kiểm tra bản mới.</li>
@@ -211,9 +211,9 @@
       </div>
       <div class="modal-body">
         <div class="option-block">
-          <h4>☁️ Mở sách từ Cloudflare R2</h4>
-          <p class="option-desc">Tải danh sách sách trực tuyến; PDF, MP3 và mốc đồng bộ được đọc từ R2.</p>
-          <button id="btnLoadR2Catalog" class="btn-primary-large" type="button">☁️ Sách trên Cloudflare R2</button>
+          <h4>☁️ Mở truyện trực tuyến</h4>
+          <p class="option-desc">Tải danh sách truyện trực tuyến; PDF, MP3 và mốc đồng bộ được tải tự động.</p>
+          <button id="btnLoadR2Catalog" class="btn-primary-large" type="button">☁️ Truyện trực tuyến</button>
           <div class="divider-text">HOẶC MỞ TỪ MÁY TÍNH</div>
           <h4>📁 Mở cả thư mục truyện</h4>
           <p class="option-desc">Nạp danh sách các tập PDF/MP3 trong thư mục để bạn chọn tập muốn nghe. Tệp truyện vẫn nằm trên thiết bị.</p>
@@ -246,9 +246,9 @@
           <button class="filter-tab" data-filter="favorites">★ Yêu thích</button>
         </div>
         <div class="playlist-export-row" style="padding: 10px 0; display: grid; gap: 8px;">
-          <label for="r2PublicBaseInput"><strong>URL công khai gốc của bucket R2</strong></label>
-          <input id="r2PublicBaseInput" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://pub-xxxxxxxx.r2.dev" style="width:100%;box-sizing:border-box;padding:10px;border-radius:6px;">
-          <button id="btnExportR2Catalog" class="btn-secondary" type="button" title="Xuất danh mục JSON với URL công khai của các tệp trên Cloudflare R2">📤 Xuất danh sách books.json cho R2</button>
+          <label for="r2PublicBaseInput"><strong>Địa chỉ gốc của kho tệp trực tuyến</strong></label>
+          <input id="r2PublicBaseInput" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://example.com" style="width:100%;box-sizing:border-box;padding:10px;border-radius:6px;">
+          <button id="btnExportR2Catalog" class="btn-secondary" type="button" title="Xuất danh mục JSON với địa chỉ công khai của các tệp">📤 Xuất danh mục truyện</button>
           <p class="modal-desc" style="margin: 0;">Nhập URL cho mỗi lần xuất. Địa chỉ không được lưu. Tải books.json lên thư mục gốc của bucket, cùng cấp với PDF và MP3.</p>
         </div>
       </div>
@@ -285,19 +285,19 @@
 
         <div class="sync-actions-row">
           <button id="btnExportSync" class="btn-secondary" title="Xuất tệp mốc để lưu cùng thư mục truyện trên máy">📥 Tải tệp mốc (.json)</button>
-          <button id="btnSaveToGithubFolder" class="btn-primary" title="Đồng bộ tất cả tệp JSON trong thư mục đã chọn lên GitHub">☁️ Đồng bộ JSON lên GitHub</button>
-          <button id="btnLoadFromGithub" class="btn-secondary" title="Tải lại mốc thời gian mới nhất từ GitHub">⬇️ Tải mốc từ GitHub</button>
+          <button id="btnSaveToGithubFolder" class="btn-primary" title="Đồng bộ các tệp mốc trong thư mục đã chọn">☁️ Đồng bộ mốc đọc</button>
+          <button id="btnLoadFromGithub" class="btn-secondary" title="Tải lại mốc thời gian mới nhất">⬇️ Tải mốc đọc</button>
           <p class="modal-desc">Khi đã chọn thư mục, ứng dụng chỉ tải lên các tệp .json có nội dung thay đổi; tệp không đổi sẽ được bỏ qua. Mốc của PDF đang mở được tự động kiểm tra và đồng bộ tối đa mỗi 1 phút khi có thay đổi và đã cấu hình token. Tệp PDF và âm thanh vẫn nằm trên thiết bị của bạn.</p>
           <div class="github-token-panel" style="border:1px solid #475569;border-radius:10px;padding:12px;margin:10px 0;display:grid;gap:8px;">
-            <strong>🔐 GitHub Token</strong>
+            <strong>🔐 Mã truy cập đồng bộ</strong>
             <p id="githubTokenStatus" class="modal-desc" style="margin:0;">Chưa có token trong phiên này.</p>
-            <label for="githubTokenInput">Nhập token mới (quyền Contents: Read and write)</label>
-            <input id="githubTokenInput" type="password" autocomplete="new-password" placeholder="github_pat_..." style="width:100%;box-sizing:border-box;padding:10px;border-radius:6px;">
+            <label for="githubTokenInput">Nhập mã truy cập (quyền đọc và ghi tệp)</label>
+            <input id="githubTokenInput" type="password" autocomplete="new-password" placeholder="Mã truy cập" style="width:100%;box-sizing:border-box;padding:10px;border-radius:6px;">
             <div class="sync-actions-row">
               <button id="btnSaveGithubToken" type="button" class="btn-primary">🔑 Lưu / thay token</button>
               <button id="btnClearGithubToken" type="button" class="btn-danger">🗑️ Xóa token đang lưu</button>
             </div>
-            <p class="modal-desc" style="margin:0;">Token chỉ lưu trong sessionStorage của tab/phiên trình duyệt hiện tại, không ghi vào mã nguồn hay GitHub. Xóa token ở đây chỉ xóa token khỏi phiên trình duyệt; muốn thu hồi quyền truy cập, hãy thu hồi token trên trang cài đặt GitHub.</p>
+            <p class="modal-desc" style="margin:0;">Mã chỉ lưu trong phiên trình duyệt hiện tại, không ghi vào mã nguồn. Xóa mã ở đây chỉ xóa mã khỏi phiên; muốn thu hồi quyền đã cấp, hãy thu hồi mã trên trang quản lý truy cập.</p>
           </div>
           <label for="importSyncInput" class="btn-secondary">
             📂 Nhập file mốc từ máy
@@ -332,16 +332,16 @@
       </div>
       <div class="modal-body">
         <p class="modal-desc">Log ghi nhận sự kiện audio, PDF, xoay màn hình và vòng đời Activity/WebView. Không ghi nội dung sách, tên tệp, đường dẫn hay URL audio.</p>
-        <p id="diagnosticsStatus" class="modal-desc diagnostics-action-status" role="status">Log sẽ được gửi tự động qua dịch vụ trung gian và tạo GitHub Issue công khai. Bạn không cần đăng nhập GitHub.</p>
+        <p id="diagnosticsStatus" class="modal-desc diagnostics-action-status" role="status">Nhật ký sẽ được gửi qua dịch vụ trung gian và tạo báo cáo công khai. Bạn không cần đăng nhập.</p>
         <label class="diagnostics-consent">
           <input id="chkDiagnosticsConsent" type="checkbox">
-          <span>Tôi đồng ý chia sẻ log chẩn đoán trong GitHub Issue công khai. Tôi sẽ kiểm tra log trước khi gửi.</span>
+          <span>Tôi đồng ý chia sẻ nhật ký chẩn đoán trong báo cáo công khai. Tôi sẽ kiểm tra nhật ký trước khi gửi.</span>
         </label>
         <div class="diagnostics-actions">
           <button id="btnExportDiagnostics" class="btn-secondary" type="button">📥 Xuất log ra tệp</button>
-          <button id="btnSubmitDiagnostics" class="btn-primary" type="button">📤 Gửi log lên GitHub (không cần đăng nhập)</button>
+          <button id="btnSubmitDiagnostics" class="btn-primary" type="button">📤 Gửi nhật ký chẩn đoán</button>
         </div>
-        <p class="modal-desc">Ứng dụng sẽ tự tạo GitHub Issue chứa log. Nếu gửi lỗi, ứng dụng sẽ tải tệp JSON để bạn có thể báo lỗi thủ công. Issue và log là công khai.</p>
+        <p class="modal-desc">Ứng dụng sẽ tự tạo báo cáo chứa nhật ký. Nếu gửi lỗi, ứng dụng sẽ tải tệp JSON để bạn có thể gửi thủ công. Báo cáo và nhật ký là công khai.</p>
       </div>
     </div>
   </div>
@@ -353,6 +353,8 @@
     // Dùng cùng giao diện gọn trên APK và Web Local để dễ kiểm tra nhất quán.
     document.documentElement.classList.add('app-ui-mode');
   </script>
+  <script src="modules/page-sync.js"></script>
+  <script src="modules/playlist-layout.js"></script>
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
