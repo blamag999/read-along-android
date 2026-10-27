@@ -2131,7 +2131,7 @@ function onAudioTimeUpdate() {
 
   // A stale timeupdate must never undo a manual page turn. Backward alignment is
   // permitted only after an actual backward media seek (including an intentional replay).
-  if (alignedPage < state.pageNum && !allowBackwardSync) {
+  if (!window.ReadAlongPageSync.shouldAllowPageChange(state.pageNum, alignedPage, allowBackwardSync)) {
     window.__raDiagRecord?.('page.turn.ignored-stale-marker', {
       fromPage: state.pageNum, toPage: alignedPage, time: curr,
       targetTime: target.time, part: currentPart,
