@@ -161,7 +161,10 @@ jobs:
               injected = marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);\n        DiagnosticsPlugin.recordLifecycle(this, "Activity.onCreate");\n        super.onCreate(savedInstanceState);\n    }'
               source = source.replace(marker, injected, 1)
           import re
-          source = re.sub(r'\s*@Override\s+protected void onResume\(\)\s*\{[^}]*\}\s*@Override\s+protected void onPause\(\)\s*\{[^}]*\}\s*@Override\s+protected void onDestroy\(\)\s*\{[^}]*\}', '', source, flags=re.S)
+          source, removed = re.subn(r'(?m)^\\s*@Override protected void onResume\\(\\) \\{[^\\n]*\\}\\s*\\n\\s*@Override protected void onPause\\(\\) \\{[^\\n]*\\}\\s*\\n\\s*@Override protected void onDestroy\\(\\) \\{[^\\n]*\\}\\s*\\n?', '', source)
+          # Fail clearly if the obsolete lifecycle hooks are still present.
+          if 'Activity.onResume' in source or 'Activity.onPause' in source or 'Activity.onDestroy' in source:
+              raise SystemExit('Obsolete Activity lifecycle override remained in MainActivity')
           if 'DiagnosticsPlugin.class' not in source:
               if 'registerPlugin(ApkUpdaterPlugin.class);' in source:
                   source = source.replace('registerPlugin(ApkUpdaterPlugin.class);', 'registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);', 1)
