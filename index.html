@@ -331,16 +331,16 @@
       </div>
       <div class="modal-body">
         <p class="modal-desc">Log ghi nhận sự kiện audio, PDF, xoay màn hình và vòng đời Activity/WebView. Không ghi nội dung sách, tên tệp, đường dẫn hay URL audio.</p>
-        <p id="diagnosticsStatus" class="modal-desc diagnostics-action-status" role="status">Không cần dịch vụ trung gian. Khi báo lỗi, ứng dụng sẽ sao chép log và mở trang tạo GitHub Issue.</p>
+        <p id="diagnosticsStatus" class="modal-desc diagnostics-action-status" role="status">Log sẽ được gửi tự động qua dịch vụ trung gian và tạo GitHub Issue công khai. Bạn không cần đăng nhập GitHub.</p>
         <label class="diagnostics-consent">
           <input id="chkDiagnosticsConsent" type="checkbox">
           <span>Tôi đồng ý chia sẻ log chẩn đoán trong GitHub Issue công khai. Tôi sẽ kiểm tra log trước khi gửi.</span>
         </label>
         <div class="diagnostics-actions">
           <button id="btnExportDiagnostics" class="btn-secondary" type="button">📥 Xuất log ra tệp</button>
-          <button id="btnSubmitDiagnostics" class="btn-primary" type="button">📋 Sao chép log &amp; mở GitHub Issue</button>
+          <button id="btnSubmitDiagnostics" class="btn-primary" type="button">📤 Gửi log lên GitHub (không cần đăng nhập)</button>
         </div>
-        <p class="modal-desc">Sau khi trang GitHub mở ra, dán log vào phần “Log chẩn đoán” rồi nhấn <strong>Submit new issue</strong>. Nếu không sao chép được, ứng dụng sẽ tải tệp JSON để bạn đính kèm. Issue là công khai.</p>
+        <p class="modal-desc">Ứng dụng sẽ tự tạo GitHub Issue chứa log. Nếu gửi lỗi, ứng dụng sẽ tải tệp JSON để bạn có thể báo lỗi thủ công. Issue và log là công khai.</p>
       </div>
     </div>
   </div>
