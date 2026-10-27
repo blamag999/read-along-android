@@ -9,7 +9,7 @@
     return Math.max(1, Math.min(count, Math.floor(height / rowHeight)));
   }
   function clampPage(page, totalPages) {
-    return Math.max(1, Math.min(Math.floor(Number(page) || 1), Math.max(1, Math.floor(Number(totalPages) || 1)));
+    return Math.max(1, Math.min(Math.floor(Number(page) || 1), Math.max(1, Math.floor(Number(totalPages) || 1))));
   }
   root.ReadAlongPlaylistLayout = Object.freeze({ calculatePageSize, clampPage });
 })(window);
