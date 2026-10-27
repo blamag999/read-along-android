@@ -2658,21 +2658,12 @@ async function checkReadAlongUpdates() {
       '\nBản mới nhất: ' + release.tag_name +
       '\nPhiên bản hiện tại: ' + currentVersion +
       (notes ? '\n\nThay đổi:\n' + notes : '') +
-      '\n\nTải APK mới? Android sẽ yêu cầu xác nhận cài đặt. APK phải được ký bằng cùng khóa với ứng dụng đang cài.';
+      '\n\nMở trang tải APK chính thức trên GitHub? Sau khi tải, hãy mở tệp và xác nhận cài đặt trong Android. APK phải được ký bằng cùng khóa với ứng dụng đang cài.';
     if (!confirm(message)) return;
 
-    const nativeUpdater = window.Capacitor?.Plugins?.ApkUpdater;
-    if (nativeUpdater?.downloadAndInstall) {
-      showToast('Đang xóa bộ nhớ đệm cũ…');
-      await clearReadAlongWebCachesForUpdate();
-      showToast('Đang tải bản cập nhật…');
-      await nativeUpdater.downloadAndInstall({
-        url: asset.browser_download_url,
-        filename: asset.name
-      });
-    } else {
-      window.location.href = asset.browser_download_url;
-    }
+    // Không cài APK trực tiếp từ bên trong ứng dụng. Mở trang tải chính thức
+    // trên GitHub để người dùng tải và tự xác nhận cài đặt qua Android.
+    window.location.href = asset.browser_download_url;
   } catch (error) {
     console.error('Update check failed:', error);
     alert('Không thể kiểm tra cập nhật kênh ' + channelLabel + ': ' +
