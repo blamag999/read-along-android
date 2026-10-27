@@ -32,6 +32,7 @@ const state = {
   resumeAfterManualTurn: false,
   autoSeekAudio: true,
   isAudioDrivenChange: false,
+  repeatAudio: false,
 
   // CHẾ ĐỘ HIỂN THỊ
   viewMode: 'fit-height',
@@ -222,6 +223,7 @@ const dom = {
   btnRewind5: document.getElementById('btnRewind5'),
   btnForward5: document.getElementById('btnForward5'),
   btnReplayPage: document.getElementById('btnReplayPage'),
+  btnRepeatAudio: document.getElementById('btnRepeatAudio'),
   selPageTurnMode: document.getElementById('selPageTurnMode'),
   chkAutoSeekAudio: document.getElementById('chkAutoSeekAudio'),
 
@@ -1223,6 +1225,8 @@ dom.selPageTurnMode.value = state.pageTurnMode;
   dom.btnPageJump.addEventListener('click', jumpToEnteredPage);
   dom.pageJumpInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') jumpToEnteredPage(); });
   dom.btnReplayPage.addEventListener('click', replayCurrentPage);
+  dom.btnRepeatAudio.addEventListener('click', toggleRepeatAudio);
+  updateRepeatButtonState();
   dom.audioElement.playbackRate = 1.0;
   initPdfClickNavigation();
 
@@ -1864,6 +1868,22 @@ function updatePlayButtonState() {
   dom.btnPlayPause.title = isPlaying ? 'Tạm dừng' : 'Phát';
   dom.btnPlayPause.setAttribute('aria-pressed', String(isPlaying));
   dom.btnPlayPause.classList.toggle('is-playing', isPlaying);
+}
+
+function updateRepeatButtonState() {
+  const enabled = Boolean(state.repeatAudio);
+  dom.btnRepeatAudio.classList.toggle('is-on', enabled);
+  dom.btnRepeatAudio.setAttribute('aria-pressed', String(enabled));
+  dom.btnRepeatAudio.title = enabled ? 'Tắt lặp audio hiện tại' : 'Lặp audio hiện tại';
+  const label = dom.btnRepeatAudio.querySelector('.repeat-label');
+  if (label) label.textContent = enabled ? 'Lặp audio: Bật' : 'Lặp audio';
+}
+
+function toggleRepeatAudio() {
+  state.repeatAudio = !state.repeatAudio;
+  dom.audioElement.loop = state.repeatAudio;
+  updateRepeatButtonState();
+  showToast(state.repeatAudio ? 'Đã bật lặp lại audio hiện tại.' : 'Đã tắt lặp lại audio.');
 }
 
 async function togglePlayPause() {
