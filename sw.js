@@ -56,7 +56,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // CDN dependencies use cache-first to avoid repeated downloads.
+  // Cache only the version-pinned PDF.js CDN assets. Do not cache GitHub
+  // API responses, release metadata, R2 catalogs, or diagnostics requests.
+  if (url.hostname !== 'cdnjs.cloudflare.com') return;
   event.respondWith((async () => {
     const cached = await caches.match(request);
     if (cached) return cached;
