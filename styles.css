@@ -2587,3 +2587,42 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
   .apk-mode .controls-row #btnRewind5,
   .apk-mode .controls-row #btnForward5 { width: 38px; height: 38px; min-height: 38px; }
 }
+
+
+/* Apply the same responsive player layout to browser and packaged Android modes. */
+.controls-row {
+  display: grid !important;
+  grid-template-columns: minmax(42px,1fr) minmax(42px,1fr) minmax(76px,1.45fr) minmax(42px,1fr) minmax(42px,1fr);
+  align-items: center; justify-items: center; gap: clamp(5px,1.2vw,12px);
+  width: min(100%,620px); margin: 3px auto 0; padding: 4px 0 2px;
+  background: transparent; border: 0; box-shadow: none;
+}
+.controls-row #btnPrevPage, .controls-row #btnNextPage,
+.controls-row #btnRewind5, .controls-row #btnForward5 {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 46px; height: 46px; min-height: 46px; padding: 0;
+  border-radius: 50% !important; background: #1d2b41;
+  border: 1px solid #405572; color: #e2e8f0;
+}
+.controls-row #btnPlayPause {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: clamp(76px,10vw,88px); height: clamp(76px,10vw,88px);
+  min-height: clamp(76px,10vw,88px); padding: 0; border-radius: 50%;
+  background: linear-gradient(145deg,#60a5fa,#2563eb); border: 2px solid #bfdbfe;
+  color: #fff; font-size: 1.8rem; line-height: 1;
+  box-shadow: 0 5px 20px rgba(37,99,235,.34);
+}
+.controls-row #btnPlayPause.is-playing { background: linear-gradient(145deg,#fb7185,#be123c); border-color: #fecdd3; }
+.controls-row #btnPrevPage, .controls-row #btnNextPage { font-size: 1.05rem; }
+.controls-row #btnRewind5, .controls-row #btnForward5 { font-size: 1.2rem; }
+@media (max-width:560px) {
+  .controls-row { grid-template-columns: minmax(36px,1fr) minmax(36px,1fr) minmax(70px,1.5fr) minmax(36px,1fr) minmax(36px,1fr); gap:5px; padding-inline:2px; }
+  .controls-row #btnPrevPage, .controls-row #btnNextPage,
+  .controls-row #btnRewind5, .controls-row #btnForward5 { width:42px; height:42px; min-height:42px; }
+  .controls-row #btnPlayPause { width:72px; height:72px; min-height:72px; }
+}
+@media (max-height:520px) and (orientation:landscape) {
+  .controls-row #btnPrevPage, .controls-row #btnNextPage,
+  .controls-row #btnRewind5, .controls-row #btnForward5 { width:38px; height:38px; min-height:38px; }
+  .controls-row #btnPlayPause { width:56px; height:56px; min-height:56px; }
+}
