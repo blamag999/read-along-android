@@ -590,7 +590,7 @@ async function loadR2Catalog() {
     renderPlaylistView();
     dom.lblPlaylistSubtitle.textContent = stories.length + ' mục trực tuyến';
     openPlaylistModal();
-    showToast('Đã tải ' + stories.length + ' sách từ R2.');
+    showToast('Đã tải danh sách sách.');
   } catch (error) {
     console.error('Không thể tải danh sách sách R2:', error);
     alert('Không thể tải danh sách sách từ R2. Kiểm tra URL, định dạng books.json và CORS. ' + error.message);
@@ -945,7 +945,7 @@ async function loadStoryFromPlaylist(story, audioPartIndex) {
   state.currentStoryAudios = story.audios || [];
   state.currentAudioIndex = (typeof audioPartIndex === 'number') ? audioPartIndex : 0;
 
-  dom.lblLoadingText.textContent = 'Đang mở: ' + story.title + '...';
+  dom.lblLoadingText.textContent = 'Đang tải sách...';
   dom.pdfLoadingIndicator.classList.remove('hidden');
 
   try {
@@ -958,7 +958,7 @@ async function loadStoryFromPlaylist(story, audioPartIndex) {
     }
 
     loadAudioPart(state.currentAudioIndex);
-    showToast('📖 Đang đọc: ' + story.title);
+    showToast('Đang mở sách...');
     renderPlaylistView();
     updateAudioPartUI();
   } catch (err) {
@@ -1924,28 +1924,53 @@ function getCurrentPageTimestamp(page) {
 function replayCurrentPage() {
   if (!state.pdfDoc) { showToast('Vui lòng mở PDF trước.'); return; }
   const marker = getCurrentPageTimestamp(state.pageNum);
-  if (!marker) { showToast('Trang hiện tại chưa có mốc thời gian.'); return; }
-  if (!dom.audioElement.src && !(state.currentStoryAudios && state.currentStoryAudios.length)) {
-    showToast('Vui lòng mở tệp MP3 trước.');
+  if (!marker) {
+    // Không có mốc: thông báo ngắn gọn và giữ nguyên vị trí/phát audio hiện tại.
+    showToast('Trang này chưa có mốc thời gian.');
     return;
   }
-  const seekAndPlay = () => {
-    dom.audioElement.currentTime = Math.max(0, marker.time);
-    dom.audioElement.playbackRate = 1.0;
-    dom.audioElement.play().catch(() => showToast('Không thể phát audio. Hãy bấm Phát để thử lại.'));
+  if (!dom.audioElement.currentSrc && !(state.currentStoryAudios && state.currentStoryAudios.length)) {
+    showToast('Chưa có audio.');
+    return;
+  }
+
+  const seekAndPlay = async () => {
+    try {
+      await new Promise((resolve, reject) => {
+        if (dom.audioElement.readyState >= 1) return resolve();
+        const onReady = () => { cleanup(); resolve(); };
+        const onError = () => { cleanup(); reject(new Error('Audio không tải được.')); };
+        const cleanup = () => {
+          dom.audioElement.removeEventListener('loadedmetadata', onReady);
+          dom.audioElement.removeEventListener('error', onError);
+        };
+        dom.audioElement.addEventListener('loadedmetadata', onReady, { once: true });
+        dom.audioElement.addEventListener('error', onError, { once: true });
+      });
+      const target = Math.max(0, marker.time);
+      if (Number.isFinite(dom.audioElement.duration)) {
+        dom.audioElement.currentTime = Math.min(target, dom.audioElement.duration);
+      } else {
+        dom.audioElement.currentTime = target;
+      }
+      await dom.audioElement.play();
+    } catch (error) {
+      console.warn('Không thể đọc lại trang:', error);
+      showToast('Không thể đọc lại trang. Hãy thử bấm Phát.');
+    }
   };
+
   if (state.currentStoryAudios && state.currentStoryAudios.length > 1 &&
       marker.part !== state.currentAudioIndex && state.currentStoryAudios[marker.part]) {
     dom.audioElement.pause();
-    dom.audioElement.addEventListener('loadedmetadata', function onReplayMetadata() {
-      dom.audioElement.removeEventListener('loadedmetadata', onReplayMetadata);
-      seekAndPlay();
-    }, { once: true });
     loadAudioPart(marker.part);
+    // loadAudioPart gán src bất đồng bộ; chờ metadata của nguồn mới trước khi seek.
+    seekAndPlay();
   } else {
     seekAndPlay();
   }
 }
+
 function initPdfClickNavigation() {
   dom.canvasWrapper.addEventListener('click', (event) => {
     if (!state.pdfDoc || event.button !== 0 || event.target.tagName !== 'CANVAS') return;
@@ -1966,49 +1991,63 @@ function onAudioMetadataLoaded() {
 }
 
 function onAudioTimeUpdate() {
-  const curr = dom.audioElement.currentTime;
+  const audio = dom.audioElement;
+  const curr = audio.currentTime;
   dom.audioSeeker.value = curr;
   dom.lblAudioCurrentTime.textContent = formatTime(curr);
 
-  const hasPageMarkers = Object.keys(state.pageTimestamps).length > 0;
-  if (!hasPageMarkers && state.pageTurnMode === 'next') {
-    // Không có mốc thời gian: tự chuyển sang chế độ chờ lật trang.
-    // Chế độ này chỉ dừng khi có mốc hợp lệ; vì không có mốc nên audio vẫn chạy liên tục.
-    state.pageTurnMode = 'markers';
-    dom.selPageTurnMode.value = 'markers';
-  }
+  const markers = state.pageTimestamps || {};
+  const hasPageMarkers = Object.keys(markers).length > 0;
   if (!state.pdfDoc || state.pageTurnMode === 'off' || !hasPageMarkers) return;
 
   const currentPart = state.currentAudioIndex || 0;
-  const matchesCurrentPart = (marker) =>
-    !state.currentStoryAudios || state.currentStoryAudios.length <= 1 || marker.part === currentPart;
-  const step = state.viewMode === 'two-pages' ? 2 : 1;
-  const nextPage = state.pageNum + step;
-  const nextMarker = nextPage <= state.totalPages ? getCurrentPageTimestamp(nextPage) : null;
+  const markerMatchesPart = marker =>
+    marker && (typeof marker === 'number'
+      ? currentPart === 0 || !state.currentStoryAudios || state.currentStoryAudios.length <= 1
+      : (marker.part === undefined || marker.part === currentPart));
 
-  // Chế độ chờ lật trang: chỉ dừng nếu trang kế tiếp có mốc hợp lệ.
-  // Tệp không có mốc cho trang kế tiếp sẽ tiếp tục phát bình thường.
+  const step = state.viewMode === 'two-pages' ? 2 : 1;
   if (state.pageTurnMode === 'markers') {
-    if (state.waitingForManualPageTurn || !nextMarker || !matchesCurrentPart(nextMarker)) return;
+    const nextPage = state.pageNum + step;
+    const nextMarker = nextPage <= state.totalPages ? getCurrentPageTimestamp(nextPage) : null;
+    if (state.waitingForManualPageTurn || !nextMarker || !markerMatchesPart(nextMarker)) return;
     if (curr >= nextMarker.time) {
       state.waitingForManualPageTurn = true;
       state.pendingManualPage = nextPage;
-      state.resumeAfterManualTurn = !dom.audioElement.paused;
-      dom.audioElement.currentTime = nextMarker.time;
-      dom.audioElement.pause();
-      showToast('Đã hết phần audio của trang này. Lật sang trang kế tiếp để đọc tiếp.');
+      state.resumeAfterManualTurn = !audio.paused;
+      audio.currentTime = nextMarker.time;
+      audio.pause();
+      showToast('Đến cuối trang. Lật trang để tiếp tục.');
     }
     return;
   }
 
-  // Chế độ tự chuyển trang: chuyển đến trang có mốc khi audio chạm mốc đó.
-  if (state.pageTurnMode === 'next' && nextMarker && matchesCurrentPart(nextMarker) && curr >= nextMarker.time) {
-    state.isAudioDrivenChange = true;
-    state.pageNum = nextPage;
-    renderCurrentSpread();
-    setTimeout(() => { state.isAudioDrivenChange = false; }, 400);
+  // Dựa trên thời gian hiện tại thay vì chỉ kiểm tra một mốc mỗi lần timeupdate.
+  // Khi người dùng tua nhanh vượt qua nhiều mốc, chuyển thẳng đến trang tương ứng.
+  let targetPage = state.pageNum;
+  let targetTime = -1;
+  for (let page = 1; page <= state.totalPages; page++) {
+    const marker = getCurrentPageTimestamp(page);
+    if (!marker || !markerMatchesPart(marker) || marker.time > curr) continue;
+    if (marker.time >= targetTime) {
+      targetTime = marker.time;
+      targetPage = page;
+    }
+  }
+  if (targetTime >= 0 && targetPage !== state.pageNum) {
+    const alignedPage = state.viewMode === 'two-pages'
+      ? (targetPage % 2 === 0 ? Math.max(1, targetPage - 1) : targetPage)
+      : targetPage;
+    if (alignedPage !== state.pageNum) {
+      state.isAudioDrivenChange = true;
+      state.pageNum = alignedPage;
+      renderCurrentSpread();
+      // Không seek audio khi render trang do audio dẫn dắt.
+      requestAnimationFrame(() => { state.isAudioDrivenChange = false; });
+    }
   }
 }
+
 function getStorageKey() {
   return `sync_${state.currentBookKey || 'default'}`;
 }
