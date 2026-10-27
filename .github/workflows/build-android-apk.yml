@@ -156,19 +156,18 @@ jobs:
           source = main.read_text()
           marker = 'public class MainActivity extends BridgeActivity {'
           if marker not in source: raise SystemExit('Could not locate MainActivity class declaration')
-          # Register both plugins in onCreate only. Activity lifecycle callbacks are
-          # recorded by the web bridge and do not need Activity method overrides.
+          # Register plugins without overriding lifecycle methods on BridgeActivity.
           if 'ApkUpdaterPlugin.class' not in source:
               injected = marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);\n        DiagnosticsPlugin.recordLifecycle(this, "Activity.onCreate");\n        super.onCreate(savedInstanceState);\n    }'
               source = source.replace(marker, injected, 1)
-              main.write_text(source)
-          else:
-              import re
-              source = re.sub(r'\s*@Override\s+protected void onResume\(\)\s*\{[^}]*\}\s*@Override\s+protected void onPause\(\)\s*\{[^}]*\}\s*@Override\s+protected void onDestroy\(\)\s*\{[^}]*\}', '', source, flags=re.S)
-              # Make sure diagnostics plugin is registered even if updater was pre-registered.
-              if 'DiagnosticsPlugin.class' not in source:
+          import re
+          source = re.sub(r'\s*@Override\s+protected void onResume\(\)\s*\{[^}]*\}\s*@Override\s+protected void onPause\(\)\s*\{[^}]*\}\s*@Override\s+protected void onDestroy\(\)\s*\{[^}]*\}', '', source, flags=re.S)
+          if 'DiagnosticsPlugin.class' not in source:
+              if 'registerPlugin(ApkUpdaterPlugin.class);' in source:
                   source = source.replace('registerPlugin(ApkUpdaterPlugin.class);', 'registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);', 1)
-              main.write_text(source)
+              else:
+                  raise SystemExit('Could not register DiagnosticsPlugin in MainActivity')
+          main.write_text(source)
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           xml = manifest.read_text()
           # Keep the Capacitor WebView alive across orientation/size changes. If
