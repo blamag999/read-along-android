@@ -2731,9 +2731,9 @@ document.addEventListener('DOMContentLoaded', () => {
   ]);
   function sanitizeDiagnosticText(value) {
     return String(value || '')
-      .replace(/https?:\\/\\/[^\\s"'<>]+/gi, '[url]')
-      .replace(/(?:[A-Za-z]:\\\\|\\/)(?:[^\\s"'<>]+[\\/])*[^\\s"'<>]*/g, '[path]')
-      .replace(/\\b[^\\s"'<>]+\\.(?:mp3|m4a|aac|wav|pdf|json|html|js|kt|java)\\b/gi, '[file]')
+      .replace(/https?:\/\/[^\s"'<>]+/gi, '[url]')
+      .replace(/(?:[A-Za-z]:\\|\/)(?:[^\s"'<>]+[\\/])*[^\s"'<>]*/g, '[path]')
+      .replace(/\b[^\s"'<>]+\.(?:mp3|m4a|aac|wav|pdf|json|html|js|kt|java)\b/gi, '[file]')
       .slice(0, 180);
   }
   function record(name, details = {}) {
@@ -2763,9 +2763,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function audioState() {
     const a = document.getElementById('audioElement');
     const pageEl = document.getElementById('lblCurrentPage');
-    const page = Number(pageEl?.textContent);
+    const displayedPage = Number(pageEl?.textContent);
     return {
-      page: Number.isFinite(page) ? page : 0,
+      page: Number.isFinite(state.pageNum) ? state.pageNum : (Number.isFinite(displayedPage) ? displayedPage : 0),
       time: Number.isFinite(a?.currentTime) ? a.currentTime : 0,
       paused: a ? a.paused : true,
       readyState: a ? a.readyState : 0,
