@@ -2804,6 +2804,7 @@ document.addEventListener('DOMContentLoaded', () => {
           setServiceStatus('Không kết nối được dịch vụ (' + (reason || 'lỗi mạng/CORS') + '). Bạn vẫn có thể xuất log ra tệp.', 'error');
         }
         status.textContent = 'Chưa thể gửi báo lỗi trực tuyến. Hãy thử lại sau hoặc xuất log ra tệp.';
+        turnstileLoading = null; // Cho phép thử kết nối lại khi mở lại hộp thoại.
         return false;
       });
     return turnstileLoading;
