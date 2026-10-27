@@ -147,6 +147,7 @@ const dom = {
   menuAutoFlip: document.getElementById('menuAutoFlip'),
   menuReloadMarkers: document.getElementById('menuReloadMarkers'),
   menuCheckUpdates: document.getElementById('menuCheckUpdates'),
+  updateChannelSelect: document.getElementById('updateChannelSelect'),
   menuTwoPagesState: document.getElementById('menuTwoPagesState'),
   menuAutoFlipState: document.getElementById('menuAutoFlipState'),
   btnZoomOut: document.getElementById('btnZoomOut'),
