@@ -29,6 +29,9 @@
     for (let page = 1; page <= totalPages; page += 1) {
       const marker = normalizeMarker(markers[page]);
       if (!marker || !markerMatchesPart(marker, currentPart, audioCount)) continue;
+      // A zero-second marker on a later page is usually a missing timestamp that
+      // was normalized to 0. It must not advance the reader away from the opening page.
+      if (page > 1 && marker.time === 0) continue;
       if (Number.isFinite(duration) && duration > 0 && marker.time > duration + 1) continue;
       // On equal timestamps prefer the first page. Choosing the last page on a tie
       // can jump past page 1 when several missing/legacy markers default to 0.
