@@ -154,15 +154,15 @@ jobs:
               if len(candidates) != 1: raise SystemExit('Could not locate generated MainActivity.java')
               main = candidates[0]
           source = main.read_text()
+          marker = 'public class MainActivity extends BridgeActivity {'
+          if marker not in source: raise SystemExit('Could not locate MainActivity class declaration')
+          # Register both Capacitor plugins once. Avoid overriding BridgeActivity lifecycle
+          # methods because the selected Capacitor version marks these methods final.
           if 'ApkUpdaterPlugin.class' not in source:
-              marker = 'public class MainActivity extends BridgeActivity {'
-              if marker not in source: raise SystemExit('Could not register ApkUpdaterPlugin in MainActivity')
-              source = source.replace(marker, marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);\n        DiagnosticsPlugin.recordLifecycle(this, \"Activity.onCreate\");\n        super.onCreate(savedInstanceState);\n    }', 1)
+              source = source.replace(marker, marker + '\\n    @Override\\n    public void onCreate(android.os.Bundle savedInstanceState) {\\n        registerPlugin(ApkUpdaterPlugin.class);\\n        registerPlugin(DiagnosticsPlugin.class);\\n        DiagnosticsPlugin.recordLifecycle(this, \\"Activity.onCreate\\");\\n        super.onCreate(savedInstanceState);\\n    }', 1)
               main.write_text(source)
-          # Add Activity lifecycle markers without logging user content or file paths.
-          source = main.read_text()
-          if 'Activity.onResume' not in source:
-              source = source.replace('public class MainActivity extends BridgeActivity {', 'public class MainActivity extends BridgeActivity {\n    @Override protected void onResume() { super.onResume(); DiagnosticsPlugin.recordLifecycle(this, "Activity.onResume"); }\n    @Override protected void onPause() { DiagnosticsPlugin.recordLifecycle(this, "Activity.onPause"); super.onPause(); }\n    @Override protected void onDestroy() { DiagnosticsPlugin.recordLifecycle(this, "Activity.onDestroy"); super.onDestroy(); }', 1)
+          elif 'DiagnosticsPlugin.class' not in source:
+              source = source.replace('registerPlugin(ApkUpdaterPlugin.class);', 'registerPlugin(ApkUpdaterPlugin.class);\\n        registerPlugin(DiagnosticsPlugin.class);', 1)
               main.write_text(source)
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           xml = manifest.read_text()
