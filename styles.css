@@ -2362,7 +2362,10 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
   flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
   gap: 0;
 }
 .app-ui-mode .playlist-card {
@@ -2821,4 +2824,20 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
   border-left: 3px solid rgba(96,165,250,.75);
   border-radius: 6px;
   background: rgba(30,41,59,.35);
+}
+
+
+/* Dynamic story-list pagination: keep overflow reachable on touch and TV devices. */
+.app-ui-mode .playlist-body { min-height: 0; }
+.app-ui-mode #playlistItemsList { scroll-padding-block: 8px; }
+.app-ui-mode #playlistItemsList:focus-within { scrollbar-gutter: stable; }
+.app-ui-mode .playlist-card { scroll-margin-block: 8px; }
+.app-ui-mode .playlist-page-btn { min-height: 46px; }
+@media (max-height: 560px) {
+  .app-ui-mode .playlist-modal-content { padding: 4px; }
+  .app-ui-mode .playlist-modal-content .modal-header { padding: 2px 0 4px; }
+  .app-ui-mode .playlist-search-bar { padding-bottom: 4px; }
+  .app-ui-mode #txtPlaylistSearch { min-height: 36px; padding-block: 5px; }
+  .app-ui-mode .playlist-page-btn { min-height: 38px; padding-block: 5px; }
+  .app-ui-mode .playlist-pagination { padding-block: 4px 2px; }
 }
