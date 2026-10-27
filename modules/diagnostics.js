@@ -206,7 +206,8 @@
       showIssueLink(result.issueUrl);
     } catch (error) {
       if (json) downloadText('read-along-diagnostics-' + new Date().toISOString().replace(/[:.]/g,'-') + '.json', json);
-      if (status) status.textContent = 'Chưa gửi được log (' + String(error?.message || 'lỗi mạng') + '). Đã tải log JSON để bạn có thể gửi thủ công.';
+      console.warn('Không thể gửi nhật ký chẩn đoán:', error);
+      if (status) status.textContent = 'Chưa gửi được nhật ký. Đã tải tệp JSON để bạn có thể gửi thủ công.';
     } finally {
       submit.disabled = false;
     }
