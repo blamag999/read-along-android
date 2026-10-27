@@ -19,7 +19,7 @@ export class RateLimiter {
 
 const REPO = 'blamag999/read-along-android';
 const MAX_BODY = 64 * 1024;
-const ALLOWED_ORIGINS = new Set(['https://localhost', 'http://localhost', 'http://127.0.0.1']);
+const ALLOWED_ORIGINS = new Set(['https://localhost', 'http://localhost', 'http://127.0.0.1', 'https://blamag999.github.io']);
 const EVENTS = new Set([
   'app.started','audio.play','audio.pause','audio.ended','audio.waiting','audio.stalled',
   'audio.seeking','audio.seeked','audio.error','audio.metadata','pdf.render.start',
