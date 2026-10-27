@@ -1,5 +1,5 @@
-const CACHE_NAME = 'pdf-audio-sync-v46-auto-github-diagnostics';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'read-along-shell-v47-network-first';
+const APP_SHELL = [
   './',
   './index.html',
   './styles.css',
@@ -12,8 +12,11 @@ const ASSETS_TO_CACHE = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+    caches.open(CACHE_NAME).then(async (cache) => {
+      await Promise.allSettled(APP_SHELL.map(async (asset) => {
+        const response = await fetch(asset, { cache: 'no-cache' });
+        if (response.ok) await cache.put(asset, response);
+      }));
     })
   );
   self.skipWaiting();
@@ -21,35 +24,47 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    })
+    caches.keys().then((keys) => Promise.all(
+      keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+    )).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  const url = event.request.url;
+  const request = event.request;
+  if (request.method !== 'GET' || request.headers.has('range')) return;
 
-  // Không lưu tệp PDF/MP3 vào bộ nhớ đệm của ứng dụng.
-  if (
-    url.endsWith('.pdf') ||
-    url.endsWith('.mp3') ||
-    url.endsWith('.m4a') ||
-    url.endsWith('.wav')
-  ) {
-    return; // Để trình duyệt trực tiếp tải từ mạng
+  const url = new URL(request.url);
+  // PDF/audio files are deliberately never cached by the service worker.
+  if (/\.(pdf|mp3|m4a|wav|ogg|aac)$/i.test(url.pathname)) return;
+
+  if (url.origin === self.location.origin) {
+    // Network-first for app code: online launches receive the newest shell,
+    // while cached files remain available when the device is offline.
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE_NAME);
+      try {
+        const response = await fetch(request, { cache: 'no-cache' });
+        if (response && response.ok) await cache.put(request, response.clone());
+        return response;
+      } catch (error) {
+        const cached = await cache.match(request) || await cache.match('./index.html');
+        if (cached) return cached;
+        throw error;
+      }
+    })());
+    return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request);
-    })
-  );
+  // CDN dependencies use cache-first to avoid repeated downloads.
+  event.respondWith((async () => {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    const response = await fetch(request);
+    if (response && response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, response.clone());
+    }
+    return response;
+  })());
 });
