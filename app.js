@@ -2649,24 +2649,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // =======================================================
-// CHẨN ĐOÁN BẢO MẬT: chỉ ghi metadata tối thiểu, không ghi nội dung/tên tệp/URL
+// CHẨN ĐOÁN: lưu log cục bộ, người dùng chủ động sao chép và tạo GitHub Issue
+// Không cần Cloudflare Worker, Turnstile hay API token.
 // =======================================================
 (() => {
   const MAX_EVENTS = 350;
   const events = [];
   let lastOrientation = '';
-  let turnstileWidgetId = null;
-  let turnstileLoading = null;
-  let diagnosticsConfig = null;
-  const apiBase = String(window.READ_ALONG_DIAGNOSTICS_API || '').trim().replace(/\/$/, '');
   const modal = document.getElementById('diagnosticsModal');
   const status = document.getElementById('diagnosticsStatus');
-  const serviceCard = document.getElementById('diagnosticsServiceCard');
-  const serviceStatus = document.getElementById('diagnosticsServiceStatus');
-  const serviceIcon = document.getElementById('diagnosticsServiceIcon');
   const submit = document.getElementById('btnSubmitDiagnostics');
   const consent = document.getElementById('chkDiagnosticsConsent');
-  const turnstileBox = document.getElementById('diagnosticsTurnstile');
   const safeEventNames = new Set([
     'app.started','audio.play','audio.pause','audio.ended','audio.waiting','audio.stalled',
     'audio.seeking','audio.seeked','audio.error','audio.metadata','pdf.render.start',
@@ -2717,18 +2710,8 @@ document.addEventListener('DOMContentLoaded', () => {
   record('app.started');
   try { window.Capacitor?.Plugins?.Diagnostics?.markWebViewReady?.(); } catch (_) {}
 
-  function setServiceStatus(message, stateName = 'checking') {
-    if (serviceStatus) serviceStatus.textContent = message;
-    if (serviceCard) {
-      serviceCard.classList.remove('is-checking', 'is-connected', 'is-error');
-      serviceCard.classList.add(stateName === 'connected' ? 'is-connected' : stateName === 'error' ? 'is-error' : 'is-checking');
-    }
-    if (serviceIcon) serviceIcon.textContent = stateName === 'connected' ? '✓' : stateName === 'error' ? '!' : '…';
-  }
-
-  function safeNativePlugin() { return window.Capacitor?.Plugins?.Diagnostics || null; }
   async function getNativeLogs() {
-    const plugin = safeNativePlugin();
+    const plugin = window.Capacitor?.Plugins?.Diagnostics || null;
     if (!plugin?.getLogs) return { available: false, lines: [] };
     try {
       const result = await plugin.getLogs();
@@ -2759,112 +2742,84 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
-  function loadTurnstile() {
-    if (!apiBase) {
-      setServiceStatus('Chưa cấu hình địa chỉ dịch vụ. Bạn vẫn có thể xuất log ra tệp.', 'error');
-      status.textContent = 'Không thể gửi báo lỗi trực tuyến cho đến khi cấu hình dịch vụ.';
-      return Promise.resolve(false);
-    }
-    if (turnstileLoading) return turnstileLoading;
-    turnstileLoading = fetch(apiBase + '/config', { method: 'GET', mode: 'cors', cache: 'no-store' })
-      .then(r => { if (!r.ok) throw new Error('config_http_' + r.status); return r.json(); })
-      .then(cfg => {
-        if (!cfg.siteKey) throw new Error('sitekey');
-        diagnosticsConfig = cfg;
-        return new Promise((resolve, reject) => {
-          const render = () => {
-            try {
-              turnstileWidgetId = window.turnstile.render(turnstileBox, {
-                sitekey: cfg.siteKey, action: 'read_along_diagnostics',
-                callback: () => { status.textContent = 'Đã xác minh chống spam. Bây giờ hãy đồng ý gửi log rồi nhấn nút gửi.'; },
-                'expired-callback': () => { status.textContent = 'Xác minh đã hết hạn. Hãy hoàn thành thử thách lại trước khi gửi.'; },
-                'error-callback': () => { status.textContent = 'Không thể xác minh. Hãy thử lại thử thách hoặc xuất log ra tệp.'; }
-              });
-              setServiceStatus('Đã kết nối dịch vụ và tải được bảo vệ chống spam.', 'connected');
-              status.textContent = 'Hoàn thành xác minh chống spam, đánh dấu đồng ý gửi log rồi nhấn nút gửi.';
-              resolve(true);
-            } catch (e) { reject(e); }
-          };
-          if (window.turnstile) render();
-          else {
-            const script = document.createElement('script');
-            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-            script.async = true; script.defer = true;
-            script.onload = render; script.onerror = () => reject(new Error('turnstile_script_load_failed'));
-            document.head.appendChild(script);
-          }
-        });
-      }).catch((error) => {
-        const reason = String(error?.message || '');
-        if (reason.startsWith('config_http_')) {
-          setServiceStatus('Dịch vụ phản hồi HTTP ' + reason.slice('config_http_'.length) + '. Cần kiểm tra cấu hình Worker.', 'error');
-        } else if (reason === 'turnstile_script_load_failed') {
-          setServiceStatus('Worker phản hồi nhưng không tải được Cloudflare Turnstile. Kiểm tra mạng, CSP hoặc trình chặn nội dung.', 'error');
-        } else {
-          setServiceStatus('Không kết nối được dịch vụ (' + (reason || 'lỗi mạng/CORS') + '). Bạn vẫn có thể xuất log ra tệp.', 'error');
-        }
-        status.textContent = 'Chưa thể gửi báo lỗi trực tuyến. Hãy thử lại sau hoặc xuất log ra tệp.';
-        turnstileLoading = null; // Cho phép thử kết nối lại khi mở lại hộp thoại.
-        return false;
-      });
-    return turnstileLoading;
+  async function copyText(text) {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (_) {}
+    try {
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.setAttribute('readonly', '');
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      const copied = document.execCommand('copy');
+      area.remove();
+      return copied;
+    } catch (_) { return false; }
   }
-  document.getElementById('menuDiagnostics')?.addEventListener('click', async () => {
+  function addIssueLink() {
+    const title = '[Diagnostics] Báo lỗi Read Along';
+    const body = '## Mô tả lỗi\nMô tả ngắn lỗi gặp phải và cách tái hiện.\n\n## Log chẩn đoán\nDán log JSON đã sao chép vào đây. Nếu không dán được, hãy đính kèm tệp JSON đã xuất.';
+    return 'https://github.com/blamag999/read-along-android/issues/new?title=' +
+      encodeURIComponent(title) + '&body=' + encodeURIComponent(body);
+  }
+
+  document.getElementById('menuDiagnostics')?.addEventListener('click', () => {
     snapshot('diagnostics.open');
     modal?.classList.remove('hidden');
     if (submit) submit.disabled = false;
-    setServiceStatus('Đang kiểm tra kết nối dịch vụ…', 'checking');
-    status.textContent = 'Hoàn thành xác minh chống spam, đánh dấu đồng ý gửi log rồi nhấn nút gửi.';
-    await loadTurnstile();
+    if (status) status.textContent = 'Không cần dịch vụ trung gian. Chọn “Sao chép log & mở GitHub Issue” để báo lỗi.';
   });
   document.getElementById('btnCloseDiagnostics')?.addEventListener('click', () => modal?.classList.add('hidden'));
   modal?.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
   consent?.addEventListener('change', () => {
-    if (consent.checked) {
-      status.textContent = 'Đã ghi nhận lựa chọn của bạn. Hoàn thành xác minh chống spam rồi nhấn nút gửi.';
-    }
+    if (consent.checked && status) status.textContent = 'Đã đồng ý. Nhấn “Sao chép log & mở GitHub Issue”; log sẽ được sao chép để bạn dán vào Issue công khai.';
   });
   document.getElementById('btnExportDiagnostics')?.addEventListener('click', async () => {
     const report = makeReport(await getNativeLogs());
     downloadText('read-along-diagnostics-' + new Date().toISOString().replace(/[:.]/g,'-') + '.json', JSON.stringify(report, null, 2));
-    status.textContent = 'Đã tạo tệp log. Kiểm tra lại nội dung trước khi chia sẻ.';
+    if (status) status.textContent = 'Đã xuất tệp log JSON. Kiểm tra nội dung trước khi đính kèm vào GitHub Issue công khai.';
   });
   submit?.addEventListener('click', async () => {
-    if (!apiBase || !diagnosticsConfig) {
-      status.textContent = 'Dịch vụ báo lỗi chưa kết nối được. Bạn vẫn có thể dùng nút Xuất log ra tệp.';
-      return;
-    }
     if (!consent?.checked) {
-      status.textContent = 'Vui lòng đánh dấu ô đồng ý gửi log trước khi tiếp tục.';
+      if (status) status.textContent = 'Vui lòng đánh dấu ô đồng ý trước khi tiếp tục.';
       consent?.focus();
       return;
     }
-    if (turnstileWidgetId === null || !window.turnstile?.getResponse?.(turnstileWidgetId)) {
-      status.textContent = 'Vui lòng hoàn thành ô xác minh chống spam ở phía trên, rồi nhấn gửi lại.';
-      turnstileBox?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
-      return;
+    // Mở trang GitHub ngay trong thao tác bấm để giảm khả năng trình duyệt chặn cửa sổ mới.
+    const issueUrl = addIssueLink();
+    const issueWindow = window.open(issueUrl, '_blank');
+    if (issueWindow) {
+      try { issueWindow.opener = null; } catch (_) {}
     }
     submit.disabled = true;
-    status.textContent = 'Đang lọc và gửi log đã xác nhận…';
+    if (status) status.textContent = 'Đang chuẩn bị log để sao chép…';
     try {
       const report = makeReport(await getNativeLogs());
-      const response = await fetch(apiBase + '/report', {
-        method: 'POST', mode: 'cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ turnstileToken: window.turnstile.getResponse(turnstileWidgetId), report })
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || 'Gửi báo lỗi thất bại (HTTP ' + response.status + ').');
-      status.textContent = 'Đã tạo Issue: ' + result.issueUrl;
-      if (result.issueUrl && /^https:\/\/github\.com\/blamag999\/read-along-android\/issues\/\d+$/.test(result.issueUrl)) {
-        const link = document.createElement('a'); link.href = result.issueUrl; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'Mở GitHub Issue';
-        status.appendChild(document.createTextNode(' ')); status.appendChild(link);
+      const json = JSON.stringify(report, null, 2);
+      const copied = await copyText(json);
+      if (!copied) {
+        downloadText('read-along-diagnostics-' + new Date().toISOString().replace(/[:.]/g,'-') + '.json', json);
       }
-      if (window.turnstile && turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId);
-      consent.checked = false;
+      if (status) {
+        status.textContent = copied
+          ? 'Đã sao chép log. Trong GitHub Issue vừa mở, dán log vào mục “Log chẩn đoán” rồi nhấn Submit new issue.'
+          : 'Không thể tự sao chép log nên đã tải tệp JSON. Đính kèm tệp này vào GitHub Issue vừa mở rồi nhấn Submit new issue.';
+        if (!issueWindow) {
+          const link = document.createElement('a');
+          link.href = issueUrl; link.target = '_blank'; link.rel = 'noopener noreferrer';
+          link.textContent = 'Mở trang tạo GitHub Issue';
+          status.appendChild(document.createTextNode(' '));
+          status.appendChild(link);
+        }
+      }
     } catch (error) {
-      status.textContent = String(error.message || 'Không thể gửi báo lỗi. Hãy xuất log ra tệp.');
-      if (window.turnstile && turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId);
+      if (status) status.textContent = 'Không tạo được log: ' + String(error?.message || 'lỗi không xác định') + '. Bạn có thể dùng “Xuất log ra tệp”.';
     } finally {
       submit.disabled = false;
     }
