@@ -162,7 +162,7 @@ jobs:
           source = re.sub(r'(?m)^\s*@Override\s+protected void onPause\(\)\s*\{\s*DiagnosticsPlugin\.recordLifecycle\(this,\s*"Activity\.onPause"\);\s*super\.onPause\(\);\s*\}\s*$', '', source)
           source = re.sub(r'(?m)^\s*@Override\s+protected void onDestroy\(\)\s*\{\s*DiagnosticsPlugin\.recordLifecycle\(this,\s*"Activity\.onDestroy"\);\s*super\.onDestroy\(\);\s*\}\s*$', '', source)
           if 'ApkUpdaterPlugin.class' not in source:
-              injected = marker + '\\n    @Override\\n    public void onCreate(android.os.Bundle savedInstanceState) {\\n        registerPlugin(ApkUpdaterPlugin.class);\\n        registerPlugin(DiagnosticsPlugin.class);\\n        DiagnosticsPlugin.recordLifecycle(this, "Activity.onCreate");\\n        super.onCreate(savedInstanceState);\\n    }'
+              injected = marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);\n        DiagnosticsPlugin.recordLifecycle(this, "Activity.onCreate");\n        super.onCreate(savedInstanceState);\n    }'
               source = source.replace(marker, injected, 1)
           if re.search(r'protected void on(?:Resume|Pause|Destroy)\s*\(', source):
               raise SystemExit('Obsolete Activity lifecycle override remained in MainActivity')
@@ -211,10 +211,10 @@ jobs:
                   1
               )
           if 'REQUEST_INSTALL_PACKAGES' not in xml:
-              xml = xml.replace('<application', '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\\n    <application', 1)
+              xml = xml.replace('<application', '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n    <application', 1)
           if '.fileprovider' not in xml:
               provider = '''<provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.fileprovider" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" /></provider>'''
-              xml = xml.replace('</application>', provider + '\\n    </application>', 1)
+              xml = xml.replace('</application>', provider + '\n    </application>', 1)
           manifest.write_text(xml)
           PY
           npx cap sync android
