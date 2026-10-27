@@ -156,11 +156,11 @@ jobs:
           source = main.read_text()
           marker = 'public class MainActivity extends BridgeActivity {'
           if marker not in source: raise SystemExit('Could not locate MainActivity class declaration')
-          # MainActivity only registers plugins; native lifecycle is recorded via WebView bridge.
+          # Remove previous Activity lifecycle overrides if this script is run on older generated source.
           import re
-          source = re.sub(r'(?m)^\s*@Override protected void onResume\(\)\s*\{[^\n]*\}\s*\n\s*@Override protected void onPause\(\)\s*\{[^\n]*\}\s*\n\s*@Override protected void onDestroy\(\)\s*\{[^\n]*\}\s*\n?', '', source)
-          # Also handle any earlier one-line hook variants.
-          source = re.sub(r'(?m)^\s*@Override\s+protected void on(?:Resume|Pause|Destroy)\(\)\s*\{[^\n]*\}\s*\n?', '', source)
+          source = re.sub(r'(?m)^\s*@Override\s+protected void onResume\(\)\s*\{\s*super\.onResume\(\);\s*DiagnosticsPlugin\.recordLifecycle\(this,\s*"Activity\.onResume"\);\s*\}\s*$', '', source)
+          source = re.sub(r'(?m)^\s*@Override\s+protected void onPause\(\)\s*\{\s*DiagnosticsPlugin\.recordLifecycle\(this,\s*"Activity\.onPause"\);\s*super\.onPause\(\);\s*\}\s*$', '', source)
+          source = re.sub(r'(?m)^\s*@Override\s+protected void onDestroy\(\)\s*\{\s*DiagnosticsPlugin\.recordLifecycle\(this,\s*"Activity\.onDestroy"\);\s*super\.onDestroy\(\);\s*\}\s*$', '', source)
           if 'ApkUpdaterPlugin.class' not in source:
               injected = marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);\n        DiagnosticsPlugin.recordLifecycle(this, "Activity.onCreate");\n        super.onCreate(savedInstanceState);\n    }'
               source = source.replace(marker, injected, 1)
