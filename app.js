@@ -147,7 +147,7 @@ const dom = {
   menuAutoFlip: document.getElementById('menuAutoFlip'),
   menuReloadMarkers: document.getElementById('menuReloadMarkers'),
   menuCheckUpdates: document.getElementById('menuCheckUpdates'),
-  updateChannelSelect: document.getElementById('updateChannelSelect'),
+  chkBetaOta: document.getElementById('chkBetaOta'),
   menuTwoPagesState: document.getElementById('menuTwoPagesState'),
   menuAutoFlipState: document.getElementById('menuAutoFlipState'),
   btnZoomOut: document.getElementById('btnZoomOut'),
@@ -838,10 +838,8 @@ function renderPlaylistView() {
     return;
   }
 
-  // Ước lượng số hàng theo chiều cao thực tế, sau đó giảm tiếp nếu nội dung tràn.
-  const listHeight = dom.playlistItemsList.clientHeight || Math.max(240, window.innerHeight - 240);
-  const compactLayout = window.innerWidth <= 560 || window.matchMedia('(orientation: portrait)').matches;
-  let pageSize = Math.max(1, Math.floor(listHeight / (compactLayout ? 58 : 48)));
+  // Mỗi trang luôn có tối đa 10 đầu truyện; danh sách tự cuộn nếu màn hình thấp.
+  const pageSize = 10;
   let totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   state.playlistPage = Math.max(1, Math.min(state.playlistPage || 1, totalPages));
 
@@ -919,15 +917,6 @@ function renderPlaylistView() {
     });
     dom.playlistItemsList.appendChild(pageFragment);
 
-    // Một số hàng có nhiều phần âm thanh hoặc tiêu đề dài; tự giảm số mục để vừa khung.
-    if (dom.playlistItemsList.clientHeight > 0 &&
-        dom.playlistItemsList.scrollHeight > dom.playlistItemsList.clientHeight + 2 &&
-        pageSize > 1) {
-      pageSize -= 1;
-      totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-      state.playlistPage = Math.min(state.playlistPage, totalPages);
-      renderCurrentPage();
-    }
   }
 
   renderCurrentPage();
@@ -2383,7 +2372,7 @@ function getSelectedUpdateChannel() {
   try {
     saved = localStorage.getItem(READ_ALONG_UPDATE_CHANNEL_KEY) || 'official';
   } catch (_) {}
-  const selected = dom.updateChannelSelect?.value || saved;
+  const selected = dom.chkBetaOta ? (dom.chkBetaOta.checked ? 'beta' : 'official') : saved;
   return selected === 'beta' ? 'beta' : 'official';
 }
 
@@ -2496,14 +2485,19 @@ async function checkReadAlongUpdates() {
 document.addEventListener('DOMContentLoaded', () => {
   const isNativeAndroid = Boolean(window.Capacitor?.isNativePlatform?.() || window.Capacitor?.getPlatform?.() === 'android');
 
-  if (dom.updateChannelSelect) {
+  const versionMeta = document.querySelector('meta[name="app-version"]');
+  if (document.getElementById('installedAppVersion')) {
+    document.getElementById('installedAppVersion').textContent = versionMeta?.content || 'Không xác định';
+  }
+
+  if (dom.chkBetaOta) {
     let savedChannel = 'official';
     try {
       savedChannel = localStorage.getItem(READ_ALONG_UPDATE_CHANNEL_KEY) || 'official';
     } catch (_) {}
-    dom.updateChannelSelect.value = savedChannel === 'beta' ? 'beta' : 'official';
-    dom.updateChannelSelect.addEventListener('change', () => {
-      const channel = dom.updateChannelSelect.value === 'beta' ? 'beta' : 'official';
+    dom.chkBetaOta.checked = savedChannel === 'beta';
+    dom.chkBetaOta.addEventListener('change', () => {
+      const channel = dom.chkBetaOta.checked ? 'beta' : 'official';
       try { localStorage.setItem(READ_ALONG_UPDATE_CHANNEL_KEY, channel); } catch (_) {}
       showToast('Đã chọn kênh OTA ' + (channel === 'beta' ? 'Beta' : 'Official') + '.');
     });
