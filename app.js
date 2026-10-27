@@ -2692,7 +2692,24 @@ document.addEventListener('DOMContentLoaded', () => {
       duration: Number.isFinite(a?.duration) ? a.duration : 0
     };
   }
-  function snapshot(name) { record(name, audioState()); }
+  function snapshot(name, extra = {}) { record(name, { ...audioState(), ...extra }); }
+  const audio = document.getElementById('audioElement');
+  if (audio) {
+    for (const name of ['play','pause','ended','waiting','stalled','seeking','seeked','error','loadedmetadata']) {
+      audio.addEventListener(name, () => snapshot(name === 'loadedmetadata' ? 'audio.metadata' : 'audio.' + name), { passive: true });
+    }
+  }
+  window.addEventListener('orientationchange', () => {
+    lastOrientation = (screen.orientation && screen.orientation.type) || 'unknown';
+    snapshot('orientation.change', { orientation: lastOrientation });
+  }, { passive: true });
+  window.addEventListener('resize', () => snapshot('viewport.change', { orientation: (screen.orientation && screen.orientation.type) || 'unknown' }), { passive: true });
+  window.visualViewport?.addEventListener('resize', () => snapshot('viewport.change', { orientation: (screen.orientation && screen.orientation.type) || 'unknown' }), { passive: true });
+  document.addEventListener('visibilitychange', () => snapshot('document.hidden', { orientation: document.hidden ? 'hidden' : 'visible' }));
+  window.addEventListener('error', () => record('window.error'));
+  window.addEventListener('unhandledrejection', () => record('promise.rejection'));
+  record('app.started');
+  try { window.Capacitor?.Plugins?.Diagnostics?.markWebViewReady?.(); } catch (_) {}
   function makeReport(nativeResult) {
     const version = document.querySelector('meta[name="app-version"]')?.content || 'unknown';
     const platform = window.Capacitor?.getPlatform?.() || 'web';
