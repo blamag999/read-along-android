@@ -2390,7 +2390,7 @@ function getSelectedUpdateChannel() {
 function compareReleaseVersions(a, b) {
   const parse = (value) => {
     const match = String(value || '').trim().replace(/^v/i, '')
-      .match(/^(\\d+)\\.(\\d+)\\.(\\d+)(?:-beta\\.(\\d+))?$/i);
+      .match(/^(\d+)\.(\d+)\.(\d+)(?:-beta\.(\d+))?$/i);
     if (!match) return null;
     return {
       major: Number(match[1]),
@@ -2435,7 +2435,7 @@ async function checkReadAlongUpdates() {
     const eligibleReleases = releases.filter(item =>
       !item.draft &&
       (channel === 'beta' ? item.prerelease === true : item.prerelease === false) &&
-      (item.assets || []).some(asset => /-android\\.apk$/i.test(asset.name)) &&
+      (item.assets || []).some(asset => /-android\.apk$/i.test(asset.name)) &&
       compareReleaseVersions(item.tag_name, '0.0.0') > 0
     );
     eligibleReleases.sort((a, b) => compareReleaseVersions(b.tag_name, a.tag_name));
@@ -2450,7 +2450,7 @@ async function checkReadAlongUpdates() {
       return;
     }
 
-    const asset = (release.assets || []).find(item => /-android\\.apk$/i.test(item.name));
+    const asset = (release.assets || []).find(item => /-android\.apk$/i.test(item.name));
     const currentVersion = document.querySelector('meta[name="app-version"]')?.content || '0.0.0';
     if (compareReleaseVersions(release.tag_name, currentVersion) <= 0) {
       const message = 'Kênh ' + channelLabel + ' mới nhất là ' + release.tag_name +
