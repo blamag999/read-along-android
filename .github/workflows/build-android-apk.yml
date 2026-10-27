@@ -156,17 +156,17 @@ jobs:
           source = main.read_text()
           marker = 'public class MainActivity extends BridgeActivity {'
           if marker not in source: raise SystemExit('Could not locate MainActivity class declaration')
-          # Remove any previous lifecycle override injection, regardless of formatting.
+          # MainActivity only registers plugins; native lifecycle is recorded via WebView bridge.
           import re
-          source = re.sub(r'(?s)\s*@Override\s+protected void onResume\(\)\s*\{.*?\}\s*@Override\s+protected void onPause\(\)\s*\{.*?\}\s*@Override\s+protected void onDestroy\(\)\s*\{.*?\}', '', source)
-          # Register both plugins and log Activity.onCreate only. BridgeActivity's other
-          # lifecycle methods are final with the Capacitor version used by this workflow.
+          source = re.sub(r'(?m)^\s*@Override protected void onResume\(\)\s*\{[^\n]*\}\s*\n\s*@Override protected void onPause\(\)\s*\{[^\n]*\}\s*\n\s*@Override protected void onDestroy\(\)\s*\{[^\n]*\}\s*\n?', '', source)
+          # Also handle any earlier one-line hook variants.
+          source = re.sub(r'(?m)^\s*@Override\s+protected void on(?:Resume|Pause|Destroy)\(\)\s*\{[^\n]*\}\s*\n?', '', source)
           if 'ApkUpdaterPlugin.class' not in source:
               injected = marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);\n        DiagnosticsPlugin.recordLifecycle(this, "Activity.onCreate");\n        super.onCreate(savedInstanceState);\n    }'
               source = source.replace(marker, injected, 1)
           elif 'DiagnosticsPlugin.class' not in source:
               source = source.replace('registerPlugin(ApkUpdaterPlugin.class);', 'registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);', 1)
-          if 'Activity.onResume' in source or 'Activity.onPause' in source or 'Activity.onDestroy' in source:
+          if re.search(r'protected void on(?:Resume|Pause|Destroy)\s*\(', source):
               raise SystemExit('Obsolete Activity lifecycle override remained in MainActivity')
           main.write_text(source)
           manifest = Path('android/app/src/main/AndroidManifest.xml')
