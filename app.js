@@ -549,7 +549,17 @@ async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl 
 
 function fileNameFromUrl(url, fallback) {
   try { return decodeURIComponent(new URL(url).pathname.split('/').pop()) || fallback; }
-  catch (error) { return fallback || url; }
+  catch (error) { return fallback || String(url || ''); }
+}
+
+function isSafeHttpsUrl(value) {
+  if (typeof value !== 'string' || !value.trim()) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && Boolean(url.hostname) && !url.username && !url.password;
+  } catch (_) {
+    return false;
+  }
 }
 
 async function loadR2Catalog() {
@@ -571,14 +581,24 @@ async function loadR2Catalog() {
         const audioList = Array.isArray(audioEntries) ? audioEntries : [audioEntries];
         const pdfUrl = typeof item.pdf === 'string' ? item.pdf : item.pdf.url;
         const syncUrl = item.sync || item.json || '';
-        const urls = audioList.map(value => typeof value === 'string' ? value : value && value.url).filter(Boolean);
-        if (!pdfUrl || !urls.length) return null;
+        const urls = audioList
+          .map(value => typeof value === 'string' ? value : value && value.url)
+          .filter(isSafeHttpsUrl);
+        if (!isSafeHttpsUrl(pdfUrl) || !urls.length) return null;
+        const safeSyncUrl = isSafeHttpsUrl(syncUrl) ? syncUrl : '';
+        const coverCandidate = item.coverUrl || item.cover || '';
+        const safeTitle = typeof item.title === 'string' && item.title.trim()
+          ? item.title.trim().slice(0, 300)
+          : normalizeStoryTitle(fileNameFromUrl(pdfUrl, 'book.pdf'));
         return {
-          id: item.id || getBookUniqueKey(fileNameFromUrl(pdfUrl, 'book.pdf')),
-          title: item.title || normalizeStoryTitle(fileNameFromUrl(pdfUrl, 'book.pdf')),
+          id: typeof item.id === 'string' || typeof item.id === 'number'
+            ? String(item.id).slice(0, 200)
+            : getBookUniqueKey(fileNameFromUrl(pdfUrl, 'book.pdf')),
+          title: safeTitle,
           pdf: { name: fileNameFromUrl(pdfUrl, 'book.pdf'), url: pdfUrl },
           audios: urls.map(url => ({ name: fileNameFromUrl(url, 'audio.mp3'), url })),
-          json: syncUrl ? { name: fileNameFromUrl(syncUrl, 'sync.json'), url: syncUrl } : null,
+          json: safeSyncUrl ? { name: fileNameFromUrl(safeSyncUrl, 'sync.json'), url: safeSyncUrl } : null,
+          coverUrl: isSafeHttpsUrl(coverCandidate) ? coverCandidate : '',
           source: 'r2'
         };
       }).filter(Boolean);
@@ -858,38 +878,65 @@ function renderPlaylistView() {
       card.setAttribute('role', 'button');
       card.setAttribute('aria-label', `${index + 1}. ${story.title}. Mở tập`);
 
-      let tagsHtml = '';
-      if (story.pdf) tagsHtml += `<span class="mini-badge badge-pdf">📄 ${story.pdf.name}</span>`;
-      if (story.audios && story.audios.length > 0) {
-        story.audios.forEach((aud) => {
-          tagsHtml += `<span class="mini-badge badge-mp3">🎵 ${aud.name}</span>`;
-        });
+      // Dữ liệu catalog từ xa không đáng tin cậy: dùng textContent thay vì ghép HTML.
+      if (isSafeHttpsUrl(story.coverUrl)) {
+        const cover = document.createElement('img');
+        cover.className = 'card-cover';
+        cover.alt = 'Bìa';
+        cover.loading = 'lazy';
+        cover.src = story.coverUrl;
+        cover.addEventListener('error', () => { cover.style.display = 'none'; }, { once: true });
+        card.appendChild(cover);
       }
 
-      let audioPartBtnsHtml = '';
+      const number = document.createElement('span');
+      number.className = 'apk-story-number';
+      number.textContent = String(index + 1);
+      card.appendChild(number);
+
+      const titleCol = document.createElement('div');
+      titleCol.className = 'card-title-col';
+      const title = document.createElement('h4');
+      title.textContent = (isPlaying ? '▶ ' : '') + String(story.title || 'Không có tiêu đề');
+      titleCol.appendChild(title);
+
+      const tags = document.createElement('div');
+      tags.className = 'card-tags';
+      if (story.pdf) {
+        const pdfTag = document.createElement('span');
+        pdfTag.className = 'mini-badge badge-pdf';
+        pdfTag.textContent = '📄 ' + String(story.pdf.name || 'PDF');
+        tags.appendChild(pdfTag);
+      }
+      (Array.isArray(story.audios) ? story.audios : []).forEach((aud) => {
+        const audioTag = document.createElement('span');
+        audioTag.className = 'mini-badge badge-mp3';
+        audioTag.textContent = '🎵 ' + String(aud.name || 'Audio');
+        tags.appendChild(audioTag);
+      });
+      titleCol.appendChild(tags);
+
       if (story.audios && story.audios.length > 1) {
-        audioPartBtnsHtml = '<div class="card-audio-parts">';
-        story.audios.forEach(function(a, i) {
-          const lbl = a.partLabel || ('Phần ' + (i + 1));
-          audioPartBtnsHtml += '<button class="card-part-btn" data-partidx="' + i + '" title="' + a.name + '">' + lbl + '</button>';
+        const partButtons = document.createElement('div');
+        partButtons.className = 'card-audio-parts';
+        story.audios.forEach((audio, partIndex) => {
+          const partButton = document.createElement('button');
+          partButton.type = 'button';
+          partButton.className = 'card-part-btn';
+          partButton.dataset.partidx = String(partIndex);
+          partButton.title = String(audio.name || '');
+          partButton.textContent = String(audio.partLabel || ('Phần ' + (partIndex + 1)));
+          partButtons.appendChild(partButton);
         });
-        audioPartBtnsHtml += '</div>';
+        titleCol.appendChild(partButtons);
       }
+      card.appendChild(titleCol);
 
-      let coverHtml = '';
-      if (story.coverUrl) {
-        coverHtml = `<img src="${story.coverUrl}" class="card-cover" alt="Bìa" loading="lazy" onerror="this.style.display='none'">`;
-      }
-
-      card.innerHTML =
-        coverHtml +
-        '<span class="apk-story-number">' + (index + 1) + '</span>' +
-        '<div class="card-title-col">' +
-          '<h4>' + (isPlaying ? '&#9654; ' : '') + story.title + '</h4>' +
-          '<div class="card-tags">' + tagsHtml + '</div>' +
-          audioPartBtnsHtml +
-        '</div>' +
-        '<button class="card-play-btn" type="button">' + (isPlaying ? 'Đang đọc' : '&#9654; Mở') + '</button>';
+      const playButton = document.createElement('button');
+      playButton.className = 'card-play-btn';
+      playButton.type = 'button';
+      playButton.textContent = isPlaying ? 'Đang đọc' : '▶ Mở';
+      card.appendChild(playButton);
 
       function openStory(partIndex) {
         loadStoryFromPlaylist(story, partIndex || 0);
@@ -1015,13 +1062,20 @@ function updateAudioPartUI() {
   }
 
   container.classList.remove('hidden');
-  var html = '<span class="audio-part-label">Phan audio:</span>';
+  container.replaceChildren();
+  const label = document.createElement('span');
+  label.className = 'audio-part-label';
+  label.textContent = 'Phần audio:';
+  container.appendChild(label);
   audios.forEach(function(a, i) {
-    var lbl = a.partLabel || ('Phần ' + (i + 1));
-    var isActive = (i === state.currentAudioIndex) ? ' active' : '';
-    html += '<button class="audio-part-btn' + isActive + '" onclick="selectAudioPart(' + i + ')" title="' + a.name + '">' + lbl + '</button>';
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'audio-part-btn' + (i === state.currentAudioIndex ? ' active' : '');
+    button.title = String(a.name || '');
+    button.textContent = String(a.partLabel || ('Phần ' + (i + 1)));
+    button.addEventListener('click', () => window.selectAudioPart(i));
+    container.appendChild(button);
   });
-  container.innerHTML = html;
 }
 
 // CHON AUDIO PART
@@ -1274,9 +1328,15 @@ dom.selPageTurnMode.value = state.pageTurnMode;
 
   initTouchGestures();
 
-  window.addEventListener('resize', debounce(() => {
-    if (state.pdfDoc) renderCurrentSpread();
-  }, 300));
+  // Xoay màn hình chỉ thay đổi kích thước vùng vẽ; không pause/load/seek audio.
+  const rerenderAfterViewportChange = debounce(() => {
+    if (state.pdfDoc) renderCurrentSpread(false);
+  }, 300);
+  window.addEventListener('resize', rerenderAfterViewportChange);
+  window.addEventListener('orientationchange', rerenderAfterViewportChange);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', rerenderAfterViewportChange);
+  }
 }
 
 // =======================================================
@@ -1604,6 +1664,7 @@ async function renderCurrentSpread(syncAudioToPage = false) {
   }
   updatePageTimestampBadge();
 
+  let renderSucceeded = false;
   try {
     const pageLeft = await state.pdfDoc.getPage(leftPageNum);
     const unscaledLeft = pageLeft.getViewport({ scale: 1 });
@@ -1646,6 +1707,7 @@ async function renderCurrentSpread(syncAudioToPage = false) {
     } else {
       dom.pageRightWrapper.classList.add('hidden');
     }
+    renderSucceeded = true;
 
   } catch (err) {
     console.error('Lỗi khi render trang:', err);
@@ -1661,9 +1723,10 @@ async function renderCurrentSpread(syncAudioToPage = false) {
     }
   }
 
-  // Chỉ tua audio khi người dùng chủ động chuyển trang. Resize/xoay màn hình,
-  // zoom hoặc đổi kiểu hiển thị chỉ render lại PDF, tuyệt đối không seek audio.
-  if (syncAudioToPage && state.autoSeekAudio && !state.isAudioDrivenChange) {
+  // Chỉ tua audio nếu render thành công và vẫn tương ứng với trang đang chọn.
+  // Render cũ hoàn tất muộn sau resize không được kéo audio về mốc trang cũ.
+  if (renderSucceeded && syncAudioToPage && state.pageNum === leftPageNum &&
+      state.autoSeekAudio && !state.isAudioDrivenChange) {
     const rawTarget = state.pageTimestamps[leftPageNum];
     if (typeof rawTarget === 'number') {
       dom.audioElement.currentTime = rawTarget;
@@ -2017,24 +2080,59 @@ function openSyncModal() {
 }
 
 function renderSyncTable() {
-  dom.syncTableBody.innerHTML = '';
+  dom.syncTableBody.replaceChildren();
   const total = state.totalPages || 10;
 
   for (let p = 1; p <= total; p++) {
     const tr = document.createElement('tr');
     const rawTs = state.pageTimestamps[p];
-    const hasTime = (typeof rawTs === 'number') || (rawTs && typeof rawTs === 'object' && typeof rawTs.time === 'number');
+    const hasTime = (typeof rawTs === 'number' && Number.isFinite(rawTs) && rawTs >= 0) ||
+      (rawTs && typeof rawTs === 'object' && typeof rawTs.time === 'number' && Number.isFinite(rawTs.time) && rawTs.time >= 0);
     const sec = typeof rawTs === 'number' ? rawTs : (hasTime ? rawTs.time : 0);
-    const partNum = (hasTime && rawTs && rawTs.part !== undefined) ? rawTs.part : null;
-    const partTxt = (partNum !== null) ? (' <span style="font-size:0.75rem;color:#38bdf8;">(Phần ' + (partNum + 1) + ')</span>') : '';
+    const partNum = (hasTime && rawTs && Number.isInteger(rawTs.part) && rawTs.part >= 0) ? rawTs.part : null;
 
-    tr.innerHTML = '<td><b>Trang ' + p + '</b></td>' +
-      '<td>' + (hasTime ? (formatTime(sec) + partTxt) : '<span style="color:#64748b;">(Chưa có)</span>') + '</td>' +
-      '<td>' +
-        (hasTime ? ('<button class="btn-mini-play" onclick="seekAndPlayTo(' + sec + ', ' + p + ', ' + (partNum !== null ? partNum : 'null') + ')">▶ Nghe</button>') : '') +
-        (hasTime ? ('<button class="btn-mini-del" onclick="deleteSync(' + p + ')">✕ Xóa</button>') : '') +
-        '<button class="btn-mini-play" onclick="setManualSync(' + p + ')">✏️ Đặt</button>' +
-      '</td>';
+    const pageCell = document.createElement('td');
+    const pageBold = document.createElement('b');
+    pageBold.textContent = 'Trang ' + p;
+    pageCell.appendChild(pageBold);
+    tr.appendChild(pageCell);
+
+    const timeCell = document.createElement('td');
+    const timeLabel = document.createElement('span');
+    timeLabel.textContent = hasTime
+      ? formatTime(sec) + (partNum !== null ? ' (Phần ' + (partNum + 1) + ')' : '')
+      : '(Chưa có)';
+    if (!hasTime) timeLabel.style.color = '#64748b';
+    if (partNum !== null) {
+      timeLabel.style.fontSize = '0.75rem';
+      timeLabel.style.color = '#38bdf8';
+    }
+    timeCell.appendChild(timeLabel);
+    tr.appendChild(timeCell);
+
+    const actionsCell = document.createElement('td');
+    if (hasTime) {
+      const playButton = document.createElement('button');
+      playButton.type = 'button';
+      playButton.className = 'btn-mini-play';
+      playButton.textContent = '▶ Nghe';
+      playButton.addEventListener('click', () => window.seekAndPlayTo(sec, p, partNum));
+      actionsCell.appendChild(playButton);
+
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.className = 'btn-mini-del';
+      deleteButton.textContent = '✕ Xóa';
+      deleteButton.addEventListener('click', () => window.deleteSync(p));
+      actionsCell.appendChild(deleteButton);
+    }
+    const setButton = document.createElement('button');
+    setButton.type = 'button';
+    setButton.className = 'btn-mini-play';
+    setButton.textContent = '✏️ Đặt';
+    setButton.addEventListener('click', () => window.setManualSync(p));
+    actionsCell.appendChild(setButton);
+    tr.appendChild(actionsCell);
     dom.syncTableBody.appendChild(tr);
   }
 }
@@ -2376,6 +2474,10 @@ function getSelectedUpdateChannel() {
   return selected === 'beta' ? 'beta' : 'official';
 }
 
+function isValidReleaseVersion(value) {
+  return /^v?\d+\.\d+\.\d+(?:-beta\.\d+)?$/i.test(String(value || '').trim());
+}
+
 function compareReleaseVersions(a, b) {
   const parse = (value) => {
     const match = String(value || '').trim().replace(/^v/i, '')
@@ -2424,7 +2526,12 @@ async function checkReadAlongUpdates() {
     const eligibleReleases = releases.filter(item =>
       !item.draft &&
       (channel === 'beta' ? item.prerelease === true : item.prerelease === false) &&
-      (item.assets || []).some(asset => /-android\.apk$/i.test(asset.name)) &&
+      isValidReleaseVersion(item.tag_name) &&
+      (item.assets || []).some(asset =>
+        /-android\.apk$/i.test(asset.name) &&
+        isSafeHttpsUrl(asset.browser_download_url) &&
+        new URL(asset.browser_download_url).hostname === 'github.com'
+      ) &&
       compareReleaseVersions(item.tag_name, '0.0.0') > 0
     );
     eligibleReleases.sort((a, b) => compareReleaseVersions(b.tag_name, a.tag_name));
@@ -2439,7 +2546,12 @@ async function checkReadAlongUpdates() {
       return;
     }
 
-    const asset = (release.assets || []).find(item => /-android\.apk$/i.test(item.name));
+    const asset = (release.assets || []).find(item =>
+      /-android\.apk$/i.test(item.name) &&
+      isSafeHttpsUrl(item.browser_download_url) &&
+      new URL(item.browser_download_url).hostname === 'github.com'
+    );
+    if (!asset) throw new Error('Release không có APK Android từ miền GitHub hợp lệ.');
     const currentVersion = document.querySelector('meta[name="app-version"]')?.content || '0.0.0';
     if (compareReleaseVersions(release.tag_name, currentVersion) <= 0) {
       const message = 'Kênh ' + channelLabel + ' mới nhất là ' + release.tag_name +
