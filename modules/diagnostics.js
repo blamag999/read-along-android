@@ -16,7 +16,7 @@
     'audio.seeking','audio.seeked','audio.error','audio.metadata','pdf.render.start',
     'pdf.render.end','pdf.render.error','viewport.change','orientation.change',
     'orientation.settled','document.hidden','window.error','promise.rejection',
-    'page.turn.manual','page.turn.auto','page.turn.waiting','page.turn.no-marker','page.replay','page.replay.error','audio.play.failure','diagnostics.open'
+    'page.turn.manual','page.turn.auto','page.turn.waiting','page.turn.no-marker','page.turn.ignored-stale-marker','page.replay','page.replay.error','audio.play.failure','diagnostics.open'
   ]);
   const diagnosticDedupeKeys = new Set();
   function sanitizeDiagnosticText(value) {
