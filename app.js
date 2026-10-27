@@ -2731,7 +2731,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (turnstileLoading) return turnstileLoading;
     turnstileLoading = fetch(apiBase + '/config', { method: 'GET', mode: 'cors', cache: 'no-store' })
-      .then(r => { if (!r.ok) throw new Error('config'); return r.json(); })
+      .then(r => { if (!r.ok) throw new Error('config_http_' + r.status); return r.json(); })
       .then(cfg => {
         if (!cfg.siteKey) throw new Error('sitekey');
         diagnosticsConfig = cfg;
@@ -2753,12 +2753,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const script = document.createElement('script');
             script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
             script.async = true; script.defer = true;
-            script.onload = render; script.onerror = () => reject(new Error('turnstile'));
+            script.onload = render; script.onerror = () => reject(new Error('turnstile_script_load_failed'));
             document.head.appendChild(script);
           }
         });
-      }).catch(() => {
-        status.textContent = 'Không kết nối được dịch vụ chẩn đoán. Bạn vẫn có thể xuất log ra tệp.';
+      }).catch((error) => {
+        const reason = String(error?.message || '');
+        if (reason.startsWith('config_http_')) {
+          status.textContent = 'Dịch vụ chẩn đoán phản hồi HTTP ' + reason.slice('config_http_'.length) + '. Hãy kiểm tra cấu hình Worker.';
+        } else if (reason === 'turnstile_script_load_failed') {
+          status.textContent = 'Dịch vụ chẩn đoán đã phản hồi nhưng không tải được Cloudflare Turnstile. Hãy kiểm tra kết nối mạng hoặc chặn nội dung.';
+        } else {
+          status.textContent = 'Không kết nối được dịch vụ chẩn đoán (' + (reason || 'lỗi mạng/CORS') + '). Bạn vẫn có thể xuất log ra tệp.';
+        }
         return false;
       });
     return turnstileLoading;
