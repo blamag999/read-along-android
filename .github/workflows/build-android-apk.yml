@@ -143,9 +143,7 @@ jobs:
           npm install
           npx cap add android
           mkdir -p android/app/src/main/java/com/blamag999/readalong android/app/src/main/res/xml
-          cp native/android/ApkUpdaterPlugin.java android/app/src/main/java/com/blamag999/readalong/ApkUpdaterPlugin.java
           cp native/android/DiagnosticsPlugin.java android/app/src/main/java/com/blamag999/readalong/DiagnosticsPlugin.java
-          cp native/android/file_paths.xml android/app/src/main/res/xml/file_paths.xml
           python3 - <<'PY'
           from pathlib import Path
           main = Path('android/app/src/main/java/com/blamag999/readalong/MainActivity.java')
@@ -161,11 +159,9 @@ jobs:
           source = re.sub(r'(?m)^\s*@Override\s+protected void onResume\(\)\s*\{\s*super\.onResume\(\);\s*DiagnosticsPlugin\.recordLifecycle\(this,\s*"Activity\.onResume"\);\s*\}\s*$', '', source)
           source = re.sub(r'(?m)^\s*@Override\s+protected void onPause\(\)\s*\{\s*DiagnosticsPlugin\.recordLifecycle\(this,\s*"Activity\.onPause"\);\s*super\.onPause\(\);\s*\}\s*$', '', source)
           source = re.sub(r'(?m)^\s*@Override\s+protected void onDestroy\(\)\s*\{\s*DiagnosticsPlugin\.recordLifecycle\(this,\s*"Activity\.onDestroy"\);\s*super\.onDestroy\(\);\s*\}\s*$', '', source)
-          if 'ApkUpdaterPlugin.class' not in source:
-              injected = marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);\n        DiagnosticsPlugin.recordLifecycle(this, "Activity.onCreate");\n        super.onCreate(savedInstanceState);\n    }'
+          if 'DiagnosticsPlugin.class' not in source:
+              injected = marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(DiagnosticsPlugin.class);\n        DiagnosticsPlugin.recordLifecycle(this, "Activity.onCreate");\n        super.onCreate(savedInstanceState);\n    }'
               source = source.replace(marker, injected, 1)
-          elif 'DiagnosticsPlugin.class' not in source:
-              source = source.replace('registerPlugin(ApkUpdaterPlugin.class);', 'registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);', 1)
           if re.search(r'protected void on(?:Resume|Pause|Destroy)\s*\(', source):
               raise SystemExit('Obsolete Activity lifecycle override remained in MainActivity')
           main.write_text(source)
@@ -193,8 +189,6 @@ jobs:
           else:
               updated_tag = activity_tag[:-1] + ' android:configChanges="' + config_value + '">'
           xml = xml.replace(activity_tag, updated_tag, 1)
-          if 'REQUEST_INSTALL_PACKAGES' not in xml:
-              xml = xml.replace('<application', '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n    <application', 1)
           # One APK for touch and non-touch devices, including Android TV/Google TV.
           features = [
               '<uses-feature android:name="android.hardware.touchscreen" android:required="false" />',
@@ -214,9 +208,6 @@ jobs:
                   launcher_category + '\n                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />',
                   1
               )
-          if '.fileprovider' not in xml:
-              provider = '''<provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.fileprovider" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" /></provider>'''
-              xml = xml.replace('</application>', provider + '\n    </application>', 1)
           manifest.write_text(xml)
           PY
           npx cap sync android
@@ -330,10 +321,16 @@ jobs:
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: ./gradlew assembleRelease
 
-      - name: Rename versioned APK
+      - name: Rename and verify signed APK
         env:
           VERSION: ${{ steps.release_info.outputs.version }}
-        run: cp android/app/build/outputs/apk/release/app-release.apk "read-along-v${VERSION}-android.apk"
+        run: |
+          APK="read-along-v${VERSION}-android.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "$APK"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          test -x "$APKSIGNER"
+          "$APKSIGNER" verify --verbose --print-certs "$APK"
+          sha256sum "$APK" > "$APK.sha256"
 
       - name: Upload versioned workflow artifacts
         uses: actions/upload-artifact@v6
@@ -341,6 +338,7 @@ jobs:
           name: read-along-v${{ steps.release_info.outputs.version }}-build
           path: |
             read-along-v${{ steps.release_info.outputs.version }}-android.apk
+            read-along-v${{ steps.release_info.outputs.version }}-android.apk.sha256
             dist/read-along-v${{ steps.release_info.outputs.version }}-web-local.zip
           if-no-files-found: error
           retention-days: 30
@@ -371,6 +369,7 @@ jobs:
 
             if gh release create "$TAG" \
               "read-along-v$VERSION-android.apk" \
+              "read-along-v$VERSION-android.apk.sha256" \
               "dist/read-along-v$VERSION-web-local.zip" \
               --title "$TITLE" \
               --notes "$CHANGELOG" \
