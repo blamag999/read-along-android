@@ -2053,7 +2053,6 @@ function onAudioMetadataLoaded() {
 function onAudioTimeUpdate() {
   const audio = dom.audioElement;
   const curr = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
-  const previousObservedTime = state.lastAudioObservedTime;
   const allowBackwardSync = state.allowBackwardAudioSync === true;
   state.allowBackwardAudioSync = false;
   state.lastAudioObservedTime = curr;
