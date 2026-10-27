@@ -17,7 +17,7 @@ This service creates a public GitHub Issue only after an explicit user action an
 ### Automated deployment (recommended)
 
 1. Create a Cloudflare Turnstile widget for the app's actual origins. Use managed mode. Copy its **site key** and **secret key**.
-2. Create a Cloudflare API token with the minimum Workers deployment permissions described in the repository's deployment instructions, and obtain the Cloudflare Account ID.
+2. Obtain the Cloudflare Account ID. For the first deployment, create an account-scoped API token with the Cloudflare Workers **Admin** role so Wrangler can create the new Worker and Durable Object. After the Worker exists, you can replace this token with one scoped to the individual Worker and the **Editor** role for subsequent deployments. Do not grant DNS, billing, or unrelated product permissions.
 3. In GitHub repository **Settings → Secrets and variables → Actions**, add these repository secrets (never commit or paste their values into source files):
    - `CLOUDFLARE_API_TOKEN`: Cloudflare API token.
    - `CLOUDFLARE_ACCOUNT_ID`: Cloudflare Account ID.
