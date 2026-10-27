@@ -5,7 +5,9 @@
   "description": "Read Along Android app wrapping the PDF/audio reader",
   "scripts": {
     "prepare:web": "node scripts/prepare-web.js",
-    "android:sync": "npm run prepare:web && cap sync android"
+    "android:sync": "npm run prepare:web && cap sync android",
+    "check:js": "node --check app.js && node --check sw.js",
+    "test": "npm run check:js"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.3",
