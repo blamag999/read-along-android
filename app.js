@@ -1006,12 +1006,29 @@ async function loadStoryFromPlaylist(story, audioPartIndex) {
 }
 
 // NAP MOT PART AUDIO CU THE
-function loadAudioPart(index) {
+function loadAudioPart(index, options = {}) {
   const audios = state.currentStoryAudios;
   if (!audios || audios.length === 0) return;
   const clampedIdx = Math.max(0, Math.min(index, audios.length - 1));
+  const requestId = (state.audioLoadRequestId || 0) + 1;
+  state.audioLoadRequestId = requestId;
   state.currentAudioIndex = clampedIdx;
   const audio = audios[clampedIdx];
+
+  // Switching parts always loads the new source paused first. If the user was
+  // listening, resume only after the new source has metadata; otherwise preserve pause.
+  if (options.resumePlayback === true) {
+    dom.audioElement.addEventListener('loadedmetadata', function resumeSelectedPart() {
+      dom.audioElement.removeEventListener('loadedmetadata', resumeSelectedPart);
+      if (state.audioLoadRequestId !== requestId || state.currentAudioIndex !== clampedIdx) return;
+      dom.audioElement.play().catch((error) => {
+        console.warn('Không thể tự phát phần audio mới:', error);
+        showToast('Đã chuyển phần audio nhưng chưa thể tự phát. Hãy bấm Play để thử lại.');
+        updatePlayButtonState();
+      });
+    });
+  }
+
   if (audio.blob) loadAudioFromBlob(audio.blob);
   else if (audio.url) loadAudioFromUrl(audio.url, audio.name);
   updateAudioPartUI();
@@ -1080,8 +1097,14 @@ function updateAudioPartUI() {
 
 // CHON AUDIO PART
 window.selectAudioPart = function(index) {
-  loadAudioPart(index);
-  showToast('Đã chuyển sang phần ' + (index + 1));
+  if (!Number.isInteger(index) || !state.currentStoryAudios || !state.currentStoryAudios[index]) return;
+  if (index === state.currentAudioIndex) return;
+
+  // Preserve the transport intent: playing -> continue playing after source load;
+  // paused -> switch source but remain paused.
+  const shouldResume = !dom.audioElement.paused && !dom.audioElement.ended;
+  loadAudioPart(index, { resumePlayback: shouldResume });
+  showToast('Đã chuyển sang phần ' + (index + 1) + (shouldResume ? ' — tiếp tục phát' : ' — đang tạm dừng'));
 };
 
 // Nguồn nội dung: tệp PDF và âm thanh cục bộ; chỉ đồng bộ JSON mốc đọc qua GitHub.
