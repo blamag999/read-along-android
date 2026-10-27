@@ -74,7 +74,7 @@ export default {
 
     const reportText = JSON.stringify(payload.report, null, 2);
     if (new TextEncoder().encode(reportText).byteLength > 80 * 1024) return json({ error: "Log is too large (max 80 KB)" }, 413);
-    const title = "[Diagnostics] Read Along - " + new Date().toISOString().replace("T", " ").replace(/\\.\\d{3}Z$/, " UTC");
+    const title = "[Diagnostics] Read Along - " + new Date().toISOString().replace("T", " ").replace(/\.\d{3}Z$/, " UTC");
     const fence = String.fromCharCode(96).repeat(3);
     const body = [
       "## Mô tả lỗi",
