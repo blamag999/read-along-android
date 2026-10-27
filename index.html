@@ -333,13 +333,13 @@
         <p class="modal-desc">Ghi nhận sự kiện audio, PDF, xoay màn hình và vòng đời Activity/WebView để tìm nguyên nhân lỗi. Không ghi nội dung sách, tên tệp, đường dẫn, URL audio, token hoặc thông tin tài khoản.</p>
         <p id="diagnosticsStatus" class="modal-desc" role="status">Đang kiểm tra dịch vụ…</p>
         <div id="diagnosticsTurnstile" style="margin:12px 0;"></div>
-        <label style="display:flex;gap:8px;align-items:flex-start;margin:12px 0;">
+        <label class="diagnostics-consent">
           <input id="chkDiagnosticsConsent" type="checkbox">
           <span>Tôi đồng ý gửi log đã lọc tới dịch vụ chẩn đoán và tạo một GitHub Issue công khai. Không gửi nếu log có thông tin riêng tư.</span>
         </label>
-        <div class="sync-actions-row">
+        <div class="diagnostics-actions">
           <button id="btnExportDiagnostics" class="btn-secondary" type="button">📥 Xuất log ra tệp</button>
-          <button id="btnSubmitDiagnostics" class="btn-primary" type="button" disabled>🔒 Xác minh và gửi báo lỗi</button>
+          <button id="btnSubmitDiagnostics" class="btn-primary" type="button">🔒 Xác minh và gửi báo lỗi</button>
         </div>
         <p class="modal-desc">Chống spam bằng Turnstile và giới hạn gửi theo IP ở dịch vụ trung gian. Log được lọc lại lần nữa trên máy chủ trước khi đưa vào Issue. GitHub Issue của kho này công khai.</p>
       </div>
