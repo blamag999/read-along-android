@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pdf-audio-sync-v44-diagnostics-audio-switch';
+const CACHE_NAME = 'pdf-audio-sync-v45-manual-github-issue';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
