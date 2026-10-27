@@ -101,6 +101,21 @@ jobs:
           xml = manifest.read_text()
           if 'REQUEST_INSTALL_PACKAGES' not in xml:
               xml = xml.replace('<application', '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n    <application', 1)
+          # One APK for touch and non-touch devices, including Android TV/Google TV.
+          features = [
+              '<uses-feature android:name="android.hardware.touchscreen" android:required="false" />',
+              '<uses-feature android:name="android.software.leanback" android:required="false" />',
+          ]
+          for feature in features:
+              if feature.split(' android:')[0] not in xml:
+                  xml = xml.replace('<application', feature + '\n    <application', 1)
+          # Expose the same activity to Android TV launchers as well as phone launchers.
+          if 'android.intent.category.LEANBACK_LAUNCHER' not in xml:
+              xml = xml.replace(
+                  'android.intent.category.LAUNCHER',
+                  'android.intent.category.LAUNCHER</category>\n                <category android:name="android.intent.category.LEANBACK_LAUNCHER"',
+                  1
+              )
           if '.fileprovider' not in xml:
               provider = '''<provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.fileprovider" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" /></provider>'''
               xml = xml.replace('</application>', provider + '\n    </application>', 1)
