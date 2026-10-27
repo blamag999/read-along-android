@@ -2740,9 +2740,9 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
               turnstileWidgetId = window.turnstile.render(turnstileBox, {
                 sitekey: cfg.siteKey, action: 'read_along_diagnostics',
-                callback: () => { if (submit) submit.disabled = !consent?.checked; },
-                'expired-callback': () => { if (submit) submit.disabled = true; },
-                'error-callback': () => { status.textContent = 'Không thể xác minh. Hãy thử tải lại thử thách.'; if (submit) submit.disabled = true; }
+                callback: () => { status.textContent = 'Đã xác minh chống spam. Bây giờ hãy đồng ý gửi log rồi nhấn nút gửi.'; },
+                'expired-callback': () => { status.textContent = 'Xác minh đã hết hạn. Hãy hoàn thành thử thách lại trước khi gửi.'; },
+                'error-callback': () => { status.textContent = 'Không thể xác minh. Hãy thử lại thử thách hoặc xuất log ra tệp.'; }
               });
               status.textContent = 'Đã tải bảo vệ chống spam. Hoàn thành xác minh rồi chọn đồng ý gửi.';
               resolve(true);
@@ -2766,13 +2766,15 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('menuDiagnostics')?.addEventListener('click', async () => {
     snapshot('diagnostics.open');
     modal?.classList.remove('hidden');
-    if (submit) submit.disabled = true;
+    if (submit) submit.disabled = false;
     await loadTurnstile();
   });
   document.getElementById('btnCloseDiagnostics')?.addEventListener('click', () => modal?.classList.add('hidden'));
   modal?.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
   consent?.addEventListener('change', () => {
-    if (submit) submit.disabled = !(consent.checked && turnstileWidgetId !== null && window.turnstile?.getResponse?.(turnstileWidgetId));
+    if (consent.checked) {
+      status.textContent = 'Đã ghi nhận lựa chọn của bạn. Hoàn thành xác minh chống spam rồi nhấn nút gửi.';
+    }
   });
   document.getElementById('btnExportDiagnostics')?.addEventListener('click', async () => {
     const report = makeReport(await getNativeLogs());
@@ -2780,8 +2782,18 @@ document.addEventListener('DOMContentLoaded', () => {
     status.textContent = 'Đã tạo tệp log. Kiểm tra lại nội dung trước khi chia sẻ.';
   });
   submit?.addEventListener('click', async () => {
-    if (!apiBase || !diagnosticsConfig || !consent?.checked || !window.turnstile?.getResponse?.(turnstileWidgetId)) {
-      status.textContent = 'Cần cấu hình dịch vụ, hoàn thành xác minh và đồng ý gửi.';
+    if (!apiBase || !diagnosticsConfig) {
+      status.textContent = 'Dịch vụ báo lỗi chưa kết nối được. Bạn vẫn có thể dùng nút Xuất log ra tệp.';
+      return;
+    }
+    if (!consent?.checked) {
+      status.textContent = 'Vui lòng đánh dấu ô đồng ý gửi log trước khi tiếp tục.';
+      consent?.focus();
+      return;
+    }
+    if (turnstileWidgetId === null || !window.turnstile?.getResponse?.(turnstileWidgetId)) {
+      status.textContent = 'Vui lòng hoàn thành ô xác minh chống spam ở phía trên, rồi nhấn gửi lại.';
+      turnstileBox?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
       return;
     }
     submit.disabled = true;
@@ -2806,7 +2818,7 @@ document.addEventListener('DOMContentLoaded', () => {
       status.textContent = String(error.message || 'Không thể gửi báo lỗi. Hãy xuất log ra tệp.');
       if (window.turnstile && turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId);
     } finally {
-      submit.disabled = true;
+      submit.disabled = false;
     }
   });
 })();
