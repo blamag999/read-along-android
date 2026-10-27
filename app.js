@@ -37,9 +37,6 @@ const state = {
   viewMode: 'fit-height',
   zoomScale: 1.0,
 
-  speeds: [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0],
-  speedIndex: 2,
-
   // MULTI-AUDIO STATE
   currentAudioIndex: 0,   // Phần âm thanh đang phát trong currentStoryAudios
   currentStoryAudios: [], // Danh sách các phần âm thanh của truyện đang mở
@@ -224,7 +221,6 @@ const dom = {
   playPauseIcon: document.getElementById('playPauseIcon'),
   btnRewind5: document.getElementById('btnRewind5'),
   btnForward5: document.getElementById('btnForward5'),
-  speedSelect: document.getElementById('speedSelect'),
   btnReplayPage: document.getElementById('btnReplayPage'),
   selPageTurnMode: document.getElementById('selPageTurnMode'),
   chkAutoSeekAudio: document.getElementById('chkAutoSeekAudio'),
@@ -993,7 +989,7 @@ function loadAudioFromUrl(url, name) {
     URL.revokeObjectURL(previousUrl);
     delete dom.audioElement.dataset.objectUrl;
   }
-  dom.audioElement.playbackRate = state.speeds[state.speedIndex] || 1.0;
+  dom.audioElement.playbackRate = 1.0;
   dom.audioFileName.textContent = '🎵 ' + state.audioFileName;
   dom.audioFileName.classList.remove('empty');
   if (dom.audioSeeker) dom.audioSeeker.value = 0;
@@ -1227,8 +1223,7 @@ dom.selPageTurnMode.value = state.pageTurnMode;
   dom.btnPageJump.addEventListener('click', jumpToEnteredPage);
   dom.pageJumpInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') jumpToEnteredPage(); });
   dom.btnReplayPage.addEventListener('click', replayCurrentPage);
-  dom.speedSelect.addEventListener('change', (e) => setPlaybackSpeed(parseFloat(e.target.value), true));
-  initPlaybackSpeed();
+  dom.audioElement.playbackRate = 1.0;
   initPdfClickNavigation();
 
   dom.btnPrevPage.addEventListener('click', () => changePage(-1));
@@ -1561,7 +1556,7 @@ function loadAudioFromBlob(file) {
 
   state.audioFileName = file.name || 'audio';
   dom.audioElement.pause();
-  dom.audioElement.playbackRate = state.speeds[state.speedIndex] || 1.0;
+  dom.audioElement.playbackRate = 1.0;
   dom.audioFileName.textContent = `🎵 ${state.audioFileName}`;
   dom.audioFileName.classList.remove('empty');
   if (dom.audioSeeker) dom.audioSeeker.value = 0;
@@ -1900,24 +1895,6 @@ async function togglePlayPause() {
   }
 }
 
-const PLAYBACK_SPEED_STORAGE_KEY = 'pdfAudioSyncPlaybackSpeed';
-function setPlaybackSpeed(speed, persist = false) {
-  const safeSpeed = state.speeds.includes(speed) ? speed : 1.0;
-  state.speedIndex = state.speeds.indexOf(safeSpeed);
-  dom.audioElement.playbackRate = safeSpeed;
-  dom.speedSelect.value = String(safeSpeed);
-  if (persist) {
-    try { localStorage.setItem(PLAYBACK_SPEED_STORAGE_KEY, String(safeSpeed)); } catch (e) {}
-  }
-}
-function initPlaybackSpeed() {
-  let savedSpeed = 1.0;
-  try {
-    const stored = parseFloat(localStorage.getItem(PLAYBACK_SPEED_STORAGE_KEY));
-    if (state.speeds.includes(stored)) savedSpeed = stored;
-  } catch (e) {}
-  setPlaybackSpeed(savedSpeed);
-}
 function jumpToEnteredPage() {
   if (!state.pdfDoc) { showToast('Vui lòng mở PDF trước.'); return; }
   const raw = dom.pageJumpInput.value.trim();
@@ -1953,7 +1930,7 @@ function replayCurrentPage() {
   }
   const seekAndPlay = () => {
     dom.audioElement.currentTime = Math.max(0, marker.time);
-    dom.audioElement.playbackRate = state.speeds[state.speedIndex] || 1;
+    dom.audioElement.playbackRate = 1.0;
     dom.audioElement.play().catch(() => showToast('Không thể phát audio. Hãy bấm Phát để thử lại.'));
   };
   if (state.currentStoryAudios && state.currentStoryAudios.length > 1 &&
