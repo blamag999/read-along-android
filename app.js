@@ -2379,13 +2379,12 @@ const READ_ALONG_RELEASES_API = 'https://api.github.com/repos/blamag999/read-alo
 const READ_ALONG_UPDATE_CHANNEL_KEY = 'readAlongUpdateChannel';
 
 function getSelectedUpdateChannel() {
-  const select = dom.updateChannelSelect;
   let saved = 'official';
   try {
     saved = localStorage.getItem(READ_ALONG_UPDATE_CHANNEL_KEY) || 'official';
   } catch (_) {}
-  const channel = select?.value || saved;
-  return channel === 'beta' ? 'beta' : 'official';
+  const selected = dom.updateChannelSelect?.value || saved;
+  return selected === 'beta' ? 'beta' : 'official';
 }
 
 function compareReleaseVersions(a, b) {
@@ -2406,7 +2405,6 @@ function compareReleaseVersions(a, b) {
     if (av[key] > bv[key]) return 1;
     if (av[key] < bv[key]) return -1;
   }
-  // Theo SemVer, bản stable lớn hơn mọi bản beta cùng số major.minor.patch.
   if (av.beta === null && bv.beta !== null) return 1;
   if (av.beta !== null && bv.beta === null) return -1;
   if (av.beta === null && bv.beta === null) return 0;
@@ -2417,12 +2415,13 @@ async function checkReadAlongUpdates() {
   const btn = dom.menuCheckUpdates;
   const channel = getSelectedUpdateChannel();
   const channelLabel = channel === 'beta' ? 'Beta' : 'Official';
-  const originalLabel = btn?.querySelector('span:last-child')?.textContent || 'Kiểm tra cập nhật';
+  const label = btn?.querySelector('span:last-child');
+  const originalLabel = label?.textContent || 'Kiểm tra cập nhật';
   if (btn) {
     btn.disabled = true;
-    const label = btn.querySelector('span:last-child');
     if (label) label.textContent = 'Đang kiểm tra ' + channelLabel + '…';
   }
+
   try {
     const response = await fetch(READ_ALONG_RELEASES_API, {
       headers: { Accept: 'application/vnd.github+json' },
@@ -2432,16 +2431,17 @@ async function checkReadAlongUpdates() {
     const releases = await response.json();
     if (!Array.isArray(releases)) throw new Error('Dữ liệu Release từ GitHub không hợp lệ.');
 
-    // Chỉ xét release đúng kênh, có APK Android; chọn theo số phiên bản
-    // thay vì phụ thuộc thứ tự API trả về (thường là ngày phát hành).
+    // Không dựa vào thứ tự API: lấy phiên bản SemVer cao nhất trong đúng kênh.
     const eligibleReleases = releases.filter(item =>
       !item.draft &&
       (channel === 'beta' ? item.prerelease === true : item.prerelease === false) &&
-      (item.assets || []).some(asset => /-android\\.apk$/i.test(asset.name)) &&
+      (item.assets || []).some(asset => /-android\.apk$/i.test(asset.name)) &&
       compareReleaseVersions(item.tag_name, '0.0.0') > 0
     );
     eligibleReleases.sort((a, b) => compareReleaseVersions(b.tag_name, a.tag_name));
-    const release = eligibleReleases[0] || null;    if (!release) {
+    const release = eligibleReleases[0] || null;
+
+    if (!release) {
       const message = channel === 'beta'
         ? 'Chưa có bản Beta kèm APK để cập nhật.'
         : 'Chưa có bản Official ổn định kèm APK để cập nhật.';
@@ -2452,12 +2452,11 @@ async function checkReadAlongUpdates() {
 
     const asset = (release.assets || []).find(item => /-android\.apk$/i.test(item.name));
     const currentVersion = document.querySelector('meta[name="app-version"]')?.content || '0.0.0';
-    const comparison = compareReleaseVersions(release.tag_name, currentVersion);
-    if (comparison <= 0) {
+    if (compareReleaseVersions(release.tag_name, currentVersion) <= 0) {
       const message = 'Kênh ' + channelLabel + ' mới nhất là ' + release.tag_name +
-        ', nhưng phiên bản hiện tại (' + currentVersion + ') không cũ hơn bản đó.';
+        ', phiên bản ứng dụng hiện tại là ' + currentVersion + '.';
       showToast('Không có bản ' + channelLabel + ' mới hơn để cài.');
-      alert(message + '\nAndroid không cho cài đè bản có versionCode thấp hơn; nếu cần chuyển kênh xuống phiên bản cũ hơn, phải gỡ ứng dụng và cài lại (có thể mất dữ liệu cục bộ).');
+      alert(message + '\nNếu đang chuyển từ Beta về Official hoặc chọn một bản có phiên bản thấp hơn, Android có thể từ chối cài đè. Hãy dùng bản phát hành có versionCode cao hơn và cùng khóa ký.');
       return;
     }
 
@@ -2466,13 +2465,14 @@ async function checkReadAlongUpdates() {
       '\nBản mới nhất: ' + release.tag_name +
       '\nPhiên bản hiện tại: ' + currentVersion +
       (notes ? '\n\nThay đổi:\n' + notes : '') +
-      '\n\nTải APK mới? Android sẽ yêu cầu xác nhận cài đặt. Bản mới cần cùng khóa ký với bản đang cài để cập nhật đè.';
+      '\n\nTải APK mới? Android sẽ yêu cầu xác nhận cài đặt. APK phải được ký bằng cùng khóa với ứng dụng đang cài.';
     if (!confirm(message)) return;
+
     const nativeUpdater = window.Capacitor?.Plugins?.ApkUpdater;
     if (nativeUpdater?.downloadAndInstall) {
       showToast('Đang xóa bộ nhớ đệm cũ…');
       await clearReadAlongWebCachesForUpdate();
-      showToast('Đang tải APK cập nhật…');
+      showToast('Đang tải APK ' + channelLabel + '…');
       await nativeUpdater.downloadAndInstall({
         url: asset.browser_download_url,
         filename: asset.name
@@ -2487,14 +2487,15 @@ async function checkReadAlongUpdates() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      const label = btn.querySelector('span:last-child');
-      if (label) label.textContent = originalLabel;
+      const currentLabel = btn.querySelector('span:last-child');
+      if (currentLabel) currentLabel.textContent = originalLabel;
     }
   }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   const isNativeAndroid = Boolean(window.Capacitor?.isNativePlatform?.() || window.Capacitor?.getPlatform?.() === 'android');
+
   if (dom.updateChannelSelect) {
     let savedChannel = 'official';
     try {
@@ -2507,6 +2508,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('Đã chọn kênh OTA ' + (channel === 'beta' ? 'Beta' : 'Official') + '.');
     });
   }
+
   if (dom.menuCheckUpdates && isNativeAndroid) {
     dom.menuCheckUpdates.classList.remove('hidden');
     dom.menuCheckUpdates.addEventListener('click', checkReadAlongUpdates);
