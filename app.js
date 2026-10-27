@@ -1103,7 +1103,7 @@ function loadAudioPart(index, options = {}) {
 
   // Switching parts always loads the new source paused first. If the user was
   // listening, resume only after the new source has metadata; otherwise preserve pause.
-  if (options.restoreSession === true) {
+  if (options.restoreSession === true || state.sessionRestorePending) {
     dom.audioElement.addEventListener('loadedmetadata', function restoreSelectedPart() {
       dom.audioElement.removeEventListener('loadedmetadata', restoreSelectedPart);
       if (state.audioLoadRequestId !== requestId || state.currentAudioIndex !== clampedIdx) return;
@@ -1669,7 +1669,7 @@ async function loadPdfFromBlob(file, shouldResetSync = true) {
   dom.lblLoadingText.textContent = 'Đang tải trang sách...';
   dom.pdfLoadingIndicator.classList.remove('hidden');
 
-  const key = getBookUniqueKey(file.name);
+  const key = state.currentBookKey || getBookUniqueKey(file.name);
   state.currentBookKey = key;
 
   if (shouldResetSync) {
@@ -2277,6 +2277,7 @@ function onAudioTimeUpdate() {
       const previousPage = state.pageNum;
       state.isAudioDrivenChange = true;
       state.pageNum = alignedPage;
+      saveReadingSession(true);
       window.__raDiagRecord?.('page.turn.auto', {
         fromPage: previousPage,
         toPage: alignedPage,
