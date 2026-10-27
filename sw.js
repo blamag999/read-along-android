@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pdf-audio-sync-v38-ota-cache-reset';
+const CACHE_NAME = 'pdf-audio-sync-v39-beta-ux-refresh';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
