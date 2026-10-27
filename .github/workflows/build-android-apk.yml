@@ -156,8 +156,10 @@ jobs:
           source = main.read_text()
           marker = 'public class MainActivity extends BridgeActivity {'
           if marker not in source: raise SystemExit('Could not locate MainActivity class declaration')
+          # Register plugins and record creation only. BridgeActivity lifecycle hooks
+          # are final in this Capacitor version, so don't override resume/pause/destroy.
           if 'ApkUpdaterPlugin.class' not in source:
-              injected = """public class MainActivity extends BridgeActivity {
+              injected = marker + """
               @Override
               public void onCreate(android.os.Bundle savedInstanceState) {
                   registerPlugin(ApkUpdaterPlugin.class);
