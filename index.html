@@ -44,11 +44,11 @@
 
       <button id="btnOpenReadMenu" class="icon-btn read-menu-button" type="button" aria-label="Mở menu đọc sách" aria-controls="readOptionsMenu" aria-expanded="false" title="Tùy chọn đọc">☰</button>
       <div id="readOptionsMenu" class="read-options-menu hidden" role="group" aria-label="Tùy chọn đọc sách">
-        <button id="menuTwoPages" class="read-menu-option" type="button" aria-pressed="false"><span class="menu-option-icon">▣</span><span>Hiện 2 trang</span><span class="menu-option-state" id="menuTwoPagesState">Tắt</span></button>
-        <button id="menuAutoFlip" class="read-menu-option" type="button" aria-pressed="true"><span class="menu-option-icon">⤓</span><span>Tự lật trang</span><span class="menu-option-state" id="menuAutoFlipState">Bật</span></button>
-        <button id="menuReloadMarkers" class="read-menu-option" type="button"><span class="menu-option-icon">⟳</span><span>Cập nhật mốc thời gian</span></button>
-        <div class="read-menu-option update-channel-row"><span class="menu-option-icon">⇅</span><label for="updateChannelSelect">Kênh OTA</label><select id="updateChannelSelect" aria-label="Chọn kênh cập nhật OTA"><option value="official">Official</option><option value="beta">Beta</option></select></div>
-        <button id="menuCheckUpdates" class="read-menu-option hidden" type="button"><span class="menu-option-icon">⬇</span><span>Kiểm tra cập nhật</span></button>
+        <button id="menuTwoPages" class="read-menu-option" type="button" aria-pressed="false"><span class="menu-option-icon" aria-hidden="true">📖</span><span>Hiện 2 trang</span><span class="menu-option-state" id="menuTwoPagesState">Tắt</span></button>
+        <button id="menuAutoFlip" class="read-menu-option" type="button" aria-pressed="true"><span class="menu-option-icon" aria-hidden="true">🔄</span><span>Tự lật trang</span><span class="menu-option-state" id="menuAutoFlipState">Bật</span></button>
+        <button id="menuReloadMarkers" class="read-menu-option" type="button"><span class="menu-option-icon" aria-hidden="true">⏱️</span><span>Cập nhật mốc thời gian</span></button>
+        <div class="read-menu-option update-channel-row"><span class="menu-option-icon" aria-hidden="true">🔀</span><label for="updateChannelSelect">Kênh cập nhật</label><select id="updateChannelSelect" aria-label="Chọn kênh cập nhật OTA"><option value="official">Official</option><option value="beta">Beta</option></select></div>
+        <button id="menuCheckUpdates" class="read-menu-option hidden" type="button"><span class="menu-option-icon" aria-hidden="true">⬆️</span><span>Kiểm tra cập nhật</span></button>
       </div>
       <button id="btnReloadMarkers" class="icon-btn apk-icon-button hidden" type="button" title="Tải mốc thời gian mới nhất từ GitHub" aria-label="Tải mốc thời gian mới nhất từ GitHub">⟳</button>
       <button id="btnOpenSyncModal" class="icon-btn" title="Quản lý mốc đồng bộ thời gian">⚙️ <span class="hide-mobile">Mốc thời gian</span></button>
