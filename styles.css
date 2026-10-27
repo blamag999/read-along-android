@@ -2646,3 +2646,33 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
     height: 34px !important;
   }
 }
+
+
+/* Read Along v1.2.1 beta UX updates */
+.app-ui-mode .update-channel-row { grid-template-columns: 28px minmax(0,1fr) 28px; cursor: pointer; }
+.app-ui-mode .update-channel-label { display: flex; flex-direction: column; gap: 2px; }
+.app-ui-mode .update-channel-label small { color: #94a3b8; font-size: .72rem; font-weight: 500; }
+.app-ui-mode .update-channel-row input[type="checkbox"] {
+  width: 22px; height: 22px; margin: 0; justify-self: center;
+  accent-color: #34d399; cursor: pointer;
+}
+.app-ui-mode .update-channel-row input[type="checkbox"]:focus-visible {
+  outline: 3px solid #60a5fa; outline-offset: 3px;
+}
+.app-ui-mode .read-menu-version {
+  display: grid; grid-template-columns: 28px minmax(0,1fr) auto; align-items: center;
+  gap: 8px; min-height: 42px; padding: 7px 10px; color: #cbd5e1;
+  border-top: 1px solid rgba(148,163,184,.2); font-size: .82rem;
+}
+.app-ui-mode .read-menu-version strong {
+  color: #f8fafc; font-size: .82rem; font-variant-numeric: tabular-nums;
+}
+.tutorial-basic-steps {
+  margin: 12px 0 0; padding-left: 1.5rem; display: grid; gap: 12px;
+  color: #cbd5e1; font-size: .94rem; line-height: 1.65;
+}
+.tutorial-basic-steps li { padding-left: 4px; }
+.tutorial-basic-steps strong { color: #f1f5f9; }
+@media(max-width:600px) {
+  .tutorial-basic-steps { font-size: .86rem; line-height: 1.55; gap: 10px; }
+}
