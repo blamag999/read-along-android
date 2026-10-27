@@ -14,6 +14,10 @@ assert.deepEqual(JSON.parse(JSON.stringify(sync.findTargetPage({
   pageTimestamps: { 1: 0, 2: 0, 3: 0 }, totalPages: 3, currentTime: 0,
   currentPart: 0, audioCount: 1, duration: 100
 }))), { page: 1, time: 0, part: 0 }, 'ties at zero must prefer the first page');
+assert.deepEqual(JSON.parse(JSON.stringify(sync.findTargetPage({
+  pageTimestamps: { 2: 0, 3: 0, 4: 12 }, totalPages: 4, currentTime: 0,
+  currentPart: 0, audioCount: 1, duration: 100
+}))), null, 'zero-second markers on later pages must not trigger an opening-page jump');
 assert.equal(sync.findTargetPage({
   pageTimestamps: { 2: { time: 20, part: 1 } }, totalPages: 3, currentTime: 30,
   currentPart: 0, audioCount: 2, duration: 100
