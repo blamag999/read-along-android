@@ -2446,7 +2446,7 @@ async function checkReadAlongUpdates() {
         ? 'Chưa có bản Beta kèm APK để cập nhật.'
         : 'Chưa có bản Official ổn định kèm APK để cập nhật.';
       showToast(message);
-      alert(message + '\\nHãy kiểm tra GitHub Releases hoặc chạy thành công workflow Build and Release.');
+      alert(message + '\nHãy kiểm tra GitHub Releases hoặc chạy thành công workflow Build and Release.');
       return;
     }
 
@@ -2456,16 +2456,16 @@ async function checkReadAlongUpdates() {
       const message = 'Kênh ' + channelLabel + ' mới nhất là ' + release.tag_name +
         ', phiên bản ứng dụng hiện tại là ' + currentVersion + '.';
       showToast('Không có bản ' + channelLabel + ' mới hơn để cài.');
-      alert(message + '\\nNếu đang chuyển từ Beta về Official hoặc chọn một bản có phiên bản thấp hơn, Android có thể từ chối cài đè. Hãy dùng bản phát hành có versionCode cao hơn và cùng khóa ký.');
+      alert(message + '\nNếu đang chuyển từ Beta về Official hoặc chọn một bản có phiên bản thấp hơn, Android có thể từ chối cài đè. Hãy dùng bản phát hành có versionCode cao hơn và cùng khóa ký.');
       return;
     }
 
-    const notes = String(release.body || '').replace(/[#*_\\x60]/g, '').trim().slice(0, 600);
+    const notes = String(release.body || '').replace(/[#*_\x60]/g, '').trim().slice(0, 600);
     const message = 'Kênh OTA: ' + channelLabel +
-      '\\nBản mới nhất: ' + release.tag_name +
-      '\\nPhiên bản hiện tại: ' + currentVersion +
-      (notes ? '\\n\\nThay đổi:\\n' + notes : '') +
-      '\\n\\nTải APK mới? Android sẽ yêu cầu xác nhận cài đặt. APK phải được ký bằng cùng khóa với ứng dụng đang cài.';
+      '\nBản mới nhất: ' + release.tag_name +
+      '\nPhiên bản hiện tại: ' + currentVersion +
+      (notes ? '\n\nThay đổi:\n' + notes : '') +
+      '\n\nTải APK mới? Android sẽ yêu cầu xác nhận cài đặt. APK phải được ký bằng cùng khóa với ứng dụng đang cài.';
     if (!confirm(message)) return;
 
     const nativeUpdater = window.Capacitor?.Plugins?.ApkUpdater;
@@ -2483,7 +2483,7 @@ async function checkReadAlongUpdates() {
   } catch (error) {
     console.error('Update check failed:', error);
     alert('Không thể kiểm tra cập nhật kênh ' + channelLabel + ': ' +
-      (error.message || 'Lỗi mạng') + '\\nHãy thử lại khi có kết nối Internet.');
+      (error.message || 'Lỗi mạng') + '\nHãy thử lại khi có kết nối Internet.');
   } finally {
     if (btn) {
       btn.disabled = false;
