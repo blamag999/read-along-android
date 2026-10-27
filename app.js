@@ -1974,6 +1974,12 @@ async function togglePlayPause() {
     // Đưa nút về trạng thái tạm dừng trong khi trình duyệt bắt đầu phát.
     await dom.audioElement.play();
   } catch (error) {
+    window.__raDiagRecord?.('audio.play.failure', {
+      page: state.pageNum,
+      time: Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0,
+      errorName: error?.name || 'Error',
+      errorMessage: error?.message || String(error)
+    });
     updatePlayButtonState();
     console.error('Không thể phát âm thanh:', error);
     const message = error && error.name === 'NotAllowedError'
@@ -2046,6 +2052,14 @@ function replayCurrentPage() {
         Number.isFinite(dom.audioElement.duration) ? dom.audioElement.duration : marker.time);
       await dom.audioElement.play();
     } catch (error) {
+      window.__raDiagRecord?.('page.replay.error', {
+        page: state.pageNum,
+        time: Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0,
+        targetTime: marker.time,
+        part: marker.part,
+        errorName: error?.name || 'Error',
+        errorMessage: error?.message || String(error)
+      });
       console.warn('Không thể đọc lại trang:', error);
       showToast('Không thể đọc lại trang. Hãy thử bấm Phát.');
     }
@@ -2759,7 +2773,7 @@ document.addEventListener('DOMContentLoaded', () => {
     'audio.seeking','audio.seeked','audio.error','audio.metadata','pdf.render.start',
     'pdf.render.end','pdf.render.error','viewport.change','orientation.change',
     'orientation.settled','document.hidden','window.error','promise.rejection',
-    'page.turn.manual','page.turn.auto','page.turn.waiting','page.turn.no-marker','page.replay','diagnostics.open'
+    'page.turn.manual','page.turn.auto','page.turn.waiting','page.turn.no-marker','page.replay','page.replay.error','audio.play.failure','diagnostics.open'
   ]);
   const diagnosticDedupeKeys = new Set();
   function sanitizeDiagnosticText(value) {
