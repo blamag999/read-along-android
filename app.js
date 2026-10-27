@@ -8,6 +8,7 @@ const state = {
   totalPages: 0,
   pageRendering: false,
   pageNumPending: null,
+  pageNumPendingSyncAudio: false,
   pdfFileName: '',
   audioFileName: '',
   currentBookKey: '', // Key định danh duy nhất của cuốn truyện hiện tại
@@ -31,13 +32,11 @@ const state = {
   resumeAfterManualTurn: false,
   autoSeekAudio: true,
   isAudioDrivenChange: false,
+  repeatAudio: false,
 
   // CHẾ ĐỘ HIỂN THỊ
   viewMode: 'fit-height',
   zoomScale: 1.0,
-
-  speeds: [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0],
-  speedIndex: 2,
 
   // MULTI-AUDIO STATE
   currentAudioIndex: 0,   // Phần âm thanh đang phát trong currentStoryAudios
@@ -223,8 +222,8 @@ const dom = {
   playPauseIcon: document.getElementById('playPauseIcon'),
   btnRewind5: document.getElementById('btnRewind5'),
   btnForward5: document.getElementById('btnForward5'),
-  speedSelect: document.getElementById('speedSelect'),
   btnReplayPage: document.getElementById('btnReplayPage'),
+  btnRepeatAudio: document.getElementById('btnRepeatAudio'),
   selPageTurnMode: document.getElementById('selPageTurnMode'),
   chkAutoSeekAudio: document.getElementById('chkAutoSeekAudio'),
 
@@ -992,7 +991,7 @@ function loadAudioFromUrl(url, name) {
     URL.revokeObjectURL(previousUrl);
     delete dom.audioElement.dataset.objectUrl;
   }
-  dom.audioElement.playbackRate = state.speeds[state.speedIndex] || 1.0;
+  dom.audioElement.playbackRate = 1.0;
   dom.audioFileName.textContent = '🎵 ' + state.audioFileName;
   dom.audioFileName.classList.remove('empty');
   if (dom.audioSeeker) dom.audioSeeker.value = 0;
@@ -1226,8 +1225,9 @@ dom.selPageTurnMode.value = state.pageTurnMode;
   dom.btnPageJump.addEventListener('click', jumpToEnteredPage);
   dom.pageJumpInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') jumpToEnteredPage(); });
   dom.btnReplayPage.addEventListener('click', replayCurrentPage);
-  dom.speedSelect.addEventListener('change', (e) => setPlaybackSpeed(parseFloat(e.target.value), true));
-  initPlaybackSpeed();
+  dom.btnRepeatAudio.addEventListener('click', toggleRepeatAudio);
+  updateRepeatButtonState();
+  dom.audioElement.playbackRate = 1.0;
   initPdfClickNavigation();
 
   dom.btnPrevPage.addEventListener('click', () => changePage(-1));
@@ -1560,7 +1560,7 @@ function loadAudioFromBlob(file) {
 
   state.audioFileName = file.name || 'audio';
   dom.audioElement.pause();
-  dom.audioElement.playbackRate = state.speeds[state.speedIndex] || 1.0;
+  dom.audioElement.playbackRate = 1.0;
   dom.audioFileName.textContent = `🎵 ${state.audioFileName}`;
   dom.audioFileName.classList.remove('empty');
   if (dom.audioSeeker) dom.audioSeeker.value = 0;
@@ -1589,10 +1589,11 @@ function loadAudioFromBlob(file) {
   return true;
 }
 
-async function renderCurrentSpread() {
+async function renderCurrentSpread(syncAudioToPage = false) {
   if (!state.pdfDoc || state.pdfLoading) return;
   if (state.pageRendering) {
     state.pageNumPending = state.pageNum;
+    state.pageNumPendingSyncAudio = state.pageNumPendingSyncAudio || syncAudioToPage;
     return;
   }
   state.pageRendering = true;
@@ -1665,12 +1666,18 @@ async function renderCurrentSpread() {
   } finally {
     state.pageRendering = false;
     if (state.pageNumPending !== null) {
+      const pendingPage = state.pageNumPending;
+      const shouldSyncPendingAudio = Boolean(state.pageNumPendingSyncAudio);
       state.pageNumPending = null;
-      renderCurrentSpread();
+      state.pageNumPendingSyncAudio = false;
+      state.pageNum = pendingPage;
+      renderCurrentSpread(shouldSyncPendingAudio);
     }
   }
 
-  if (state.autoSeekAudio && !state.isAudioDrivenChange) {
+  // Chỉ tua audio khi người dùng chủ động chuyển trang. Resize/xoay màn hình,
+  // zoom hoặc đổi kiểu hiển thị chỉ render lại PDF, tuyệt đối không seek audio.
+  if (syncAudioToPage && state.autoSeekAudio && !state.isAudioDrivenChange) {
     const rawTarget = state.pageTimestamps[leftPageNum];
     if (typeof rawTarget === 'number') {
       dom.audioElement.currentTime = rawTarget;
@@ -1734,7 +1741,7 @@ function changePage(delta) {
   }
 
   state.isAudioDrivenChange = false;
-  renderCurrentSpread();
+  renderCurrentSpread(true);
 
   // Nếu audio đang chờ người đọc lật đến trang kế tiếp, tiếp tục tại đúng mốc.
   if (state.waitingForManualPageTurn && state.pendingManualPage !== null) {
@@ -1863,6 +1870,22 @@ function updatePlayButtonState() {
   dom.btnPlayPause.classList.toggle('is-playing', isPlaying);
 }
 
+function updateRepeatButtonState() {
+  const enabled = Boolean(state.repeatAudio);
+  dom.btnRepeatAudio.classList.toggle('is-on', enabled);
+  dom.btnRepeatAudio.setAttribute('aria-pressed', String(enabled));
+  dom.btnRepeatAudio.title = enabled ? 'Tắt lặp audio hiện tại' : 'Lặp audio hiện tại';
+  const label = dom.btnRepeatAudio.querySelector('.repeat-label');
+  if (label) label.textContent = enabled ? 'Lặp audio: Bật' : 'Lặp audio';
+}
+
+function toggleRepeatAudio() {
+  state.repeatAudio = !state.repeatAudio;
+  dom.audioElement.loop = state.repeatAudio;
+  updateRepeatButtonState();
+  showToast(state.repeatAudio ? 'Đã bật lặp lại audio hiện tại.' : 'Đã tắt lặp lại audio.');
+}
+
 async function togglePlayPause() {
   const hasAudioSource = Boolean(dom.audioElement.currentSrc || dom.audioElement.src);
   if (!hasAudioSource || !state.currentStoryAudios || state.currentStoryAudios.length === 0) {
@@ -1892,24 +1915,6 @@ async function togglePlayPause() {
   }
 }
 
-const PLAYBACK_SPEED_STORAGE_KEY = 'pdfAudioSyncPlaybackSpeed';
-function setPlaybackSpeed(speed, persist = false) {
-  const safeSpeed = state.speeds.includes(speed) ? speed : 1.0;
-  state.speedIndex = state.speeds.indexOf(safeSpeed);
-  dom.audioElement.playbackRate = safeSpeed;
-  dom.speedSelect.value = String(safeSpeed);
-  if (persist) {
-    try { localStorage.setItem(PLAYBACK_SPEED_STORAGE_KEY, String(safeSpeed)); } catch (e) {}
-  }
-}
-function initPlaybackSpeed() {
-  let savedSpeed = 1.0;
-  try {
-    const stored = parseFloat(localStorage.getItem(PLAYBACK_SPEED_STORAGE_KEY));
-    if (state.speeds.includes(stored)) savedSpeed = stored;
-  } catch (e) {}
-  setPlaybackSpeed(savedSpeed);
-}
 function jumpToEnteredPage() {
   if (!state.pdfDoc) { showToast('Vui lòng mở PDF trước.'); return; }
   const raw = dom.pageJumpInput.value.trim();
@@ -1924,7 +1929,7 @@ function jumpToEnteredPage() {
   state.waitingForManualPageTurn = false;
   state.pendingManualPage = null;
   state.resumeAfterManualTurn = false;
-  renderCurrentSpread();
+  renderCurrentSpread(true);
   dom.pageJumpInput.value = '';
 }
 function getCurrentPageTimestamp(page) {
@@ -1945,7 +1950,7 @@ function replayCurrentPage() {
   }
   const seekAndPlay = () => {
     dom.audioElement.currentTime = Math.max(0, marker.time);
-    dom.audioElement.playbackRate = state.speeds[state.speedIndex] || 1;
+    dom.audioElement.playbackRate = 1.0;
     dom.audioElement.play().catch(() => showToast('Không thể phát audio. Hãy bấm Phát để thử lại.'));
   };
   if (state.currentStoryAudios && state.currentStoryAudios.length > 1 &&
@@ -2275,12 +2280,42 @@ function installTvRemoteControls() {
   const isEditable = (target) => target instanceof Element &&
     Boolean(target.closest('input, textarea, select, [contenteditable="true"], .playlist-search-bar'));
   const isReadMenuOpen = () => dom.readOptionsMenu && !dom.readOptionsMenu.classList.contains('hidden');
+  const focusableSelector = 'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
+  const getFocusable = () => Array.from(document.querySelectorAll(focusableSelector)).filter(el =>
+    el instanceof HTMLElement && el.getClientRects().length && !el.closest('.hidden, [aria-hidden="true"]') &&
+    getComputedStyle(el).visibility !== 'hidden');
+  const moveFocus = (direction) => {
+    const current = document.activeElement;
+    const candidates = getFocusable().filter(el => el !== current);
+    if (!candidates.length) return false;
+    if (!(current instanceof HTMLElement) || current === document.body || current === document.documentElement) {
+      const first = candidates[0];
+      first.focus({ preventScroll: true });
+      first.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      return true;
+    }
+    const a = current.getBoundingClientRect();
+    const ax = a.left + a.width / 2, ay = a.top + a.height / 2;
+    const scored = candidates.map(el => {
+      const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+      const dx = x - ax, dy = y - ay;
+      const primary = direction === 'left' ? -dx : direction === 'right' ? dx : direction === 'up' ? -dy : dy;
+      const cross = direction === 'left' || direction === 'right' ? Math.abs(dy) : Math.abs(dx);
+      return { el, primary, score: primary > 1 ? primary + cross * 2.5 : Infinity };
+    }).sort((x, y) => x.score - y.score);
+    if (!scored.length || !Number.isFinite(scored[0].score)) return false;
+    scored[0].el.focus({ preventScroll: true });
+    scored[0].el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    return true;
+  };
   const seekAudio = (delta) => {
     const audio = dom.audioElement;
     const duration = Number.isFinite(audio.duration) ? audio.duration : Number.MAX_SAFE_INTEGER;
     audio.currentTime = Math.max(0, Math.min(duration, (audio.currentTime || 0) + delta));
   };
 
+  // Bàn phím/remote TV: chỉ chiếm phím media toàn cục. D-pad ưu tiên điều hướng
+  // focus; khi focus nằm trên vùng PDF mới dùng trái/phải để lật trang.
   document.addEventListener('keydown', (event) => {
     if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || isEditable(event.target)) return;
     const key = event.key;
@@ -2297,40 +2332,58 @@ function installTvRemoteControls() {
     if (rewind) { event.preventDefault(); seekAudio(-5); return; }
     if (fastForward) { event.preventDefault(); seekAudio(5); return; }
 
-    // When the menu is open, retain arrow-key navigation between its options.
-    if (isReadMenuOpen()) return;
-    if (key === 'ArrowLeft' || code === 37) {
-      event.preventDefault(); if (!event.repeat) changePage(-1); return;
-    }
-    if (key === 'ArrowRight' || code === 39) {
-      event.preventDefault(); if (!event.repeat) changePage(1); return;
-    }
-    if (key === 'ArrowUp' || code === 38) {
-      event.preventDefault(); seekAudio(-5); return;
-    }
-    if (key === 'ArrowDown' || code === 40) {
-      event.preventDefault(); seekAudio(5); return;
-    }
-    if (key === ' ' || key === 'Spacebar' || code === 32) {
-      event.preventDefault(); togglePlayPause(); return;
-    }
-    if ((key === 'Enter' || code === 13) && (event.target === document.body || event.target === document.documentElement || event.target === dom.viewerContainer)) {
-      event.preventDefault(); togglePlayPause(); return;
-    }
-    if (key === 'Backspace' || key === 'Escape' || key === 'BrowserBack' || code === 4) {
+    if (key === 'Escape' || key === 'BrowserBack' || code === 4 || key === 'Backspace') {
       const playlist = document.getElementById('playlistModal');
-      if (dom.readOptionsMenu && !dom.readOptionsMenu.classList.contains('hidden')) {
+      if (isReadMenuOpen()) {
         event.preventDefault();
         dom.readOptionsMenu.classList.add('hidden');
         dom.btnOpenReadMenu?.setAttribute('aria-expanded', 'false');
+        dom.btnOpenReadMenu?.focus({ preventScroll: true });
       } else if (playlist && !playlist.classList.contains('hidden')) {
         event.preventDefault();
         document.getElementById('btnClosePlaylist')?.click();
+        dom.btnOpenPlaylist?.focus({ preventScroll: true });
       }
+      return;
+    }
+    if (isReadMenuOpen()) return;
+
+    const directionByKey = {
+      ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down'
+    };
+    const direction = directionByKey[key] ||
+      ({ 37: 'left', 39: 'right', 38: 'up', 40: 'down' })[code];
+    if (direction) {
+      const active = document.activeElement;
+      const onPdf = active === dom.canvasWrapper || active === dom.pdfCanvasLeft ||
+        active === dom.pdfCanvasRight || active === document.body || active === document.documentElement;
+      // Từ body, ưu tiên chuyển focus đến nút đầu tiên; khi đang ở điều khiển,
+      // dùng điều hướng không gian; chỉ lật trang khi focus thực sự ở vùng PDF.
+      if (onPdf && active !== document.body && active !== document.documentElement && (direction === 'left' || direction === 'right')) {
+        event.preventDefault();
+        if (!event.repeat) changePage(direction === 'left' ? -1 : 1);
+        return;
+      }
+      if (moveFocus(direction)) event.preventDefault();
+      return;
+    }
+    if (key === ' ' || key === 'Spacebar' || code === 32) {
+      if (event.target === document.body || event.target === document.documentElement ||
+          event.target === dom.canvasWrapper || event.target === dom.pdfCanvasLeft || event.target === dom.pdfCanvasRight) {
+        event.preventDefault(); togglePlayPause();
+      }
+      return;
+    }
+    if ((key === 'Enter' || code === 13) &&
+        (event.target === document.body || event.target === document.documentElement)) {
+      const first = getFocusable()[0];
+      if (first) { event.preventDefault(); first.focus({ preventScroll: true }); }
     }
   });
-}
 
+  // Cho phép D-pad chọn vùng PDF sau khi các nút giao diện đã được duyệt.
+  if (dom.canvasWrapper && !dom.canvasWrapper.hasAttribute('tabindex')) dom.canvasWrapper.setAttribute('tabindex', '0');
+}
 
 // Xóa bộ nhớ đệm giao diện trước khi cập nhật, không xóa dữ liệu sách/mốc đọc.
 async function clearReadAlongWebCachesForUpdate() {

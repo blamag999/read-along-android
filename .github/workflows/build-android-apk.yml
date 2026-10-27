@@ -10,10 +10,11 @@ jobs:
   build-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout main
+      - name: Checkout selected workflow ref
         uses: actions/checkout@v6
         with:
-          ref: main
+          # Build the branch selected in Actions > Run workflow, not always main.
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - name: Generate release version and changelog from commits
@@ -99,8 +100,49 @@ jobs:
               main.write_text(source)
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           xml = manifest.read_text()
+          # Keep the Capacitor WebView alive across orientation/size changes. If
+          # Android recreates the Activity, the HTML audio element and its position
+          # are lost and the reader appears to restart the page audio.
+          import re
+          activity_match = re.search(r'<activity\b[^>]*MainActivity[^>]*>', xml)
+          if not activity_match:
+              raise SystemExit('Could not locate the generated MainActivity declaration')
+          activity_tag = activity_match.group(0)
+          required_config_changes = [
+              'orientation', 'screenSize', 'smallestScreenSize', 'screenLayout',
+              'uiMode', 'keyboard', 'keyboardHidden', 'navigation', 'locale',
+              'layoutDirection'
+          ]
+          config_match = re.search(r'android:configChanges="([^"]*)"', activity_tag)
+          existing = config_match.group(1).split('|') if config_match else []
+          merged = list(dict.fromkeys(existing + required_config_changes))
+          config_value = '|'.join(merged)
+          if config_match:
+              updated_tag = activity_tag[:config_match.start(1)] + config_value + activity_tag[config_match.end(1):]
+          else:
+              updated_tag = activity_tag[:-1] + ' android:configChanges="' + config_value + '">'
+          xml = xml.replace(activity_tag, updated_tag, 1)
           if 'REQUEST_INSTALL_PACKAGES' not in xml:
               xml = xml.replace('<application', '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n    <application', 1)
+          # One APK for touch and non-touch devices, including Android TV/Google TV.
+          features = [
+              '<uses-feature android:name="android.hardware.touchscreen" android:required="false" />',
+              '<uses-feature android:name="android.software.leanback" android:required="false" />',
+          ]
+          for feature in features:
+              feature_name = 'android:name="' + feature.split('android:name="', 1)[1].split('"', 1)[0] + '"'
+              if feature_name not in xml:
+                  xml = xml.replace('<application', feature + '\n    <application', 1)
+          # Expose the same activity to Android TV launchers as well as phone launchers.
+          if 'android.intent.category.LEANBACK_LAUNCHER' not in xml:
+              launcher_category = '<category android:name="android.intent.category.LAUNCHER" />'
+              if launcher_category not in xml:
+                  raise SystemExit('Could not find the generated launcher category')
+              xml = xml.replace(
+                  launcher_category,
+                  launcher_category + '\n                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />',
+                  1
+              )
           if '.fileprovider' not in xml:
               provider = '''<provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.fileprovider" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" /></provider>'''
               xml = xml.replace('</application>', provider + '\n    </application>', 1)

@@ -119,9 +119,9 @@
         <p class="tutorial-intro">Mở danh sách 📚, tìm truyện bằng ô tìm kiếm hoặc số thứ tự rồi chạm vào tên truyện để đọc.</p>
         <div class="tutorial-steps">
           <article class="tutorial-step"><img src="./assets/read-along-step-1.svg" alt="Mở sách PDF trên màn hình" loading="lazy" width="132" height="132"><div><h4>Bước 1 — Mở sách</h4><p>Danh sách được sắp xếp theo ABC. Dùng số thứ tự hoặc ô tìm kiếm để chọn nhanh truyện.</p></div></article>
-          <article class="tutorial-step"><img src="./assets/read-along-step-2.svg" alt="Sách kết hợp với lời đọc âm thanh" loading="lazy" width="132" height="132"><div><h4>Bước 2 — Ghép lời đọc</h4><p>Dùng nút phát/tạm dừng, tua 5 giây và chọn tốc độ đọc ở thanh dưới.</p></div></article>
+          <article class="tutorial-step"><img src="./assets/read-along-step-2.svg" alt="Sách kết hợp với lời đọc âm thanh" loading="lazy" width="132" height="132"><div><h4>Bước 2 — Ghép lời đọc</h4><p>Dùng nút phát/tạm dừng và tua 5 giây ở thanh điều khiển phía dưới.</p></div></article>
           <article class="tutorial-step"><img src="./assets/read-along-step-3.svg" alt="Theo dõi nội dung và đồng bộ từng trang sách" loading="lazy" width="132" height="132"><div><h4>Bước 3 — Đồng bộ âm thanh và trang</h4><p>Biểu tượng ⤓ bật/tắt tự lật trang theo mốc; biểu tượng hiển thị trang đổi giữa 2 trang và vừa trang. Nút ⟳ tải mốc mới nhất từ GitHub.</p></div></article>
-          <article class="tutorial-step"><img src="./assets/read-along-step-4.svg" alt="Nghe lời đọc và luyện tập cùng sách" loading="lazy" width="132" height="132"><div><h4>Bước 4 — Nghe, đọc và luyện tập</h4><p>Tua âm thanh, thay đổi tốc độ, đến trang bất kỳ hoặc nghe lại trang hiện tại để theo kịp lời đọc.</p></div></article>
+          <article class="tutorial-step"><img src="./assets/read-along-step-4.svg" alt="Nghe lời đọc và luyện tập cùng sách" loading="lazy" width="132" height="132"><div><h4>Bước 4 — Nghe, đọc và luyện tập</h4><p>Tua âm thanh, đến trang bất kỳ hoặc nghe lại trang hiện tại để theo kịp lời đọc.</p></div></article>
         </div>
         <div class="tutorial-note"><strong>Lưu mốc đồng bộ:</strong> Có thể tải mốc thời gian thành tệp JSON hoặc đồng bộ lên GitHub. Tệp PDF và âm thanh vẫn nằm trên thiết bị của bạn.</div>
         <div class="usage-guide"><h3>Hướng dẫn nhanh</h3><ol><li>Nhấn <strong>Bắt đầu</strong> để chọn cách mở nội dung.</li><li>Chọn <strong>Thư mục</strong> để duyệt danh sách tập, hoặc chọn <strong>PDF</strong> rồi nạp file <strong>MP3 tương ứng</strong>.</li><li>Nhấn <strong>Play</strong> để nghe; dùng các nút điều khiển để tua, lật trang hoặc đọc lại trang.</li><li>Ghim mốc thời gian cho từng trang nếu muốn tự động đồng bộ trang với âm thanh.</li><li>Dùng <strong>Menu</strong> để mở tùy chọn đọc. Trên Android TV: trái/phải đổi trang, lên/xuống tua 5 giây, OK/Enter phát hoặc tạm dừng khi không chọn điều khiển.</li></ol></div>
@@ -171,7 +171,7 @@
 
     <div class="controls-row">
       <button id="btnPrevPage" class="ctrl-btn page-ctrl" type="button" title="Trang trước" aria-label="Trang trước">
-        ◀
+        ⏮
       </button>
       <button id="btnRewind5" class="ctrl-btn" type="button" title="Tua lùi 5 giây" aria-label="Tua lùi 5 giây">
         ↶
@@ -183,23 +183,15 @@
         ↷
       </button>
       <button id="btnNextPage" class="ctrl-btn page-ctrl" type="button" title="Trang sau" aria-label="Trang sau">
-        ▶
+        ⏭
       </button>
-      <button id="btnReplayPage" class="ctrl-btn replay-page-btn" type="button" title="Đọc lại trang hiện tại từ mốc thời gian" aria-label="Đọc lại trang hiện tại"><span class="replay-page-icon" aria-hidden="true">↺</span></button>
-      <label class="speed-select-wrap" title="Chọn tốc độ phát âm thanh">
-        <span class="sr-only">Tốc độ phát</span>
-        <select id="speedSelect" class="ctrl-btn speed-select" aria-label="Tốc độ phát âm thanh">
-          <option value="0.5">0,5×</option>
-          <option value="0.75">0,75×</option>
-          <option value="1" selected>1×</option>
-          <option value="1.25">1,25×</option>
-          <option value="1.5">1,5×</option>
-          <option value="1.75">1,75×</option>
-          <option value="2">2×</option>
-          <option value="2.5">2,5×</option>
-          <option value="3">3×</option>
-        </select>
-      </label>
+    </div>
+
+    <div class="repeat-controls-row" aria-label="Điều khiển phụ">
+      <button id="btnRepeatAudio" class="repeat-audio-btn" type="button" aria-label="Lặp audio hiện tại" aria-pressed="false" title="Lặp audio hiện tại">
+        <span aria-hidden="true">⟲</span><span class="repeat-label">Lặp audio</span>
+      </button>
+      <button id="btnReplayPage" class="ctrl-btn replay-page-btn" type="button" title="Đọc lại trang hiện tại từ mốc thời gian" aria-label="Đọc lại trang hiện tại"><span class="replay-page-icon" aria-hidden="true">↺</span><span class="replay-page-text">Đọc lại trang</span></button>
     </div>
 
     <audio id="audioElement" preload="metadata"></audio>
