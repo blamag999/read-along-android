@@ -47,7 +47,14 @@
         <button id="menuTwoPages" class="read-menu-option" type="button" aria-pressed="false"><span class="menu-option-icon">▣</span><span>Hiện 2 trang</span><span class="menu-option-state" id="menuTwoPagesState">Tắt</span></button>
         <button id="menuAutoFlip" class="read-menu-option" type="button" aria-pressed="true"><span class="menu-option-icon">⤓</span><span>Tự lật trang</span><span class="menu-option-state" id="menuAutoFlipState">Bật</span></button>
         <button id="menuReloadMarkers" class="read-menu-option" type="button"><span class="menu-option-icon">⟳</span><span>Cập nhật mốc thời gian</span></button>
-        <div class="read-menu-option update-channel-row"><span class="menu-option-icon">⇅</span><label for="updateChannelSelect">Kênh OTA</label><select id="updateChannelSelect" aria-label="Chọn kênh cập nhật OTA"><option value="official">Official</option><option value="beta">Beta</option></select></div>
+        <label class="read-menu-option update-channel-row" for="chkBetaOta">
+          <span class="menu-option-icon">⇅</span>
+          <span class="update-channel-label">Kênh OTA <small>Đánh dấu để dùng Beta</small></span>
+          <input id="chkBetaOta" type="checkbox" aria-label="Dùng kênh OTA Beta; bỏ tích để dùng Official">
+        </label>
+        <div class="read-menu-version" aria-label="Phiên bản ứng dụng đang cài">
+          <span class="menu-option-icon">ⓘ</span><span>Phiên bản đang cài</span><strong id="installedAppVersion">Đang tải…</strong>
+        </div>
         <button id="menuCheckUpdates" class="read-menu-option hidden" type="button"><span class="menu-option-icon">⬇</span><span>Kiểm tra cập nhật</span></button>
       </div>
       <button id="btnReloadMarkers" class="icon-btn apk-icon-button hidden" type="button" title="Tải mốc thời gian mới nhất từ GitHub" aria-label="Tải mốc thời gian mới nhất từ GitHub">⟳</button>
@@ -116,16 +123,16 @@
       <p>Read Along là ứng dụng kết hợp sách điện tử với lời đọc bằng âm thanh, giúp trẻ em và người học vừa nghe lời đọc vừa theo dõi văn bản tương ứng.</p>
       
       <section class="readalong-tutorial" aria-labelledby="readalongTutorialTitle">
-        <h3 id="readalongTutorialTitle">Read Along hoạt động như thế nào?</h3>
-        <p class="tutorial-intro">Mở danh sách 📚, tìm truyện bằng ô tìm kiếm hoặc số thứ tự rồi chạm vào tên truyện để đọc.</p>
-        <div class="tutorial-steps">
-          <article class="tutorial-step"><img src="./assets/read-along-step-1.svg" alt="Mở sách PDF trên màn hình" loading="lazy" width="132" height="132"><div><h4>Bước 1 — Mở sách</h4><p>Danh sách được sắp xếp theo ABC. Dùng số thứ tự hoặc ô tìm kiếm để chọn nhanh truyện.</p></div></article>
-          <article class="tutorial-step"><img src="./assets/read-along-step-2.svg" alt="Sách kết hợp với lời đọc âm thanh" loading="lazy" width="132" height="132"><div><h4>Bước 2 — Ghép lời đọc</h4><p>Dùng nút phát/tạm dừng và tua 5 giây ở thanh điều khiển phía dưới.</p></div></article>
-          <article class="tutorial-step"><img src="./assets/read-along-step-3.svg" alt="Theo dõi nội dung và đồng bộ từng trang sách" loading="lazy" width="132" height="132"><div><h4>Bước 3 — Đồng bộ âm thanh và trang</h4><p>Biểu tượng ⤓ bật/tắt tự lật trang theo mốc; biểu tượng hiển thị trang đổi giữa 2 trang và vừa trang. Nút ⟳ tải mốc mới nhất từ GitHub.</p></div></article>
-          <article class="tutorial-step"><img src="./assets/read-along-step-4.svg" alt="Nghe lời đọc và luyện tập cùng sách" loading="lazy" width="132" height="132"><div><h4>Bước 4 — Nghe, đọc và luyện tập</h4><p>Tua âm thanh, đến trang bất kỳ hoặc nghe lại trang hiện tại để theo kịp lời đọc.</p></div></article>
-        </div>
-        <div class="tutorial-note"><strong>Lưu mốc đồng bộ:</strong> Có thể tải mốc thời gian thành tệp JSON hoặc đồng bộ lên GitHub. Tệp PDF và âm thanh vẫn nằm trên thiết bị của bạn.</div>
-        <div class="usage-guide"><h3>Hướng dẫn nhanh</h3><ol><li>Nhấn <strong>Bắt đầu</strong> để chọn cách mở nội dung.</li><li>Chọn <strong>Thư mục</strong> để duyệt danh sách tập, hoặc chọn <strong>PDF</strong> rồi nạp file <strong>MP3 tương ứng</strong>.</li><li>Nhấn <strong>Play</strong> để nghe; dùng các nút điều khiển để tua, lật trang hoặc đọc lại trang.</li><li>Ghim mốc thời gian cho từng trang nếu muốn tự động đồng bộ trang với âm thanh.</li><li>Dùng <strong>Menu</strong> để mở tùy chọn đọc. Trên Android TV: trái/phải đổi trang, lên/xuống tua 5 giây, OK/Enter phát hoặc tạm dừng khi không chọn điều khiển.</li></ol></div>
+        <h3 id="readalongTutorialTitle">Hướng dẫn nhanh cho người mới</h3>
+        <p class="tutorial-intro">Bạn chỉ cần làm theo các bước dưới đây để mở truyện và nghe đọc. Không cần thiết lập mốc thời gian nếu truyện đã được đồng bộ sẵn.</p>
+        <ol class="tutorial-basic-steps">
+          <li><strong>Mở danh sách truyện:</strong> nhấn <strong>📚 Danh sách truyện</strong>, tìm tên truyện bằng ô tìm kiếm rồi chọn truyện muốn đọc.</li>
+          <li><strong>Nếu chưa có danh sách:</strong> nhấn <strong>Bắt đầu</strong>, chọn sách trên Cloudflare R2 hoặc chọn thư mục có PDF và MP3. Nếu mở riêng một PDF, hãy nhấn <strong>Chọn MP3</strong> để ghép âm thanh.</li>
+          <li><strong>Nghe và theo dõi:</strong> nhấn nút <strong>▶ Phát</strong> ở thanh điều khiển phía dưới. Dùng nút tua lùi/tiến 5 giây hoặc nút trang trước/trang sau khi cần.</li>
+          <li><strong>Điều chỉnh cách đọc:</strong> mở menu <strong>☰</strong> để bật/tắt tự lật trang hoặc hiển thị hai trang. Dùng điều khiển trên màn hình hoặc các phím điều hướng trên remote.</li>
+          <li><strong>Cập nhật ứng dụng:</strong> trong menu, bỏ tích <strong>Kênh OTA Beta</strong> để nhận bản Official; tích vào để nhận bản Beta thử nghiệm. Chọn <strong>Kiểm tra cập nhật</strong> để kiểm tra bản mới.</li>
+        </ol>
+        <p class="tutorial-note"><strong>Mẹo:</strong> nếu trang sách chưa khớp với lời đọc, mở mục <strong>Mốc thời gian</strong> để kiểm tra hoặc cập nhật mốc đồng bộ. Chỉ thay đổi mốc khi thật sự cần thiết.</p>
       </section>
     </div>
 
