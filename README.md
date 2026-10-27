@@ -20,7 +20,13 @@
 
 Trên Windows, giải nén gói Web Local, cài Python 3 nếu máy chưa có, sau đó chạy tệp khởi động đi kèm. Giữ cửa sổ dòng lệnh mở trong khi sử dụng. Một số nội dung trực tuyến cần kết nối Internet.
 
-## Build và cập nhật
+## Quy trình nhánh và phát hành
+
+- Mọi thay đổi mới phải được phát triển trên nhánh riêng (ví dụ `fix/...`, `feat/...` hoặc `chore/...`), không sửa trực tiếp `main`.
+- Bản thử nghiệm được build từ nhánh làm việc với kênh **Beta**. Beta được gắn nhãn rõ trong tên Release và số phiên bản, ví dụ `1.1.0-beta.1`, `1.1.0-beta.2`; GitHub Release được đánh dấu **Pre-release**.
+- Chỉ sau khi lỗi đã được xử lý và kiểm tra ổn định, mới merge Pull Request vào `main` và tạo bản **Official/Stable**. Bản stable đầu tiên theo quy ước mới là `1.1.0`; sau đó tăng minor theo từng bản ổn định tiếp theo (`1.2.0`, `1.3.0`, ...).
+- Khi bắt đầu kiểm thử cho phiên bản stable tiếp theo, beta sẽ theo phiên bản đích đó, ví dụ `1.2.0-beta.1`. Workflow chỉ cho phép kênh stable khi chạy trên `main`.
+- Vào **Actions → Build and Release Read Along → Run workflow**, chọn nhánh muốn build và chọn `beta` hoặc `stable`. Kênh beta là lựa chọn mặc định.
 
 Sử dụng quy trình build/phát hành được cung cấp trong kho mã. Thông tin xác thực và khóa ký phải được cấu hình trong kho lưu trữ bí mật của hệ thống build; không đưa token, mật khẩu, khóa ký hoặc tệp cá nhân vào mã nguồn.
 
