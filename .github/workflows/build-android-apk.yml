@@ -353,13 +353,34 @@ jobs:
           CHANNEL: ${{ inputs.channel }}
           CHANGELOG: ${{ steps.release_info.outputs.changelog }}
         run: |
+          set -euo pipefail
+          TAG="v$VERSION"
           TITLE="Read Along v$VERSION"
           if [[ "$CHANNEL" == "beta" ]]; then TITLE="Read Along Beta v$VERSION"; fi
+
           ARGS=()
           if [[ "$PRERELEASE" == "true" ]]; then ARGS+=(--prerelease); fi
-          gh release create "v$VERSION" \
-            "read-along-v$VERSION-android.apk" \
-            "dist/read-along-v$VERSION-web-local.zip" \
-            --title "$TITLE" \
-            --notes "$CHANGELOG" \
-            "${ARGS[@]}"
+
+          # Retry transient GitHub API errors. Before each retry, check whether
+          # the previous request actually created the release despite returning an error.
+          for attempt in 1 2 3; do
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              echo "Release $TAG already exists; skip creation to avoid duplicates."
+              exit 0
+            fi
+
+            if gh release create "$TAG" \
+              "read-along-v$VERSION-android.apk" \
+              "dist/read-along-v$VERSION-web-local.zip" \
+              --title "$TITLE" \
+              --notes "$CHANGELOG" \
+              "${ARGS[@]}"; then
+              exit 0
+            fi
+
+            echo "GitHub Release creation attempt $attempt failed."
+            if [[ "$attempt" -lt 3 ]]; then sleep $((attempt * 10)); fi
+          done
+
+          echo "Failed to create $TAG after 3 attempts." >&2
+          exit 1
