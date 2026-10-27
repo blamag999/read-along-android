@@ -2685,6 +2685,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('error', () => record('window.error'));
   window.addEventListener('unhandledrejection', () => record('promise.rejection'));
   record('app.started');
+  try { window.Capacitor?.Plugins?.Diagnostics?.markWebViewReady?.(); } catch (_) {}
 
   function safeNativePlugin() { return window.Capacitor?.Plugins?.Diagnostics || null; }
   async function getNativeLogs() {

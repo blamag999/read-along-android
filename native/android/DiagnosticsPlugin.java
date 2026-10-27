@@ -53,6 +53,12 @@ public class DiagnosticsPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void markWebViewReady(PluginCall call) {
+        recordLifecycle(getContext(), "WebView.bridgeReady");
+        call.resolve();
+    }
+
+    @PluginMethod
     public void getLogs(PluginCall call) {
         JSObject result = new JSObject();
         JSArray lines = new JSArray();
