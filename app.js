@@ -1075,12 +1075,18 @@ function initEvents() {
     renderPlaylistView();
   });
 
+  function focusPlaylistCard(card) {
+    if (!card) return;
+    card.focus({ preventScroll: true });
+    card.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+
   function changePlaylistPage(delta) {
     const nextPage = Math.max(1, Math.min(state.playlistTotalPages, state.playlistPage + delta));
     if (nextPage === state.playlistPage) return;
     state.playlistPage = nextPage;
     renderPlaylistView();
-    requestAnimationFrame(() => dom.playlistItemsList.querySelector('.playlist-card')?.focus({ preventScroll: true }));
+    requestAnimationFrame(() => focusPlaylistCard(dom.playlistItemsList.querySelector('.playlist-card')));
   }
   dom.btnPlaylistPrevPage.addEventListener('click', () => changePlaylistPage(-1));
   dom.btnPlaylistNextPage.addEventListener('click', () => changePlaylistPage(1));
@@ -1092,18 +1098,18 @@ function initEvents() {
     const index = cards.indexOf(card);
     if (e.key === 'ArrowUp' && index > 0) {
       e.preventDefault();
-      cards[index - 1].focus({ preventScroll: true });
+      focusPlaylistCard(cards[index - 1]);
     } else if (e.key === 'ArrowUp' && index === 0 && state.playlistPage > 1) {
       e.preventDefault();
       changePlaylistPage(-1);
       requestAnimationFrame(() => {
         const previousCards = dom.playlistItemsList.querySelectorAll('.playlist-card');
-        previousCards[previousCards.length - 1]?.focus({ preventScroll: true });
+        focusPlaylistCard(previousCards[previousCards.length - 1]);
       });
     } else if (e.key === 'ArrowDown') {
       if (index < cards.length - 1) {
         e.preventDefault();
-        cards[index + 1].focus({ preventScroll: true });
+        focusPlaylistCard(cards[index + 1]);
       } else if (state.playlistPage < state.playlistTotalPages) {
         e.preventDefault();
         changePlaylistPage(1);
