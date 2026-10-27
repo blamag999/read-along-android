@@ -156,13 +156,13 @@ jobs:
           source = main.read_text()
           marker = 'public class MainActivity extends BridgeActivity {'
           if marker not in source: raise SystemExit('Could not locate MainActivity class declaration')
-          # Keep only onCreate. BridgeActivity makes resume/pause/destroy final.
+          # Generate only the onCreate registration hook; don't override lifecycle
+          # methods that BridgeActivity marks final in this Capacitor version.
           if 'ApkUpdaterPlugin.class' not in source:
               injected = marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);\n        DiagnosticsPlugin.recordLifecycle(this, "Activity.onCreate");\n        super.onCreate(savedInstanceState);\n    }'
               source = source.replace(marker, injected, 1)
               main.write_text(source)
           else:
-              # Remove old lifecycle override injection if this generator block is reused.
               import re
               source = re.sub(r'\s*@Override\s+protected void onResume\(\)\s*\{[^}]*\}\s*@Override\s+protected void onPause\(\)\s*\{[^}]*\}\s*@Override\s+protected void onDestroy\(\)\s*\{[^}]*\}', '', source, flags=re.S)
               if 'DiagnosticsPlugin.class' not in source:
