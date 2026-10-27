@@ -107,13 +107,17 @@ jobs:
               '<uses-feature android:name="android.software.leanback" android:required="false" />',
           ]
           for feature in features:
-              if feature.split(' android:')[0] not in xml:
+              feature_name = 'android:name="' + feature.split('android:name="', 1)[1].split('"', 1)[0] + '"'
+              if feature_name not in xml:
                   xml = xml.replace('<application', feature + '\n    <application', 1)
           # Expose the same activity to Android TV launchers as well as phone launchers.
           if 'android.intent.category.LEANBACK_LAUNCHER' not in xml:
+              launcher_category = '<category android:name="android.intent.category.LAUNCHER" />'
+              if launcher_category not in xml:
+                  raise SystemExit('Could not find the generated launcher category')
               xml = xml.replace(
-                  'android.intent.category.LAUNCHER',
-                  'android.intent.category.LAUNCHER</category>\n                <category android:name="android.intent.category.LEANBACK_LAUNCHER"',
+                  launcher_category,
+                  launcher_category + '\n                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />',
                   1
               )
           if '.fileprovider' not in xml:
