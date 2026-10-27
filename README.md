@@ -32,6 +32,8 @@ Sử dụng quy trình build/phát hành được cung cấp trong kho mã. Thô
 
 Các bản Android cập nhật đè cần được ký bằng cùng khóa phát hành. Hãy sao lưu khóa ký an toàn và giới hạn quyền truy cập.
 
+Để giảm rủi ro bảo mật khi phân phối APK ngoài Google Play, ứng dụng chỉ mở trang GitHub Releases để người dùng tự tải và xác nhận cài đặt qua Android; ứng dụng không tự tải rồi khởi chạy trình cài đặt APK. Mỗi bản phát hành kèm tệp SHA-256 để kiểm tra tính toàn vẹn. Chữ ký hợp lệ và SHA-256 khớp không đảm bảo Play Protect sẽ không cảnh báo; nếu vẫn bị phân loại nhầm là có hại, cần gửi APK và thông tin phát hành để Google xem xét.
+
 ## Lưu ý bảo mật
 
 - Không commit dữ liệu cá nhân, thông tin xác thực hoặc nội dung chưa được phép công khai.
