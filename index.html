@@ -331,7 +331,11 @@
       </div>
       <div class="modal-body">
         <p class="modal-desc">Ghi nhận sự kiện audio, PDF, xoay màn hình và vòng đời Activity/WebView để tìm nguyên nhân lỗi. Không ghi nội dung sách, tên tệp, đường dẫn, URL audio, token hoặc thông tin tài khoản.</p>
-        <p id="diagnosticsStatus" class="modal-desc" role="status">Đang kiểm tra dịch vụ…</p>
+        <section id="diagnosticsServiceCard" class="diagnostics-service-card is-checking" aria-live="polite">
+          <div class="diagnostics-service-heading"><span id="diagnosticsServiceIcon" aria-hidden="true">●</span><strong>Tình trạng dịch vụ báo lỗi</strong></div>
+          <p id="diagnosticsServiceStatus">Đang kiểm tra kết nối dịch vụ…</p>
+        </section>
+        <p id="diagnosticsStatus" class="modal-desc diagnostics-action-status" role="status">Hoàn thành xác minh chống spam và đồng ý gửi log trước khi gửi báo lỗi.</p>
         <div id="diagnosticsTurnstile" style="margin:12px 0;"></div>
         <label class="diagnostics-consent">
           <input id="chkDiagnosticsConsent" type="checkbox">
