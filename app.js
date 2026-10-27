@@ -2545,14 +2545,6 @@ function installTvRemoteControls() {
   if (dom.canvasWrapper && !dom.canvasWrapper.hasAttribute('tabindex')) dom.canvasWrapper.setAttribute('tabindex', '0');
 }
 
-// Xóa bộ nhớ đệm giao diện trước khi cập nhật, không xóa dữ liệu sách/mốc đọc.
-async function clearReadAlongWebCachesForUpdate() {
-  if ('caches' in window) {
-    const cacheNames = await caches.keys();
-    await Promise.all(cacheNames.map(name => caches.delete(name)));
-  }
-}
-
 // Kiểm tra bản phát hành mới nhất theo kênh OTA được người dùng chọn.
 const READ_ALONG_RELEASES_API = 'https://api.github.com/repos/blamag999/read-along-android/releases?per_page=100';
 const READ_ALONG_UPDATE_CHANNEL_KEY = 'readAlongUpdateChannel';
@@ -2658,7 +2650,7 @@ async function checkReadAlongUpdates() {
       '\nBản mới nhất: ' + release.tag_name +
       '\nPhiên bản hiện tại: ' + currentVersion +
       (notes ? '\n\nThay đổi:\n' + notes : '') +
-      '\n\nMở trang tải APK chính thức trên GitHub? Sau khi tải, hãy mở tệp và xác nhận cài đặt trong Android. APK phải được ký bằng cùng khóa với ứng dụng đang cài.';
+      '\n\nMở liên kết tải APK từ GitHub? Sau khi tải, hãy mở tệp và xác nhận cài đặt trong Android. APK phải được ký bằng cùng khóa với ứng dụng đang cài.';
     if (!confirm(message)) return;
 
     // Không cài APK trực tiếp từ bên trong ứng dụng. Mở trang tải chính thức
