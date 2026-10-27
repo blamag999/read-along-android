@@ -156,20 +156,18 @@ jobs:
           source = main.read_text()
           marker = 'public class MainActivity extends BridgeActivity {'
           if marker not in source: raise SystemExit('Could not locate MainActivity class declaration')
-          # Register plugins without overriding lifecycle methods on BridgeActivity.
+          # Remove any previous lifecycle override injection, regardless of formatting.
+          import re
+          source = re.sub(r'(?s)\s*@Override\s+protected void onResume\(\)\s*\{.*?\}\s*@Override\s+protected void onPause\(\)\s*\{.*?\}\s*@Override\s+protected void onDestroy\(\)\s*\{.*?\}', '', source)
+          # Register both plugins and log Activity.onCreate only. BridgeActivity's other
+          # lifecycle methods are final with the Capacitor version used by this workflow.
           if 'ApkUpdaterPlugin.class' not in source:
               injected = marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);\n        DiagnosticsPlugin.recordLifecycle(this, "Activity.onCreate");\n        super.onCreate(savedInstanceState);\n    }'
               source = source.replace(marker, injected, 1)
-          import re
-          source, removed = re.subn(r'(?m)^\\s*@Override protected void onResume\\(\\) \\{[^\\n]*\\}\\s*\\n\\s*@Override protected void onPause\\(\\) \\{[^\\n]*\\}\\s*\\n\\s*@Override protected void onDestroy\\(\\) \\{[^\\n]*\\}\\s*\\n?', '', source)
-          # Fail clearly if the obsolete lifecycle hooks are still present.
+          elif 'DiagnosticsPlugin.class' not in source:
+              source = source.replace('registerPlugin(ApkUpdaterPlugin.class);', 'registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);', 1)
           if 'Activity.onResume' in source or 'Activity.onPause' in source or 'Activity.onDestroy' in source:
               raise SystemExit('Obsolete Activity lifecycle override remained in MainActivity')
-          if 'DiagnosticsPlugin.class' not in source:
-              if 'registerPlugin(ApkUpdaterPlugin.class);' in source:
-                  source = source.replace('registerPlugin(ApkUpdaterPlugin.class);', 'registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);', 1)
-              else:
-                  raise SystemExit('Could not register DiagnosticsPlugin in MainActivity')
           main.write_text(source)
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           xml = manifest.read_text()
