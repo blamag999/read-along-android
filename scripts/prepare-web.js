@@ -9,7 +9,7 @@ fs.mkdirSync(out, { recursive: true });
 for (const file of ['index.html', 'app.js', 'styles.css', 'manifest.json', 'sw.js']) {
   fs.copyFileSync(path.join(root, file), path.join(out, file));
 }
-for (const dir of ['assets']) {
+for (const dir of ['assets', 'modules']) {
   const source = path.join(root, dir);
   if (fs.existsSync(source)) fs.cpSync(source, path.join(out, dir), { recursive: true });
 }
