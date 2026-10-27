@@ -12,7 +12,7 @@ export class RateLimiter {
       return Response.json({allowed:false}, {status:429});
     }
     recent.push(now);
-    await this.state.storage.put('events', recent, {expirationTtl: 86400});
+    await this.state.storage.put('events', recent);
     return Response.json({allowed:true});
   }
 }

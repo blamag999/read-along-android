@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 @CapacitorPlugin(name = "Diagnostics")
 public class DiagnosticsPlugin extends Plugin {
@@ -25,8 +26,9 @@ public class DiagnosticsPlugin extends Plugin {
 
     public static synchronized void recordLifecycle(Context context, String event) {
         if (context == null || event == null || !event.matches("[A-Za-z0-9_.-]{1,64}")) return;
-        String line = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-                .format(new Date()) + " " + event;
+        String line = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US) {{
+                    setTimeZone(TimeZone.getTimeZone("UTC"));
+                }}.format(new Date()) + " " + event;
         try {
             File file = new File(context.getFilesDir(), LOG_FILE);
             try (FileWriter writer = new FileWriter(file, true)) {
