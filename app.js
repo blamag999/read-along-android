@@ -42,7 +42,9 @@ const state = {
   currentStoryAudios: [], // Danh sách các phần âm thanh của truyện đang mở
   pdfSelectionInProgress: false,
   sessionRestorePending: false,
-  lastSessionSaveAt: 0
+  lastSessionSaveAt: 0,
+  lastAudioObservedTime: null,
+  allowBackwardAudioSync: false
 };
 
 // =======================================================
@@ -362,14 +364,14 @@ function saveGithubTokenFromInput(){
  const token=(dom.githubTokenInput?.value||'').trim();
  if(!token){showToast('Hãy nhập token mới trước khi lưu.');dom.githubTokenInput?.focus();return;}
  if(!/^(github_pat_|gh[pousr]_[A-Za-z0-9_]+)/.test(token)){
-  if(!confirm('Token không giống định dạng token GitHub thông dụng. Bạn vẫn muốn lưu token này?'))return;
+  if(!confirm('Mã truy cập có định dạng không quen thuộc. Bạn vẫn muốn lưu mã này?'))return;
  }
- try{sessionStorage.setItem(GITHUB_TOKEN_SESSION_KEY,token);updateGithubTokenStatus();showToast('Đã lưu/thay GitHub token trong phiên hiện tại.');}
+ try{sessionStorage.setItem(GITHUB_TOKEN_SESSION_KEY,token);updateGithubTokenStatus();showToast('Đã lưu mã truy cập trong phiên hiện tại.');}
  catch(e){showToast('Không thể lưu token trong phiên trình duyệt.');}
 }
 function clearGithubToken(){
  if(!getGithubToken()){updateGithubTokenStatus();showToast('Không có token nào đang lưu trong phiên này.');return;}
- if(!confirm('Xóa token khỏi phiên trình duyệt hiện tại? Thao tác này không thu hồi token trên GitHub.'))return;
+ if(!confirm('Xóa mã truy cập khỏi phiên trình duyệt hiện tại? Thao tác này không thu hồi quyền đã cấp.'))return;
  sessionStorage.removeItem(GITHUB_TOKEN_SESSION_KEY);
  if(githubSyncTimer){clearTimeout(githubSyncTimer);githubSyncTimer=null;}
  updateGithubTokenStatus();showToast('Đã xóa token khỏi phiên trình duyệt.');
@@ -378,10 +380,10 @@ function encodeBase64Utf8(v){const b=new TextEncoder().encode(v);let x='';for(le
 async function getGithubWriteToken(askForToken=false){
  let token=getGithubToken();
  if(!token&&askForToken){
-  token=prompt('Nhập GitHub Personal Access Token có quyền Contents: Read and write cho blamag999/pdf-audio-sync. Token chỉ được giữ trong phiên trình duyệt hiện tại.');
+  token=prompt('Nhập mã truy cập có quyền đọc và ghi tệp đồng bộ. Mã chỉ được giữ trong phiên trình duyệt hiện tại.');
   if(token){token=token.trim();if(token)sessionStorage.setItem(GITHUB_TOKEN_SESSION_KEY,token);}
  }
- if(!token&&askForToken)alert('Chưa có GitHub token. Cần quyền Contents: Read and write.');
+ if(!token&&askForToken)alert('Chưa có mã truy cập. Cần quyền đọc và ghi tệp đồng bộ.');
  return token||'';
 }
 async function getGitBlobSha(content){
@@ -453,17 +455,17 @@ async function syncAllFolderJsonToGitHub({askForToken=false}={}){
 }
 async function syncCurrentBookToGitHub({askForToken=false}={}){
  if(!state.currentBookKey||!state.pdfFileName){if(askForToken)alert('Vui lòng mở PDF trước khi đồng bộ mốc.');return false;}
- let token=getGithubToken();if(!token&&askForToken){token=prompt('Nhập GitHub Personal Access Token có quyền Contents: Read and write cho blamag999/pdf-audio-sync. Token chỉ được giữ trong phiên trình duyệt hiện tại.');if(token){token=token.trim();sessionStorage.setItem(GITHUB_TOKEN_SESSION_KEY,token);}}
- if(!token){if(askForToken)alert('Chưa có GitHub token. Cần quyền Contents: Read and write.');return false;}
+ let token=getGithubToken();if(!token&&askForToken){token=prompt('Nhập mã truy cập có quyền đọc và ghi tệp đồng bộ. Mã chỉ được giữ trong phiên trình duyệt hiện tại.');if(token){token=token.trim();sessionStorage.setItem(GITHUB_TOKEN_SESSION_KEY,token);}}
+ if(!token){if(askForToken)alert('Chưa có mã truy cập. Cần quyền đọc và ghi tệp đồng bộ.');return false;}
  const path=getCloudSyncPath(),url='https://api.github.com/repos/'+GITHUB_OWNER+'/'+GITHUB_REPO+'/contents/'+path.split('/').map(encodeURIComponent).join('/');
  const headers={'Accept':'application/vnd.github+json','Authorization':'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'};
  try{const content=JSON.stringify(state.pageTimestamps,null,2);const localSha=await getGitBlobSha(content);
  const old=await fetch(url+'?ref='+encodeURIComponent(GITHUB_BRANCH),{headers});let sha=null;if(old.ok)sha=(await old.json()).sha||null;else if(old.status!==404)throw Error('Không đọc được file GitHub ('+old.status+').');
- if(sha&&sha===localSha){updateSaveStatusBadge('☁️ Mốc GitHub đã mới nhất');return true;}
+ if(sha&&sha===localSha){updateSaveStatusBadge('☁️ Mốc đọc đã mới nhất');return true;}
  const body={message:'Sync reading markers for '+getSyncStem(),content:encodeBase64Utf8(content),branch:GITHUB_BRANCH};if(sha)body.sha=sha;
  const res=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});if(!res.ok)throw Error('GitHub từ chối lưu ('+res.status+'): '+await res.text());
- updateSaveStatusBadge('☁️ Đã đồng bộ GitHub');showToast('☁️ Đã đồng bộ mốc lên GitHub: '+path);return true;
- }catch(e){console.error(e);updateSaveStatusBadge('⚠️ Đồng bộ GitHub lỗi');if(askForToken)alert('Không thể đồng bộ. Kiểm tra token và quyền Contents: Read and write.\\n\\n'+e.message);return false;}
+ updateSaveStatusBadge('☁️ Đã đồng bộ mốc đọc');showToast('☁️ Đã đồng bộ mốc lên GitHub: '+path);return true;
+ }catch(e){console.error(e);updateSaveStatusBadge('⚠️ Đồng bộ mốc đọc lỗi');if(askForToken)alert('Không thể đồng bộ mốc đọc. Hãy kiểm tra mã truy cập và quyền ghi.\\n\\n'+e.message);return false;}
 }
 function scheduleGitHubSync(){
  if(!getGithubToken()||!state.currentBookKey||githubSyncTimer)return;
@@ -481,18 +483,18 @@ async function reloadCurrentBookFromGitHub() {
   const button = dom.btnLoadFromGithub;
   if (button) { button.disabled = true; button.textContent = '⏳ Đang tải...'; }
   if (dom.btnReloadMarkers) { dom.btnReloadMarkers.disabled = true; dom.btnReloadMarkers.textContent = '…'; }
-  updateSaveStatusBadge('☁️ Đang tải mốc từ GitHub...');
+  updateSaveStatusBadge('☁️ Đang tải mốc đọc...');
   try {
     const loaded = await loadCloudSyncForBook();
     if (loaded) {
       renderSyncTable();
       showToast('Đã cập nhật mốc thời gian.');
     } else {
-      updateSaveStatusBadge('⚠️ Không tìm thấy JSON trên GitHub');
-      showToast('Không tìm thấy JSON trên GitHub cho tên PDF này.');
+      updateSaveStatusBadge('⚠️ Không tìm thấy tệp mốc đọc');
+      showToast('Không tìm thấy tệp mốc đồng bộ cho tài liệu này.');
     }
   } finally {
-    if (button) { button.disabled = false; button.textContent = '⬇️ Tải mốc từ GitHub'; }
+    if (button) { button.disabled = false; button.textContent = '⬇️ Tải mốc đọc'; }
     if (dom.btnReloadMarkers) { dom.btnReloadMarkers.disabled = false; dom.btnReloadMarkers.textContent = '⟳'; }
   }
 }
@@ -509,7 +511,7 @@ async function loadCloudSyncForBook(){
         const data=await res.json();
         if(data&&typeof data==='object'&&!Array.isArray(data)){
           state.pageTimestamps=data;saveSyncToStorage();updatePageTimestampBadge();updateSyncCountBadge();
-          updateSaveStatusBadge('☁️ Đã nạp mốc từ GitHub');return true;
+          updateSaveStatusBadge('☁️ Đã nạp mốc đọc');return true;
         }
       }catch(e){console.warn('Không thể nạp mốc GitHub:',e);}
     }
@@ -568,9 +570,9 @@ async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl 
           saveSyncToStorage();
           updatePageTimestampBadge();
           updateSyncCountBadge();
-          updateSaveStatusBadge('☁️ Đã nạp mốc từ Cloudflare R2');
+          updateSaveStatusBadge('☁️ Đã nạp mốc đọc');
           if (await loadCloudSyncForBook()) {
-            updateSaveStatusBadge('☁️ Đã nạp mốc mới nhất từ GitHub');
+            updateSaveStatusBadge('☁️ Đã nạp mốc đọc mới nhất');
           }
           return;
         }
@@ -683,13 +685,13 @@ async function loadR2Catalog() {
     renderPlaylistView();
     dom.lblPlaylistSubtitle.textContent = stories.length + ' mục trực tuyến';
     openPlaylistModal();
-    showToast('Đã tải ' + stories.length + ' sách từ R2.');
+    showToast('Đã tải ' + stories.length + ' truyện.');
   } catch (error) {
     console.error('Không thể tải danh sách sách R2:', error);
-    alert('Không thể tải danh sách sách từ R2. Kiểm tra URL, định dạng books.json và CORS. ' + error.message);
+    alert('Không thể tải danh sách truyện. Hãy kiểm tra kết nối và cấu hình danh mục. ' + error.message);
   } finally {
     dom.playlistLoading.classList.add('hidden');
-    if (button) { button.disabled = false; button.textContent = '☁️ Sách trên Cloudflare R2'; }
+    if (button) { button.disabled = false; button.textContent = '☁️ Truyện trực tuyến'; }
   }
 }
 
@@ -697,7 +699,7 @@ function getManualR2PublicBase() {
   const input = dom.r2PublicBaseInput;
   const raw = input ? input.value.trim() : '';
   if (!raw) {
-    alert('Vui lòng nhập URL công khai gốc của bucket R2 trước khi xuất books.json. Ví dụ: https://pub-xxxxxxxx.r2.dev');
+    alert('Vui lòng nhập địa chỉ gốc của kho tệp trước khi xuất danh mục.');
     input?.focus();
     return '';
   }
@@ -705,12 +707,12 @@ function getManualR2PublicBase() {
   try {
     parsed = new URL(raw);
   } catch (error) {
-    alert('URL R2 không hợp lệ. Hãy nhập URL đầy đủ, bắt đầu bằng https://');
+    alert('Địa chỉ kho tệp không hợp lệ. Hãy nhập địa chỉ HTTPS đầy đủ.');
     input?.focus();
     return '';
   }
   if (parsed.protocol !== 'https:' || !parsed.hostname.endsWith('.r2.dev') || parsed.pathname !== '/' || parsed.search || parsed.hash) {
-    alert('Hãy nhập URL gốc dạng https://pub-xxxxxxxx.r2.dev, không thêm tên tệp, đường dẫn, tham số hoặc dấu #.');
+    alert('Hãy nhập địa chỉ gốc HTTPS, không thêm tên tệp, đường dẫn, tham số hoặc dấu #.');
     input?.focus();
     return '';
   }
@@ -933,10 +935,15 @@ function renderPlaylistView() {
     return;
   }
 
-  // Mỗi trang luôn có tối đa 10 đầu truyện; danh sách tự cuộn nếu màn hình thấp.
-  const pageSize = 10;
+  // Derive page size from the actual visible list height; card measurements below
+  // shrink it further when titles/audio-part controls make rows taller than expected.
+  const availableHeight = dom.playlistItemsList.clientHeight || Math.max(180, window.innerHeight * 0.48);
+  const hasMultiPartStories = filtered.some(story => Array.isArray(story.audios) && story.audios.length > 1);
+  let pageSize = window.ReadAlongPlaylistLayout.calculatePageSize(
+    availableHeight, hasMultiPartStories ? 78 : 48, filtered.length
+  );
   let totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  state.playlistPage = Math.max(1, Math.min(state.playlistPage || 1, totalPages));
+  state.playlistPage = window.ReadAlongPlaylistLayout.clampPage(state.playlistPage, totalPages);
 
   function renderCurrentPage() {
     dom.playlistItemsList.replaceChildren();
@@ -1053,6 +1060,16 @@ function renderPlaylistView() {
   }
 
   renderCurrentPage();
+  let fitAttempts = 0;
+  while (dom.playlistItemsList.clientHeight > 0 &&
+         dom.playlistItemsList.scrollHeight > dom.playlistItemsList.clientHeight + 2 &&
+         pageSize > 1 && fitAttempts < 20) {
+    pageSize -= 1;
+    totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    state.playlistPage = window.ReadAlongPlaylistLayout.clampPage(state.playlistPage, totalPages);
+    renderCurrentPage();
+    fitAttempts += 1;
+  }
   state.playlistPageSize = pageSize;
   updatePlaylistPagination(totalPages, filtered.length);
 }
@@ -1249,6 +1266,13 @@ function initEvents() {
     if (e.key === 'ArrowUp' && index > 0) {
       e.preventDefault();
       cards[index - 1].focus({ preventScroll: true });
+    } else if (e.key === 'ArrowUp' && index === 0 && state.playlistPage > 1) {
+      e.preventDefault();
+      changePlaylistPage(-1);
+      requestAnimationFrame(() => {
+        const previousCards = dom.playlistItemsList.querySelectorAll('.playlist-card');
+        previousCards[previousCards.length - 1]?.focus({ preventScroll: true });
+      });
     } else if (e.key === 'ArrowDown') {
       if (index < cards.length - 1) {
         e.preventDefault();
@@ -1409,6 +1433,14 @@ dom.selPageTurnMode.value = state.pageTurnMode;
   // Android TV remote support: IR and Bluetooth remotes that emit Android key events.
   installTvRemoteControls();
   dom.audioElement.addEventListener('timeupdate', () => saveReadingSession(false));
+  dom.audioElement.addEventListener('seeking', () => {
+    const nextTime = Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0;
+    const previousTime = state.lastAudioObservedTime;
+    state.allowBackwardAudioSync = Number.isFinite(previousTime) && nextTime < previousTime - 0.25;
+  });
+  dom.audioElement.addEventListener('seeked', () => {
+    state.lastAudioObservedTime = Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0;
+  });
   dom.audioElement.addEventListener('pause', () => saveReadingSession(true));
   window.addEventListener('pagehide', () => saveReadingSession(true));
   dom.audioElement.addEventListener('timeupdate', onAudioTimeUpdate);
@@ -1628,7 +1660,7 @@ async function loadPdfFromUrl(url, fileName, shouldResetSync = true) {
   state.pdfFileName = fileName || url.split('/').pop() || 'book.pdf';
   dom.pdfFileName.textContent = '📄 ' + state.pdfFileName;
   dom.pdfFileName.classList.remove('empty');
-  dom.lblLoadingText.textContent = 'Đang tải sách từ Cloudflare R2...';
+  dom.lblLoadingText.textContent = 'Đang tải truyện trực tuyến...';
   dom.pdfLoadingIndicator.classList.remove('hidden');
 
   const key = state.currentBookKey || getBookUniqueKey(state.pdfFileName);
@@ -1659,7 +1691,7 @@ async function loadPdfFromUrl(url, fileName, shouldResetSync = true) {
     dom.canvasWrapper.classList.remove('hidden');
   } catch (error) {
     state.pdfDoc = null;
-    throw new Error('Không tải được PDF từ R2. Hãy kiểm tra URL và CORS của bucket. ' + error.message);
+    throw new Error('Không tải được PDF trực tuyến. Hãy kiểm tra địa chỉ tệp và quyền truy cập. ' + error.message);
   } finally {
     state.pdfLoading = false;
     dom.pdfLoadingIndicator.classList.add('hidden');
@@ -2116,12 +2148,7 @@ function jumpToEnteredPage() {
   dom.pageJumpInput.value = '';
 }
 function getCurrentPageTimestamp(page) {
-  const raw = state.pageTimestamps[page];
-  if (typeof raw === 'number' && Number.isFinite(raw)) return { time: raw, part: 0 };
-  if (raw && typeof raw === 'object' && Number.isFinite(raw.time)) {
-    return { time: raw.time, part: Number.isInteger(raw.part) ? raw.part : 0 };
-  }
-  return null;
+  return window.ReadAlongPageSync.normalizeMarker((state.pageTimestamps || {})[page]);
 }
 function waitForAudioMetadata(audio, timeoutMs = 15000) {
   if (audio.readyState >= 1) return Promise.resolve();
@@ -2198,17 +2225,21 @@ function onAudioMetadataLoaded() {
 
 function onAudioTimeUpdate() {
   const audio = dom.audioElement;
-  const curr = audio.currentTime;
+  const curr = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
+  const previousObservedTime = state.lastAudioObservedTime;
+  const allowBackwardSync = state.allowBackwardAudioSync === true;
+  state.allowBackwardAudioSync = false;
+  state.lastAudioObservedTime = curr;
+
   dom.audioSeeker.value = curr;
   dom.lblAudioCurrentTime.textContent = formatTime(curr);
   const markers = state.pageTimestamps || {};
   if (!state.pdfDoc || state.pageTurnMode === 'off' || !Object.keys(markers).length) return;
 
   const currentPart = state.currentAudioIndex || 0;
-  const markerMatchesPart = marker => marker && (
-    typeof marker === 'number'
-      ? (!state.currentStoryAudios || state.currentStoryAudios.length <= 1 || currentPart === 0)
-      : (marker.part === undefined || marker.part === currentPart)
+  const audioCount = Array.isArray(state.currentStoryAudios) ? state.currentStoryAudios.length : 0;
+  const markerMatchesPart = marker => window.ReadAlongPageSync.markerMatchesPart(
+    marker, currentPart, audioCount
   );
   const step = state.viewMode === 'two-pages' ? 2 : 1;
 
@@ -2218,10 +2249,7 @@ function onAudioTimeUpdate() {
     if (state.waitingForManualPageTurn || !nextMarker || !markerMatchesPart(nextMarker)) {
       if (!state.waitingForManualPageTurn && nextPage <= state.totalPages) {
         window.__raDiagRecord?.('page.turn.no-marker', {
-          page: state.pageNum,
-          toPage: nextPage,
-          time: curr,
-          part: currentPart,
+          page: state.pageNum, toPage: nextPage, time: curr, part: currentPart,
           mode: state.pageTurnMode,
           reason: !nextMarker ? 'missing-next-marker' : 'marker-in-different-audio-part'
         });
@@ -2233,13 +2261,9 @@ function onAudioTimeUpdate() {
       state.pendingManualPage = nextPage;
       state.resumeAfterManualTurn = !audio.paused;
       window.__raDiagRecord?.('page.turn.waiting', {
-        fromPage: state.pageNum,
-        toPage: nextPage,
-        time: curr,
-        targetTime: nextMarker.time,
-        part: currentPart,
-        mode: state.pageTurnMode,
-        reason: 'next-marker-reached'
+        fromPage: state.pageNum, toPage: nextPage, time: curr,
+        targetTime: nextMarker.time, part: currentPart,
+        mode: state.pageTurnMode, reason: 'next-marker-reached'
       });
       audio.currentTime = nextMarker.time;
       audio.pause();
@@ -2248,54 +2272,53 @@ function onAudioTimeUpdate() {
     return;
   }
 
-  // Ghi nhận thiếu mốc trang kế tiếp (mỗi trang/phần chỉ ghi một lần).
   const nextPageForDiagnostics = state.pageNum + step;
   if (nextPageForDiagnostics <= state.totalPages) {
-    const nextMarkerForDiagnostics = getCurrentPageTimestamp(nextPageForDiagnostics);
-    if (!nextMarkerForDiagnostics || !markerMatchesPart(nextMarkerForDiagnostics)) {
+    const nextMarker = getCurrentPageTimestamp(nextPageForDiagnostics);
+    if (!nextMarker || !markerMatchesPart(nextMarker)) {
       window.__raDiagRecord?.('page.turn.no-marker', {
-        page: state.pageNum,
-        toPage: nextPageForDiagnostics,
-        time: curr,
-        part: currentPart,
-        mode: state.pageTurnMode,
-        reason: !nextMarkerForDiagnostics ? 'missing-next-marker' : 'marker-in-different-audio-part'
+        page: state.pageNum, toPage: nextPageForDiagnostics, time: curr,
+        part: currentPart, mode: state.pageTurnMode,
+        reason: !nextMarker ? 'missing-next-marker' : 'marker-in-different-audio-part'
       });
     }
   }
 
-  // Bắt kịp trang tương ứng ngay cả khi tua nhanh vượt qua nhiều mốc.
-  let targetPage = state.pageNum;
-  let targetTime = -1;
-  for (let page = 1; page <= state.totalPages; page++) {
-    const marker = getCurrentPageTimestamp(page);
-    if (markerMatchesPart(marker) && marker.time <= curr && marker.time >= targetTime) {
-      targetTime = marker.time;
-      targetPage = page;
-    }
+  const target = window.ReadAlongPageSync.findTargetPage({
+    pageTimestamps: markers,
+    totalPages: state.totalPages,
+    currentTime: curr,
+    currentPart,
+    audioCount,
+    duration: audio.duration
+  });
+  if (!target) return;
+
+  const alignedPage = window.ReadAlongPageSync.alignPage(target.page, state.viewMode);
+  if (alignedPage === state.pageNum) return;
+
+  // A stale timeupdate must never undo a manual page turn. Backward alignment is
+  // permitted only after an actual backward media seek (including an intentional replay).
+  if (alignedPage < state.pageNum && !allowBackwardSync) {
+    window.__raDiagRecord?.('page.turn.ignored-stale-marker', {
+      fromPage: state.pageNum, toPage: alignedPage, time: curr,
+      targetTime: target.time, part: currentPart,
+      mode: state.pageTurnMode, reason: 'backward-page-without-backward-seek'
+    });
+    return;
   }
-  if (targetTime >= 0 && targetPage !== state.pageNum) {
-    const alignedPage = state.viewMode === 'two-pages'
-      ? (targetPage % 2 === 0 ? Math.max(1, targetPage - 1) : targetPage)
-      : targetPage;
-    if (alignedPage !== state.pageNum) {
-      const previousPage = state.pageNum;
-      state.isAudioDrivenChange = true;
-      state.pageNum = alignedPage;
-      saveReadingSession(true);
-      window.__raDiagRecord?.('page.turn.auto', {
-        fromPage: previousPage,
-        toPage: alignedPage,
-        time: curr,
-        targetTime,
-        part: currentPart,
-        mode: state.pageTurnMode,
-        reason: 'audio-marker'
-      });
-      renderCurrentSpread();
-      requestAnimationFrame(() => { state.isAudioDrivenChange = false; });
-    }
-  }
+
+  const previousPage = state.pageNum;
+  state.isAudioDrivenChange = true;
+  state.pageNum = alignedPage;
+  saveReadingSession(true);
+  window.__raDiagRecord?.('page.turn.auto', {
+    fromPage: previousPage, toPage: alignedPage, time: curr,
+    targetTime: target.time, part: currentPart,
+    mode: state.pageTurnMode, reason: 'audio-marker'
+  });
+  renderCurrentSpread();
+  requestAnimationFrame(() => { state.isAudioDrivenChange = false; });
 }
 
 function getStorageKey() {
@@ -2755,9 +2778,9 @@ async function checkReadAlongUpdates() {
       headers: { Accept: 'application/vnd.github+json' },
       cache: 'no-store'
     });
-    if (!response.ok) throw new Error('GitHub trả về HTTP ' + response.status);
+    if (!response.ok) throw new Error('Máy chủ cập nhật trả về HTTP ' + response.status);
     const releases = await response.json();
-    if (!Array.isArray(releases)) throw new Error('Dữ liệu Release từ GitHub không hợp lệ.');
+    if (!Array.isArray(releases)) throw new Error('Dữ liệu bản cập nhật không hợp lệ.');
 
     // Không dựa vào thứ tự API: lấy phiên bản SemVer cao nhất trong đúng kênh.
     const eligibleReleases = releases.filter(item =>
@@ -2788,7 +2811,7 @@ async function checkReadAlongUpdates() {
       isSafeHttpsUrl(item.browser_download_url) &&
       new URL(item.browser_download_url).hostname === 'github.com'
     );
-    if (!asset) throw new Error('Release không có APK Android từ miền GitHub hợp lệ.');
+    if (!asset) throw new Error('Bản phát hành không có tệp cài đặt Android hợp lệ.');
     const currentVersion = document.querySelector('meta[name="app-version"]')?.content || '0.0.0';
     if (compareReleaseVersions(release.tag_name, currentVersion) <= 0) {
       const message = 'Kênh ' + channelLabel + ' mới nhất là ' + release.tag_name +
@@ -3021,7 +3044,7 @@ document.addEventListener('DOMContentLoaded', () => {
     link.href = url;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    link.textContent = 'Mở GitHub Issue vừa tạo';
+    link.textContent = 'Mở báo cáo vừa tạo';
     status.appendChild(link);
   }
 
@@ -3029,12 +3052,12 @@ document.addEventListener('DOMContentLoaded', () => {
     snapshot('diagnostics.open');
     modal?.classList.remove('hidden');
     if (submit) submit.disabled = false;
-    if (status) status.textContent = 'Log sẽ được gửi tự động lên GitHub qua dịch vụ trung gian; bạn không cần đăng nhập GitHub.';
+    if (status) status.textContent = 'Nhật ký sẽ được gửi qua dịch vụ trung gian và tạo báo cáo công khai. Bạn không cần đăng nhập.';
   });
   document.getElementById('btnCloseDiagnostics')?.addEventListener('click', () => modal?.classList.add('hidden'));
   modal?.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
   consent?.addEventListener('change', () => {
-    if (consent.checked && status) status.textContent = 'Đã đồng ý. Khi nhấn gửi, log sẽ được đưa vào GitHub Issue công khai.';
+    if (consent.checked && status) status.textContent = 'Đã đồng ý. Khi nhấn gửi, nhật ký sẽ được đưa vào báo cáo công khai.';
   });
   document.getElementById('btnExportDiagnostics')?.addEventListener('click', async () => {
     const report = makeReport(await getNativeLogs());
@@ -3048,7 +3071,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     submit.disabled = true;
-    if (status) status.textContent = 'Đang gửi log lên GitHub…';
+    if (status) status.textContent = 'Đang gửi nhật ký chẩn đoán…';
     let json = '';
     try {
       const report = makeReport(await getNativeLogs());
