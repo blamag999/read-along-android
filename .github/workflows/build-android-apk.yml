@@ -157,7 +157,7 @@ jobs:
           if 'ApkUpdaterPlugin.class' not in source:
               marker = 'public class MainActivity extends BridgeActivity {'
               if marker not in source: raise SystemExit('Could not register ApkUpdaterPlugin in MainActivity')
-              source = source.replace(marker, marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);\n        DiagnosticsPlugin.recordLifecycle(this, \'Activity.onCreate\');\n        super.onCreate(savedInstanceState);\n    }', 1)
+              source = source.replace(marker, marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);\n        DiagnosticsPlugin.recordLifecycle(this, \"Activity.onCreate\");\n        super.onCreate(savedInstanceState);\n    }', 1)
               main.write_text(source)
           # Add Activity lifecycle markers without logging user content or file paths.
           source = main.read_text()
