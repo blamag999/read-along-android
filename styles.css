@@ -881,6 +881,21 @@ body {
   border: 1px solid rgba(16, 185, 129, 0.4);
 }
 
+.card-favorite-btn {
+  flex: 0 0 auto;
+  min-width: 38px;
+  min-height: 38px;
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  border-radius: var(--radius-md);
+  background: rgba(250, 204, 21, 0.08);
+  color: #facc15;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.card-favorite-btn[aria-pressed="true"] { background: rgba(250, 204, 21, 0.18); }
+.card-favorite-btn:focus-visible { outline: 3px solid #facc15; outline-offset: 2px; }
+
 .card-play-btn {
   background: linear-gradient(135deg, #0284c7, #0369a1);
   color: #fff;
