@@ -2484,145 +2484,69 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
 }
 
 
-/* Adaptive dark player — approved design: prominent round Play, secondary Repeat row. */
-.app-ui-mode .audio-scrubber-row, .apk-mode .audio-scrubber-row { order: 1; }
-.app-ui-mode .controls-row, .apk-mode .controls-row { order: 2; }
-.app-ui-mode .repeat-controls-row, .apk-mode .repeat-controls-row { order: 3; }
-.app-ui-mode .app-footer, .apk-mode .app-footer {
-  background: #0b1220;
-  border-top: 1px solid #29384f;
+/* Compact responsive audio player: all six controls stay on one row. */
+.app-ui-mode .app-footer, .apk-mode .app-footer { background: #0b1220; border-top: 1px solid #29384f; }
+.app-ui-mode .audio-scrubber-row, .apk-mode .audio-scrubber-row {
+  order: 1; width: min(100%, 760px); margin: 0 auto 3px;
 }
-.repeat-controls-row {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  width: min(100%, 680px); margin: 2px auto 0; padding: 2px 0;
+.app-ui-mode .controls-row, .apk-mode .controls-row, .controls-row {
+  order: 2; display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: center; justify-items: stretch; gap: clamp(3px, 1vw, 8px);
+  width: min(100%, 760px); margin: 3px auto 0; padding: 3px 0 2px;
+  background: transparent; border: 0; box-shadow: none; flex-wrap: nowrap;
 }
-.repeat-audio-btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: 38px; padding: 7px 14px; border: 1px solid #3b4c65;
-  border-radius: 999px; background: #172338; color: #dbeafe; font: inherit;
-  font-size: .86rem; font-weight: 650; cursor: pointer;
-  transition: background .16s ease, border-color .16s ease, color .16s ease;
-}
-.repeat-audio-btn > span:first-child { font-size: 1.2rem; line-height: 1; }
-.repeat-audio-btn.is-on { background: #123b3a; border-color: #34d399; color: #a7f3d0; }
-.repeat-audio-btn:focus-visible,
-.repeat-controls-row .replay-page-btn:focus-visible,
-.controls-row .ctrl-btn:focus-visible { outline: 3px solid #93c5fd; outline-offset: 3px; }
-.repeat-controls-row .replay-page-btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-  min-width: 0; min-height: 38px !important; height: 38px; padding: 7px 13px !important;
-  border: 1px solid #3b4c65; border-radius: 999px; background: #172338;
-  color: #dbeafe; font-size: .84rem !important;
-}
-.repeat-controls-row .replay-page-icon { font-size: 1.05rem; }
-.app-ui-mode .controls-row, .apk-mode .controls-row {
-  display: grid !important;
-  grid-template-columns: minmax(42px,1fr) minmax(42px,1fr) minmax(76px,1.45fr) minmax(42px,1fr) minmax(42px,1fr);
-  align-items: center; justify-items: center; gap: clamp(5px,1.2vw,12px);
-  width: min(100%,620px); margin: 3px auto 0; padding: 4px 0 2px;
-  background: transparent; border: 0; box-shadow: none;
-}
-.app-ui-mode .controls-row #btnPrevPage,
-.app-ui-mode .controls-row #btnNextPage,
-.apk-mode .controls-row #btnPrevPage,
-.apk-mode .controls-row #btnNextPage {
-  width: 46px; height: 46px; min-height: 46px; border-radius: 50% !important;
-  background: #1d2b41; border: 1px solid #405572; color: #e2e8f0; font-size: 1.05rem; padding: 0;
-}
-.app-ui-mode .controls-row #btnRewind5,
-.app-ui-mode .controls-row #btnForward5,
-.apk-mode .controls-row #btnRewind5,
-.apk-mode .controls-row #btnForward5 {
-  width: 46px; height: 46px; min-height: 46px; border-radius: 50% !important;
-  background: #1d2b41; border: 1px solid #405572; color: #e2e8f0; font-size: 1.2rem; padding: 0;
-}
-.app-ui-mode .controls-row #btnPlayPause, .apk-mode .controls-row #btnPlayPause {
+.controls-row .ctrl-btn {
+  min-width: 0; width: 100%; height: 44px; min-height: 44px; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
-  width: clamp(76px,10vw,88px); height: clamp(76px,10vw,88px);
-  min-height: clamp(76px,10vw,88px); padding: 0; border-radius: 50%;
-  background: linear-gradient(145deg,#60a5fa,#2563eb); border: 2px solid #bfdbfe;
-  color: #fff; font-size: 1.8rem; line-height: 1; box-shadow: 0 5px 20px rgba(37,99,235,.34);
-}
-.app-ui-mode .controls-row #btnPlayPause.is-playing,
-.apk-mode .controls-row #btnPlayPause.is-playing {
-  background: linear-gradient(145deg,#fb7185,#be123c); border-color: #fecdd3;
-}
-.app-ui-mode .controls-row #btnPlayPause:hover,
-.apk-mode .controls-row #btnPlayPause:hover { filter: brightness(1.08); box-shadow: 0 6px 22px rgba(37,99,235,.42); }
-.app-ui-mode .audio-scrubber-row, .apk-mode .audio-scrubber-row { width: min(100%,720px); margin: 0 auto 3px; }
-.app-ui-mode .audio-slider, .apk-mode .audio-slider { accent-color: #60a5fa; }
-@media (max-width: 560px) {
-  .repeat-controls-row { gap: 7px; margin-top: 1px; }
-  .repeat-audio-btn { min-height: 36px; padding: 6px 11px; font-size: .8rem; }
-  .repeat-controls-row .replay-page-btn { min-height: 36px !important; height: 36px; padding: 6px 11px !important; }
-  .app-ui-mode .controls-row, .apk-mode .controls-row {
-    grid-template-columns: minmax(36px,1fr) minmax(36px,1fr) minmax(70px,1.5fr) minmax(36px,1fr) minmax(36px,1fr);
-    gap: 5px; padding-inline: 2px;
-  }
-  .app-ui-mode .controls-row #btnPrevPage,
-  .app-ui-mode .controls-row #btnNextPage,
-  .app-ui-mode .controls-row #btnRewind5,
-  .app-ui-mode .controls-row #btnForward5,
-  .apk-mode .controls-row #btnPrevPage,
-  .apk-mode .controls-row #btnNextPage,
-  .apk-mode .controls-row #btnRewind5,
-  .apk-mode .controls-row #btnForward5 { width: 42px; height: 42px; min-height: 42px; }
-  .app-ui-mode .controls-row #btnPlayPause, .apk-mode .controls-row #btnPlayPause {
-    width: 72px; height: 72px; min-height: 72px;
-  }
-}
-@media (max-height: 520px) and (orientation: landscape) {
-  .app-ui-mode .app-footer, .apk-mode .app-footer { padding-top: 2px; padding-bottom: max(3px,env(safe-area-inset-bottom)); gap: 2px; }
-  .app-ui-mode .repeat-controls-row, .apk-mode .repeat-controls-row { min-height: 30px; padding: 0; }
-  .app-ui-mode .repeat-audio-btn, .apk-mode .repeat-audio-btn { min-height: 30px; padding: 4px 10px; }
-  .app-ui-mode .repeat-controls-row .replay-page-btn,
-  .apk-mode .repeat-controls-row .replay-page-btn { min-height: 30px !important; height: 30px; padding: 4px 10px !important; }
-  .app-ui-mode .controls-row #btnPlayPause, .apk-mode .controls-row #btnPlayPause { width: 56px; height: 56px; min-height: 56px; }
-  .app-ui-mode .controls-row #btnPrevPage,
-  .app-ui-mode .controls-row #btnNextPage,
-  .app-ui-mode .controls-row #btnRewind5,
-  .app-ui-mode .controls-row #btnForward5,
-  .apk-mode .controls-row #btnPrevPage,
-  .apk-mode .controls-row #btnNextPage,
-  .apk-mode .controls-row #btnRewind5,
-  .apk-mode .controls-row #btnForward5 { width: 38px; height: 38px; min-height: 38px; }
-}
-
-
-/* Apply the same responsive player layout to browser and packaged Android modes. */
-.controls-row {
-  display: grid !important;
-  grid-template-columns: minmax(42px,1fr) minmax(42px,1fr) minmax(76px,1.45fr) minmax(42px,1fr) minmax(42px,1fr);
-  align-items: center; justify-items: center; gap: clamp(5px,1.2vw,12px);
-  width: min(100%,620px); margin: 3px auto 0; padding: 4px 0 2px;
-  background: transparent; border: 0; box-shadow: none;
+  white-space: nowrap; border-radius: 10px; font-size: 1rem;
 }
 .controls-row #btnPrevPage, .controls-row #btnNextPage,
-.controls-row #btnRewind5, .controls-row #btnForward5 {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 46px; height: 46px; min-height: 46px; padding: 0;
-  border-radius: 50% !important; background: #1d2b41;
-  border: 1px solid #405572; color: #e2e8f0;
+.controls-row #btnRewind5, .controls-row #btnForward5,
+.controls-row #btnReplayPage {
+  width: 100%; height: 44px; min-height: 44px; padding: 0;
+  border-radius: 10px !important; background: #1d2b41;
+  border: 1px solid #405572; color: #e2e8f0; font-size: 1rem;
 }
 .controls-row #btnPlayPause {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: clamp(76px,10vw,88px); height: clamp(76px,10vw,88px);
-  min-height: clamp(76px,10vw,88px); padding: 0; border-radius: 50%;
-  background: linear-gradient(145deg,#60a5fa,#2563eb); border: 2px solid #bfdbfe;
-  color: #fff; font-size: 1.8rem; line-height: 1;
-  box-shadow: 0 5px 20px rgba(37,99,235,.34);
+  width: 100%; height: 54px; min-height: 54px; padding: 0;
+  border-radius: 12px; background: linear-gradient(145deg,#60a5fa,#2563eb);
+  border: 2px solid #bfdbfe; color: #fff; font-size: 1.5rem; line-height: 1;
+  box-shadow: 0 4px 14px rgba(37,99,235,.28);
 }
-.controls-row #btnPlayPause.is-playing { background: linear-gradient(145deg,#fb7185,#be123c); border-color: #fecdd3; }
-.controls-row #btnPrevPage, .controls-row #btnNextPage { font-size: 1.05rem; }
-.controls-row #btnRewind5, .controls-row #btnForward5 { font-size: 1.2rem; }
-@media (max-width:560px) {
-  .controls-row { grid-template-columns: minmax(36px,1fr) minmax(36px,1fr) minmax(70px,1.5fr) minmax(36px,1fr) minmax(36px,1fr); gap:5px; padding-inline:2px; }
-  .controls-row #btnPrevPage, .controls-row #btnNextPage,
-  .controls-row #btnRewind5, .controls-row #btnForward5 { width:42px; height:42px; min-height:42px; }
-  .controls-row #btnPlayPause { width:72px; height:72px; min-height:72px; }
+.controls-row #btnPlayPause.is-playing {
+  background: linear-gradient(145deg,#fb7185,#be123c); border-color: #fecdd3;
 }
-@media (max-height:520px) and (orientation:landscape) {
+.controls-row #btnPrevPage, .controls-row #btnNextPage { font-size: .95rem; }
+.controls-row #btnRewind5, .controls-row #btnForward5, .controls-row #btnReplayPage { font-size: 1.15rem; }
+.app-ui-mode .audio-slider, .apk-mode .audio-slider { accent-color: #60a5fa; }
+
+@media (max-width: 560px) {
+  .app-ui-mode .controls-row, .apk-mode .controls-row, .controls-row { gap: 4px; padding-inline: 0; }
+  .controls-row .ctrl-btn,
   .controls-row #btnPrevPage, .controls-row #btnNextPage,
-  .controls-row #btnRewind5, .controls-row #btnForward5 { width:38px; height:38px; min-height:38px; }
-  .controls-row #btnPlayPause { width:56px; height:56px; min-height:56px; }
+  .controls-row #btnRewind5, .controls-row #btnForward5,
+  .controls-row #btnReplayPage {
+    height: 38px; min-height: 38px; font-size: .9rem; border-radius: 8px !important;
+  }
+  .controls-row #btnPlayPause { height: 46px; min-height: 46px; font-size: 1.25rem; border-radius: 10px; }
+}
+@media (max-width: 360px) {
+  .app-ui-mode .controls-row, .apk-mode .controls-row, .controls-row { gap: 3px; }
+  .controls-row .ctrl-btn,
+  .controls-row #btnPrevPage, .controls-row #btnNextPage,
+  .controls-row #btnRewind5, .controls-row #btnForward5,
+  .controls-row #btnReplayPage { height: 34px; min-height: 34px; font-size: .82rem; }
+  .controls-row #btnPlayPause { height: 40px; min-height: 40px; font-size: 1.1rem; }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  .app-ui-mode .app-footer, .apk-mode .app-footer { padding: 2px 8px max(3px,env(safe-area-inset-bottom)); }
+  .app-ui-mode .sync-banner, .apk-mode .sync-banner { margin-bottom: 2px; gap: 3px; }
+  .app-ui-mode .audio-scrubber-row, .apk-mode .audio-scrubber-row { margin-bottom: 1px; }
+  .app-ui-mode .controls-row, .apk-mode .controls-row, .controls-row { margin-top: 0; padding: 0; gap: 4px; }
+  .controls-row .ctrl-btn,
+  .controls-row #btnPrevPage, .controls-row #btnNextPage,
+  .controls-row #btnRewind5, .controls-row #btnForward5,
+  .controls-row #btnReplayPage { height: 30px; min-height: 30px; }
+  .controls-row #btnPlayPause { height: 34px; min-height: 34px; font-size: 1.05rem; }
 }
