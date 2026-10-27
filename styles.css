@@ -2448,3 +2448,37 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
     transition: none !important;
   }
 }
+
+
+/* Center the remaining six playback/navigation controls after removing speed selection. */
+.app-ui-mode .controls-row {
+  display: flex !important;
+  grid-template-columns: none !important;
+  justify-content: center !important;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  max-width: 620px;
+  margin-inline: auto;
+}
+.app-ui-mode .controls-row .ctrl-btn {
+  flex: 0 0 auto;
+  min-width: 42px;
+}
+.app-ui-mode .controls-row .page-ctrl { min-width: 58px; }
+.app-ui-mode .controls-row #btnPlayPause {
+  flex: 0 0 50px;
+  width: 50px;
+  min-width: 50px;
+}
+.app-ui-mode .controls-row .speed-select-wrap { display: none !important; }
+@media (max-width: 560px) {
+  .app-ui-mode .controls-row { gap: 6px; padding-inline: 4px; }
+  .app-ui-mode .controls-row .page-ctrl { min-width: 48px; }
+  .app-ui-mode .controls-row #btnPlayPause {
+    flex-basis: 46px;
+    width: 46px;
+    min-width: 46px;
+  }
+}
