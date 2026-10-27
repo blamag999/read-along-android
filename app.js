@@ -2432,12 +2432,16 @@ async function checkReadAlongUpdates() {
     const releases = await response.json();
     if (!Array.isArray(releases)) throw new Error('Dữ liệu Release từ GitHub không hợp lệ.');
 
-    const release = releases.find(item =>
+    // Chỉ xét release đúng kênh, có APK Android; chọn theo số phiên bản
+    // thay vì phụ thuộc thứ tự API trả về (thường là ngày phát hành).
+    const eligibleReleases = releases.filter(item =>
       !item.draft &&
       (channel === 'beta' ? item.prerelease === true : item.prerelease === false) &&
-      (item.assets || []).some(asset => /-android\.apk$/i.test(asset.name))
+      (item.assets || []).some(asset => /-android\\.apk$/i.test(asset.name)) &&
+      compareReleaseVersions(item.tag_name, '0.0.0') > 0
     );
-    if (!release) {
+    eligibleReleases.sort((a, b) => compareReleaseVersions(b.tag_name, a.tag_name));
+    const release = eligibleReleases[0] || null;    if (!release) {
       const message = channel === 'beta'
         ? 'Chưa có bản Beta kèm APK để cập nhật.'
         : 'Chưa có bản Official ổn định kèm APK để cập nhật.';
