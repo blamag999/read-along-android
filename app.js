@@ -1816,6 +1816,13 @@ function changePage(delta) {
   }
 
   state.isAudioDrivenChange = false;
+  window.__raDiagRecord?.('page.turn.manual', {
+    fromPage: previousPage,
+    toPage: state.pageNum,
+    time: Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0,
+    reason: 'manual-navigation',
+    mode: state.pageTurnMode
+  });
   renderCurrentSpread(true);
 
   // Nếu audio đang chờ người đọc lật đến trang kế tiếp, tiếp tục tại đúng mốc.
@@ -2002,6 +2009,13 @@ function getCurrentPageTimestamp(page) {
 function replayCurrentPage() {
   if (!state.pdfDoc) { showToast('Vui lòng mở PDF trước.'); return; }
   const marker = getCurrentPageTimestamp(state.pageNum);
+  window.__raDiagRecord?.('page.replay', {
+    page: state.pageNum,
+    time: Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0,
+    targetTime: marker ? marker.time : -1,
+    part: marker ? marker.part : state.currentAudioIndex,
+    reason: marker ? 'marker-found' : 'marker-missing'
+  });
   if (!marker) {
     showToast('Trang này chưa có mốc thời gian.');
     return;
@@ -2085,6 +2099,15 @@ function onAudioTimeUpdate() {
       state.waitingForManualPageTurn = true;
       state.pendingManualPage = nextPage;
       state.resumeAfterManualTurn = !audio.paused;
+      window.__raDiagRecord?.('page.turn.waiting', {
+        fromPage: state.pageNum,
+        toPage: nextPage,
+        time: curr,
+        targetTime: nextMarker.time,
+        part: currentPart,
+        mode: state.pageTurnMode,
+        reason: 'next-marker-reached'
+      });
       audio.currentTime = nextMarker.time;
       audio.pause();
       showToast('Đến cuối trang. Lật trang để tiếp tục.');
@@ -2107,8 +2130,18 @@ function onAudioTimeUpdate() {
       ? (targetPage % 2 === 0 ? Math.max(1, targetPage - 1) : targetPage)
       : targetPage;
     if (alignedPage !== state.pageNum) {
+      const previousPage = state.pageNum;
       state.isAudioDrivenChange = true;
       state.pageNum = alignedPage;
+      window.__raDiagRecord?.('page.turn.auto', {
+        fromPage: previousPage,
+        toPage: alignedPage,
+        time: curr,
+        targetTime,
+        part: currentPart,
+        mode: state.pageTurnMode,
+        reason: 'audio-marker'
+      });
       renderCurrentSpread();
       requestAnimationFrame(() => { state.isAudioDrivenChange = false; });
     }
@@ -2693,17 +2726,36 @@ document.addEventListener('DOMContentLoaded', () => {
     'app.started','audio.play','audio.pause','audio.ended','audio.waiting','audio.stalled',
     'audio.seeking','audio.seeked','audio.error','audio.metadata','pdf.render.start',
     'pdf.render.end','pdf.render.error','viewport.change','orientation.change',
-    'document.hidden','window.error','promise.rejection','diagnostics.open'
+    'orientation.settled','document.hidden','window.error','promise.rejection',
+    'page.turn.manual','page.turn.auto','page.turn.waiting','page.replay','diagnostics.open'
   ]);
+  function sanitizeDiagnosticText(value) {
+    return String(value || '')
+      .replace(/https?:\\/\\/[^\\s"'<>]+/gi, '[url]')
+      .replace(/(?:[A-Za-z]:\\\\|\\/)(?:[^\\s"'<>]+[\\/])*[^\\s"'<>]*/g, '[path]')
+      .replace(/\\b[^\\s"'<>]+\\.(?:mp3|m4a|aac|wav|pdf|json|html|js|kt|java)\\b/gi, '[file]')
+      .slice(0, 180);
+  }
   function record(name, details = {}) {
     if (!safeEventNames.has(name)) return;
     const item = { at: new Date().toISOString(), event: name };
-    if (Number.isFinite(details.page)) item.page = Math.max(0, Math.min(100000, Math.trunc(details.page)));
+    for (const key of ['page','fromPage','toPage','part','targetTime','fromTime','toTime','width','height','code','line','column']) {
+      if (Number.isFinite(details[key])) {
+        const value = details[key];
+        item[key] = ['targetTime','fromTime','toTime'].includes(key)
+          ? Math.round(Math.max(0, Math.min(864000, value)) * 10) / 10
+          : Math.max(0, Math.min(1000000, Math.trunc(value)));
+      }
+    }
     if (Number.isFinite(details.time)) item.audioTime = Math.round(Math.max(0, Math.min(864000, details.time)) * 10) / 10;
     if (typeof details.paused === 'boolean') item.paused = details.paused;
+    if (typeof details.beforePaused === 'boolean') item.beforePaused = details.beforePaused;
     if (typeof details.readyState === 'number') item.readyState = Math.max(0, Math.min(4, details.readyState));
     if (typeof details.duration === 'number' && Number.isFinite(details.duration)) item.duration = Math.round(Math.max(0, Math.min(864000, details.duration)) * 10) / 10;
-    if (details.orientation) item.orientation = details.orientation;
+    for (const key of ['orientation','reason','mode','errorName']) {
+      if (typeof details[key] === 'string' && details[key]) item[key] = sanitizeDiagnosticText(details[key]);
+    }
+    if (typeof details.errorMessage === 'string' && details.errorMessage) item.errorMessage = sanitizeDiagnosticText(details.errorMessage);
     events.push(item);
     if (events.length > MAX_EVENTS) events.splice(0, events.length - MAX_EVENTS);
   }
@@ -2724,25 +2776,61 @@ document.addEventListener('DOMContentLoaded', () => {
   const audio = document.getElementById('audioElement');
   if (audio) {
     for (const name of ['play','pause','ended','waiting','stalled','seeking','seeked','error','loadedmetadata']) {
-      audio.addEventListener(name, () => snapshot(name === 'loadedmetadata' ? 'audio.metadata' : 'audio.' + name), { passive: true });
+      audio.addEventListener(name, () => {
+        const extra = name === 'error' && audio.error
+          ? { code: audio.error.code, errorName: 'MediaError', errorMessage: audio.error.message || '' }
+          : {};
+        snapshot(name === 'loadedmetadata' ? 'audio.metadata' : 'audio.' + name, extra);
+      }, { passive: true });
     }
   }
+  let lastViewportSignature = '';
+  const recordViewportChange = () => {
+    const orientation = (screen.orientation && screen.orientation.type) || 'unknown';
+    const signature = [window.innerWidth || 0, window.innerHeight || 0, orientation].join('x');
+    if (signature === lastViewportSignature) return;
+    lastViewportSignature = signature;
+    snapshot('viewport.change', { orientation, width: window.innerWidth || 0, height: window.innerHeight || 0 });
+  };
   window.addEventListener('orientationchange', () => {
     lastOrientation = (screen.orientation && screen.orientation.type) || 'unknown';
-    snapshot('orientation.change', { orientation: lastOrientation });
+    const before = audioState();
+    snapshot('orientation.change', { orientation: lastOrientation, fromTime: before.time, beforePaused: before.paused });
+    setTimeout(() => {
+      const after = audioState();
+      snapshot('orientation.settled', {
+        orientation: (screen.orientation && screen.orientation.type) || lastOrientation,
+        fromTime: before.time,
+        toTime: after.time,
+        beforePaused: before.paused,
+        reason: before.paused === after.paused ? 'playback-state-unchanged' : 'playback-state-changed'
+      });
+    }, 350);
+    recordViewportChange();
   }, { passive: true });
-  window.addEventListener('resize', () => snapshot('viewport.change', { orientation: (screen.orientation && screen.orientation.type) || 'unknown' }), { passive: true });
-  window.visualViewport?.addEventListener('resize', () => snapshot('viewport.change', { orientation: (screen.orientation && screen.orientation.type) || 'unknown' }), { passive: true });
+  window.addEventListener('resize', recordViewportChange, { passive: true });
+  window.visualViewport?.addEventListener('resize', recordViewportChange, { passive: true });
   document.addEventListener('visibilitychange', () => snapshot('document.hidden', { orientation: document.hidden ? 'hidden' : 'visible' }));
-  window.addEventListener('error', () => record('window.error'));
-  window.addEventListener('unhandledrejection', () => record('promise.rejection'));
+  window.addEventListener('error', event => record('window.error', {
+    errorName: event.error?.name || 'Error',
+    errorMessage: event.message || '',
+    line: event.lineno || 0,
+    column: event.colno || 0
+  }));
+  window.addEventListener('unhandledrejection', event => {
+    const reason = event.reason;
+    record('promise.rejection', {
+      errorName: reason?.name || typeof reason,
+      errorMessage: reason?.message || (typeof reason === 'string' ? reason : '')
+    });
+  });
   record('app.started');
   try { window.Capacitor?.Plugins?.Diagnostics?.markWebViewReady?.(); } catch (_) {}
   function makeReport(nativeResult) {
     const version = document.querySelector('meta[name="app-version"]')?.content || 'unknown';
     const platform = window.Capacitor?.getPlatform?.() || 'web';
     return {
-      schemaVersion: 1,
+      schemaVersion: 2,
       app: 'Read Along',
       version: /^[0-9A-Za-z.+-]{1,40}$/.test(version) ? version : 'unknown',
       platform: ['android','ios','web'].includes(platform) ? platform : 'other',
