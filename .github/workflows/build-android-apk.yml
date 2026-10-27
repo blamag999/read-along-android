@@ -59,24 +59,25 @@ jobs:
 
           stable_releases = [r for r in parsed if not r.get("isPrerelease") and r["beta_seq"] is None]
           latest_stable = max((r["version"] for r in stable_releases), default=(1, 1, 0))
-          major, stable_minor, _ = latest_stable
+          stable_major, stable_minor, stable_patch = latest_stable
 
           if channel == "stable":
-              # Deliberately reserve one minor line for Beta: 1.1.x stable -> 1.2.x Beta -> 1.3.0 stable.
-              version = f"{major}.{stable_minor + 2}.0"
+              # Stable increments the minor version: 1.1.0 -> 1.2.0 -> 1.3.0.
+              version = f"{stable_major}.{stable_minor + 1}.0"
               prerelease = "false"
           else:
-              beta_minor = stable_minor + 1
-              beta_releases = [
+              # Beta uses the current stable minor line, increasing patch each build:
+              # after 1.2.0 Official: 1.2.1-beta.1, 1.2.2-beta.1, ...
+              beta_candidates = [
                   r for r in parsed
                   if r.get("isPrerelease")
-                  and r["version"][0] == major
-                  and r["version"][1] == beta_minor
+                  and r["version"][0] == stable_major
+                  and r["version"][1] == stable_minor
                   and r["beta_seq"] is not None
               ]
-              # Increase the patch component for each Beta build: 1.2.0-beta.1, 1.2.1-beta.1, ...
-              next_patch = max((r["version"][2] for r in beta_releases), default=-1) + 1
-              version = f"{major}.{beta_minor}.{next_patch}-beta.1"
+              max_beta_patch = max((r["version"][2] for r in beta_candidates), default=stable_patch)
+              next_patch = max(stable_patch, max_beta_patch) + 1
+              version = f"{stable_major}.{stable_minor}.{next_patch}-beta.1"
               prerelease = "true"
 
           print(f"version={version}")
