@@ -1,0 +1,66 @@
+name: Deploy diagnostics Worker
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-diagnostics-worker
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy Cloudflare Worker
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      READ_ALONG_ISSUES_TOKEN: ${{ secrets.READ_ALONG_ISSUES_TOKEN }}
+      TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
+      TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+      RATE_LIMIT_SALT: ${{ secrets.RATE_LIMIT_SALT }}
+    steps:
+      - name: Check out beta source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Validate required settings
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID READ_ALONG_ISSUES_TOKEN TURNSTILE_SECRET TURNSTILE_SITE_KEY RATE_LIMIT_SALT; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing required GitHub Actions secret: $name"
+              exit 1
+            fi
+          done
+          if [[ "${GITHUB_REF}" != "refs/heads/beta" ]]; then
+            echo "::error::This workflow may only deploy from the beta branch."
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Wrangler
+        run: npm install --global wrangler@4
+
+      - name: Deploy Worker and Durable Object
+        working-directory: services/diagnostics
+        run: wrangler deploy --config wrangler.toml
+
+      - name: Configure Worker secrets
+        working-directory: services/diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s' "$READ_ALONG_ISSUES_TOKEN" | wrangler secret put GITHUB_TOKEN --config wrangler.toml
+          printf '%s' "$TURNSTILE_SECRET" | wrangler secret put TURNSTILE_SECRET --config wrangler.toml
+          printf '%s' "$TURNSTILE_SITE_KEY" | wrangler secret put TURNSTILE_SITE_KEY --config wrangler.toml
+          printf '%s' "$RATE_LIMIT_SALT" | wrangler secret put RATE_LIMIT_SALT --config wrangler.toml
