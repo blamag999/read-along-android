@@ -66,18 +66,18 @@ jobs:
               version = f"{stable_major}.{stable_minor + 1}.0"
               prerelease = "false"
           else:
-              # Beta uses the current stable minor line, increasing patch each build:
-              # after 1.2.0 Official: 1.2.1-beta.1, 1.2.2-beta.1, ...
+              # Beta uses the current stable minor line and increments the patch:
+              # after 1.2.0 Official: 1.2.1, 1.2.2, ...
+              # GitHub's prerelease flag distinguishes Beta from Official.
               beta_candidates = [
                   r for r in parsed
                   if r.get("isPrerelease")
                   and r["version"][0] == stable_major
                   and r["version"][1] == stable_minor
-                  and r["beta_seq"] is not None
               ]
               max_beta_patch = max((r["version"][2] for r in beta_candidates), default=stable_patch)
               next_patch = max(stable_patch, max_beta_patch) + 1
-              version = f"{stable_major}.{stable_minor}.{next_patch}-beta.1"
+              version = f"{stable_major}.{stable_minor}.{next_patch}"
               prerelease = "true"
 
           print(f"version={version}")
