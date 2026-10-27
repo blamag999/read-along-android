@@ -41,5 +41,8 @@
   function alignPage(page, viewMode) {
     return viewMode === 'two-pages' ? (page % 2 === 0 ? Math.max(1, page - 1) : page) : page;
   }
-  root.ReadAlongPageSync = Object.freeze({ normalizeMarker, markerMatchesPart, findTargetPage, alignPage });
+  function shouldAllowPageChange(currentPage, targetPage, allowBackwardSync) {
+    return targetPage >= currentPage || allowBackwardSync === true;
+  }
+  root.ReadAlongPageSync = Object.freeze({ normalizeMarker, markerMatchesPart, findTargetPage, alignPage, shouldAllowPageChange });
 })(window);
