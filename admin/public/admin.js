@@ -211,6 +211,8 @@ async function loadFiles() {
     setStatus(message, true);
     const row = document.createElement("tr"); const cell = addCell(row, message);
     cell.colSpan = 5; cell.className = "empty error"; $("fileRows").append(row);
+    $("prevPageBtn").disabled = requestedPage === 0;
+    $("nextPageBtn").disabled = true;
     $("refreshBtn").disabled = false;
     return;
   }
