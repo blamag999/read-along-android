@@ -406,6 +406,27 @@ async function runDiagnostics() {
     buttons.forEach((button) => { if (button) button.disabled = false; });
   }
 }
+$("publishBooksBtn").addEventListener("click", async () => {
+  const button = $("publishBooksBtn");
+  if (!await confirmAction("Tạo / cập nhật books.json?", "Sẽ kiểm tra toàn bộ đường dẫn PDF, audio và sync trong manifest, sau đó ghi đè books.json ở thư mục gốc Bucket my-audio-book. APK sẽ dùng manifest này qua API.", "Tạo / cập nhật")) return;
+  button.disabled = true;
+  const oldLabel = button.textContent;
+  button.textContent = "Đang kiểm tra tệp…";
+  try {
+    const response = await fetch("/books.json", { cache: "no-store" });
+    if (!response.ok) throw new Error("Không đọc được file mẫu books.json (" + response.status + ")");
+    const manifest = await response.json();
+    if (!manifest || !Array.isArray(manifest.books)) throw new Error("File mẫu không đúng cấu trúc { books: [...] }");
+    const result = await postJson("catalog/publish", manifest);
+    setStatus("Đã tạo books.json: " + result.books + " sách, " + result.files + " tệp đã xác minh.");
+    await loadFiles();
+  } catch (error) {
+    setStatus("Không thể tạo books.json: " + error.message, true);
+  } finally {
+    button.disabled = false;
+    button.textContent = oldLabel;
+  }
+});
 $("scanBtn").addEventListener("click", runDiagnostics);
 $("scanAgainBtn").addEventListener("click", runDiagnostics);
 
