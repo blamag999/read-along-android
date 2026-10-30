@@ -1225,8 +1225,8 @@ dom.selPageTurnMode.value = state.pageTurnMode;
     const actualTime = Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0;
     const pending = state.pendingBackwardSeek;
     // Xác nhận seek đã hoàn tất đúng đích trước khi cho phép đổi trang lùi.
-    state.allowBackwardAudioSync = Boolean(pending && pending.from > pending.target + 0.25 &&
-      Math.abs(actualTime - pending.target) <= 1.25);
+    state.allowBackwardAudioSync = Boolean(pending && window.ReadAlongPageSync.isConfirmedBackwardSeek(
+      pending.from, pending.target, actualTime));
     state.pendingBackwardSeek = null;
     state.lastAudioObservedTime = actualTime;
   });
