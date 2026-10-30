@@ -12,10 +12,24 @@
   <main class="shell">
     <header class="topbar">
       <div class="brand"><span class="brand-icon">RA</span><div><h1>Read Along Admin</h1><p>Quản lý thư viện sách và audio</p></div></div>
-      <button id="logoutBtn" class="button subtle hidden" type="button">Đăng xuất</button>
+      <div class="topbar-actions"><button id="homeBtn" class="button subtle hidden" type="button">Trang chủ</button><button id="logoutBtn" class="button subtle hidden" type="button">Đăng xuất</button></div>
     </header>
 
-    <section id="loginPanel" class="panel login-panel">
+    <section id="homePanel" class="home-panel">
+      <div class="home-intro"><div class="eyebrow">READ ALONG · THƯ VIỆN SỐ</div><h2>Tổng quan thư viện</h2><p class="muted">Thống kê nội dung và mức độ sử dụng ứng dụng Read Along.</p></div>
+      <div class="home-stats">
+        <article class="home-stat"><span>Đầu sách</span><strong id="statBooks">—</strong><small>Trong danh mục trực tuyến</small></article>
+        <article class="home-stat"><span>Tệp PDF</span><strong id="statPdfs">—</strong><small>Tài liệu đọc</small></article>
+        <article class="home-stat"><span>Tệp audio</span><strong id="statAudios">—</strong><small>Các phần âm thanh</small></article>
+        <article class="home-stat"><span>Tệp đồng bộ</span><strong id="statSync">—</strong><small>JSON mốc thời gian</small></article>
+        <article class="home-stat accent"><span>Lượt mở ứng dụng</span><strong id="statVisits">—</strong><small id="statVisitsRecent">Trong 30 ngày: —</small></article>
+        <article class="home-stat accent"><span>Máy cài đặt đã ghi nhận</span><strong id="statDevices">—</strong><small id="statDevicesRecent">Hoạt động 30 ngày: —</small></article>
+      </div>
+      <div class="home-footer"><div><h3>Quản lý thư viện</h3><p class="muted">Các chức năng tải lên, đổi tên, kiểm tra và cập nhật danh mục yêu cầu xác thực.</p></div><button id="manageBtn" class="button primary manage-button" type="button">Quản lý nâng cao →</button></div>
+      <p id="homeStatus" class="muted home-status" role="status">Đang tải thống kê…</p>
+    </section>
+
+    <section id="loginPanel" class="panel login-panel hidden">
       <div class="eyebrow">KHU VỰC QUẢN TRỊ RIÊNG</div>
       <h2>Đăng nhập</h2>
       <p class="muted">Nhập mã xác thực 6 chữ số từ ứng dụng Authenticator.</p>
@@ -28,7 +42,7 @@
     </section>
 
     <section id="managerPanel" class="hidden">
-      <nav class="tabbar" aria-label="Khu vực quản lý"><button id="libraryTabBtn" class="tab-button active" type="button">Thư viện</button><button id="diagnosticsTabBtn" class="tab-button" type="button">Kiểm tra lỗi</button><button id="debugTabBtn" class="tab-button" type="button">Debug</button></nav>
+      <nav class="tabbar" aria-label="Khu vực quản lý"><button id="libraryTabBtn" class="tab-button active" type="button">Thư viện</button><button id="diagnosticsTabBtn" class="tab-button" type="button">Kiểm tra thư viện</button></nav>
       <section id="libraryPanel">
       <div class="summary-row">
         <div><div class="eyebrow">THƯ VIỆN R2</div><h2>Quản lý nội dung</h2><p class="muted">Chỉ thao tác trên bucket Read Along.</p></div>
@@ -73,27 +87,11 @@
         <p class="footnote">Kiểm tra chữ ký/metadata, ghép tự động khi tên chuẩn hóa trùng khớp và cảnh báo tên gần giống. Gợi ý đổi tên chỉ được áp dụng sau khi quản trị viên duyệt; không tự sửa tệp. Đây không phải bộ giải mã đầy đủ.</p>
       </section>
 
-      <section id="debugPanel" class="panel debug-panel hidden" aria-live="polite">
-        <div class="diagnostics-heading">
-          <div><div class="eyebrow">CHẨN ĐOÁN VẬN HÀNH</div><h3>Debug & nhật ký quét</h3><p class="muted">Nhật ký API của phiên hiện tại và lịch sử quét lưu trong D1 Admin.</p></div>
-          <div class="toolbar"><button id="refreshDebugBtn" class="button secondary" type="button">Làm mới log</button><button id="exportDebugBtn" class="button subtle" type="button">Xuất JSON</button></div>
-        </div>
-        <h4>Nhật ký quét trên máy chủ</h4>
-        <div class="table-wrap"><table class="diagnostic-table"><thead><tr><th>Thời gian</th><th>Trạng thái</th><th>Quét / đổi / bỏ qua</th><th>Lỗi / cảnh báo</th><th>Thời lượng</th><th>Ray ID / lỗi</th></tr></thead><tbody id="serverLogRows"><tr><td colspan="6" class="empty">Chưa tải log.</td></tr></tbody></table></div>
-        <h4>Yêu cầu phân trang lưu trên máy chủ</h4>
-        <div class="table-wrap"><table class="diagnostic-table"><thead><tr><th>Thời gian</th><th>Thư mục</th><th>Giới hạn trang</th><th>Cursor gửi</th><th>Thư mục / tệp</th><th>Còn dữ liệu</th><th>HTTP / thời lượng</th><th>Ray ID / lỗi</th></tr></thead><tbody id="libraryRequestRows"><tr><td colspan="8" class="empty">Chưa có log.</td></tr></tbody></table></div>
-        <h4>Sự kiện giao diện lưu trên máy chủ</h4>
-        <div class="table-wrap"><table class="diagnostic-table"><thead><tr><th>Thời gian</th><th>Sự kiện</th><th>Ray ID</th><th>Chi tiết</th></tr></thead><tbody id="serverEventRows"><tr><td colspan="4" class="empty">Chưa có log.</td></tr></tbody></table></div>
-        <h4>Yêu cầu API trong phiên hiện tại</h4>
-        <div class="table-wrap"><table class="diagnostic-table"><thead><tr><th>Thời gian</th><th>API</th><th>HTTP</th><th>Thời lượng</th><th>Ray ID</th><th>Lỗi</th></tr></thead><tbody id="clientLogRows"><tr><td colspan="6" class="empty">Chưa có yêu cầu.</td></tr></tbody></table></div>
-        <p class="footnote">Log lưu lịch sử quét, request phân trang và sự kiện giao diện trong D1 Admin. Log API chi tiết phía trình duyệt vẫn có trong bộ nhớ tab và được xuất kèm JSON. Không lưu OTP, cookie, token hoặc nội dung tệp.</p>
-      </section>
-
       <details class="panel audit-panel">
         <summary>Lịch sử thao tác quản trị</summary>
         <div id="auditRows" class="audit-list muted">Mở để tải lịch sử.</div>
       </details>
-      <p class="footnote">Phiên đăng nhập tự hết hạn sau 30 phút. Thao tác xóa sẽ được ghi vào nhật ký.</p>
+      <p class="footnote">Phiên quản trị tự gia hạn khi còn hoạt động và hết hạn sau 30 phút không hoạt động. Thao tác quản trị được ghi nhật ký tự động.</p>
     </section>
   </main>
   <div id="confirmDialog" class="dialog hidden" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">

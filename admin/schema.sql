@@ -89,3 +89,24 @@ CREATE TABLE IF NOT EXISTS admin_client_events (
   created_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_admin_client_events_created ON admin_client_events(created_at DESC);
+
+
+-- Anonymous app usage. Store only hashes of random installation/launch identifiers.
+CREATE TABLE IF NOT EXISTS admin_app_installations (
+  install_hash TEXT PRIMARY KEY, first_seen INTEGER NOT NULL, last_seen INTEGER NOT NULL,
+  platform TEXT NOT NULL DEFAULT 'other', app_version TEXT NOT NULL DEFAULT 'unknown'
+);
+CREATE INDEX IF NOT EXISTS idx_admin_app_installations_last_seen ON admin_app_installations(last_seen DESC);
+CREATE TABLE IF NOT EXISTS admin_app_visits (
+  launch_hash TEXT PRIMARY KEY, install_hash TEXT NOT NULL, platform TEXT NOT NULL DEFAULT 'other',
+  app_version TEXT NOT NULL DEFAULT 'unknown', visited_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_admin_app_visits_visited_at ON admin_app_visits(visited_at DESC);
+CREATE TABLE IF NOT EXISTS admin_app_totals (
+  id INTEGER PRIMARY KEY CHECK (id = 1), total_visits INTEGER NOT NULL DEFAULT 0
+);
+INSERT OR IGNORE INTO admin_app_totals (id, total_visits) VALUES (1, 0);
+CREATE TABLE IF NOT EXISTS admin_server_errors (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, route TEXT NOT NULL, message TEXT NOT NULL, ray_id TEXT, created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_admin_server_errors_created ON admin_server_errors(created_at DESC);
