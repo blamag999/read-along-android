@@ -3,12 +3,13 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 const app = fs.readFileSync('app.js', 'utf8');
+const catalogSource = fs.readFileSync('modules/catalog-playlist.js', 'utf8');
 const manifest = JSON.parse(fs.readFileSync('admin/public/books.json', 'utf8'));
 
 assert.match(app, /https:\/\/pub-763a3a5ae235415cbef15b64f7a20820\.r2\.dev\/books\.json/, 'app must fetch the public R2 manifest directly');
 assert.doesNotMatch(app, /private-comic-reader\.pages\.dev\/api\/readalong\/books/, 'catalog loading must not depend on the Pages API');
-assert.match(app, /typeof value === 'string'/, 'catalog parser must accept URL strings from books.json');
-assert.match(app, /item\.sync \|\| item\.json/, 'catalog parser must read the manifest sync URL');
+assert.match(catalogSource, /typeof value === 'string'/, 'catalog module must accept URL strings from books.json');
+assert.match(catalogSource, /item\.sync \|\| item\.json/, 'catalog module must read the manifest sync URL');
 assert.ok(Array.isArray(manifest.books) && manifest.books.length > 0, 'books.json must contain a non-empty books array');
 const r2Host = 'pub-763a3a5ae235415cbef15b64f7a20820.r2.dev';
 
