@@ -60,9 +60,9 @@ APK cập nhật đè phải dùng **cùng khóa ký** với ứng dụng đã c
 ### P0 — Admin dashboard và OTA Beta (đợt sửa 2026-10-30)
 
 - Admin production ghi nhận lỗi JavaScript `Cannot read properties of null (reading 'addEventListener')` tại `admin/public/admin.js`: mã đăng ký sự kiện cho `scanAgainBtn` trong khi HTML không còn phần tử này. Lỗi làm dừng phần còn lại của script, khiến dashboard không tải thống kê và điều hướng `#manage` không hoạt động.
-- Luồng OTA gọi `clearReadAlongWebCachesForUpdate()` nhưng không có định nghĩa hàm trong `app.js`, gây `ReferenceError` trước khi bắt đầu tải APK. Cần triển khai dọn đúng cache `read-along-shell-*` và unregister đúng `sw.js`; tuyệt đối không xóa dữ liệu người dùng, thư viện hay local/session storage.
-- Bổ sung kiểm thử tĩnh để phát hiện tham chiếu ID HTML thiếu trong Admin và kiểm tra helper OTA không bị bỏ sót.
-- Đợt sửa được gom trên nhánh `testing`; chỉ merge vào `beta` sau khi kiểm tra mã và test.
+- Đã định nghĩa `clearReadAlongWebCachesForUpdate()` trong `app.js`: chỉ xóa cache shell có tiền tố `read-along-shell-*` và unregister service worker có đúng URL `sw.js` của Read Along. Nếu dọn cache gặp lỗi, OTA vẫn tiếp tục tải APK và ghi cảnh báo; không xóa localStorage/sessionStorage hoặc dữ liệu người dùng.
+- Đã xóa toàn bộ tham chiếu tới `scanAgainBtn` không còn tồn tại trong HTML; Admin chỉ còn dùng `scanBtn` để chạy kiểm tra thư viện.
+- Đã thêm regression tests cho DOM Admin và OTA, đồng thời đưa `npm test` vào workflow CI. CI của PR #31 đã chạy thành công.
 
 
 ### P0 — Đồng bộ trang PDF và audio
