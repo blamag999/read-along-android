@@ -7,10 +7,16 @@ const diagnostics = read('modules/diagnostics.js');
 const adminApi = read('admin/functions/api/readalong-admin/[[path]].js');
 const diagnosticsWorker = read('services/diagnostics/worker.js');
 const adminClient = read('admin/public/admin.js');
+const remoteSync = read('modules/remote-sync.js');
 
-const runtimeSources = [app, diagnostics, adminApi, diagnosticsWorker, adminClient].join('\n');
+const runtimeSources = [app, diagnostics, adminApi, diagnosticsWorker, adminClient, remoteSync].join('\n');
 assert.doesNotMatch(runtimeSources, /private-comic-reader|comic-reader\.pages\.dev/i,
   'Read Along runtime must not call or allow another project domain');
+
+assert.match(remoteSync, /GITHUB_REPO='read-along-android'/,
+  'marker sync must target the Read Along repository only');
+assert.doesNotMatch(remoteSync, /pdf-audio-sync/,
+  'marker sync must not call the former external repository');
 
 assert.match(app, /pub-[a-f0-9]+\.r2\.dev\/books\.json/,
   'online catalog must load directly from the Read Along public R2 manifest');

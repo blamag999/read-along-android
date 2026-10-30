@@ -10,6 +10,10 @@ on:
     paths:
       - "admin/**"
       - "app.js"
+      - "index.html"
+      - "sw.js"
+      - "modules/**"
+      - "services/**"
       - "package.json"
       - "tests/**"
       - ".github/workflows/check-readalong-admin.yml"
@@ -19,6 +23,13 @@ on:
       - main
     paths:
       - "admin/**"
+      - "app.js"
+      - "index.html"
+      - "sw.js"
+      - "modules/**"
+      - "services/**"
+      - "package.json"
+      - "tests/**"
       - ".github/workflows/check-readalong-admin.yml"
 
 permissions:
