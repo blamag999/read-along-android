@@ -1282,9 +1282,16 @@ async function handlePdfFileSelect(e) {
 }
 
 async function handleAudioFileSelect(e) {
-  const files = Array.from(e.target.files || []);
+  const selectedFiles = Array.from(e.target.files || []);
   e.target.value = '';
-  if (files.length === 0) return;
+  if (selectedFiles.length === 0) return;
+  const files = selectedFiles.filter(file => isSupportedAudioFileName(file.name));
+  const skippedCount = selectedFiles.length - files.length;
+  if (files.length === 0) {
+    showToast('Định dạng audio chưa được hỗ trợ. Dùng MP3, M4A/M4B, AAC, WAV, OGG/Opus hoặc FLAC.');
+    return;
+  }
+  if (skippedCount > 0) showToast('Đã bỏ qua ' + skippedCount + ' file có định dạng chưa hỗ trợ.');
 
   dom.pdfLoadingIndicator.classList.remove('hidden');
   dom.lblLoadingText.textContent = 'Đang nạp tệp âm thanh...';
@@ -1378,6 +1385,7 @@ function handleFileList(files) {
   if (!files || files.length === 0) return;
 
   const rawItems = [];
+  const unsupportedWmaCount = files.filter(file => /\\.wma$/i.test(file.name)).length;
   state.folderJsonFiles = [];
   files.forEach(f => {
     const l = f.name.toLowerCase();
@@ -1398,11 +1406,12 @@ function handleFileList(files) {
 
   if (rawItems.length > 0) {
     buildPlaylistFromItems(rawItems);
+    if (unsupportedWmaCount > 0) showToast('Đã bỏ qua ' + unsupportedWmaCount + ' file WMA. Android WebView không phát WMA trực tiếp; hãy chuyển sang MP3 hoặc M4A.');
     if (state.playlist.length > 0) {
       loadStoryFromPlaylist(state.playlist[0]);
     }
   } else {
-    alert('Không tìm thấy file PDF hoặc MP3 nào trong thư mục!');
+    alert('Không tìm thấy file PDF hoặc audio được hỗ trợ nào trong thư mục!');
   }
 }
 
