@@ -35,6 +35,8 @@ vm.runInContext(fs.readFileSync('modules/catalog-playlist.js', 'utf8'), context,
 });
 const catalog = context.window.ReadAlongCatalogPlaylist;
 assert.ok(catalog, 'catalog/playlist module must publish its API');
+assert.throws(() => catalog.mapRemoteCatalog({}), /books array/, 'remote catalog must reject a malformed manifest');
+assert.throws(() => catalog.mapRemoteCatalog({ books: [] }), /Thiếu bộ kiểm tra URL/, 'remote catalog must require URL validation dependencies');
 assert.equal(catalog.getBookUniqueKey('X22_The-Book.PDF'), '_the_book', 'preserve the existing book-key normalization contract');
 assert.equal(catalog.normalizeStoryTitle('X22_The_Book_Read_Along_Part_2.pdf'), 'The');
 
