@@ -259,3 +259,19 @@ Quy tắc bảo trì:
 - Không xem việc commit code hoặc thêm unit test là bằng chứng lỗi đã hết.
 - Báo riêng kết quả unit test, CI, build APK và kiểm thử thiết bị; không gộp thành một trạng thái “đã kiểm thử”.
 - Chỉ phát hành stable khi beta vượt qua các bài test hồi quy, workflow ký APK thành công và người dùng xác nhận promote.
+
+
+## 11. Catalog/playlist tách khỏi app.js — 2026-10-31
+
+- Đã thêm `modules/catalog-playlist.js` cho logic thuần: chuẩn hóa ID/tên sách, chuyển manifest thành story model, gom PDF/audio/JSON từ thư mục, sắp xếp part audio và lọc/tìm kiếm playlist.
+- Module không thao tác DOM, localStorage, network, PDF.js hoặc audio element. `app.js` vẫn điều phối giao diện, trạng thái playlist và việc tải dữ liệu; chỉ ủy quyền các phép biến đổi dữ liệu cho module mới.
+- API: `window.ReadAlongCatalogPlaylist`. Script được nạp trước `app.js`, nằm trong app shell của service worker và được kiểm tra cú pháp bởi CI.
+- `tests/catalog.test.js` kiểm tra manifest, từ chối asset ngoài R2, nhóm file cục bộ, JSON marker mồ côi, thứ tự audio part, filter và tìm kiếm.
+- Chưa đánh dấu hoàn tất cho tới khi CI xác nhận. Chưa build APK hoặc kiểm thử thiết bị ở bước này.
+
+### Roadmap cấu trúc tiếp theo
+
+1. Tách DOM renderer playlist thành module UI riêng, giữ nguyên class/ARIA/keyboard interactions và test bằng DOM giả lập hoặc fixture.
+2. Tách tương tác tìm kiếm, filter, pagination và favorite thành controller riêng; không đổi key localStorage hoặc schema playlist.
+3. Bổ sung test DOM cho mở sách, chọn audio part, đánh dấu yêu thích, tìm kiếm và pagination.
+4. Sau khi catalog/playlist ổn định mới xem xét tách quản lý PDF/audio. Không thay đổi các module page-sync, OTA hoặc diagnostics trong cùng đợt.
