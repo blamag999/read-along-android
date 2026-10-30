@@ -450,7 +450,7 @@ $("publishBooksBtn").addEventListener("click", async () => {
   }
 });
 $("scanBtn").addEventListener("click", runDiagnostics);
-$("scanAgainBtn").addEventListener("click", runDiagnostics);
+// scanAgainBtn đã bị loại khỏi giao diện; scanBtn là nút quét duy nhất.
 
 async function renameEntry(entry) {
   const suggestion = entry.key;
