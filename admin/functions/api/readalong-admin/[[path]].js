@@ -267,9 +267,11 @@ async function scanLibrary(bucket, prefix, db) {
     for (const result of inspected) {
       findings.push(...result.findings);
       if (!result.cached) changed.push(result.item.key);
-      if (!result.cached) statements.push(db.prepare(
+      const retryRequired = result.findings.some((finding) => finding.code === "content_check_failed");
+      if (!result.cached && !retryRequired) statements.push(db.prepare(
         "INSERT INTO admin_scan_cache (object_key, fingerprint, rule_version, findings_json, scanned_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(object_key) DO UPDATE SET fingerprint=excluded.fingerprint, rule_version=excluded.rule_version, findings_json=excluded.findings_json, scanned_at=excluded.scanned_at"
       ).bind(result.item.key, result.fp, SCAN_RULE_VERSION, JSON.stringify(result.findings), Date.now()));
+      if (retryRequired) await db.prepare("DELETE FROM admin_scan_cache WHERE object_key = ?").bind(result.item.key).run();
     }
     if (statements.length) await db.batch(statements);
   }
