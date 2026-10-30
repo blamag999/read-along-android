@@ -18,6 +18,10 @@ assert.match(remoteSync, /GITHUB_REPO='read-along-android'/,
 assert.doesNotMatch(remoteSync, /pdf-audio-sync/,
   'marker sync must not call the former external repository');
 
+assert.match(app, /function isReadAlongR2Url\(value\)/,
+  'manifest asset URLs must pass the Read Along R2 host check');
+assert.match(app, /url\.hostname === READ_ALONG_R2_HOST/,
+  'manifest assets must not be fetched from arbitrary HTTPS hosts');
 assert.match(app, /pub-[a-f0-9]+\.r2\.dev\/books\.json/,
   'online catalog must load directly from the Read Along public R2 manifest');
 assert.doesNotMatch(app, /\/api\/readalong\/books/,
