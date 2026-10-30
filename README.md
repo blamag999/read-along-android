@@ -319,3 +319,11 @@ Quy tắc bảo trì:
 3. Chạy thủ công workflow **Build and Release Read Along** trên branch `beta`, channel `beta`; kiểm tra version, APK signature, SHA-256, artifact và GitHub prerelease.
 4. Kiểm thử APK trên thiết bị Android/WebView: truyện trực tuyến từ R2, playlist local, search/filter/favorites/pagination, chọn audio part, mở PDF/audio và dữ liệu đọc hiện có. Chỉ kết luận beta sẵn sàng sau khi có kết quả thực tế.
 5. Cập nhật README với commit, run URL, release version, checksum, kết quả thiết bị và issue còn tồn tại. Không promote `main` trong đợt beta này.
+
+
+### Trạng thái giao ban bổ sung — 2026-10-31
+
+- Run #41103722981 hiện được workflow-run API trả `completed / success`; các log đã đọc trước đó cho thấy toàn bộ test suite, JS syntax, Pages Functions syntax và isolation đều qua. Tuy nhiên job/check-run API có lúc vẫn trả dữ liệu `in_progress`; ghi nhận đây là trạng thái API không nhất quán và không dùng run này để xác nhận phần test mới được thêm sau đó.
+- Commit test mới nhất `84bc5536cebca283c537349e76ea47aaa9728366` đã tạo PR run #41104249478. Tại lần kiểm tra gần nhất, run đang `queued`, chưa có job log/conclusion. Cần tiếp tục kiểm tra run này cho đến khi kết thúc; không merge PR dựa trên run cũ.
+- PR #37 vẫn Draft/open, base `beta`; chưa merge. Chưa chạy workflow build-release beta, chưa có APK/artifact/Release và chưa kiểm thử thiết bị.
+- Trạng thái hiện tại: **CI của code/test cũ: Success theo workflow-run API**; **CI của test mới: Queued/Pending**; **Build beta: Pending**; **Device verification: Pending**; **Merge PR: Pending**.
