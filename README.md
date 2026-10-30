@@ -293,3 +293,7 @@ Quy tắc bảo trì:
 - Đã sửa test để kiểm tra hai contract ở đúng module sở hữu logic mới; kiểm tra app vẫn tải manifest trực tiếp từ URL R2 và không phụ thuộc Pages API.
 - Commit sửa test: `79d28e4c98e6fd485c4a0f10f40274299da18a65`.
 - Trạng thái: **đã sửa nguyên nhân được xác định; chờ CI mới chạy trên head cập nhật**. Chưa tuyên bố test pass, chưa build APK/kiểm thử thiết bị.
+
+
+- Bổ sung tối ưu sau khi rà soát danh sách Actions: bỏ trigger `push` cho nhánh `testing` vì nhánh này luôn được xác minh qua sự kiện `pull_request` tới `beta`. Trước đó cùng một commit tạo cả lượt push và pull_request, gây chạy trùng. Các trigger push cho `beta`, `main`, `feature/**` vẫn giữ nguyên; PR validation vẫn áp dụng cho `testing`.
+- Commit loại bỏ trigger trùng: `7ea251933731494fa8311d58b379626e5a87e1a9`. Chờ workflow mới xác nhận.
