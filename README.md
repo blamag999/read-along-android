@@ -24,8 +24,11 @@
 
 ### Nhánh
 
-- Tiếp tục sửa lỗi và thử nghiệm trên **`beta`** theo yêu cầu dự án.
-- Chỉ đưa bản đã kiểm thử lên **`main`** khi người dùng yêu cầu phát hành stable hoặc xác nhận rõ việc promote.
+- Nhánh tích hợp `beta`; nhánh phát hành stable `main`.
+- Mỗi đợt sửa/kiểm thử dùng duy nhất nhánh tạm **`testing`** được tạo từ `beta`; gom mọi chỉnh sửa liên quan vào nhánh này.
+- Khi hoàn tất, tạo một PR `testing` → `beta`; kiểm thử tiếp và sửa bổ sung ngay trên `testing`. Sau khi PR được merge, xóa nhánh `testing`.
+- Không tạo các nhánh `feature/*` hoặc `fix/*` riêng lẻ cho từng lỗi trong cùng đợt.
+- Chỉ đưa bản đã kiểm thử từ `beta` lên **`main`** khi người dùng yêu cầu phát hành stable hoặc xác nhận rõ việc promote.
 - Không tự ý force-push, viết lại lịch sử, xóa nhánh, xóa secrets hoặc thay đổi khóa ký.
 - Trước khi sửa: đọc README và workflow liên quan, kiểm tra commit mới nhất của `beta`/`main`, xem diff và các issue mở.
 - Sau khi sửa: chạy kiểm tra phù hợp, đọc lại diff, commit với thông điệp mô tả đúng thay đổi và báo rõ phần nào đã/chưa được kiểm thử.
@@ -53,6 +56,14 @@ APK cập nhật đè phải dùng **cùng khóa ký** với ứng dụng đã c
 - Không tuyên bố có thể vượt Play Protect hoặc bỏ xác nhận của Android. Với phân phối ngoài Play Store, ưu tiên tính minh bạch, chữ ký nhất quán, checksum và quy trình phát hành đáng tin cậy.
 
 ## 4. Vấn đề cần xử lý trước tiên
+
+### P0 — Admin dashboard và OTA Beta (đợt sửa 2026-10-30)
+
+- Admin production ghi nhận lỗi JavaScript `Cannot read properties of null (reading 'addEventListener')` tại `admin/public/admin.js`: mã đăng ký sự kiện cho `scanAgainBtn` trong khi HTML không còn phần tử này. Lỗi làm dừng phần còn lại của script, khiến dashboard không tải thống kê và điều hướng `#manage` không hoạt động.
+- Đã định nghĩa `clearReadAlongWebCachesForUpdate()` trong `app.js`: chỉ xóa cache shell có tiền tố `read-along-shell-*` và unregister service worker có đúng URL `sw.js` của Read Along. Nếu dọn cache gặp lỗi, OTA vẫn tiếp tục tải APK và ghi cảnh báo; không xóa localStorage/sessionStorage hoặc dữ liệu người dùng.
+- Đã xóa toàn bộ tham chiếu tới `scanAgainBtn` không còn tồn tại trong HTML; Admin chỉ còn dùng `scanBtn` để chạy kiểm tra thư viện.
+- Đã thêm regression tests cho DOM Admin và OTA, đồng thời đưa `npm test` vào workflow CI. CI của PR #31 đã chạy thành công.
+
 
 ### P0 — Đồng bộ trang PDF và audio
 

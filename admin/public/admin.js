@@ -346,7 +346,7 @@ function diagnosticStat(label, value, kind) {
 }
 
 async function runDiagnostics() {
-  const buttons = [$("scanBtn"), $("scanAgainBtn")];
+  const buttons = [$("scanBtn")];
   buttons.forEach((button) => { if (button) button.disabled = true; });
   show("diagnosticsPanel", true);
   $("diagnosticsSummary").textContent = "Đang quét thư viện và kiểm tra chữ ký tệp…";
@@ -450,7 +450,7 @@ $("publishBooksBtn").addEventListener("click", async () => {
   }
 });
 $("scanBtn").addEventListener("click", runDiagnostics);
-$("scanAgainBtn").addEventListener("click", runDiagnostics);
+// scanAgainBtn đã bị loại khỏi giao diện; scanBtn là nút quét duy nhất.
 
 async function renameEntry(entry) {
   const suggestion = entry.key;

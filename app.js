@@ -2471,6 +2471,50 @@ function installTvRemoteControls() {
   if (dom.canvasWrapper && !dom.canvasWrapper.hasAttribute('tabindex')) dom.canvasWrapper.setAttribute('tabindex', '0');
 }
 
+// Dọn đúng cache shell của Read Along và unregister đúng service worker của ứng dụng.
+// Không đụng tới localStorage/sessionStorage, thư viện tải về hoặc dữ liệu đọc của người dùng.
+async function clearReadAlongWebCachesForUpdate() {
+  const result = { deletedCaches: 0, unregisteredWorkers: 0, errors: [] };
+
+  if (window.caches && typeof window.caches.keys === 'function') {
+    try {
+      const keys = await window.caches.keys();
+      const appCaches = keys.filter(key => /^read-along-shell-/i.test(key));
+      const deleted = await Promise.allSettled(appCaches.map(key => window.caches.delete(key)));
+      for (const item of deleted) {
+        if (item.status === 'fulfilled' && item.value) result.deletedCaches++;
+        else if (item.status === 'rejected') result.errors.push(String(item.reason?.message || item.reason || 'Cache deletion failed'));
+      }
+    } catch (error) {
+      result.errors.push(String(error?.message || error || 'Cache API unavailable'));
+    }
+  }
+
+  if (navigator.serviceWorker && typeof navigator.serviceWorker.getRegistrations === 'function') {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      const appWorkerPath = new URL('./sw.js', window.location.href).pathname;
+      const appRegistrations = registrations.filter(registration => {
+        const worker = registration.active || registration.waiting || registration.installing;
+        if (!worker?.scriptURL) return false;
+        try {
+          const script = new URL(worker.scriptURL);
+          return script.origin === window.location.origin && script.pathname === appWorkerPath;
+        } catch (_) { return false; }
+      });
+      const removed = await Promise.allSettled(appRegistrations.map(registration => registration.unregister()));
+      for (const item of removed) {
+        if (item.status === 'fulfilled' && item.value) result.unregisteredWorkers++;
+        else if (item.status === 'rejected') result.errors.push(String(item.reason?.message || item.reason || 'Service worker unregister failed'));
+      }
+    } catch (error) {
+      result.errors.push(String(error?.message || error || 'Service worker API unavailable'));
+    }
+  }
+
+  return result;
+}
+
 // Kiểm tra bản phát hành mới nhất theo kênh OTA được người dùng chọn.
 const READ_ALONG_RELEASES_API = 'https://api.github.com/repos/blamag999/read-along-android/releases?per_page=100';
 const READ_ALONG_UPDATE_CHANNEL_KEY = 'readAlongUpdateChannel';
@@ -2581,9 +2625,14 @@ async function checkReadAlongUpdates() {
 
     const nativeUpdater = window.Capacitor?.Plugins?.ApkUpdater;
     if (nativeUpdater?.downloadAndInstall) {
-      showToast('Đang xóa bộ nhớ đệm cũ…');
-      await clearReadAlongWebCachesForUpdate();
-      showToast('Đang tải bản cập nhật…');
+      showToast('Đang dọn cache ứng dụng cũ…');
+      const cleanup = await clearReadAlongWebCachesForUpdate();
+      if (cleanup.errors.length) {
+        console.warn('Một phần cache/service worker chưa được dọn:', cleanup.errors);
+        showToast('Không dọn được toàn bộ cache cũ; vẫn tiếp tục cập nhật.');
+      } else {
+        showToast('Đã dọn cache cũ. Đang tải bản cập nhật…');
+      }
       await nativeUpdater.downloadAndInstall({
         url: asset.browser_download_url,
         filename: asset.name
