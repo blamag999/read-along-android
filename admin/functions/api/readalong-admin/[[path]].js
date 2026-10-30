@@ -263,16 +263,20 @@ async function scanLibrary(bucket, prefix, db) {
       }
       return { item, fp, findings: await inspectLibraryObject(bucket, item), cached: false };
     }));
+    const statements = [];
     for (const result of inspected) {
       findings.push(...result.findings);
       if (!result.cached) changed.push(result.item.key);
-      await db.prepare(
+      if (!result.cached) statements.push(db.prepare(
         "INSERT INTO admin_scan_cache (object_key, fingerprint, rule_version, findings_json, scanned_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(object_key) DO UPDATE SET fingerprint=excluded.fingerprint, rule_version=excluded.rule_version, findings_json=excluded.findings_json, scanned_at=excluded.scanned_at"
-      ).bind(result.item.key, result.fp, SCAN_RULE_VERSION, JSON.stringify(result.findings), Date.now()).run();
+      ).bind(result.item.key, result.fp, SCAN_RULE_VERSION, JSON.stringify(result.findings), Date.now()));
     }
+    if (statements.length) await db.batch(statements);
   }
-  for (const key of stale) {
-    await db.prepare("DELETE FROM admin_scan_cache WHERE object_key = ?").bind(key).run();
+  if (stale.length) {
+    for (let i = 0; i < stale.length; i += 50) {
+      await db.batch(stale.slice(i, i + 50).map((key) => db.prepare("DELETE FROM admin_scan_cache WHERE object_key = ?").bind(key)));
+    }
   }
 
   const normalizeBookName = value => String(value || "")
