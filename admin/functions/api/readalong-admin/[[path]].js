@@ -505,10 +505,10 @@ async function handle(request, env) {
     const ids = new Set(), refs = [];
     const allowedHost = "pub-763a3a5ae235415cbef15b64f7a20820.r2.dev";
     const resolveRef = (value, extensions, label) => {
-      if (value === null && label === "sync") return null;
+      if (value === null && extensions.includes(".json")) return null;
       if (typeof value !== "string") throw new Error(label + " phải là URL hoặc null");
       let parsed, key;
-      try { parsed = new URL(value); key = decodeURIComponent(parsed.pathname.replace(/^\\//, "")); } catch { throw new Error(label + " có URL không hợp lệ"); }
+      try { parsed = new URL(value); key = decodeURIComponent(parsed.pathname.slice(1)); } catch { throw new Error(label + " có URL không hợp lệ"); }
       if (parsed.protocol !== "https:" || parsed.hostname !== allowedHost || parsed.search || parsed.hash ||
           !validKey(key) || !extensions.includes(extensionOf(key))) throw new Error(label + " không thuộc kho R2 hợp lệ");
       refs.push({ key, label });
