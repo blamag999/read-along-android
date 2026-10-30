@@ -62,7 +62,8 @@ function getCookie(request, name) {
 }
 
 function cookie(value, maxAge) {
-  return `${SESSION_COOKIE}=${value}; Path=/; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Strict`;
+  const expires = new Date(Date.now() + Math.max(0, maxAge) * 1000).toUTCString();
+  return SESSION_COOKIE + "=" + value + "; Path=/; Max-Age=" + maxAge + "; Expires=" + expires + "; HttpOnly; Secure; SameSite=Lax";
 }
 
 function clientIp(request) {
@@ -101,7 +102,7 @@ async function authenticate(request, env) {
   const row = await env.DB.prepare(
     "SELECT token_hash, expires_at FROM admin_sessions WHERE token_hash = ? AND expires_at > ?"
   ).bind(tokenHash, Date.now()).first();
-  return row ? { tokenHash } : null;
+  return row ? { tokenHash, expiresAt: Number(row.expires_at) } : null;
 }
 
 async function requireAuth(request, env) {
@@ -471,8 +472,16 @@ async function handle(request, env) {
   }
 
   if (route === "session" && method === "GET") {
+    const cookiePresent = !!getCookie(request, SESSION_COOKIE);
     const session = await authenticate(request, env);
-    return json({ authenticated: !!session });
+    const now = Date.now();
+    return json({
+      authenticated: !!session,
+      cookiePresent,
+      expiresAt: session?.expiresAt || null,
+      expiresIn: session ? Math.max(0, Math.floor((session.expiresAt - now) / 1000)) : 0,
+      reason: session ? "valid" : (cookiePresent ? "expired_or_unknown" : "cookie_missing")
+    });
   }
 
   if (route === "logout" && method === "POST") {
