@@ -301,3 +301,21 @@ Quy tắc bảo trì:
 
 - Rà soát tiếp test mới phát hiện assertion khóa sách cũng phải giữ đúng hành vi cũ: `getBookUniqueKey('X22_The-Book.PDF')` trả `_the_book` theo implementation trước khi tách module. Đã sửa kỳ vọng test để bảo vệ tính tương thích, không thay đổi thuật toán/key lưu trữ. Commit: `45f555357b7158b373fafda632f61ec242a569fa`.
 - CI phải chạy lại trên head mới; các run trước commit này không được dùng làm bằng chứng pass.
+
+
+### Giao ban tiếp theo — xác minh PR #37 và CI (2026-10-31)
+
+- Đã xác nhận PR [#37](https://github.com/blamag999/read-along-android/pull/37) vẫn mở ở trạng thái Draft, base `beta`, head `testing`; head hiện tại trước vòng kiểm tra mới là `6d6f75bf6015cc71b3e86b9ac83003415b181a6c`. Chưa merge và chưa thay đổi `main`.
+- Đã review toàn bộ diff 9 tệp: module catalog là IIFE thuần, không truy cập DOM/storage/network; app nạp module trước `app.js`; service worker precache module; `prepare:web` đã có cơ chế copy thư mục modules; URL manifest vẫn đọc trực tiếp từ R2 và giữ kiểm tra host.
+- Run [#41103722981](https://github.com/blamag999/read-along-android/actions/runs/41103722981) chạy trên đúng head nói trên. Log cho thấy các bước `npm test` (module, catalog 83 sách, API isolation, Admin DOM/stats, OTA cache cleanup, check:js), Pages Functions syntax và isolation đều đã đi qua; tuy nhiên GitHub API vẫn trả trạng thái job/run `in_progress`, chưa có `completed/success`. Vì vậy ghi nhận **các lệnh kiểm thử xuất log thành công; trạng thái tổng CI chưa chốt**, không đánh dấu CI pass.
+- Để tránh kết luận dựa trên run có trạng thái treo, bổ sung test input không hợp lệ/thiếu dependency cho catalog rồi kích hoạt một lượt PR CI mới. Commit cập nhật test tiếp theo sẽ là head cần nghiệm thu; run #41103722981 không được dùng thay thế cho run của head mới.
+- Chưa build APK beta, chưa có artifact/Release mới và chưa kiểm thử WebView/Android thật. Không tạo Release trước khi PR được tích hợp vào `beta` và workflow build beta hoàn tất.
+- Trạng thái công việc: **Review diff: Completed**; **Unit/regression log: Passed trong log của run cũ, chờ xác nhận lại trên head mới**; **CI tổng: In Progress/Unconfirmed**; **Android build/device test: Pending**; **Merge PR #37: Pending CI**.
+
+#### Việc tiếp theo
+
+1. Chờ workflow PR mới kết thúc; đọc lại job conclusion và toàn bộ step summary/log. Nếu fail, sửa nguyên nhân trên `testing`, bổ sung test, cập nhật giao ban và chờ run mới.
+2. Khi CI success, chuyển PR #37 khỏi Draft/hoàn tất review rồi merge `testing` → `beta`; xác minh SHA của `beta` sau merge.
+3. Chạy thủ công workflow **Build and Release Read Along** trên branch `beta`, channel `beta`; kiểm tra version, APK signature, SHA-256, artifact và GitHub prerelease.
+4. Kiểm thử APK trên thiết bị Android/WebView: truyện trực tuyến từ R2, playlist local, search/filter/favorites/pagination, chọn audio part, mở PDF/audio và dữ liệu đọc hiện có. Chỉ kết luận beta sẵn sàng sau khi có kết quả thực tế.
+5. Cập nhật README với commit, run URL, release version, checksum, kết quả thiết bị và issue còn tồn tại. Không promote `main` trong đợt beta này.
