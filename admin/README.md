@@ -1,6 +1,6 @@
 # Read Along Admin
 
-Standalone web file manager for the Read Along R2 library. This app lives in the Android repository but is deployed as a **separate Cloudflare Pages project**. It does not use the Private Comic Reader API, D1 database, TOTP secret, cookie, or session.
+Standalone web file manager for the Read Along R2 library. This app lives in the Read Along Android repository and is deployed as a dedicated Cloudflare Pages project with its own R2 binding, D1 database, TOTP secret, cookie, and session.
 
 ## Architecture and isolation
 
@@ -12,9 +12,9 @@ Standalone web file manager for the Read Along R2 library. This app lives in the
 - Production branch: `beta`; `main` and `feature/*` are preview branches
 - R2 binding: `READALONG` -> `my-audio-book` only
 - D1 binding: `DB` -> dedicated `read-along-admin-db`
-- Secret: `READALONG_TOTP_SECRET` (Base32, at least 32 characters); never reuse the Private Comic Reader `TOTP_SECRET`
+- Secret: `READALONG_TOTP_SECRET` (Base32, at least 32 characters), used only by this Admin project.
 
-Do not add a `COMICS` binding, do not bind the Private Comic Reader D1 database, and do not copy its authentication secrets or cookies into this project.
+Do not add bindings, database connections, authentication secrets, or cookies belonging to any other application.
 
 ## Provisioned Cloudflare resources
 
@@ -38,7 +38,7 @@ Create/configure the Pages project from the same GitHub repository:
    - R2 bucket binding named `READALONG`, bucket `my-audio-book`.
    - D1 database binding named `DB`, database `read-along-admin-db`.
    Preview deliberately has no D1 or R2 bindings, so preview builds cannot access production library data.
-9. Add `READALONG_TOTP_SECRET` as a secret in **Production only**. Generate a new random Base32 secret of at least 160 bits and add it to an authenticator app. Never reuse the Comic Reader seed. Do not add the production secret to Preview.
+9. Add `READALONG_TOTP_SECRET` as a secret in **Production only**. Generate a new random Base32 secret of at least 160 bits and add it to an authenticator app. Use a new random seed dedicated to Read Along Admin. Do not add the production secret to Preview.
 10. Apply `schema.sql` once to `read-along-admin-db` using the D1 Console or Wrangler.
 
 Example local D1 migration (after installing Wrangler and authenticating):
@@ -47,7 +47,7 @@ Example local D1 migration (after installing Wrangler and authenticating):
 npx wrangler d1 execute read-along-admin-db --remote --file=admin/schema.sql
 ```
 
-Production is the only environment with the `DB` and `READALONG` bindings. Preview must have neither binding and must not receive `READALONG_TOTP_SECRET`. Do not bind this Admin project to the existing `private-comic-reader-db`.
+Production is the only environment with the `DB` and `READALONG` bindings. Preview must have neither binding and must not receive `READALONG_TOTP_SECRET`. Do not bind this Admin project to any database outside the Read Along Admin resources.
 
 ## Authentication and security
 
@@ -74,7 +74,7 @@ Supported library extensions: PDF, JSON, MP3, M4A/M4B, AAC, WAV, OGG/OGA, Opus, 
 
 ## Operational notes
 
-- Do not change the existing Private Comic Reader Pages project, its D1 database, R2 bindings, routes, secrets, or cookies for this Admin app.
+- Changes to this Admin app must remain within the Read Along Android repository and its dedicated Cloudflare resources.
 - Do not add the Admin directory to the Android APK asset-copy/build pipeline.
 - Never commit OTP seeds, Cloudflare API tokens, passwords, or session tokens.
 - Before enabling production, verify login lockout, session expiry, upload completion, rename verification, and deletion behavior on a test folder.
@@ -111,7 +111,7 @@ The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READA
 - Cache entries for objects no longer present in the scanned prefix are removed. Rename naturally creates a new cache key and delete is reconciled on the next scan.
 - Scan history is stored in `admin_scan_logs` in the dedicated Admin D1. It records scan ID, status, scanned/changed/skipped counts, error/warning counts, duration, rule version and Cloudflare Ray ID. It does not store OTPs, cookies, tokens or file contents.
 - The manual Debug UI has been removed. Browser exceptions, unhandled promise rejections, API failures, server exceptions, scan history and library request diagnostics continue to be recorded automatically in the dedicated Admin D1.
-- After adding the new tables to an existing production D1 database, apply the updated `admin/schema.sql` once (it uses `CREATE TABLE IF NOT EXISTS`). Never apply it to the Private Comic Reader database.
+- After adding the new tables to an existing production D1 database, apply the updated `admin/schema.sql` once (it uses `CREATE TABLE IF NOT EXISTS`). Never apply it to a database outside the Read Along Admin resources.
 
 
 ### Library pagination diagnostics (2026-10-30)
@@ -122,7 +122,7 @@ The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READA
 - Browser events are sent in small batches to the same-origin `telemetry/events` endpoint and persisted in `admin_client_events` in the dedicated Admin D1.
 - Every Library listing request is recorded in `admin_library_requests`: prefix, page size, cursor-present flag, folder/file counts, R2 truncation state, HTTP status, duration, Ray ID and error. Raw cursor values are never stored.
 - No Debug tab or manual JSON export is exposed to end users. Diagnostic events continue to be sent automatically to the telemetry endpoint and stored in Admin D1.
-- Apply the appended `admin/schema.sql` additions to **read-along-admin-db only** before deploying. Never apply them to Comic Reader D1.
+- Apply the appended `admin/schema.sql` additions to **read-along-admin-db only** before deploying. Never apply them to any other D1 database.
 
 
 ### Admin session persistence and refresh diagnostics (2026-10-30)
@@ -136,7 +136,7 @@ The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READA
 
 ## books.json
 
-The Admin publishes the manifest stored in `admin/public/books.json` to the root of the `my-audio-book` R2 bucket. Use **Tạo / cập nhật books.json** in the Diagnostics tab. The endpoint validates the schema, allowed R2 public hostname, file extensions, and existence of every referenced PDF/audio/sync object before overwriting the manifest. The private-comic-reader API reads this R2 manifest and exposes the files through its private proxy endpoint. Update the seed JSON in Git before publishing future catalog changes.
+The Admin publishes the manifest stored in `admin/public/books.json` to the root of the `my-audio-book` R2 bucket. Use **Tạo / cập nhật books.json** in the Diagnostics tab. The endpoint validates the schema, allowed R2 public hostname, file extensions, and existence of every referenced PDF/audio/sync object before overwriting the manifest. The Android app reads this manifest directly from the public Read Along R2 endpoint; PDF, audio, and sync URLs are consumed directly from the manifest. Update the seed JSON in Git before publishing future catalog changes.
 
 
 ## Public dashboard and app usage metrics
@@ -147,5 +147,5 @@ The Admin publishes the manifest stored in `admin/public/books.json` to the root
 - The dashboard's installation and launch metrics are filtered to platform=android, so browser-only use is not counted as an installed Android device. It shows total Android launches (lifetime counter), Android launches in the last 30 days, unique Android installations ever recorded, and Android installations active in the last 30 days. Detailed visit rows are retained for 90 days; the lifetime total remains aggregated. Catalog counts are derived from the R2 books.json manifest.
 - Installation count is an estimate of installations that have launched at least once after telemetry is added. Clearing app data/reinstalling can create a new ID; existing APKs do not report telemetry until updated.
 - The anonymous usage endpoint accepts only random identifiers, platform and app version. Never send account IDs, device serials, advertising IDs, email, phone, OTP, cookies or tokens.
-- Server exceptions are stored in admin_server_errors; browser and API telemetry is stored in admin_client_events. Both are bounded. Query the Admin D1 database only; never use the Comic Reader D1 database.
+- Server exceptions are stored in admin_server_errors; browser and API telemetry is stored in admin_client_events. Both are bounded. Query the dedicated Read Along Admin D1 database only.
 - Apply the new tables in schema.sql to read-along-admin-db only before production deployment.
