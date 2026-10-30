@@ -31,3 +31,13 @@ label{display:block;font-size:13px;font-weight:650;margin-bottom:8px}input:not([
 .pagination{display:flex;align-items:center;justify-content:center;gap:16px;padding:14px 0 0;color:var(--muted);font-size:13px}
 .pagination button:disabled{opacity:.35;cursor:not-allowed}
 @media(max-width:650px){.tabbar{width:100%}.tab-button{flex:1}.pagination{justify-content:space-between}}
+
+.page-size-label{display:flex;align-items:center;gap:8px;margin:0;color:var(--muted);font-size:12px;white-space:nowrap}
+.page-size-label select{background:#0b1422;border:1px solid #34465f;color:var(--text);border-radius:7px;padding:6px 9px;font:inherit}
+.pagination{flex-wrap:wrap}
+.debug-panel{margin-top:18px}
+.debug-panel h4{margin:22px 0 10px;font-size:14px}
+.debug-panel .table-wrap{margin-bottom:16px}
+.debug-panel td{font-size:12px;overflow-wrap:anywhere;max-width:260px}
+.diagnostics-heading .toolbar{justify-content:flex-end}
+@media(max-width:650px){.page-size-label{width:100%;justify-content:flex-start}.debug-panel .diagnostics-heading{align-items:flex-start;flex-direction:column}.debug-panel .diagnostics-heading .toolbar{width:100%;justify-content:flex-start;flex-wrap:wrap}}
