@@ -78,9 +78,13 @@
         </div>
         <h4>Nhật ký quét trên máy chủ</h4>
         <div class="table-wrap"><table class="diagnostic-table"><thead><tr><th>Thời gian</th><th>Trạng thái</th><th>Quét / đổi / bỏ qua</th><th>Lỗi / cảnh báo</th><th>Thời lượng</th><th>Ray ID / lỗi</th></tr></thead><tbody id="serverLogRows"><tr><td colspan="6" class="empty">Chưa tải log.</td></tr></tbody></table></div>
+        <h4>Yêu cầu phân trang lưu trên máy chủ</h4>
+        <div class="table-wrap"><table class="diagnostic-table"><thead><tr><th>Thời gian</th><th>Thư mục</th><th>Giới hạn trang</th><th>Cursor gửi</th><th>Thư mục / tệp</th><th>Còn dữ liệu</th><th>HTTP / thời lượng</th><th>Ray ID / lỗi</th></tr></thead><tbody id="libraryRequestRows"><tr><td colspan="8" class="empty">Chưa có log.</td></tr></tbody></table></div>
+        <h4>Sự kiện giao diện lưu trên máy chủ</h4>
+        <div class="table-wrap"><table class="diagnostic-table"><thead><tr><th>Thời gian</th><th>Sự kiện</th><th>Ray ID</th><th>Chi tiết</th></tr></thead><tbody id="serverEventRows"><tr><td colspan="4" class="empty">Chưa có log.</td></tr></tbody></table></div>
         <h4>Yêu cầu API trong phiên hiện tại</h4>
         <div class="table-wrap"><table class="diagnostic-table"><thead><tr><th>Thời gian</th><th>API</th><th>HTTP</th><th>Thời lượng</th><th>Ray ID</th><th>Lỗi</th></tr></thead><tbody id="clientLogRows"><tr><td colspan="6" class="empty">Chưa có yêu cầu.</td></tr></tbody></table></div>
-        <p class="footnote">Log không lưu OTP, cookie, token hoặc nội dung request. Nhật ký API phía trình duyệt chỉ tồn tại trong bộ nhớ của tab; lịch sử quét máy chủ được lưu trong D1 Admin.</p>
+        <p class="footnote">Log lưu lịch sử quét, request phân trang và sự kiện giao diện trong D1 Admin. Log API chi tiết phía trình duyệt vẫn có trong bộ nhớ tab và được xuất kèm JSON. Không lưu OTP, cookie, token hoặc nội dung tệp.</p>
       </section>
 
       <details class="panel audit-panel">
