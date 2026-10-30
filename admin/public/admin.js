@@ -212,6 +212,25 @@ async function runDiagnostics() {
       addCell(row, finding.message);
       addCell(row, finding.suggestion || "Kiểm tra tệp gốc.");
       const actionCell = document.createElement("td");
+      if (finding.candidateKey) {
+        const match = document.createElement("div");
+        match.className = "diagnostic-key";
+        match.textContent = "Tệp đối chiếu: " + finding.candidateKey + (finding.similarity ? " · " + finding.similarity + "%" : "");
+        actionCell.append(match);
+      }
+      if (finding.suggestedRename) {
+        actionCell.append(actionButton("Duyệt gợi ý đổi tên", async () => {
+          const destination = prompt("Xác nhận tên mới cho tệp này:", finding.suggestedRename);
+          if (!destination || destination === finding.key) return;
+          if (!allowed.test(destination)) { setStatus("Tên tệp hoặc định dạng không hợp lệ.", true); return; }
+          try {
+            await postJson("rename", { source: finding.key, destination });
+            setStatus("Đã đổi tên theo gợi ý. Hãy quét lại thư viện để xác nhận ghép cặp.");
+            await loadFiles();
+            await runDiagnostics();
+          } catch (error) { setStatus(error.message, true); }
+        }));
+      }
       actionCell.append(actionButton("Mở thư mục", () => {
         const parts = finding.key.split("/");
         parts.pop();
