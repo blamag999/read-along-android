@@ -35,7 +35,7 @@ vm.runInContext(fs.readFileSync('modules/catalog-playlist.js', 'utf8'), context,
 });
 const catalog = context.window.ReadAlongCatalogPlaylist;
 assert.ok(catalog, 'catalog/playlist module must publish its API');
-assert.equal(catalog.getBookUniqueKey('X22_The-Book.PDF'), 'the_book');
+assert.equal(catalog.getBookUniqueKey('X22_The-Book.PDF'), '_the_book', 'preserve the existing book-key normalization contract');
 assert.equal(catalog.normalizeStoryTitle('X22_The_Book_Read_Along_Part_2.pdf'), 'The');
 
 const r2Url = name => 'https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/' + name;
