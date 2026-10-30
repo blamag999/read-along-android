@@ -230,7 +230,7 @@ function addEntry(row, entry) {
 }
 
 function normalizeSearch(value) {
-  return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("vi");
+  return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").toLocaleLowerCase("vi");
 }
 function renderLibraryPage() {
   const term=normalizeSearch($("searchFilesInput").value.trim());
