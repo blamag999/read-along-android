@@ -119,3 +119,14 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 - Không xóa/chỉnh sửa GitHub Secrets, khóa ký hoặc cấu hình release nếu chưa có yêu cầu rõ ràng.
 - Không đóng issue chỉ để làm sạch danh sách; cập nhật issue với nguyên nhân, commit và kết quả test.
 - Khi chưa chắc về hành vi của workflow hoặc plugin, đọc mã nguồn và log trước khi sửa.
+
+## 8. Truy cập thư viện trực tuyến từ R2 riêng tư
+
+- Nhánh phát triển beta chuyển sang lấy danh sách sách từ Pages Functions của dự án `private-comic-reader`; không còn đọc `books.json` hoặc URL `r2.dev`.
+- API production dự kiến: `https://private-comic-reader.pages.dev/api/readalong/books` và `/api/readalong/file?key=...`.
+- Pages Functions dùng R2 binding `COMICS` để liệt kê và đọc file từ Bucket `my-manga`; APK không chứa R2 Access Key/Secret.
+- API ghép các file PDF, MP3 và JSON theo tên cơ sở, giữ riêng nhóm theo thư mục; hậu tố `part/pt/side/disc` được dùng để ghép nhiều phần audio.
+- API file hỗ trợ `HEAD`, HTTP Range (206/416), MIME PDF/MP3/JSON và CORS cho luồng đọc đa nguồn.
+- Đây là phương án A: API đọc công khai. Bucket R2 có thể đặt Private, nhưng bất kỳ ai biết endpoint vẫn có thể đọc/tải nội dung qua API. Không coi đây là DRM hoặc cơ chế xác thực người dùng.
+- Backend được phát triển trong PR của `blamag999/private-comic-reader`. Chỉ khi PR được merge và Cloudflare Pages deploy thành công, API production mới sẵn sàng cho APK beta.
+- Khi kiểm thử: xác nhận danh sách mới tự xuất hiện sau khi thêm file vào R2; PDF tải theo Range; MP3 tua được; JSON marker nạp được; không có request nào tới `.r2.dev`.
