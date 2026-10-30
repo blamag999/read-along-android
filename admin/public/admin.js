@@ -245,7 +245,6 @@ function renderLibraryPage() {
   filePageIndex=Math.min(Math.max(0,filePageIndex),totalPages-1);
   const start=filePageIndex*pageSize;
   const entries=filteredLibraryEntries.slice(start,start+pageSize);
-  $("pageLabel").textContent="Trang";
   $("pageJumpInput").value=String(filePageIndex+1);
   $("pageJumpInput").max=String(totalPages);
   $("pageTotal").textContent=" / "+totalPages;
