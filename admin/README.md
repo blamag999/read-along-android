@@ -98,7 +98,7 @@ The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READA
 - PDF, timestamp JSON and audio use the same normalized book stem.
 - A single audio can use the book stem. Multiple audio parts must be named _P1, _P2, _P3... with no gaps or duplicate part numbers.
 - Correctly numbered audio parts are valid and are not duplicate warnings.
-- Orphan timestamp JSON, unmatched names, invalid file signatures, zero-byte files, malformed JSON and unsupported extensions are reported.
+- Orphan per-book timestamp JSON, unmatched names, invalid file signatures, zero-byte files, malformed JSON and unsupported extensions are reported. The root `books.json` catalog manifest is excluded from the entire diagnostics scan and is not treated as a timestamp sidecar.
 - Near-name matches are suggestions only. Rename requires administrator approval; fuzzy matches are never auto-paired.
 
 ## Incremental scan cache and Debug

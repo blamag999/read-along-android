@@ -223,7 +223,7 @@ async function inspectLibraryObject(bucket, item) {
   return issues;
 }
 
-const SCAN_RULE_VERSION = "2026-10-30.2";
+const SCAN_RULE_VERSION = "2026-10-30.3";
 
 async function listAllObjects(bucket, prefix) {
   const objects = [];
@@ -239,7 +239,9 @@ async function listAllObjects(bucket, prefix) {
 
 async function scanLibrary(bucket, prefix, db) {
   const startedAt = Date.now();
-  const listed = await listAllObjects(bucket, prefix);
+  // The root books.json is the catalog manifest, not a per-book timestamp sidecar.
+  // Keep it out of binary validation, PDF/audio pairing, and scan findings.
+  const listed = (await listAllObjects(bucket, prefix)).filter((object) => object.key !== "books.json");
   const cachedRows = await db.prepare("SELECT object_key, fingerprint, rule_version, findings_json FROM admin_scan_cache").all();
   const cache = new Map((cachedRows.results || []).filter((row) => row.object_key.startsWith(prefix)).map((row) => [row.object_key, row]));
   const items = listed.map((object) => ({
