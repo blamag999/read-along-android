@@ -41,11 +41,15 @@
     }
     return target;
   }
+  function isConfirmedBackwardSeek(previousTime, targetTime, actualTime) {
+    return Number.isFinite(previousTime) && Number.isFinite(targetTime) && Number.isFinite(actualTime) &&
+      previousTime > targetTime + 0.25 && Math.abs(actualTime - targetTime) <= 1.25;
+  }
   function alignPage(page, viewMode) {
     return viewMode === 'two-pages' ? (page % 2 === 0 ? Math.max(1, page - 1) : page) : page;
   }
   function shouldAllowPageChange(currentPage, targetPage, allowBackwardSync) {
     return targetPage >= currentPage || allowBackwardSync === true;
   }
-  root.ReadAlongPageSync = Object.freeze({ normalizeMarker, markerMatchesPart, findTargetPage, alignPage, shouldAllowPageChange });
+  root.ReadAlongPageSync = Object.freeze({ normalizeMarker, markerMatchesPart, findTargetPage, isConfirmedBackwardSeek, alignPage, shouldAllowPageChange });
 })(window);

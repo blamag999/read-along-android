@@ -44,7 +44,8 @@ const state = {
   sessionRestorePending: false,
   lastSessionSaveAt: 0,
   lastAudioObservedTime: null,
-  allowBackwardAudioSync: false
+  allowBackwardAudioSync: false,
+  pendingBackwardSeek: null
 };
 
 // =======================================================
@@ -1212,12 +1213,22 @@ dom.selPageTurnMode.value = state.pageTurnMode;
   installTvRemoteControls();
   dom.audioElement.addEventListener('timeupdate', () => saveReadingSession(false));
   dom.audioElement.addEventListener('seeking', () => {
-    const nextTime = Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0;
+    const targetTime = Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0;
     const previousTime = state.lastAudioObservedTime;
-    state.allowBackwardAudioSync = Number.isFinite(previousTime) && nextTime < previousTime - 0.25;
+    // Chỉ ghi nhận ý định tua lùi; chưa cấp quyền đồng bộ lùi khi seek còn chạy.
+    state.pendingBackwardSeek = Number.isFinite(previousTime) && targetTime < previousTime - 0.25
+      ? { from: previousTime, target: targetTime }
+      : null;
+    state.allowBackwardAudioSync = false;
   });
   dom.audioElement.addEventListener('seeked', () => {
-    state.lastAudioObservedTime = Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0;
+    const actualTime = Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0;
+    const pending = state.pendingBackwardSeek;
+    // Xác nhận seek đã hoàn tất đúng đích trước khi cho phép đổi trang lùi.
+    state.allowBackwardAudioSync = Boolean(pending && window.ReadAlongPageSync.isConfirmedBackwardSeek(
+      pending.from, pending.target, actualTime));
+    state.pendingBackwardSeek = null;
+    state.lastAudioObservedTime = actualTime;
   });
   dom.audioElement.addEventListener('pause', () => saveReadingSession(true));
   window.addEventListener('pagehide', () => saveReadingSession(true));
@@ -2013,12 +2024,14 @@ function onAudioMetadataLoaded() {
 function onAudioTimeUpdate() {
   const audio = dom.audioElement;
   const curr = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
-  const allowBackwardSync = state.allowBackwardAudioSync === true;
-  state.allowBackwardAudioSync = false;
-  state.lastAudioObservedTime = curr;
 
   dom.audioSeeker.value = curr;
   dom.lblAudioCurrentTime.textContent = formatTime(curr);
+  // Bỏ qua timeupdate trung gian trong lúc seek; chỉ đồng bộ sau sự kiện seeked.
+  if (audio.seeking) return;
+  const allowBackwardSync = state.allowBackwardAudioSync === true;
+  state.allowBackwardAudioSync = false;
+  state.lastAudioObservedTime = curr;
   const markers = state.pageTimestamps || {};
   if (!state.pdfDoc || state.pageTurnMode === 'off' || !Object.keys(markers).length) return;
 
