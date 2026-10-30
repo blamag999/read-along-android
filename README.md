@@ -297,3 +297,7 @@ Quy tắc bảo trì:
 
 - Bổ sung tối ưu sau khi rà soát danh sách Actions: bỏ trigger `push` cho nhánh `testing` vì nhánh này luôn được xác minh qua sự kiện `pull_request` tới `beta`. Trước đó cùng một commit tạo cả lượt push và pull_request, gây chạy trùng. Các trigger push cho `beta`, `main`, `feature/**` vẫn giữ nguyên; PR validation vẫn áp dụng cho `testing`.
 - Commit loại bỏ trigger trùng: `7ea251933731494fa8311d58b379626e5a87e1a9`. Chờ workflow mới xác nhận.
+
+
+- Rà soát tiếp test mới phát hiện assertion khóa sách cũng phải giữ đúng hành vi cũ: `getBookUniqueKey('X22_The-Book.PDF')` trả `_the_book` theo implementation trước khi tách module. Đã sửa kỳ vọng test để bảo vệ tính tương thích, không thay đổi thuật toán/key lưu trữ. Commit: `45f555357b7158b373fafda632f61ec242a569fa`.
+- CI phải chạy lại trên head mới; các run trước commit này không được dùng làm bằng chứng pass.
