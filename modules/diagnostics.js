@@ -19,8 +19,11 @@
     } catch (_) { return randomUsageId(); }
   }
   function reportAppUsage() {
-    const installId = usageId(localStorage, 'read_along_install_id_v1');
-    const launchId = usageId(sessionStorage, 'read_along_launch_id_v1');
+    let installId, launchId;
+    try {
+      installId = usageId(localStorage, 'read_along_install_id_v1');
+      launchId = usageId(sessionStorage, 'read_along_launch_id_v1');
+    } catch (_) { return; }
     const version = document.querySelector('meta[name="app-version"]')?.content || 'unknown';
     const platform = window.Capacitor?.getPlatform?.() || 'web';
     fetch(USAGE_ENDPOINT, { method: 'POST', mode: 'cors', keepalive: true,
