@@ -110,3 +110,12 @@ CREATE TABLE IF NOT EXISTS admin_server_errors (
   id INTEGER PRIMARY KEY AUTOINCREMENT, route TEXT NOT NULL, message TEXT NOT NULL, ray_id TEXT, created_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_admin_server_errors_created ON admin_server_errors(created_at DESC);
+
+
+-- Platform-specific aggregate counters; dashboard uses Android installs only.
+CREATE TABLE IF NOT EXISTS admin_app_platform_totals (
+  platform TEXT PRIMARY KEY,
+  total_visits INTEGER NOT NULL DEFAULT 0
+);
+INSERT OR IGNORE INTO admin_app_platform_totals (platform, total_visits)
+VALUES ('android', 0), ('ios', 0), ('web', 0), ('other', 0);
