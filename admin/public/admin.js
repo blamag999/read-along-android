@@ -27,7 +27,11 @@ const api = async (path, options = {}) => {
       show("loginPanel", true);
       show("logoutBtn", false);
     }
-    if (!response.ok) throw new Error(data.error || "Yêu cầu thất bại (" + response.status + ")");
+    if (!response.ok) {
+      const error = new Error(data.error || "Yêu cầu thất bại (" + response.status + ")");
+      error.rayId = response.headers.get("cf-ray") || data.rayId || "";
+      throw error;
+    }
     return data;
   } catch (error) {
     failure = error.message || String(error);
