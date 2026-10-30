@@ -28,7 +28,7 @@
     </section>
 
     <section id="managerPanel" class="hidden">
-      <nav class="tabbar" aria-label="Khu vực quản lý"><button id="libraryTabBtn" class="tab-button active" type="button">Thư viện</button><button id="diagnosticsTabBtn" class="tab-button" type="button">Kiểm tra lỗi</button></nav>
+      <nav class="tabbar" aria-label="Khu vực quản lý"><button id="libraryTabBtn" class="tab-button active" type="button">Thư viện</button><button id="diagnosticsTabBtn" class="tab-button" type="button">Kiểm tra lỗi</button><button id="debugTabBtn" class="tab-button" type="button">Debug</button></nav>
       <section id="libraryPanel">
       <div class="summary-row">
         <div><div class="eyebrow">THƯ VIỆN R2</div><h2>Quản lý nội dung</h2><p class="muted">Chỉ thao tác trên bucket Read Along.</p></div>
@@ -52,7 +52,7 @@
             <tbody id="fileRows"><tr><td colspan="5" class="empty">Chưa tải danh sách.</td></tr></tbody>
           </table>
         </div>
-<div class="pagination"><button id="prevPageBtn" class="button secondary small" type="button" disabled>← Trước</button><span id="pageLabel">Trang 1</span><button id="nextPageBtn" class="button secondary small" type="button" disabled>Tiếp →</button></div>
+<div class="pagination"><label class="page-size-label" for="pageSizeSelect">Hiển thị <select id="pageSizeSelect"><option value="25" selected>25</option><option value="50">50</option><option value="100">100</option></select> file/trang</label><button id="prevPageBtn" class="button secondary small" type="button" disabled>← Trước</button><span id="pageLabel">Trang 1</span><button id="nextPageBtn" class="button secondary small" type="button" disabled>Tiếp →</button></div>
       </div>
       </section>
 
@@ -69,6 +69,18 @@
           </table>
         </div>
         <p class="footnote">Kiểm tra chữ ký/metadata, ghép tự động khi tên chuẩn hóa trùng khớp và cảnh báo tên gần giống. Gợi ý đổi tên chỉ được áp dụng sau khi quản trị viên duyệt; không tự sửa tệp. Đây không phải bộ giải mã đầy đủ.</p>
+      </section>
+
+      <section id="debugPanel" class="panel debug-panel hidden" aria-live="polite">
+        <div class="diagnostics-heading">
+          <div><div class="eyebrow">CHẨN ĐOÁN VẬN HÀNH</div><h3>Debug & nhật ký quét</h3><p class="muted">Nhật ký API của phiên hiện tại và lịch sử quét lưu trong D1 Admin.</p></div>
+          <div class="toolbar"><button id="refreshDebugBtn" class="button secondary" type="button">Làm mới log</button><button id="exportDebugBtn" class="button subtle" type="button">Xuất JSON</button></div>
+        </div>
+        <h4>Nhật ký quét trên máy chủ</h4>
+        <div class="table-wrap"><table class="diagnostic-table"><thead><tr><th>Thời gian</th><th>Trạng thái</th><th>Quét / đổi / bỏ qua</th><th>Lỗi / cảnh báo</th><th>Thời lượng</th><th>Ray ID / lỗi</th></tr></thead><tbody id="serverLogRows"><tr><td colspan="6" class="empty">Chưa tải log.</td></tr></tbody></table></div>
+        <h4>Yêu cầu API trong phiên hiện tại</h4>
+        <div class="table-wrap"><table class="diagnostic-table"><thead><tr><th>Thời gian</th><th>API</th><th>HTTP</th><th>Thời lượng</th><th>Ray ID</th><th>Lỗi</th></tr></thead><tbody id="clientLogRows"><tr><td colspan="6" class="empty">Chưa có yêu cầu.</td></tr></tbody></table></div>
+        <p class="footnote">Log không lưu OTP, cookie, token hoặc nội dung request. Nhật ký API phía trình duyệt chỉ tồn tại trong bộ nhớ của tab; lịch sử quét máy chủ được lưu trong D1 Admin.</p>
       </section>
 
       <details class="panel audit-panel">

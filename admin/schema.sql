@@ -32,3 +32,33 @@ CREATE TABLE IF NOT EXISTS admin_totp_state (
   last_counter INTEGER NOT NULL
 );
 INSERT OR IGNORE INTO admin_totp_state (id, last_counter) VALUES (1, -1);
+
+-- Incremental diagnostics cache and operational debug history (Admin D1 only).
+CREATE TABLE IF NOT EXISTS admin_scan_cache (
+  object_key TEXT PRIMARY KEY,
+  fingerprint TEXT NOT NULL,
+  rule_version TEXT NOT NULL,
+  findings_json TEXT NOT NULL,
+  scanned_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_admin_scan_cache_scanned ON admin_scan_cache(scanned_at);
+
+CREATE TABLE IF NOT EXISTS admin_scan_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  scan_id TEXT NOT NULL,
+  prefix TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL,
+  scanned INTEGER NOT NULL DEFAULT 0,
+  changed INTEGER NOT NULL DEFAULT 0,
+  skipped INTEGER NOT NULL DEFAULT 0,
+  errors INTEGER NOT NULL DEFAULT 0,
+  warnings INTEGER NOT NULL DEFAULT 0,
+  duration_ms INTEGER NOT NULL DEFAULT 0,
+  rule_version TEXT,
+  ray_id TEXT,
+  error_message TEXT,
+  detail_json TEXT,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_admin_scan_logs_created ON admin_scan_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_admin_scan_logs_scan_id ON admin_scan_logs(scan_id);

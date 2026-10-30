@@ -22,7 +22,7 @@ label{display:block;font-size:13px;font-weight:650;margin-bottom:8px}input:not([
 .hidden{display:none!important}
 @media(max-width:650px){.shell{padding:18px 12px 40px}.panel{padding:16px}.summary-row{align-items:flex-start;flex-direction:column}.toolbar{width:100%}.toolbar>*{flex:1;text-align:center;justify-content:center}.topbar{margin-bottom:22px}.login-panel{margin-top:7vh}}
 
-.diagnostics-panel{margin-top:16px}.diagnostics-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}.diagnostics-heading h3{margin:4px 0}.diagnostics-heading p{margin:0;font-size:13px}.diagnostic-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 18px}.diagnostic-stat{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#0d1828}.diagnostic-stat strong{font-size:22px}.diagnostic-stat span{font-size:12px;color:var(--muted)}.diagnostic-stat.bad strong{color:#ff9292}.diagnostic-stat.warn strong{color:#f3c879}.diagnostic-stat.good strong{color:#8ed6a6}.diagnostic-key{overflow-wrap:anywhere;word-break:break-word;min-width:170px}.severity{display:inline-block;border-radius:6px;padding:3px 7px;font-size:11px;font-weight:700;white-space:nowrap}.severity.error{background:#4a242b;color:#ffb0b0}.severity.warning{background:#49391f;color:#f4d28b}.diagnostic-table{min-width:900px}.diagnostic-table td{vertical-align:top}.diagnostic-table .row-actions button{white-space:nowrap}
+.diagnostics-panel{margin-top:16px}.diagnostics-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}.diagnostics-heading h3{margin:4px 0}.diagnostics-heading p{margin:0;font-size:13px}.diagnostic-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:14px 0 18px}.diagnostic-stat{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#0d1828}.diagnostic-stat strong{font-size:22px}.diagnostic-stat span{font-size:12px;color:var(--muted)}.diagnostic-stat.bad strong{color:#ff9292}.diagnostic-stat.warn strong{color:#f3c879}.diagnostic-stat.good strong{color:#8ed6a6}.diagnostic-key{overflow-wrap:anywhere;word-break:break-word;min-width:170px}.severity{display:inline-block;border-radius:6px;padding:3px 7px;font-size:11px;font-weight:700;white-space:nowrap}.severity.error{background:#4a242b;color:#ffb0b0}.severity.warning{background:#49391f;color:#f4d28b}.diagnostic-table{min-width:900px}.diagnostic-table td{vertical-align:top}.diagnostic-table .row-actions button{white-space:nowrap}
 @media(max-width:650px){.diagnostics-heading{align-items:flex-start}.diagnostic-stats{grid-template-columns:1fr 1fr}.diagnostics-heading button{white-space:nowrap}}
 
 .tabbar{display:flex;gap:8px;margin:0 0 16px;padding:5px;background:#0d1828;border:1px solid var(--line);border-radius:12px;width:max-content;max-width:100%}
@@ -30,4 +30,14 @@ label{display:block;font-size:13px;font-weight:650;margin-bottom:8px}input:not([
 .tab-button.active{background:#294b73;color:#eef6ff;box-shadow:0 2px 8px #0003}
 .pagination{display:flex;align-items:center;justify-content:center;gap:16px;padding:14px 0 0;color:var(--muted);font-size:13px}
 .pagination button:disabled{opacity:.35;cursor:not-allowed}
-@media(max-width:650px){.tabbar{width:100%}.tab-button{flex:1}.pagination{justify-content:space-between}}
+@media(max-width:900px){.diagnostic-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}\n@media(max-width:650px){.diagnostic-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tabbar{width:100%}.tab-button{flex:1}.pagination{justify-content:space-between}}
+
+.page-size-label{display:flex;align-items:center;gap:8px;margin:0;color:var(--muted);font-size:12px;white-space:nowrap}
+.page-size-label select{background:#0b1422;border:1px solid #34465f;color:var(--text);border-radius:7px;padding:6px 9px;font:inherit}
+.pagination{flex-wrap:wrap}
+.debug-panel{margin-top:18px}
+.debug-panel h4{margin:22px 0 10px;font-size:14px}
+.debug-panel .table-wrap{margin-bottom:16px}
+.debug-panel td{font-size:12px;overflow-wrap:anywhere;max-width:260px}
+.diagnostics-heading .toolbar{justify-content:flex-end}
+@media(max-width:650px){.page-size-label{width:100%;justify-content:flex-start}.debug-panel .diagnostics-heading{align-items:flex-start;flex-direction:column}.debug-panel .diagnostics-heading .toolbar{width:100%;justify-content:flex-start;flex-wrap:wrap}}

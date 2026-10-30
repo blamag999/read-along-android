@@ -92,11 +92,23 @@ The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READA
 
 ## Library UI and matching rules
 
-- Admin has two tabs: Library for file browsing and Diagnostics for full-library checks.
-- Library listing uses server-side R2 cursor pagination, 100 entries per page. Changing folders resets the page.
+- Admin has three tabs: Library for file browsing, Diagnostics for integrity checks, and Debug for request/scan logs.
+- Library listing uses server-side R2 cursor pagination, defaults to 25 entries per page, and allows 25/50/100. The selected size is remembered for the current browser session. Changing folders resets the page.
 - R2 objects are the only catalog source; books.json is not used.
 - PDF, timestamp JSON and audio use the same normalized book stem.
 - A single audio can use the book stem. Multiple audio parts must be named _P1, _P2, _P3... with no gaps or duplicate part numbers.
 - Correctly numbered audio parts are valid and are not duplicate warnings.
 - Orphan timestamp JSON, unmatched names, invalid file signatures, zero-byte files, malformed JSON and unsupported extensions are reported.
 - Near-name matches are suggestions only. Rename requires administrator approval; fuzzy matches are never auto-paired.
+
+## Incremental scan cache and Debug
+
+- Diagnostics compares R2 listing metadata (key, size, upload timestamp and ETag) against the dedicated Admin D1 table `admin_scan_cache`.
+- Files whose metadata fingerprint and scan rule version are unchanged reuse their saved per-file inspection findings. New/changed files and files evaluated under a new rule version are inspected again.
+- Pairing/name diagnostics are recalculated from the current full inventory on every scan, so a newly added/renamed counterpart can change pairing results even when the other file's binary inspection is reused.
+- Temporary content-read failures are not cached; those files are retried on the next scan.
+- The first scan after installing this feature, and the first scan after a rule-version change, re-inspects all eligible files. R2 inventory listing and global pairing analysis still run each time.
+- Cache entries for objects no longer present in the scanned prefix are removed. Rename naturally creates a new cache key and delete is reconciled on the next scan.
+- Scan history is stored in `admin_scan_logs` in the dedicated Admin D1. It records scan ID, status, scanned/changed/skipped counts, error/warning counts, duration, rule version and Cloudflare Ray ID. It does not store OTPs, cookies, tokens or file contents.
+- The Debug tab shows recent server scan history and the current tab's in-memory API request log, and can export both as JSON. Browser request logs are cleared when the tab/session is closed; server scan history persists in D1.
+- After adding the new tables to an existing production D1 database, apply the updated `admin/schema.sql` once (it uses `CREATE TABLE IF NOT EXISTS`). Never apply it to the Private Comic Reader database.
