@@ -5,24 +5,24 @@
   function getBookUniqueKey(pdfName, audioName) {
     const name = pdfName || audioName || 'unnamed';
     return name.toLowerCase()
-      .replace(/\\.[^/.]+$/, '')
+      .replace(/\.[^/.]+$/, '')
       .replace(/^[xX]22/g, '')
-      .replace(/[_\\-\\s,\\.]+/g, '_')
+      .replace(/[_\-\s,\.]+/g, '_')
       .trim();
   }
 
   function normalizeStoryTitle(filename) {
     if (!filename) return '';
     return filename
-      .replace(/\\.[^/.]+$/, '')
+      .replace(/\.[^/.]+$/, '')
       .replace(/^[xX]22/g, '')
-      .replace(/[_\\-]+/g, ' ')
-      .replace(/\\bread[\\s_-]*along\\b/gi, '')
-      .replace(/\\bbook\\b/gi, '')
-      .replace(/\\bside[\\s_-]*[0-9]+\\b/gi, '')
-      .replace(/\\bpart[\\s_-]*[0-9]+\\b/gi, '')
-      .replace(/[,\\.]+/g, '')
-      .replace(/\\s+/g, ' ')
+      .replace(/[_\-]+/g, ' ')
+      .replace(/\bread[\s_-]*along\b/gi, '')
+      .replace(/\bbook\b/gi, '')
+      .replace(/\bside[\s_-]*[0-9]+\b/gi, '')
+      .replace(/\bpart[\s_-]*[0-9]+\b/gi, '')
+      .replace(/[,\.]+/g, '')
+      .replace(/\s+/g, ' ')
       .trim();
   }
 
@@ -73,7 +73,7 @@
   }
 
   function parsePartLabel(filename) {
-    const match = filename.match(/part[_\\s-]*(\\d+)|side[_\\s-]*([ab])|disc[_\\s-]*(\\d+)|\\b(\\d+)\\s*of\\s*\\d+/i);
+    const match = filename.match(/part[_\s-]*(\d+)|side[_\s-]*([ab])|disc[_\s-]*(\d+)|\b(\d+)\s*of\s*\d+/i);
     if (!match) return null;
     if (match[1]) return 'Phần ' + match[1];
     if (match[2]) return 'Mặt ' + match[2].toUpperCase();
@@ -92,7 +92,7 @@
       }
       if (item.type !== 'pdf' && item.type !== 'audio') return;
       const title = normalizeStoryTitle(item.name);
-      const key = title.toLowerCase().replace(/\\s+/g, '_');
+      const key = title.toLowerCase().replace(/\s+/g, '_');
       if (!groups[key]) {
         groups[key] = {
           id: key,
@@ -107,7 +107,7 @@
     });
 
     jsonItems.forEach(item => {
-      const normalized = normalizeStoryTitle(item.name).toLowerCase().replace(/\\s+/g, '_');
+      const normalized = normalizeStoryTitle(item.name).toLowerCase().replace(/\s+/g, '_');
       if (groups[normalized]) {
         groups[normalized].json = item;
         return;
