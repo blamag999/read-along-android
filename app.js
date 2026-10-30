@@ -1385,7 +1385,7 @@ function handleFileList(files) {
   if (!files || files.length === 0) return;
 
   const rawItems = [];
-  const unsupportedWmaCount = files.filter(file => /\\.wma$/i.test(file.name)).length;
+  const unsupportedWmaCount = files.filter(file => /\.wma$/i.test(file.name)).length;
   state.folderJsonFiles = [];
   files.forEach(f => {
     const l = f.name.toLowerCase();
