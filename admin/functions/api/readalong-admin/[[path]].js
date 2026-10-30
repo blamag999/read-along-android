@@ -267,7 +267,8 @@ async function scanLibrary(bucket, prefix) {
     const name=item.key.split("/").pop().replace(/\\.[^.]+$/,"");
     const ext=extensionOf(item.key);
     const partMatch=ext!==".pdf" && ext!==".json" ? name.match(/_P(\\d+)$/i) : null;
-    const baseName=partMatch ? name.slice(0,partMatch.index) : name;
+    const withoutPart=partMatch ? name.slice(0,partMatch.index) : name;
+    const baseName=ext===".json" ? withoutPart.replace(/[_-]sync$/i,"") : withoutPart;
     return {...item,ext,dir:item.key.includes("/")?item.key.slice(0,item.key.lastIndexOf("/")+1):"",
       stem:name,part:partMatch?Number(partMatch[1]):null,
       normalized:normalizeBookName(baseName)};
