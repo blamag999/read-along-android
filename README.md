@@ -137,7 +137,7 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 - Nguồn dữ liệu duy nhất của thư viện Read Along là `books.json` tại thư mục gốc Bucket R2 `my-audio-book`.
 - Manifest dùng đúng cấu trúc: `{ "books": [{ "id", "title", "pdf", "audios", "sync" }] }`; `pdf` là URL PDF, `audios` là mảng URL audio (có thể nhiều track), `sync` là URL JSON hoặc `null`.
 - Admin có nút **Tạo / cập nhật books.json** trong tab **Kiểm tra lỗi**. Nút nạp bản mẫu `admin/public/books.json` (83 sách theo file được cung cấp), kiểm tra host R2, phần mở rộng và sự tồn tại của mọi PDF/audio/sync, rồi mới ghi manifest vào R2. Nếu có tệp thiếu, thao tác dừng và báo danh sách; không ghi đè manifest hiện tại.
-- APK đọc trực tiếp `https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/books.json` khi mở **Truyện trực tuyến**; không gọi `private-comic-reader.pages.dev/api/readalong/books` và không phụ thuộc Pages Functions trung gian.
+- APK đọc trực tiếp `books.json` từ public R2 bucket riêng của Read Along khi mở **Truyện trực tuyến**; không dùng API danh mục trung gian.
 - Manifest có cấu trúc `{ "books": [{ "id", "title", "pdf", "audios", "sync" }] }`; `pdf`, từng phần tử `audios` và `sync` là URL HTTPS công khai trên R2. Ứng dụng hỗ trợ dạng URL chuỗi trong manifest và giữ hỗ trợ tương thích dạng object `{ "url", "name" }`.
 - Ứng dụng tải PDF/audio/JSON đồng bộ trực tiếp từ URL trong manifest. R2 CORS hiện cho phép origin `*` với GET/HEAD; nếu thay đổi CORS, cần giữ quyền GET để WebView/Capacitor đọc `books.json` và các tệp công khai.
 - Cập nhật danh mục bằng cách publish `admin/public/books.json` lên root bucket R2; không cần build APK mới chỉ để thay đổi danh sách truyện.
@@ -145,7 +145,7 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 
 ## 8. Read Along Admin — web quản trị thư viện
 
-Đã phát triển khu vực quản trị độc lập trong cùng repository, tại thư mục `admin/`. Đây là website riêng, không nằm trong APK và không dùng backend/xác thực của Private Comic Reader.
+Đã phát triển khu vực quản trị độc lập trong cùng repository, tại thư mục `admin/`. Đây là website riêng, không nằm trong APK, dùng Pages Functions và các tài nguyên Cloudflare dành riêng cho Read Along.
 
 ### Kiến trúc và ranh giới bảo mật
 
@@ -156,7 +156,7 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 - Production bindings: `READALONG` → R2 bucket `my-audio-book`; `DB` → D1 database `read-along-admin-db`.
 - D1 ID: `6a316068-ef8e-4eaf-af4b-536b4fd7b74c`.
 - Preview deployment cố ý không có D1/R2 binding và không có OTP secret, tránh thao tác lên dữ liệu thật.
-- Không bind `COMICS`, không dùng `private-comic-reader-db`, không dùng cookie/session hoặc TOTP secret của Private Comic Reader.
+- Admin chỉ dùng R2 binding `READALONG`, D1 riêng `read-along-admin-db`, cùng secret/session riêng của Read Along Admin.
 - Secret bắt buộc ở Production: `READALONG_TOTP_SECRET` (Base32 mới, tối thiểu 160 bit). Chưa cấu hình secret; phải thêm trong Cloudflare Pages > Settings > Variables and Secrets trước khi đăng nhập. Không commit secret vào GitHub và không thêm vào Preview.
 
 ### API và chức năng hiện có
@@ -191,7 +191,7 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 - The Debug tab and manual log export were removed from the Admin UI. Browser/API telemetry and server exceptions are recorded automatically in the dedicated Admin D1. See `admin/README.md` for the schema, privacy model and investigation notes.
 - `modules/diagnostics.js` sends anonymous usage events to the Admin Pages endpoint. It uses a random local installation ID and session launch ID; the server stores SHA-256 hashes only. No device serial, advertising ID, email, phone, OTP, cookie or access token is collected.
 - The dashboard reports total app launches, launches in the last 30 days, installations recorded, and installations active in the last 30 days. Counts start only after an updated app opens and reports telemetry; old APKs and historical installations cannot be backfilled. Clearing app data/reinstalling can create a new installation ID.
-- The Admin D1 tables are in `read-along-admin-db` only. Never apply Admin migrations to the Private Comic Reader D1 database.
+- The Admin D1 tables are in the dedicated `read-along-admin-db` only. Never apply Admin migrations to another database.
 - To package the Android telemetry change, open **Actions → Build and Release Read Along → Run workflow**, select branch `beta` and channel `beta`. The workflow is manual (`workflow_dispatch`); no APK build or Release is created automatically by merging PR #30.
 
 
@@ -201,3 +201,26 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 - Parser xử lý đúng manifest hiện tại: `pdf` là chuỗi URL, `audios` là mảng URL, `sync` là URL hoặc `null`; vẫn chấp nhận dạng object `{ url, name }` để tương thích.
 - Việc tải nội dung PDF/audio và JSON marker cũng dùng trực tiếp URL từ manifest. Không thay đổi API proxy phía backend hoặc các chức năng khác.
 - R2 CORS được kiểm tra hiện cho phép `GET`/`HEAD` từ mọi origin; nếu chính sách CORS thay đổi, tải trực tiếp từ Capacitor WebView có thể bị chặn.
+
+## 9. Ranh giới API và tài nguyên — nguyên tắc độc lập
+
+Mọi kết nối mạng của ứng dụng phải phục vụ trực tiếp chức năng Read Along và thuộc một trong các nguồn được quản lý cùng repository này. Không gọi API, proxy, database, session hoặc token của ứng dụng/dự án khác.
+
+| Chức năng | Nguồn duy nhất | Vai trò |
+|---|---|---|
+| Danh sách truyện | Public R2 `books.json` của Read Along | Manifest thư viện |
+| PDF/audio/JSON marker | URL trong `books.json`, cùng R2 bucket | Nội dung đọc và đồng bộ |
+| OTA | GitHub Releases của `blamag999/read-along-android` | Metadata release và APK |
+| Thống kê sử dụng | Read Along Admin Pages `/api/readalong-admin/usage/track` | Ghi nhận launch/install ẩn danh |
+| Quản trị thư viện | Read Along Admin Pages `/api/readalong-admin/*` | Duyệt và quản lý R2; xác thực Admin riêng |
+| Gửi log có đồng ý | Read Along Diagnostics Worker `/submit` | Tạo GitHub Issue trong chính repository này |
+| PDF.js | Bản PDF.js đã ghim phiên bản trên CDN được khai báo trong `sw.js` | Thư viện render PDF, không phải API nghiệp vụ |
+
+Telemetry và gửi báo cáo không trùng chức năng: telemetry chỉ ghi số liệu tổng hợp vào Admin D1; diagnostics chỉ nhận báo cáo người dùng đồng ý gửi và tạo Issue trong repository. Không dùng một endpoint để thay thế endpoint còn lại.
+
+Quy tắc bảo trì:
+- Không thêm API proxy cho danh sách/nội dung khi R2 public URL đã đáp ứng được.
+- Không thêm domain dịch vụ khác vào CORS allowlist.
+- Mỗi endpoint phải có một mục đích duy nhất, được ghi trong README và có test kiểm tra ranh giới.
+- Không thay đổi đồng thời luồng đọc PDF/audio, đồng bộ trang và OTA trong một đợt sửa nếu không có nguyên nhân bắt buộc.
+- Mọi thay đổi cấu trúc phải có test hồi quy trước; giữ API/contract cũ cho tới khi đã xác nhận không còn caller.
