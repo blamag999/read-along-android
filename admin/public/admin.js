@@ -5,6 +5,8 @@ let currentPrefix = "";
 let filePageCursors = [null];
 let filePageIndex = 0;
 let nextFileCursor = null;
+let allLibraryEntries = [];
+let filteredLibraryEntries = [];
 let dialogResolve = null;
 let pageSize = [25, 50, 100].includes(Number(sessionStorage.getItem("readalong-page-size"))) ? Number(sessionStorage.getItem("readalong-page-size")) : 25;
 let clientLogs = [];
@@ -107,6 +109,21 @@ async function flushDebugEvents() {
 window.addEventListener("error",event=>queueDebugEvent("javascript_error",{message:String(event.message||"Unknown error").slice(0,500),source:String(event.filename||"").split("/").pop().slice(0,120),line:event.lineno||0,column:event.colno||0}));
 window.addEventListener("unhandledrejection",event=>queueDebugEvent("unhandled_promise_rejection",{reason:String(event.reason?.message||event.reason||"Unknown rejection").slice(0,500)}));
 
+let sessionHeartbeatStarted=false;
+function startSessionHeartbeat(){
+  if(sessionHeartbeatStarted)return;
+  sessionHeartbeatStarted=true;
+  setInterval(async()=>{
+    try{
+      const result=await api("session",{cache:"no-store"});
+      if(!result.authenticated){
+        queueDebugEvent("auth_session_expired_during_use",{reason:result.reason||"unknown",cookiePresent:!!result.cookiePresent,host:location.host});
+        show("managerPanel",false);show("loginPanel",true);show("logoutBtn",false);
+        $("loginError").textContent="Phiên quản trị đã hết hạn. Vui lòng đăng nhập lại.";
+      }
+    }catch(error){queueDebugEvent("auth_session_heartbeat_error",{error:String(error.message||error).slice(0,300)});}
+  },5*60*1000);
+}
 async function checkSession() {
   const startedAt = performance.now();
   try {
@@ -123,6 +140,7 @@ async function checkSession() {
       $("loginError").textContent = "";
       await loadFiles();
       activateTab("library");
+      startSessionHeartbeat();
     } else {
       $("loginError").textContent = result.reason === "cookie_missing"
         ? "Không tìm thấy cookie phiên đăng nhập trên hostname hiện tại. Hãy đăng nhập lại; nếu lỗi lặp lại sau khi tải lại trang, gửi log Debug."
@@ -210,83 +228,72 @@ function addEntry(row, entry) {
   row.append(actionCell);
 }
 
-async function loadFiles() {
-  const requestSeq = ++fileLoadSequence;
-  const requestedPrefix = currentPrefix;
-  const requestedPage = filePageIndex;
-  const requestedPageSize = pageSize;
-  const cursor = filePageCursors[requestedPage] || null;
-  const startedAt = performance.now();
-  queueDebugEvent("library_load_start", {
-    requestSeq, prefix: requestedPrefix, page: requestedPage + 1,
-    pageSize: requestedPageSize, cursorPresent: !!cursor
-  });
-  $("currentPath").textContent = "/" + requestedPrefix;
-  $("prevPageBtn").disabled = true;
-  $("nextPageBtn").disabled = true;
-  $("refreshBtn").disabled = true;
-  setStatus("Đang tải trang " + (requestedPage + 1) + "…");
-  $("fileRows").replaceChildren();
-  if (requestedPage > 0 && !cursor) {
-    const message = "Thiếu cursor của trang " + (requestedPage + 1) + ". Hãy quay lại trang đầu và thử lại.";
-    queueDebugEvent("library_pagination_state_error", { requestSeq, prefix: requestedPrefix, page: requestedPage + 1, pageSize: requestedPageSize, reason: "missing_cursor" });
-    setStatus(message, true);
-    const row = document.createElement("tr"); const cell = addCell(row, message);
-    cell.colSpan = 5; cell.className = "empty error"; $("fileRows").append(row);
-    $("prevPageBtn").disabled = requestedPage === 0;
-    $("nextPageBtn").disabled = true;
-    $("refreshBtn").disabled = false;
-    return;
-  }
-  try {
-    const result = await api("files?prefix=" + encodeURIComponent(requestedPrefix) + "&limit=" + requestedPageSize + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""));
-    if (requestSeq !== fileLoadSequence || requestedPrefix !== currentPrefix || requestedPage !== filePageIndex) {
-      queueDebugEvent("library_stale_response_ignored", { requestSeq, activeRequestSeq: fileLoadSequence, prefix: requestedPrefix, page: requestedPage + 1, currentPrefix, currentPage: filePageIndex + 1 });
-      return;
-    }
-    if (!Array.isArray(result.folders) || !Array.isArray(result.files)) throw new Error("API trả về dữ liệu phân trang không đúng cấu trúc.");
-    const returnedCursor = result.truncated ? result.cursor : null;
-    if (result.truncated && !returnedCursor) throw new Error("R2 báo còn dữ liệu nhưng không trả cursor. Đã ghi nhận sự kiện để kiểm tra.");
-    if (cursor && returnedCursor && cursor === returnedCursor) throw new Error("Cursor không thay đổi giữa hai trang. Đã dừng phân trang để tránh lặp dữ liệu.");
-    nextFileCursor = returnedCursor;
-    $("pageLabel").textContent = "Trang " + (requestedPage + 1);
-    const entries = [...result.folders, ...result.files].sort((a,b) => a.type !== b.type ? (a.type === "folder" ? -1 : 1) : a.name.localeCompare(b.name,"vi"));
-    if (requestedPrefix) {
-      const parent = document.createElement("tr"), up = document.createElement("button");
-      up.className = "folder-name"; up.type = "button"; up.textContent = "↰ ..";
-      up.addEventListener("click", () => { const p=currentPrefix.split("/").filter(Boolean).slice(0,-1).join("/"); setFolder(p ? p+"/" : ""); loadFiles(); });
-      const cell=document.createElement("td"); cell.append(up); parent.append(cell);
-      addCell(parent,"Thư mục cha"); addCell(parent,"—"); addCell(parent,"—"); addCell(parent,"—"); $("fileRows").append(parent);
-    }
-    for (const entry of entries) { const row=document.createElement("tr"); addEntry(row,entry); $("fileRows").append(row); }
-    if (!entries.length) {
-      const row=document.createElement("tr");
-      const cell=addCell(row,requestedPrefix ? "Thư mục trống." : "Thư viện chưa có tệp. Hãy tải PDF/audio lên.");
-      cell.colSpan=5; cell.className="empty"; $("fileRows").append(row);
-    }
-    queueDebugEvent("library_load_success", {
-      requestSeq, prefix: requestedPrefix, page: requestedPage + 1, pageSize: requestedPageSize,
-      cursorPresent: !!cursor, folderCount: result.folders.length, fileCount: result.files.length,
-      renderedCount: entries.length, truncated: !!result.truncated, nextCursorPresent: !!returnedCursor,
-      durationMs: Math.round(performance.now()-startedAt)
-    });
-    setStatus("Đã tải " + entries.length + " mục · Trang " + (requestedPage+1) + (result.truncated ? " · Còn trang tiếp theo" : " · Trang cuối"));
-  } catch(error) {
-    if (requestSeq !== fileLoadSequence) return;
-    nextFileCursor=null;
-    queueDebugEvent("library_load_error", { requestSeq, prefix: requestedPrefix, page: requestedPage+1, pageSize: requestedPageSize, cursorPresent: !!cursor, durationMs: Math.round(performance.now()-startedAt), error: String(error.message||error).slice(0,500) });
-    setStatus(error.message,true);
-    const row=document.createElement("tr"), cell=addCell(row,"Không tải được trang: "+error.message);
-    cell.colSpan=5; cell.className="empty error"; $("fileRows").append(row);
-  } finally {
-    if(requestSeq===fileLoadSequence) {
-      $("prevPageBtn").disabled=requestedPage===0;
-      $("nextPageBtn").disabled=!nextFileCursor;
-      $("refreshBtn").disabled=false;
-    }
-  }
+function normalizeSearch(value) {
+  return String(value || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("vi");
 }
-
+function renderLibraryPage() {
+  const term=normalizeSearch($("searchFilesInput").value.trim());
+  const sort=$("sortFilesSelect").value;
+  filteredLibraryEntries=allLibraryEntries.filter(entry=>!term||normalizeSearch(entry.name).includes(term));
+  filteredLibraryEntries.sort((a,b)=>{
+    if(a.type!==b.type) return a.type==="folder"?-1:1;
+    const compared=a.name.localeCompare(b.name,"vi",{sensitivity:"base",numeric:true});
+    return sort==="desc"?-compared:compared;
+  });
+  const totalPages=Math.max(1,Math.ceil(filteredLibraryEntries.length/pageSize));
+  filePageIndex=Math.min(Math.max(0,filePageIndex),totalPages-1);
+  const start=filePageIndex*pageSize;
+  const entries=filteredLibraryEntries.slice(start,start+pageSize);
+  $("pageLabel").textContent="Trang";
+  $("pageJumpInput").value=String(filePageIndex+1);
+  $("pageJumpInput").max=String(totalPages);
+  $("pageTotal").textContent=" / "+totalPages;
+  $("firstPageBtn").disabled=filePageIndex===0;
+  $("prevPageBtn").disabled=filePageIndex===0;
+  $("nextPageBtn").disabled=filePageIndex>=totalPages-1;
+  $("lastPageBtn").disabled=filePageIndex>=totalPages-1;
+  $("fileRows").replaceChildren();
+  if(currentPrefix){
+    const parent=document.createElement("tr"),up=document.createElement("button");
+    up.className="folder-name";up.type="button";up.textContent="↰ ..";
+    up.addEventListener("click",()=>{const p=currentPrefix.split("/").filter(Boolean).slice(0,-1).join("/");setFolder(p?p+"/":"");loadFiles();});
+    const cell=document.createElement("td");cell.append(up);parent.append(cell);
+    addCell(parent,"Thư mục cha");addCell(parent,"—");addCell(parent,"—");addCell(parent,"—");$("fileRows").append(parent);
+  }
+  for(const entry of entries){const row=document.createElement("tr");addEntry(row,entry);$("fileRows").append(row);}
+  if(!entries.length){
+    const row=document.createElement("tr"),cell=addCell(row,term?"Không tìm thấy tệp/thư mục phù hợp.":(currentPrefix?"Thư mục trống.":"Thư viện chưa có tệp. Hãy tải PDF/audio lên."));
+    cell.colSpan=5;cell.className="empty";$("fileRows").append(row);
+  }
+  $("pageStatus").textContent=filteredLibraryEntries.length
+    ? "Hiển thị "+(start+1)+"–"+Math.min(start+entries.length,filteredLibraryEntries.length)+" / "+filteredLibraryEntries.length+" mục"
+    : "0 mục";
+}
+async function loadFiles() {
+  const requestSeq=++fileLoadSequence,requestedPrefix=currentPrefix,startedAt=performance.now();
+  queueDebugEvent("library_load_start",{requestSeq,prefix:requestedPrefix,mode:"full_snapshot"});
+  $("currentPath").textContent="/"+requestedPrefix;
+  $("refreshBtn").disabled=true;
+  $("fileRows").replaceChildren();
+  setStatus("Đang tải danh sách thư mục…");
+  try{
+    const result=await api("files/all?prefix="+encodeURIComponent(requestedPrefix),{cache:"no-store"});
+    if(requestSeq!==fileLoadSequence||requestedPrefix!==currentPrefix)return;
+    if(!Array.isArray(result.folders)||!Array.isArray(result.files))throw new Error("API trả về danh sách thư viện không đúng cấu trúc.");
+    allLibraryEntries=[...result.folders,...result.files];
+    filePageIndex=0;
+    renderLibraryPage();
+    queueDebugEvent("library_load_success",{requestSeq,prefix:requestedPrefix,mode:"full_snapshot",folderCount:result.folders.length,fileCount:result.files.length,total:allLibraryEntries.length,durationMs:Math.round(performance.now()-startedAt)});
+    setStatus("Đã tải "+allLibraryEntries.length+" mục trong thư mục hiện tại.");
+  }catch(error){
+    if(requestSeq!==fileLoadSequence)return;
+    allLibraryEntries=[];filteredLibraryEntries=[];renderLibraryPage();
+    queueDebugEvent("library_load_error",{requestSeq,prefix:requestedPrefix,durationMs:Math.round(performance.now()-startedAt),error:String(error.message||error).slice(0,500)});
+    setStatus(error.message,true);
+    const row=document.createElement("tr"),cell=addCell(row,"Không tải được thư viện: "+error.message);
+    cell.colSpan=5;cell.className="empty error";$("fileRows").append(row);
+  }finally{if(requestSeq===fileLoadSequence)$("refreshBtn").disabled=false;}
+}
 
 function activateTab(name) {
   const library = name === "library";
@@ -304,13 +311,24 @@ function activateTab(name) {
 $("libraryTabBtn").addEventListener("click", () => activateTab("library"));
 $("diagnosticsTabBtn").addEventListener("click", () => activateTab("diagnostics"));
 $("debugTabBtn").addEventListener("click", () => activateTab("debug"));
-$("pageSizeSelect").value = String(pageSize);
-$("pageSizeSelect").addEventListener("change", () => {
-  pageSize = Math.min(100, Math.max(25, Number($("pageSizeSelect").value) || 25));
-  sessionStorage.setItem("readalong-page-size", String(pageSize));
-  setFolder(currentPrefix);
-  loadFiles();
+$("pageSizeSelect").value=String(pageSize);
+$("pageSizeSelect").addEventListener("change",()=>{
+  pageSize=Math.min(100,Math.max(25,Number($("pageSizeSelect").value)||25));
+  sessionStorage.setItem("readalong-page-size",String(pageSize));
+  filePageIndex=0;renderLibraryPage();
 });
+$("searchFilesInput").addEventListener("input",()=>{filePageIndex=0;renderLibraryPage();});
+$("sortFilesSelect").addEventListener("change",()=>{filePageIndex=0;renderLibraryPage();});
+$("firstPageBtn").addEventListener("click",()=>{filePageIndex=0;renderLibraryPage();});
+$("prevPageBtn").addEventListener("click",()=>{if(filePageIndex>0){filePageIndex--;renderLibraryPage();}});
+$("nextPageBtn").addEventListener("click",()=>{const total=Math.max(1,Math.ceil(filteredLibraryEntries.length/pageSize));if(filePageIndex<total-1){filePageIndex++;renderLibraryPage();}});
+$("lastPageBtn").addEventListener("click",()=>{filePageIndex=Math.max(0,Math.ceil(filteredLibraryEntries.length/pageSize)-1);renderLibraryPage();});
+$("pageJumpInput").addEventListener("change",()=>{
+  const total=Math.max(1,Math.ceil(filteredLibraryEntries.length/pageSize));
+  const requested=Math.min(total,Math.max(1,Number($("pageJumpInput").value)||1));
+  filePageIndex=requested-1;renderLibraryPage();
+});
+$("pageJumpInput").addEventListener("keydown",event=>{if(event.key==="Enter")$("pageJumpInput").dispatchEvent(new Event("change"));});
 
 function diagnosticStat(label, value, kind) {
   const box = document.createElement("div");
@@ -588,31 +606,11 @@ $("newFolderBtn").addEventListener("click", async () => {
     await loadFiles();
   } catch (error) { setStatus(error.message, true); }
 });
-$("rootBtn").addEventListener("click", () => { setFolder(""); loadFiles(); });
-$("refreshBtn").addEventListener("click", loadFiles);
-$("prevPageBtn").addEventListener("click", async () => {
-  queueDebugEvent("pagination_click_previous", { prefix: currentPrefix, fromPage: filePageIndex+1, pageSize, targetCursorPresent: !!filePageCursors[filePageIndex-1] });
-  if (filePageIndex <= 0 || !filePageCursors[filePageIndex-1] && filePageIndex-1 > 0) {
-    setStatus("Không có cursor của trang trước. Hãy tải lại thư mục từ trang đầu.", true);
-    return;
-  }
-  filePageIndex--;
-  await loadFiles();
-});
-$("nextPageBtn").addEventListener("click", async () => {
-  queueDebugEvent("pagination_click_next", { prefix: currentPrefix, fromPage: filePageIndex+1, pageSize, cursorPresent: !!nextFileCursor });
-  if (!nextFileCursor) {
-    queueDebugEvent("pagination_click_ignored", { reason:"next_cursor_missing", prefix:currentPrefix, page:filePageIndex+1 });
-    setStatus("Không có cursor trang tiếp theo. Hãy làm mới thư viện để cập nhật danh sách.", true);
-    return;
-  }
-  filePageCursors[filePageIndex+1] = nextFileCursor;
-  filePageIndex++;
-  await loadFiles();
-});
+$("rootBtn").addEventListener("click",()=>{setFolder("");loadFiles();});
+$("refreshBtn").addEventListener("click",loadFiles);
 function setFolder(prefix) {
   queueDebugEvent("library_folder_change", { from: currentPrefix, to: prefix });
-  currentPrefix=prefix; filePageCursors=[null]; filePageIndex=0; nextFileCursor=null;
+  currentPrefix=prefix; filePageCursors=[null]; filePageIndex=0; nextFileCursor=null; allLibraryEntries=[]; filteredLibraryEntries=[];
   fileLoadSequence++;
 }
 $("fileInput").addEventListener("change", async (event) => {
