@@ -132,3 +132,8 @@ The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READA
 - `GET session` returns safe diagnostics only: whether a cookie was present, whether the server-side session is valid, expiry time/remaining seconds, and a reason code. It never returns the cookie or token hash.
 - The browser records `auth_session_check`, `auth_session_check_error`, login/logout, and API 401 events in the Admin Debug event log. Network/5xx failures are described as inability to verify the session, not automatically as an expired login.
 - Use the canonical Production hostname `https://read-along-admin.pages.dev`; do not mix it with deployment-specific `*.pages.dev` URLs because cookies are host-scoped.
+
+
+## books.json
+
+The Admin publishes the manifest stored in `admin/public/books.json` to the root of the `my-audio-book` R2 bucket. Use **Tạo / cập nhật books.json** in the Diagnostics tab. The endpoint validates the schema, allowed R2 public hostname, file extensions, and existence of every referenced PDF/audio/sync object before overwriting the manifest. The private-comic-reader API reads this R2 manifest and exposes the files through its private proxy endpoint. Update the seed JSON in Git before publishing future catalog changes.

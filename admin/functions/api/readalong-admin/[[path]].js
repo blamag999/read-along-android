@@ -495,6 +495,51 @@ async function handle(request, env) {
   if (auth.response) return auth.response;
 
 
+  if (route === "catalog/publish" && method === "POST") {
+    assertOrigin(request);
+    let manifest;
+    try { manifest = await request.json(); } catch { return json({ error: "books.json không phải JSON hợp lệ" }, 400); }
+    if (!manifest || !Array.isArray(manifest.books) || !manifest.books.length || manifest.books.length > 1000) {
+      return json({ error: "Manifest phải có mảng books từ 1 đến 1.000 mục" }, 400);
+    }
+    const ids = new Set(), refs = [];
+    const allowedHost = "pub-763a3a5ae235415cbef15b64f7a20820.r2.dev";
+    const resolveRef = (value, extensions, label) => {
+      if (value === null && extensions.includes(".json")) return null;
+      if (typeof value !== "string") throw new Error(label + " phải là URL hoặc null");
+      let parsed, key;
+      try { parsed = new URL(value); key = decodeURIComponent(parsed.pathname.slice(1)); } catch { throw new Error(label + " có URL không hợp lệ"); }
+      if (parsed.protocol !== "https:" || parsed.hostname !== allowedHost || parsed.search || parsed.hash ||
+          !validKey(key) || !extensions.includes(extensionOf(key))) throw new Error(label + " không thuộc kho R2 hợp lệ");
+      refs.push({ key, label });
+      return value;
+    };
+    const normalized = [];
+    try {
+      for (const book of manifest.books) {
+        if (!book || typeof book !== "object" || typeof book.id !== "string" || !book.id.trim() ||
+            typeof book.title !== "string" || !book.title.trim() || ids.has(book.id) ||
+            !Array.isArray(book.audios) || !book.audios.length) throw new Error("Mỗi sách cần id/title duy nhất và ít nhất một audio");
+        ids.add(book.id);
+        normalized.push({
+          id: book.id.trim(), title: book.title.trim(),
+          pdf: resolveRef(book.pdf, [".pdf"], "PDF của " + book.title),
+          audios: book.audios.map((value, index) => resolveRef(value, [".mp3",".m4a",".m4b",".aac",".wav",".ogg",".oga",".opus",".flac"], "Audio " + (index+1) + " của " + book.title)),
+          sync: resolveRef(book.sync ?? null, [".json"], "Sync của " + book.title)
+        });
+      }
+    } catch (error) { return json({ error: error.message }, 400); }
+    for (let i = 0; i < refs.length; i += 12) {
+      const batch = await Promise.all(refs.slice(i, i + 12).map(async ref => ({ ...ref, exists: !!(await env.READALONG.head(ref.key)) })));
+      const missing = batch.filter(item => !item.exists);
+      if (missing.length) return json({ error: "Không tìm thấy " + missing.length + " tệp trong R2: " + missing.slice(0, 8).map(item => item.key).join(", "), missing: missing.map(item => item.key) }, 409);
+    }
+    const output = JSON.stringify({ books: normalized }, null, 2) + "\\n";
+    await env.READALONG.put("books.json", output, { httpMetadata: { contentType: "application/json; charset=utf-8", cacheControl: "no-store" } });
+    await audit(env, "publish_books_manifest", "books.json", { books: normalized.length, files: refs.length });
+    return json({ ok: true, key: "books.json", books: normalized.length, files: refs.length, bytes: new TextEncoder().encode(output).length });
+  }
+
   if (route === "diagnostics/scan" && method === "GET") {
     const prefix = url.searchParams.get("prefix") || "";
     if (prefix && !validKey(prefix.endsWith("/") ? prefix.slice(0, -1) : prefix)) return json({ error: "Invalid folder path" }, 400);

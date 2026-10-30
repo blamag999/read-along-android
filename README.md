@@ -120,21 +120,15 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 - Không đóng issue chỉ để làm sạch danh sách; cập nhật issue với nguyên nhân, commit và kết quả test.
 - Khi chưa chắc về hành vi của workflow hoặc plugin, đọc mã nguồn và log trước khi sửa.
 
-## 8. Truy cập thư viện trực tuyến từ R2 riêng tư
+## 8. Danh mục sách Read Along bằng books.json
 
-- Nhánh phát triển beta chuyển sang lấy danh sách sách từ Pages Functions của dự án `private-comic-reader`; không còn đọc `books.json` hoặc URL `r2.dev`.
-- API production: `https://private-comic-reader.pages.dev/api/readalong/books` và `/api/readalong/file?key=...` (Pages Functions đã deploy thành công).
-- Pages Functions dùng R2 binding `READALONG` trỏ tới Bucket `my-audio-book`; APK không chứa R2 Access Key/Secret. Binding này tách biệt với `COMICS`/`my-manga` đang phục vụ dự án đọc truyện online.
-- API `GET /api/readalong/books` ưu tiên manifest `books.json` trong bucket để ghép đúng PDF/audio/sync theo từng `id`; đối chiếu object R2 theo tên chính xác trước, sau đó mới dùng tên chuẩn hóa duy nhất làm phương án dự phòng. Chuẩn hóa phải đổi `_`/`-` thành dấu cách trước khi bỏ `Read Along`, `Book` và hậu tố `part/side`, tránh lỗi ranh giới từ với dấu gạch dưới.
-- Các object chưa được manifest khai báo vẫn được tự phát hiện từ R2; không ghép mơ hồ nếu có nhiều ứng viên. Nhiều audio trong một sách được giữ theo thứ tự manifest. `sync` là tùy chọn, không phải điều kiện để hiển thị sách.
-- API và trình phát beta hiện hỗ trợ các định dạng audio phổ biến: MP3, M4A/M4B, AAC, WAV, OGG/OGA, Opus và FLAC; MIME type được trả đúng theo phần mở rộng, vẫn hỗ trợ HTTP Range để tua audio.
-- WMA không được Android WebView/Chromium hỗ trợ phát trực tiếp ổn định nên hiện không đưa vào danh sách audio có thể phát. Hai file `Oliver_Company_part 1/2.wma` cần chuyển sang MP3 hoặc M4A/AAC để xuất hiện trong danh sách.
-- API file hỗ trợ `HEAD`, HTTP Range (206/416), MIME PDF/JSON và MIME audio riêng cho MP3, M4A/M4B, AAC, WAV, OGG/OGA, Opus, FLAC; CORS chỉ áp dụng cho hai endpoint đọc.
-- Đây là phương án A: API đọc công khai. Bucket R2 có thể đặt Private, nhưng bất kỳ ai biết endpoint vẫn có thể đọc/tải nội dung qua API. Không coi đây là DRM hoặc cơ chế xác thực người dùng.
-- Backend đã merge PR [#11](https://github.com/blamag999/private-comic-reader/pull/11) và Cloudflare Pages Production deploy thành công. Bucket `my-audio-book` đã tắt public `r2.dev`; binding `READALONG` hoạt động qua Pages Functions. API runtime và APK vẫn cần kiểm thử đầu-cuối trên thiết bị trước khi coi là hoàn tất.
-- Khi kiểm thử: xác nhận danh sách mới tự xuất hiện sau khi thêm file vào R2; PDF tải theo Range; các định dạng audio hỗ trợ tua được; JSON marker nạp được; không có request nào tới `.r2.dev`.
-- Kiểm kê Bucket tại thời điểm 2026-10-30: 184 object, gồm 87 MP3, 85 PDF, 10 JSON và 2 WMA. Manifest `books.json` có 83 đầu sách; API đã đối chiếu được đủ 83/83 đầu sách với PDF và audio thực tế (3 tên audio sai khác được ghép bằng fallback chuẩn hóa). Ngoài manifest còn có cặp `Sleeping Beauty`, nâng tổng số lên 84 cặp PDF+audio; 9 sách có JSON đồng bộ. `Oliver_Company` có PDF và hai track `.wma` nhưng chưa có audio được hỗ trợ phát trực tiếp trên Android WebView, vì vậy chỉ xuất hiện ở danh sách PDF, không nằm trong bộ lọc sách đã ghép. API hiện ưu tiên đọc `books.json` thay vì bỏ qua manifest.
-
+- Nguồn dữ liệu duy nhất của thư viện Read Along là `books.json` tại thư mục gốc Bucket R2 `my-audio-book`.
+- Manifest dùng đúng cấu trúc: `{ "books": [{ "id", "title", "pdf", "audios", "sync" }] }`; `pdf` là URL PDF, `audios` là mảng URL audio (có thể nhiều track), `sync` là URL JSON hoặc `null`.
+- Admin có nút **Tạo / cập nhật books.json** trong tab **Kiểm tra lỗi**. Nút nạp bản mẫu `admin/public/books.json` (83 sách theo file được cung cấp), kiểm tra host R2, phần mở rộng và sự tồn tại của mọi PDF/audio/sync, rồi mới ghi manifest vào R2. Nếu có tệp thiếu, thao tác dừng và báo danh sách; không ghi đè manifest hiện tại.
+- API production `https://private-comic-reader.pages.dev/api/readalong/books` đọc trực tiếp manifest R2, chuyển URL thành URL proxy `/api/readalong/file?key=...` và giữ nguyên id/title/thứ tự audio/sync. API không tự dò hoặc ghép sách theo tên tệp nữa.
+- APK đã gọi API này khi mở **Truyện trực tuyến**; do đó APK đọc danh mục từ chính `books.json` thông qua API. Không cần nhúng manifest vào APK hoặc phát hành APK mới chỉ để cập nhật danh sách sách.
+- API file vẫn phục vụ nội dung qua binding `READALONG`, hỗ trợ HTTP Range để tua audio và không đưa R2 Access Key/Secret vào APK.
+- Để bổ sung hoặc sửa sách: cập nhật file mẫu `admin/public/books.json` theo cùng cấu trúc, commit lên nhánh `beta`, sau đó vào Admin và bấm **Tạo / cập nhật books.json**. Nút xác minh trước khi ghi đè file trên R2.
 
 ## 8. Read Along Admin — web quản trị thư viện
 
