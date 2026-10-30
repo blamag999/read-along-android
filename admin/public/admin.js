@@ -28,6 +28,7 @@ const api = async (path, options = {}) => {
     response = await fetch(API + "/" + path, { credentials: "same-origin", ...options });
     data = await response.json().catch(() => ({}));
     if (response.status === 401) {
+      queueDebugEvent("auth_api_unauthorized", { path: String(path).split("?")[0], status: 401 });
       show("managerPanel", false);
       show("loginPanel", true);
       show("logoutBtn", false);
@@ -107,16 +108,35 @@ window.addEventListener("error",event=>queueDebugEvent("javascript_error",{messa
 window.addEventListener("unhandledrejection",event=>queueDebugEvent("unhandled_promise_rejection",{reason:String(event.reason?.message||event.reason||"Unknown rejection").slice(0,500)}));
 
 async function checkSession() {
+  const startedAt = performance.now();
   try {
-    const result = await api("session");
+    const result = await api("session", { cache: "no-store" });
+    queueDebugEvent("auth_session_check", {
+      authenticated: !!result.authenticated, cookiePresent: !!result.cookiePresent,
+      reason: result.reason || "unknown", expiresIn: Number(result.expiresIn || 0),
+      expiresAt: result.expiresAt || null, durationMs: Math.round(performance.now() - startedAt), host: location.host
+    });
     show("loginPanel", !result.authenticated);
     show("managerPanel", result.authenticated);
     show("logoutBtn", result.authenticated);
-    if (result.authenticated) { await loadFiles(); activateTab("library"); }
+    if (result.authenticated) {
+      $("loginError").textContent = "";
+      await loadFiles();
+      activateTab("library");
+    } else {
+      $("loginError").textContent = result.reason === "cookie_missing"
+        ? "Không tìm thấy cookie phiên đăng nhập trên hostname hiện tại. Hãy đăng nhập lại; nếu lỗi lặp lại sau khi tải lại trang, gửi log Debug."
+        : "Cookie phiên không còn hợp lệ hoặc đã hết hạn. Hãy đăng nhập lại.";
+    }
   } catch (error) {
+    queueDebugEvent("auth_session_check_error", {
+      error: String(error.message || error).slice(0, 500),
+      durationMs: Math.round(performance.now() - startedAt), host: location.host
+    });
     show("loginPanel", true);
     show("managerPanel", false);
-    $("loginError").textContent = error.message;
+    show("logoutBtn", false);
+    $("loginError").textContent = "Không thể kiểm tra phiên đăng nhập do lỗi kết nối hoặc máy chủ: " + error.message + ". Đây chưa chắc là phiên đã hết hạn; hãy thử lại.";
   }
 }
 
@@ -126,6 +146,7 @@ $("loginForm").addEventListener("submit", async (event) => {
   const code = $("otpCode").value.trim();
   try {
     await postJson("login", { code });
+    queueDebugEvent("auth_login_success", { host: location.host });
     $("otpCode").value = "";
     show("loginPanel", false);
     show("managerPanel", true);
@@ -138,6 +159,7 @@ $("loginForm").addEventListener("submit", async (event) => {
 
 $("logoutBtn").addEventListener("click", async () => {
   try { await postJson("logout", {}); } catch {}
+  queueDebugEvent("auth_logout", { host: location.host });
   show("managerPanel", false);
   show("loginPanel", true);
   show("logoutBtn", false);
