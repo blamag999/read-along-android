@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <title>Read Along Admin</title>
+  <link rel="stylesheet" href="/admin.css">
+  <script src="/admin.js" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-icon">RA</span><div><h1>Read Along Admin</h1><p>Quản lý thư viện sách và audio</p></div></div>
+      <button id="logoutBtn" class="button subtle hidden" type="button">Đăng xuất</button>
+    </header>
+
+    <section id="loginPanel" class="panel login-panel">
+      <div class="eyebrow">KHU VỰC QUẢN TRỊ RIÊNG</div>
+      <h2>Đăng nhập</h2>
+      <p class="muted">Nhập mã xác thực 6 chữ số từ ứng dụng Authenticator.</p>
+      <form id="loginForm">
+        <label for="otpCode">Mã OTP</label>
+        <input id="otpCode" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" required>
+        <button class="button primary full" type="submit">Xác thực và tiếp tục</button>
+      </form>
+      <p id="loginError" class="error" role="alert"></p>
+    </section>
+
+    <section id="managerPanel" class="hidden">
+      <div class="summary-row">
+        <div><div class="eyebrow">THƯ VIỆN R2</div><h2>Quản lý nội dung</h2><p class="muted">Chỉ thao tác trên bucket Read Along.</p></div>
+        <div class="toolbar">
+          <button id="newFolderBtn" class="button secondary" type="button">＋ Thư mục</button>
+          <label class="button primary file-button">↑ Tải tệp lên<input id="fileInput" type="file" multiple accept=".pdf,.json,.mp3,.m4a,.m4b,.aac,.wav,.ogg,.oga,.opus,.flac,.wma"></label>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="pathbar">
+          <button id="rootBtn" class="crumb" type="button">Thư viện</button>
+          <span id="currentPath" class="path-text">/</span>
+          <button id="refreshBtn" class="button subtle small" type="button">Làm mới</button>
+        </div>
+        <div id="status" class="status" role="status"></div>
+        <div id="progress" class="progress hidden"><span></span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tên</th><th>Loại</th><th>Dung lượng</th><th>Cập nhật</th><th>Thao tác</th></tr></thead>
+            <tbody id="fileRows"><tr><td colspan="5" class="empty">Chưa tải danh sách.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <details class="panel audit-panel">
+        <summary>Lịch sử thao tác quản trị</summary>
+        <div id="auditRows" class="audit-list muted">Mở để tải lịch sử.</div>
+      </details>
+      <p class="footnote">Phiên đăng nhập tự hết hạn sau 30 phút. Thao tác xóa sẽ được ghi vào nhật ký.</p>
+    </section>
+  </main>
+  <div id="confirmDialog" class="dialog hidden" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+    <div class="dialog-card"><h3 id="dialogTitle">Xác nhận</h3><p id="dialogText"></p><div class="dialog-actions"><button id="cancelDialog" class="button secondary" type="button">Hủy</button><button id="acceptDialog" class="button danger" type="button">Xác nhận</button></div></div>
+  </div>
+</body>
+</html>
