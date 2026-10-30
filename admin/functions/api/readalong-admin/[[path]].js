@@ -464,8 +464,47 @@ async function handle(request, env) {
     return json({ ok: true, recorded: Number(inserted.meta?.changes || 0) > 0 });
   }
   if (route === "usage/stats" && method === "GET") {
-    let manifest = { books: [] };
-    try { const object = await env.READALONG.get("books.json"); if (object) { const parsed = JSON.parse(await object.text()); if (Array.isArray(parsed.books)) manifest = parsed; } } catch {}
+    // Prefer the published manifest; fall back to actual R2 objects when it is missing, empty or invalid.
+    let manifest = null;
+    try {
+      const object = await env.READALONG.get("books.json");
+      if (object) {
+        const parsed = JSON.parse(await object.text());
+        if (Array.isArray(parsed.books) && parsed.books.length) manifest = parsed;
+      }
+    } catch {
+      // An unreadable manifest is handled by the inventory fallback.
+    }
+    let counts, source;
+    if (manifest) {
+      const books = manifest.books;
+      counts = {
+        books: books.length,
+        pdfs: books.filter(book => typeof book.pdf === "string" && book.pdf).length,
+        audios: books.reduce((sum, book) => sum + (Array.isArray(book.audios) ? book.audios.length : 0), 0),
+        sync: books.filter(book => typeof book.sync === "string" && book.sync).length
+      };
+      source = "manifest";
+    } else {
+      const inventory = { pdfs: 0, audios: 0, sync: 0, objects: 0 };
+      const audioExtensions = new Set([".mp3", ".m4a", ".m4b", ".aac", ".wav", ".ogg", ".oga", ".opus", ".flac", ".wma"]);
+      let cursor;
+      do {
+        const page = await env.READALONG.list({ limit: 1000, ...(cursor ? { cursor } : {}) });
+        for (const item of page.objects || []) {
+          inventory.objects++;
+          const key = String(item.key || "");
+          const ext = extensionOf(key);
+          if (ext === ".pdf") inventory.pdfs++;
+          else if (audioExtensions.has(ext)) inventory.audios++;
+          else if (ext === ".json" && key !== "books.json") inventory.sync++;
+        }
+        cursor = page.truncated ? page.cursor : undefined;
+        if (inventory.objects > 10000) throw new Error("R2 inventory exceeds 10,000 objects; refusing incomplete statistics.");
+      } while (cursor);
+      counts = { books: inventory.pdfs, pdfs: inventory.pdfs, audios: inventory.audios, sync: inventory.sync };
+      source = "r2_inventory";
+    }
     const now = Date.now();
     const [totals, devices, recentVisits, recentDevices] = await Promise.all([
       env.DB.prepare("SELECT total_visits FROM admin_app_platform_totals WHERE platform = 'android'").first(),
@@ -473,11 +512,8 @@ async function handle(request, env) {
       env.DB.prepare("SELECT COUNT(*) AS total FROM admin_app_visits WHERE visited_at >= ? AND platform = 'android'").bind(now - 30 * 86400000).first(),
       env.DB.prepare("SELECT COUNT(*) AS total FROM admin_app_installations WHERE last_seen >= ? AND platform = 'android'").bind(now - 30 * 86400000).first()
     ]);
-    const books = manifest.books;
     return json({
-      books: books.length, pdfs: books.filter(book => typeof book.pdf === "string").length,
-      audios: books.reduce((sum, book) => sum + (Array.isArray(book.audios) ? book.audios.length : 0), 0),
-      sync: books.filter(book => typeof book.sync === "string" && book.sync).length,
+      ...counts, source,
       totalVisits: Number(totals?.total_visits || 0), visits30d: Number(recentVisits?.total || 0),
       totalDevices: Number(devices?.total || 0), devices30d: Number(recentDevices?.total || 0),
       updatedAt: new Date().toISOString()
