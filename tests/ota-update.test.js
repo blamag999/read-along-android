@@ -1,0 +1,10 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+assert.ok(app.includes('async function clearReadAlongWebCachesForUpdate()'), 'OTA cache cleanup function must be defined');
+assert.ok(app.includes('await clearReadAlongWebCachesForUpdate()'), 'OTA flow must await cache cleanup');
+assert.ok(app.includes("/^read-along-shell-/i.test(key)"), 'Cleanup must be restricted to Read Along shell caches');
+assert.ok(app.includes('script.pathname === appWorkerPath'), 'Cleanup must target only the Read Along service worker');
+assert.ok(!app.includes('localStorage.clear(') && !app.includes('sessionStorage.clear('), 'OTA cleanup must not erase user storage');
+console.log('OTA cache cleanup regression tests passed.');
