@@ -92,7 +92,7 @@ The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READA
 
 ## Library UI and matching rules
 
-- Admin has three tabs: Library for file browsing, Diagnostics for integrity checks, and Debug for request/scan logs.
+- Admin has two tabs: Library for file browsing and Diagnostics for integrity checks. The public home page displays catalog and anonymous app usage metrics; advanced management is entered through the Manage button and OTP.
 - Library listing uses server-side R2 cursor pagination, defaults to 25 entries per page, and allows 25/50/100. The selected size is remembered for the current browser session. Changing folders resets the page.
 - R2 objects are the only catalog source; books.json is not used.
 - PDF, timestamp JSON and audio use the same normalized book stem.
@@ -110,7 +110,7 @@ The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READA
 - The first scan after installing this feature, and the first scan after a rule-version change, re-inspects all eligible files. R2 inventory listing and global pairing analysis still run each time.
 - Cache entries for objects no longer present in the scanned prefix are removed. Rename naturally creates a new cache key and delete is reconciled on the next scan.
 - Scan history is stored in `admin_scan_logs` in the dedicated Admin D1. It records scan ID, status, scanned/changed/skipped counts, error/warning counts, duration, rule version and Cloudflare Ray ID. It does not store OTPs, cookies, tokens or file contents.
-- The Debug tab shows recent server scan history and the current tab's in-memory API request log, and can export both as JSON. Browser request logs are cleared when the tab/session is closed; server scan history persists in D1.
+- Debug UI has been removed. Browser exceptions, unhandled promise rejections, API failures, server exceptions, scan history and library request diagnostics continue to be recorded automatically in the dedicated Admin D1.
 - After adding the new tables to an existing production D1 database, apply the updated `admin/schema.sql` once (it uses `CREATE TABLE IF NOT EXISTS`). Never apply it to the Private Comic Reader database.
 
 
@@ -121,7 +121,7 @@ The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READA
 - Browser telemetry records page navigation clicks, load start/success/failure, folder changes, stale responses, missing/repeated cursor state, API status/duration/Ray ID, JavaScript errors and unhandled promise rejections.
 - Browser events are sent in small batches to the authenticated `debug/events` endpoint and persisted in `admin_client_events` in the dedicated Admin D1.
 - Every Library listing request is recorded in `admin_library_requests`: prefix, page size, cursor-present flag, folder/file counts, R2 truncation state, HTTP status, duration, Ray ID and error. Raw cursor values are never stored.
-- The Debug tab displays scan history, server-side pagination requests, persisted browser events and current-tab API logs; JSON export includes all sources.
+- No Debug tab or manual JSON export is exposed to end users. Diagnostic events continue to be sent automatically to the telemetry endpoint and stored in Admin D1.
 - Apply the appended `admin/schema.sql` additions to **read-along-admin-db only** before deploying. Never apply them to Comic Reader D1.
 
 
@@ -137,3 +137,15 @@ The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READA
 ## books.json
 
 The Admin publishes the manifest stored in `admin/public/books.json` to the root of the `my-audio-book` R2 bucket. Use **Tạo / cập nhật books.json** in the Diagnostics tab. The endpoint validates the schema, allowed R2 public hostname, file extensions, and existence of every referenced PDF/audio/sync object before overwriting the manifest. The private-comic-reader API reads this R2 manifest and exposes the files through its private proxy endpoint. Update the seed JSON in Git before publishing future catalog changes.
+
+
+## Public dashboard and app usage metrics
+
+- The canonical home page is public and does not call the session endpoint. It reads aggregate catalog and usage metrics from GET /api/readalong-admin/usage/stats.
+- The Quản lý nâng cao action switches to #manage, where the existing OTP login and authenticated management UI are shown. Refreshing #manage rechecks the HttpOnly session; the home page remains accessible without OTP.
+- The Android/Web app reports one launch per browser session using a random installation ID in local storage and a random launch ID in session storage. Both IDs are SHA-256 hashed on the server; raw IDs are not stored.
+- Metrics: total recorded launches (lifetime counter), launches in the last 30 days, unique installations ever recorded, and installations active in the last 30 days. Catalog counts are derived from the R2 books.json manifest.
+- Installation count is an estimate of installations that have launched at least once after telemetry is added. Clearing app data/reinstalling can create a new ID; existing APKs do not report telemetry until updated.
+- The anonymous usage endpoint accepts only random identifiers, platform and app version. Never send account IDs, device serials, advertising IDs, email, phone, OTP, cookies or tokens.
+- Server exceptions are stored in admin_server_errors; browser and API telemetry is stored in admin_client_events. Both are bounded. Query the Admin D1 database only; never use the Comic Reader D1 database.
+- Apply the new tables in schema.sql to read-along-admin-db only before production deployment.
