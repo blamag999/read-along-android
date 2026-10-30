@@ -327,3 +327,21 @@ Quy tắc bảo trì:
 - Commit test mới nhất `84bc5536cebca283c537349e76ea47aaa9728366` đã tạo PR run #41104249478. Tại lần kiểm tra gần nhất, run đang `queued`, chưa có job log/conclusion. Cần tiếp tục kiểm tra run này cho đến khi kết thúc; không merge PR dựa trên run cũ.
 - PR #37 vẫn Draft/open, base `beta`; chưa merge. Chưa chạy workflow build-release beta, chưa có APK/artifact/Release và chưa kiểm thử thiết bị.
 - Trạng thái hiện tại: **CI của code/test cũ: Success theo workflow-run API**; **CI của test mới: Queued/Pending**; **Build beta: Pending**; **Device verification: Pending**; **Merge PR: Pending**.
+
+
+## 13. Điều tra Issue #38 — danh sách truyện không tải được (2026-10-31)
+
+- Issue mới nhất: [#38 — Diagnostics 1.3.3](https://github.com/blamag999/read-along-android/issues/38). Log ghi nhận `app.started`, `viewport.change`, native `Activity.onCreate` và `WebView.bridgeReady`; không có sự kiện lỗi JS. Diagnostics hiện chưa ghi sự kiện riêng cho lần fetch catalog, vì vậy log không chứng minh được request `books.json` đã chạy hay thất bại.
+- Đã đối chiếu mã nguồn release `v1.3.3` (tag trỏ commit `17783ca6b6985f33847e575678d201c510c83ae5`) và `app.js` trên `main`: ứng dụng tải trực tiếp `https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/books.json` khi `DOMContentLoaded`. Các listener của `btnAutoFlipToggle` đã có guard; kiểm tra DOM tĩnh không tìm thấy phần tử sự kiện bị thiếu nào khác không có guard, nên không xác nhận giả thuyết crash init từ ID này.
+- Đã kiểm tra Cloudflare bucket `my-audio-book`: bucket tồn tại; object `books.json` tồn tại (28,606 bytes, content type JSON, cache-control `no-store`); CORS cho phép origin `*` với `GET/HEAD`. Manifest mẫu trong repository có 83 sách và URL asset dùng đúng hostname R2.
+- **Nguyên nhân gốc được xác nhận ở cấu hình public access:** Managed R2 `r2.dev` domain của bucket đang `enabled: false`, dù app gọi URL trên hostname này. Vì vậy public endpoint không được bật và client không thể tải manifest qua URL hiện tại. CORS không tự bật public access.
+- Cần người quản lý xác nhận trước khi thay đổi: bật managed `r2.dev` domain sẽ làm **toàn bộ object trong bucket `my-audio-book` có thể truy cập công khai** qua domain đó, không chỉ riêng `books.json`. Nội dung truyện/PDF/audio hiện được thiết kế để app đọc công khai, nhưng cần xác nhận không có object riêng tư trong bucket. API Cloudflare hỗ trợ `PUT /accounts/{account_id}/r2/buckets/{bucket_name}/domains/managed` với `{ enabled: true }`; chưa thực hiện thay đổi này.
+- Trạng thái: **Issue review: Completed**; **R2 object/manifest/CORS inspection: Completed**; **Root cause: Confirmed — r2.dev public domain disabled**; **Enable public access: Blocked pending explicit confirmation of whole-bucket exposure**; **App retry/telemetry improvements: Pending**; **APK/device verification: Pending**.
+
+### Hướng xử lý tiếp theo
+
+1. Xác nhận bucket không chứa nội dung cần giữ riêng tư và cho phép bật public access toàn bucket; hoặc chọn custom domain/public delivery khác nếu không muốn dùng `r2.dev`.
+2. Sau khi endpoint public được bật, kiểm tra GET `books.json` qua public URL và kiểm tra CORS thực tế từ WebView/origin của app.
+3. Bổ sung test DOM khởi tạo và telemetry catalog tối thiểu: `catalog.load.start`, `catalog.load.success` (số sách), `catalog.load.failure` (HTTP status/error name), không ghi URL/token hay dữ liệu nhạy cảm.
+4. Bảo đảm lỗi tải catalog không làm hỏng khởi tạo app; hiển thị nút thử lại và giữ khả năng chọn thư mục local.
+5. Chỉ sau khi xác nhận endpoint hoạt động mới build beta mới, kiểm tra truyện trực tuyến trên thiết bị Android và cập nhật Issue #38.
