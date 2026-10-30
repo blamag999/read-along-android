@@ -45,6 +45,8 @@ jobs:
           node-version: 24
       - name: Check Admin browser JavaScript
         run: node --check admin/public/admin.js
+      - name: Check catalog and playlist module syntax
+        run: node --check modules/catalog-playlist.js
       - name: Run regression and JavaScript syntax tests
         run: npm test
       - name: Check Pages Functions module syntax
