@@ -1,7 +1,9 @@
 /* Remote marker synchronization service. UI-facing messages stay provider-neutral. */
-// GitHub stores only marker JSON; PDF and audio remain local.
-const GITHUB_OWNER='blamag999',GITHUB_REPO='pdf-audio-sync',GITHUB_BRANCH='main',GITHUB_SYNC_DIR='sync_data';
-const GITHUB_TOKEN_SESSION_KEY='pdf_audio_sync_github_token';let githubSyncTimer=null;
+// Marker JSON is stored in this app's repository only; PDF and audio remain in R2/local storage.
+const GITHUB_OWNER='blamag999',GITHUB_REPO='read-along-android',GITHUB_BRANCH='main',GITHUB_SYNC_DIR='sync_data';
+const GITHUB_TOKEN_SESSION_KEY='read_along_android_sync_token_v1';
+try { sessionStorage.removeItem('pdf_audio_sync_github_token'); } catch (_) {}
+let githubSyncTimer=null;
 function getSyncStem(){
   const n = state.pdfFileName || state.currentBookKey || 'truyen';
   return n.replace(/\.[^/.]+$/, '').replace(/[\\/:*?"<>|]/g, '_').trim() || 'truyen';
