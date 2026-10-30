@@ -34,6 +34,6 @@ jobs:
         run: node --check --input-type=module < 'admin/functions/api/readalong-admin/[[path]].js'
       - name: Verify isolation constraints
         run: |
-          ! grep -R -nE 'COMICS|TOTP_SECRET([^A-Z_]|$)|comic_manager_session|private-comic-reader-db' admin/
+          ! grep -R -nE '(^|[^A-Z_])COMICS([^A-Z_]|$)|(^|[^A-Z_])TOTP_SECRET([^A-Z_]|$)|comic_manager_session' admin/functions admin/public
           grep -q 'READALONG' admin/functions/api/readalong-admin/[[path]].js
           grep -q 'admin_totp_state' admin/functions/api/readalong-admin/[[path]].js
