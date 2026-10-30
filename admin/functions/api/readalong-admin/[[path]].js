@@ -266,7 +266,7 @@ async function scanLibrary(bucket, prefix) {
   }).map(item=>{
     const name=item.key.split("/").pop().replace(/\\.[^.]+$/,"");
     const ext=extensionOf(item.key);
-    const partMatch=ext!==".pdf" && ext!==".json" ? name.match(/(?:_|-)P(\\d+)$/i) : null;
+    const partMatch=ext!==".pdf" && ext!==".json" ? name.match(/_P(\\d+)$/i) : null;
     const baseName=partMatch ? name.slice(0,partMatch.index) : name;
     return {...item,ext,dir:item.key.includes("/")?item.key.slice(0,item.key.lastIndexOf("/")+1):"",
       stem:name,part:partMatch?Number(partMatch[1]):null,
@@ -329,7 +329,7 @@ async function scanLibrary(bucket, prefix) {
   const reported=new Set();
   for(const item of unmatched){
     if(reported.has(item.key))continue;
-    const opposite=unmatched.filter(other=>other.dir===item.dir &&
+    const opposite=assets.filter(other=>other.dir===item.dir && other.normalized!==item.normalized &&
       (item.ext===".pdf" ? (other.ext!==".pdf" && other.ext!==".json") :
        item.ext===".json" ? other.ext===".pdf" : other.ext===".pdf"));
     const ranked=opposite.map(other=>({other,score:similarity(item.normalized,other.normalized)}))
@@ -349,6 +349,14 @@ async function scanLibrary(bucket, prefix) {
       message:"Tên tệp gần giống nhưng chưa trùng tên gốc; hiện không được ghép tự động.",
       suggestion:"Nếu xác nhận cùng một sách, duyệt đổi tên thành: "+suggestedRename});
     reported.add(item.key);
+  }
+  for(const item of assets.filter(x=>x.ext===".json")){
+    const group=groups.get(item.dir+"|"+item.normalized);
+    if(!group.pdf.length || !group.audio.length){
+      findings.push({severity:"warning",code:"orphan_timestamp_json",key:item.key,
+        message:"JSON mốc thời gian chưa có đủ PDF và audio cùng tên gốc.",
+        suggestion:"Đảm bảo tên JSON trùng tên PDF và audio của đúng sách."});
+    }
   }
   const errors = findings.filter((x) => x.severity === "error").length;
   const warnings = findings.filter((x) => x.severity === "warning").length;
