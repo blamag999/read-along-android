@@ -151,7 +151,9 @@ async function handle(request, env) {
     assertOrigin(request);
     if (!env.READALONG_TOTP_SECRET) return json({ error: "TOTP secret is not configured" }, 503);
     const ipHash = await sha256(clientIp(request));
-    const since = Date.now() - RATE_WINDOW_MS;
+    const now = Date.now();
+    const since = now - RATE_WINDOW_MS;
+    await env.DB.prepare("DELETE FROM admin_auth_attempts WHERE attempted_at <= ?").bind(since).run();
     const count = await env.DB.prepare(
       "SELECT COUNT(*) AS total FROM admin_auth_attempts WHERE ip_hash = ? AND attempted_at > ?"
     ).bind(ipHash, since).first();
@@ -168,7 +170,6 @@ async function handle(request, env) {
     crypto.getRandomValues(raw);
     const token = base64url(raw);
     const tokenHash = await sha256(token);
-    const now = Date.now();
     await env.DB.prepare(
       "INSERT INTO admin_sessions (token_hash, created_at, expires_at, ip_hash, user_agent) VALUES (?, ?, ?, ?, ?)"
     ).bind(tokenHash, now, now + SESSION_TTL * 1000, ipHash, (request.headers.get("User-Agent") || "").slice(0, 300)).run();
@@ -316,7 +317,7 @@ export async function onRequest(context) {
     headers.set("referrer-policy", "no-referrer");
     headers.set("cache-control", "no-store");
     return new Response(response.body, { status: response.status, headers });
-  } catch (error) {
-    return json({ error: error instanceof Error ? error.message : "Internal server error" }, 400);
+  } catch {
+    return json({ error: "Internal server error" }, 500);
   }
 }
