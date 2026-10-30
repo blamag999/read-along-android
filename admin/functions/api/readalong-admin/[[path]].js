@@ -117,7 +117,7 @@ async function listAllKeys(bucket, prefix) {
     const page = await bucket.list({ prefix, cursor, limit: 1000 });
     keys.push(...page.objects.map((item) => item.key));
     cursor = page.truncated ? page.cursor : undefined;
-    if (keys.length > 5000) throw new Error("Folder contains more than 5,000 objects; delete in smaller folders");
+    if (keys.length > 5000) throw new Error("Thư mục có hơn 5.000 đối tượng; hãy quét từng thư mục con để thu hẹp phạm vi.");
   } while (cursor);
   return keys;
 }
@@ -223,7 +223,7 @@ async function inspectLibraryObject(bucket, item) {
 }
 
 async function scanLibrary(bucket, prefix) {
-  const keys = await listAllKeys(bucket, prefix);
+  const keys = (await listAllKeys(bucket, prefix)).filter((key) => !key.endsWith("/"));
   const items = [];
   for (let i = 0; i < keys.length; i += 10) {
     const batch = await Promise.all(keys.slice(i, i + 10).map(async (key) => {
