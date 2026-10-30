@@ -423,3 +423,22 @@ Quy tắc bảo trì:
 - Đã sửa regex tại commit `544ee6999973b34f1ff4d0d0bc8c1fb1ec572de7` để kiểm tra đúng source literal `"\\n"` (một escape sequence biểu diễn newline thật trong JavaScript), không thay đổi API runtime.
 - **CI cho commit `544ee69`: chưa thấy run trong lần truy vấn đầu tiên; cần tiếp tục kiểm tra Actions.** Không dùng run #41106560409 làm bằng chứng pass.
 - PR #37 vẫn open/Draft; chưa merge, Pages chưa deploy, R2 chưa publish lại, APK beta chưa build.
+
+
+### Kết quả tích hợp PR #37 và triển khai Admin (2026-10-31)
+
+- PR [#37](https://github.com/blamag999/read-along-android/pull/37) đã được merge vào `beta`; merge commit: `b6a99a0fb0b5327d5c4217ca7255be799f5e6a5c`. Nhánh `main` không thay đổi.
+- PR CI [#41106670347](https://github.com/blamag999/read-along-android/actions/runs/41106670347) kết thúc **completed / success**. Job regression-and-isolation đã chạy xong thành công. Test bao gồm catalog/module (manifest mẫu 83 sách), API boundaries (bao gồm serializer newline), Admin DOM/stats, OTA regression, JavaScript syntax, Pages Functions syntax và isolation.
+- Cloudflare Pages project `read-along-admin` giữ production branch `beta`, root `admin`, output `public`, bindings production `READALONG` → `my-audio-book` và `DB` → D1 chuyên dụng. Production deployment cho merge commit đã **success**:
+  - Deployment ID: `1af6ebe3-4408-4199-a267-e6192d28f5f1`
+  - URL: https://1af6ebe3.read-along-admin.pages.dev
+  - Canonical URL: https://read-along-admin.pages.dev
+  - Build và deploy stages đều success.
+- Serializer đã sửa để ghi newline thật vào cuối JSON, không thêm literal backslash+n. Chưa ghi đè R2 manifest.
+- **Pending — R2 republish:** cần phiên Admin OTP đã xác thực. Truy cập Admin → Quản lý nâng cao → Kiểm tra thư viện → **Tạo / cập nhật books.json**. API sẽ xác minh từng PDF/audio/sync trên bucket trước khi ghi đè. Không tự bypass OTP hoặc ghi thẳng manifest khi không có phiên được cấp quyền.
+- **Pending — manifest runtime verification:** sau publish, xác nhận URL public trả JSON parse được, có `books` array và không có literal backslash+n sau dấu đóng object. Công cụ web hiện không truy cập được hostname R2; cần kiểm tra bằng trình duyệt/Admin sau khi publish.
+- **Pending — APK beta:** workflow `.github/workflows/build-android-apk.yml` chỉ hỗ trợ `workflow_dispatch`. GitHub connector hiện tại không có thao tác dispatch workflow, do đó chưa thể khởi chạy build từ phiên này. Người quản trị cần mở Actions → Build and Release Read Along → Run workflow, chọn branch `beta`, channel `beta`. Sau đó kiểm tra APK signature, SHA-256, artifact và prerelease.
+- **Pending — Android device test:** cần cài APK beta và kiểm tra truyện trực tuyến, mở PDF/audio, playlist local, search/filter/favorites/pagination/audio parts và dữ liệu đọc hiện tại. Không có thiết bị Android điều khiển từ xa trong phiên này nên chưa thể xác nhận device test.
+- Issue [#38](https://github.com/blamag999/read-along-android/issues/38) vẫn mở cho tới khi manifest R2 được publish/kiểm tra và lỗi trên thiết bị được xác nhận đã hết.
+- Trạng thái bàn giao: **Code fix: Completed; PR merge: Completed; CI: Passed; Admin production deploy: Passed; R2 manifest republish: Pending authenticated Admin action; APK beta build: Pending manual workflow dispatch; Android device verification: Pending.**
+- Không promote `main`, không phát hành stable, không thay đổi signing secrets/keystore.
