@@ -512,7 +512,7 @@ async function handle(request, env) {
       if (parsed.protocol !== "https:" || parsed.hostname !== allowedHost || parsed.search || parsed.hash ||
           !validKey(key) || !extensions.includes(extensionOf(key))) throw new Error(label + " không thuộc kho R2 hợp lệ");
       refs.push({ key, label });
-      return key;
+      return value;
     };
     const normalized = [];
     try {
