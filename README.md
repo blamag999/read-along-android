@@ -144,7 +144,7 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 - Mã nguồn: `admin/` trong repository `blamag999/read-along-android`.
 - Cloudflare Pages project riêng: `read-along-admin`, URL production `https://read-along-admin.pages.dev`.
 - Pages root directory: `admin`; output directory: `public`; không cần build command.
-- Pages project dùng nhánh `beta` làm production trong giai đoạn thử nghiệm; nhánh `main` và `feature/*` là preview.
+- Pages project dùng nhánh `beta` làm production trong giai đoạn thử nghiệm; nhánh `main` và `feature/*` là preview. Path filter Pages hiện để `*` nhằm bảo đảm deploy; một số commit khác trong repo có thể cũng kích hoạt Pages build riêng, nhưng không kích hoạt build APK.
 - Production bindings: `READALONG` → R2 bucket `my-audio-book`; `DB` → D1 database `read-along-admin-db`.
 - D1 ID: `6a316068-ef8e-4eaf-af4b-536b4fd7b74c`.
 - Preview deployment cố ý không có D1/R2 binding và không có OTP secret, tránh thao tác lên dữ liệu thật.
