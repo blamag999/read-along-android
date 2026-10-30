@@ -117,7 +117,7 @@ async function listAllKeys(bucket, prefix) {
     const page = await bucket.list({ prefix, cursor, limit: 1000 });
     keys.push(...page.objects.map((item) => item.key));
     cursor = page.truncated ? page.cursor : undefined;
-    if (keys.length > 5000) throw new Error("Folder contains more than 5,000 objects; delete in smaller folders");
+    if (keys.length > 5000) throw new Error("Thư mục có hơn 5.000 đối tượng; hãy quét từng thư mục con để thu hẹp phạm vi.");
   } while (cursor);
   return keys;
 }
@@ -139,6 +139,134 @@ async function moveObject(bucket, source, destination) {
     throw new Error("Copy verification failed; source was preserved");
   }
   await bucket.delete(source);
+}
+
+
+const AUDIO_EXTENSIONS = new Set([".mp3", ".m4a", ".m4b", ".aac", ".wav", ".ogg", ".oga", ".opus", ".flac", ".wma"]);
+
+async function readObjectRange(bucket, key, offset, length) {
+  const object = await bucket.get(key, { range: { offset, length } });
+  return object ? new Uint8Array(await object.arrayBuffer()) : new Uint8Array();
+}
+
+function hasMp3Frame(bytes) {
+  for (let i = 0; i + 3 < bytes.length; i++) {
+    if (bytes[i] !== 0xff || (bytes[i + 1] & 0xe0) !== 0xe0) continue;
+    const version = (bytes[i + 1] >> 3) & 3;
+    const layer = (bytes[i + 1] >> 1) & 3;
+    const bitrate = (bytes[i + 2] >> 4) & 15;
+    const sampleRate = (bytes[i + 2] >> 2) & 3;
+    if (version !== 1 && layer !== 0 && bitrate !== 0 && bitrate !== 15 && sampleRate !== 3) return true;
+  }
+  return false;
+}
+
+async function inspectLibraryObject(bucket, item) {
+  const key = item.key;
+  const ext = extensionOf(key);
+  const size = Number(item.size || 0);
+  const issues = [];
+  const add = (severity, code, message, suggestion) => issues.push({ severity, code, key, message, suggestion });
+  if (!ALLOWED_EXTENSIONS.has(ext)) {
+    add("error", "unsupported_format", "Định dạng tệp không được Read Along Admin hỗ trợ.", "Chuyển đổi sang PDF, MP3 hoặc định dạng audio được hỗ trợ; sau đó tải lại.");
+    return issues;
+  }
+  if (size === 0) {
+    add("error", "empty_file", "Tệp có dung lượng 0 byte, có thể upload chưa hoàn tất.", "Kiểm tra tệp gốc và tải lên lại.");
+    return issues;
+  }
+  if (ext === ".wma") {
+    add("warning", "playback_compatibility", "WMA có thể lưu trữ nhưng phát không ổn định hoặc không được hỗ trợ trên Android WebView.", "Ưu tiên chuyển sang MP3 hoặc M4A/AAC.");
+    return issues;
+  }
+
+  try {
+    const head = await readObjectRange(bucket, key, 0, Math.min(size, 4096));
+    if (ext === ".pdf") {
+      const header = new TextDecoder().decode(head.slice(0, 8));
+      if (!header.startsWith("%PDF-")) {
+        add("error", "invalid_pdf_header", "Không tìm thấy chữ ký %PDF- ở đầu tệp; tệp có thể sai định dạng hoặc hỏng.", "Mở PDF gốc để xác nhận, rồi xuất hoặc tải lại tệp.");
+      } else {
+        const tail = await readObjectRange(bucket, key, Math.max(0, size - Math.min(size, 2048)), Math.min(size, 2048));
+        const tailText = new TextDecoder().decode(tail);
+        if (!tailText.includes("%%EOF")) add("warning", "pdf_eof_missing", "Không tìm thấy dấu kết thúc %%EOF ở 2 KB cuối; PDF có thể bị cắt cụt hoặc chưa hoàn chỉnh.", "Mở thử PDF; nếu không đọc hết trang, hãy xuất và tải lại bản đầy đủ.");
+      }
+    } else if (ext === ".mp3") {
+      const id3 = head.length >= 3 && head[0] === 0x49 && head[1] === 0x44 && head[2] === 0x33;
+      if (!id3 && !hasMp3Frame(head)) add("error", "invalid_mp3_header", "Không tìm thấy ID3 tag hoặc MPEG audio frame hợp lệ ở đầu tệp.", "Kiểm tra tệp có thực sự là MP3 và chuyển mã/tải lại nếu cần.");
+    } else if (ext === ".wav") {
+      if (head.length < 12 || String.fromCharCode(...head.slice(0, 4)) !== "RIFF" || String.fromCharCode(...head.slice(8, 12)) !== "WAVE") add("error", "invalid_wav_header", "Thiếu chữ ký RIFF/WAVE hợp lệ.", "Xuất lại audio dưới dạng WAV chuẩn.");
+    } else if (ext === ".flac") {
+      if (String.fromCharCode(...head.slice(0, 4)) !== "fLaC") add("error", "invalid_flac_header", "Thiếu chữ ký fLaC.", "Chuyển mã hoặc tải lại tệp FLAC.");
+    } else if ([".ogg", ".oga", ".opus"].includes(ext)) {
+      if (String.fromCharCode(...head.slice(0, 4)) !== "OggS") add("error", "invalid_ogg_header", "Thiếu chữ ký OggS.", "Kiểm tra codec/container và xuất lại tệp OGG/Opus.");
+      else if (ext === ".opus" && !new TextDecoder().decode(head).includes("OpusHead")) add("warning", "opus_header_missing", "Không tìm thấy OpusHead trong phần đầu tệp Ogg.", "Xác nhận đây là audio Opus đúng chuẩn.");
+    } else if (ext === ".m4a" || ext === ".m4b") {
+      if (head.length < 12 || String.fromCharCode(...head.slice(4, 8)) !== "ftyp") add("error", "invalid_mp4_audio_header", "Thiếu hộp ftyp của container MP4/M4A.", "Xuất lại audio dưới dạng M4A/AAC chuẩn.");
+    } else if (ext === ".aac") {
+      if (head.length < 2 || head[0] !== 0xff || (head[1] & 0xf6) !== 0xf0) add("error", "invalid_aac_header", "Không tìm thấy ADTS sync word ở đầu tệp AAC.", "Kiểm tra tệp AAC có dùng ADTS; nếu không, đóng gói lại thành M4A.");
+    }
+    if (ext === ".json") {
+      if (size > 2 * 1024 * 1024) {
+        add("warning", "json_too_large_to_validate", "JSON lớn hơn 2 MB nên công cụ chỉ kiểm tra dung lượng, chưa kiểm tra cú pháp.", "Nếu đây là tệp marker/timestamp, nên giữ JSON gọn và kiểm tra riêng.");
+      } else {
+        const object = await bucket.get(key);
+        const text = object ? await object.text() : "";
+        try { JSON.parse(text); }
+        catch { add("error", "invalid_json", "Nội dung JSON không hợp lệ hoặc bị cắt cụt.", "Mở JSON bằng trình soạn thảo, sửa cú pháp rồi tải lại."); }
+      }
+    }
+  } catch {
+    add("warning", "content_check_failed", "Không thể đọc nội dung tệp để kiểm tra chữ ký; thông tin metadata vẫn được giữ nguyên.", "Thử quét lại. Nếu lỗi lặp lại, kiểm tra quyền truy cập hoặc tải lại tệp.");
+  }
+  return issues;
+}
+
+async function scanLibrary(bucket, prefix) {
+  const keys = (await listAllKeys(bucket, prefix)).filter((key) => !key.endsWith("/"));
+  const items = [];
+  for (let i = 0; i < keys.length; i += 10) {
+    const batch = await Promise.all(keys.slice(i, i + 10).map(async (key) => {
+      const head = await bucket.head(key);
+      return head ? { key, size: head.size, uploaded: head.uploaded } : { key, size: 0 };
+    }));
+    items.push(...batch);
+  }
+  const findings = [];
+  for (let i = 0; i < items.length; i += 10) {
+    const batch = await Promise.all(items.slice(i, i + 10).map((item) => inspectLibraryObject(bucket, item)));
+    findings.push(...batch.flat());
+  }
+
+  const groups = new Map();
+  for (const item of items) {
+    const ext = extensionOf(item.key);
+    if (ext !== ".pdf" && !AUDIO_EXTENSIONS.has(ext)) continue;
+    const name = item.key.split("/").pop().replace(/\\.[^.]+$/, "").normalize("NFKC").toLocaleLowerCase("vi");
+    const groupKey = item.key.includes("/") ? item.key.slice(0, item.key.lastIndexOf("/") + 1) + name : name;
+    if (!groups.has(groupKey)) groups.set(groupKey, { pdf: [], audio: [] });
+    groups.get(groupKey)[ext === ".pdf" ? "pdf" : "audio"].push(item.key);
+  }
+  for (const group of groups.values()) {
+    if (group.pdf.length && !group.audio.length) findings.push({
+      severity: "error", code: "missing_audio", key: group.pdf[0],
+      message: "Có PDF nhưng không tìm thấy audio cùng tên trong thư mục.",
+      suggestion: "Tải audio tương ứng lên cùng thư mục và đặt cùng tên cơ sở với PDF."
+    });
+    if (group.audio.length && !group.pdf.length) findings.push({
+      severity: "error", code: "missing_pdf", key: group.audio[0],
+      message: "Có audio nhưng không tìm thấy PDF cùng tên trong thư mục.",
+      suggestion: "Tải PDF tương ứng lên cùng thư mục và đặt cùng tên cơ sở với audio."
+    });
+    if (group.pdf.length > 1 || group.audio.length > 1) findings.push({
+      severity: "warning", code: "duplicate_book_assets", key: group.pdf[0] || group.audio[0],
+      message: "Có nhiều PDF hoặc audio cùng tên cơ sở; cần xác nhận đây là bản thay thế hay dữ liệu trùng.",
+      suggestion: "Kiểm tra các tệp trong cùng thư mục và đổi tên/xóa bản trùng nếu không cần."
+    });
+  }
+  const errors = findings.filter((x) => x.severity === "error").length;
+  const warnings = findings.filter((x) => x.severity === "warning").length;
+  return { prefix, scanned: items.length, errors, warnings, findings, complete: true, checkedAt: new Date().toISOString() };
 }
 
 async function handle(request, env) {
@@ -199,6 +327,17 @@ async function handle(request, env) {
 
   const auth = await requireAuth(request, env);
   if (auth.response) return auth.response;
+
+
+  if (route === "diagnostics/scan" && method === "GET") {
+    const prefix = url.searchParams.get("prefix") || "";
+    if (prefix && !validKey(prefix.endsWith("/") ? prefix.slice(0, -1) : prefix)) return json({ error: "Invalid folder path" }, 400);
+    try {
+      return json(await scanLibrary(env.READALONG, prefix ? (prefix.endsWith("/") ? prefix : prefix + "/") : ""));
+    } catch (error) {
+      return json({ error: error.message || "Library scan failed" }, 422);
+    }
+  }
 
   if (route === "files" && method === "GET") {
     const prefix = url.searchParams.get("prefix") || "";

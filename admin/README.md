@@ -78,3 +78,14 @@ Supported library extensions: PDF, JSON, MP3, M4A/M4B, AAC, WAV, OGG/OGA, Opus, 
 - Do not add the Admin directory to the Android APK asset-copy/build pipeline.
 - Never commit OTP seeds, Cloudflare API tokens, passwords, or session tokens.
 - Before enabling production, verify login lockout, session expiry, upload completion, rename verification, and deletion behavior on a test folder.
+
+
+## Library Health Check
+
+The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READALONG` R2 bucket.
+
+- Scans the selected folder and its descendants; root scan is limited to 5,000 objects per run. For larger libraries, scan narrower subfolders.
+- Reports unsupported extensions, zero-byte objects, basic PDF/MP3/audio container signature issues, missing PDF/audio pairs (same base filename in the same folder), duplicate same-name assets, invalid JSON syntax, and WMA playback compatibility warnings.
+- PDF checks inspect the `%PDF-` header and look for `%%EOF` near the end. Audio checks inspect container/frame signatures only; they do not fully decode or certify every audio frame or duration.
+- The scan is read-only: it never deletes, renames, converts, or modifies library objects.
+- After correcting files, run the scan again to verify the result.
