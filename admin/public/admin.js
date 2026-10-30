@@ -9,6 +9,11 @@ let dialogResolve = null;
 let pageSize = [25, 50, 100].includes(Number(sessionStorage.getItem("readalong-page-size"))) ? Number(sessionStorage.getItem("readalong-page-size")) : 25;
 let clientLogs = [];
 let serverLogs = [];
+let serverEvents = [];
+let libraryRequests = [];
+let fileLoadSequence = 0;
+let debugEventQueue = [];
+let debugFlushScheduled = false;
 
 const $ = (id) => document.getElementById(id);
 const show = (id, visible) => $(id).classList.toggle("hidden", !visible);
@@ -37,15 +42,18 @@ const api = async (path, options = {}) => {
     failure = error.message || String(error);
     throw error;
   } finally {
-    clientLogs.unshift({
+    const log = {
       at: new Date().toISOString(),
+      method: String(options.method || "GET").toUpperCase(),
       path: String(path).split("?")[0],
       status: response ? response.status : "NETWORK",
       durationMs: Math.round(performance.now() - started),
       rayId: response?.headers.get("cf-ray") || data.rayId || "",
       error: failure
-    });
+    };
+    clientLogs.unshift(log);
     clientLogs = clientLogs.slice(0, 100);
+    queueDebugEvent("api_request", log);
   }
 };
 const postJson = (path, body) => api(path, {
@@ -72,6 +80,31 @@ function confirmAction(title, message, accept = "Xác nhận") {
 }
 $("cancelDialog").addEventListener("click", () => { show("confirmDialog", false); dialogResolve?.(false); dialogResolve = null; });
 $("acceptDialog").addEventListener("click", () => { show("confirmDialog", false); dialogResolve?.(true); dialogResolve = null; });
+
+function queueDebugEvent(type, details = {}) {
+  debugEventQueue.push({ type: String(type).slice(0,80), details });
+  if (debugEventQueue.length>100) debugEventQueue=debugEventQueue.slice(-100);
+  if (debugFlushScheduled) return;
+  debugFlushScheduled=true; setTimeout(flushDebugEvents,250);
+}
+async function flushDebugEvents() {
+  debugFlushScheduled=false;
+  if (!debugEventQueue.length) return;
+  const events=debugEventQueue.splice(0,25);
+  try {
+    const response=await fetch(API+"/debug/events",{method:"POST",credentials:"same-origin",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({events})});
+    if(!response.ok) {
+      clientLogs.unshift({at:new Date().toISOString(),method:"POST",path:"debug/events",status:response.status,durationMs:0,rayId:response.headers.get("cf-ray")||"",error:"Không đồng bộ được log sự kiện"});
+      clientLogs=clientLogs.slice(0,100);
+    }
+  } catch(error) {
+    clientLogs.unshift({at:new Date().toISOString(),method:"POST",path:"debug/events",status:"NETWORK",durationMs:0,rayId:"",error:String(error.message||error)});
+    clientLogs=clientLogs.slice(0,100);
+  }
+  if(debugEventQueue.length&&!debugFlushScheduled){debugFlushScheduled=true;setTimeout(flushDebugEvents,250);}
+}
+window.addEventListener("error",event=>queueDebugEvent("javascript_error",{message:String(event.message||"Unknown error").slice(0,500),source:String(event.filename||"").split("/").pop().slice(0,120),line:event.lineno||0,column:event.colno||0}));
+window.addEventListener("unhandledrejection",event=>queueDebugEvent("unhandled_promise_rejection",{reason:String(event.reason?.message||event.reason||"Unknown rejection").slice(0,500)}));
 
 async function checkSession() {
   try {
@@ -156,44 +189,79 @@ function addEntry(row, entry) {
 }
 
 async function loadFiles() {
-  setStatus("Đang tải danh sách…");
+  const requestSeq = ++fileLoadSequence;
+  const requestedPrefix = currentPrefix;
+  const requestedPage = filePageIndex;
+  const requestedPageSize = pageSize;
+  const cursor = filePageCursors[requestedPage] || null;
+  const startedAt = performance.now();
+  queueDebugEvent("library_load_start", {
+    requestSeq, prefix: requestedPrefix, page: requestedPage + 1,
+    pageSize: requestedPageSize, cursorPresent: !!cursor
+  });
+  $("currentPath").textContent = "/" + requestedPrefix;
+  $("prevPageBtn").disabled = true;
+  $("nextPageBtn").disabled = true;
+  $("refreshBtn").disabled = true;
+  setStatus("Đang tải trang " + (requestedPage + 1) + "…");
   $("fileRows").replaceChildren();
-  $("currentPath").textContent = "/" + currentPrefix;
+  if (requestedPage > 0 && !cursor) {
+    const message = "Thiếu cursor của trang " + (requestedPage + 1) + ". Hãy quay lại trang đầu và thử lại.";
+    queueDebugEvent("library_pagination_state_error", { requestSeq, prefix: requestedPrefix, page: requestedPage + 1, pageSize: requestedPageSize, reason: "missing_cursor" });
+    setStatus(message, true);
+    const row = document.createElement("tr"); const cell = addCell(row, message);
+    cell.colSpan = 5; cell.className = "empty error"; $("fileRows").append(row);
+    $("prevPageBtn").disabled = requestedPage === 0;
+    $("nextPageBtn").disabled = true;
+    $("refreshBtn").disabled = false;
+    return;
+  }
   try {
-    const cursor = filePageCursors[filePageIndex];
-    const result = await api("files?prefix=" + encodeURIComponent(currentPrefix) + "&limit=" + pageSize + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""));
-    nextFileCursor = result.truncated ? result.cursor : null;
-    $("prevPageBtn").disabled = filePageIndex === 0;
-    $("nextPageBtn").disabled = !nextFileCursor;
-    $("pageLabel").textContent = "Trang " + (filePageIndex + 1);
-    const entries = [...result.folders, ...result.files].sort((a, b) => {
-      if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
-      return a.name.localeCompare(b.name, "vi");
-    });
-    if (currentPrefix) {
-      const parent = document.createElement("tr");
-      const up = document.createElement("button");
+    const result = await api("files?prefix=" + encodeURIComponent(requestedPrefix) + "&limit=" + requestedPageSize + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""));
+    if (requestSeq !== fileLoadSequence || requestedPrefix !== currentPrefix || requestedPage !== filePageIndex) {
+      queueDebugEvent("library_stale_response_ignored", { requestSeq, activeRequestSeq: fileLoadSequence, prefix: requestedPrefix, page: requestedPage + 1, currentPrefix, currentPage: filePageIndex + 1 });
+      return;
+    }
+    if (!Array.isArray(result.folders) || !Array.isArray(result.files)) throw new Error("API trả về dữ liệu phân trang không đúng cấu trúc.");
+    const returnedCursor = result.truncated ? result.cursor : null;
+    if (result.truncated && !returnedCursor) throw new Error("R2 báo còn dữ liệu nhưng không trả cursor. Đã ghi nhận sự kiện để kiểm tra.");
+    if (cursor && returnedCursor && cursor === returnedCursor) throw new Error("Cursor không thay đổi giữa hai trang. Đã dừng phân trang để tránh lặp dữ liệu.");
+    nextFileCursor = returnedCursor;
+    $("pageLabel").textContent = "Trang " + (requestedPage + 1);
+    const entries = [...result.folders, ...result.files].sort((a,b) => a.type !== b.type ? (a.type === "folder" ? -1 : 1) : a.name.localeCompare(b.name,"vi"));
+    if (requestedPrefix) {
+      const parent = document.createElement("tr"), up = document.createElement("button");
       up.className = "folder-name"; up.type = "button"; up.textContent = "↰ ..";
-      up.addEventListener("click", () => { const parent = currentPrefix.split("/").filter(Boolean).slice(0, -1).join("/"); setFolder(parent ? parent + "/" : ""); loadFiles(); });
-      const cell = document.createElement("td"); cell.append(up); parent.append(cell);
-      addCell(parent, "Thư mục cha"); addCell(parent, "—"); addCell(parent, "—"); addCell(parent, "—");
-      $("fileRows").append(parent);
+      up.addEventListener("click", () => { const p=currentPrefix.split("/").filter(Boolean).slice(0,-1).join("/"); setFolder(p ? p+"/" : ""); loadFiles(); });
+      const cell=document.createElement("td"); cell.append(up); parent.append(cell);
+      addCell(parent,"Thư mục cha"); addCell(parent,"—"); addCell(parent,"—"); addCell(parent,"—"); $("fileRows").append(parent);
     }
-    for (const entry of entries) {
-      const row = document.createElement("tr");
-      addEntry(row, entry);
-      $("fileRows").append(row);
+    for (const entry of entries) { const row=document.createElement("tr"); addEntry(row,entry); $("fileRows").append(row); }
+    if (!entries.length) {
+      const row=document.createElement("tr");
+      const cell=addCell(row,requestedPrefix ? "Thư mục trống." : "Thư viện chưa có tệp. Hãy tải PDF/audio lên.");
+      cell.colSpan=5; cell.className="empty"; $("fileRows").append(row);
     }
-    if (!entries.length && !currentPrefix) {
-      const row = document.createElement("tr"); const cell = addCell(row, "Thư viện chưa có tệp. Hãy tải PDF/audio lên.");
-      cell.colSpan = 5; cell.className = "empty"; $("fileRows").append(row);
-    } else if (!entries.length && currentPrefix) {
-      const row = document.createElement("tr"); const cell = addCell(row, "Thư mục trống.");
-      cell.colSpan = 5; cell.className = "empty"; $("fileRows").append(row);
+    queueDebugEvent("library_load_success", {
+      requestSeq, prefix: requestedPrefix, page: requestedPage + 1, pageSize: requestedPageSize,
+      cursorPresent: !!cursor, folderCount: result.folders.length, fileCount: result.files.length,
+      renderedCount: entries.length, truncated: !!result.truncated, nextCursorPresent: !!returnedCursor,
+      durationMs: Math.round(performance.now()-startedAt)
+    });
+    setStatus("Đã tải " + entries.length + " mục · Trang " + (requestedPage+1) + (result.truncated ? " · Còn trang tiếp theo" : " · Trang cuối"));
+  } catch(error) {
+    if (requestSeq !== fileLoadSequence) return;
+    nextFileCursor=null;
+    queueDebugEvent("library_load_error", { requestSeq, prefix: requestedPrefix, page: requestedPage+1, pageSize: requestedPageSize, cursorPresent: !!cursor, durationMs: Math.round(performance.now()-startedAt), error: String(error.message||error).slice(0,500) });
+    setStatus(error.message,true);
+    const row=document.createElement("tr"), cell=addCell(row,"Không tải được trang: "+error.message);
+    cell.colSpan=5; cell.className="empty error"; $("fileRows").append(row);
+  } finally {
+    if(requestSeq===fileLoadSequence) {
+      $("prevPageBtn").disabled=requestedPage===0;
+      $("nextPageBtn").disabled=!nextFileCursor;
+      $("refreshBtn").disabled=false;
     }
-    setStatus("Đã tải " + entries.length + " mục · Trang " + (filePageIndex + 1) + (result.truncated ? " · Còn trang tiếp theo" : " · Trang cuối"));
-  } catch (error) {
-    setStatus(error.message, true);
   }
 }
 
@@ -321,9 +389,10 @@ $("scanAgainBtn").addEventListener("click", runDiagnostics);
 
 async function loadDebugLogs() {
   try {
-    const result = await api("debug/logs?limit=50");
+    const result = await api("debug/logs?limit=100");
     serverLogs = result.entries || [];
-    renderDebugLogs();
+    libraryRequests = result.libraryRequests || [];
+    serverEvents = result.events || [];
   } catch (error) {
     $("serverLogRows").replaceChildren();
     const row = document.createElement("tr");
@@ -335,6 +404,8 @@ async function loadDebugLogs() {
 function renderDebugLogs() {
   const server = $("serverLogRows");
   const client = $("clientLogRows");
+  const requests = $("libraryRequestRows");
+  const events = $("serverEventRows");
   if (server) {
     server.replaceChildren();
     if (!serverLogs.length) {
@@ -350,6 +421,27 @@ function renderDebugLogs() {
       addCell(row, (log.duration_ms || 0) + " ms");
       addCell(row, [log.ray_id, log.error_message].filter(Boolean).join(" · ") || "—");
       server.append(row);
+    }
+  }
+  if (requests) {
+    requests.replaceChildren();
+    if (!libraryRequests.length) { const row=document.createElement("tr"); const cell=addCell(row,"Chưa có yêu cầu phân trang được ghi nhận."); cell.colSpan=8; cell.className="empty"; requests.append(row); }
+    for (const log of libraryRequests) {
+      const row=document.createElement("tr");
+      addCell(row,formatDate(log.created_at)); addCell(row,log.prefix||"/");
+      addCell(row,String(log.page_size||"—")); addCell(row,log.cursor_present ? "Có" : "Không");
+      addCell(row,(log.folders_count||0)+" / "+(log.files_count||0)); addCell(row,log.truncated ? "Còn" : "Hết");
+      addCell(row,log.status+" · "+(log.duration_ms||0)+" ms");
+      addCell(row,[log.ray_id,log.error_message].filter(Boolean).join(" · ")||"—"); requests.append(row);
+    }
+  }
+  if (events) {
+    events.replaceChildren();
+    if (!serverEvents.length) { const row=document.createElement("tr"); const cell=addCell(row,"Chưa có sự kiện giao diện được đồng bộ."); cell.colSpan=4; cell.className="empty"; events.append(row); }
+    for (const event of serverEvents) {
+      const row=document.createElement("tr");
+      addCell(row,formatDate(event.created_at)); addCell(row,event.event_type);
+      addCell(row,event.ray_id||"—"); addCell(row,event.details_json||"—"); events.append(row);
     }
   }
   if (client) {
@@ -369,7 +461,7 @@ function renderDebugLogs() {
 }
 $("refreshDebugBtn").addEventListener("click", loadDebugLogs);
 $("exportDebugBtn").addEventListener("click", () => {
-  const payload = { exportedAt: new Date().toISOString(), serverLogs, clientLogs };
+  const payload = { exportedAt: new Date().toISOString(), serverLogs, libraryRequests, serverEvents, clientLogs };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a"); link.href = url;
@@ -419,9 +511,20 @@ $("newFolderBtn").addEventListener("click", async () => {
 });
 $("rootBtn").addEventListener("click", () => { setFolder(""); loadFiles(); });
 $("refreshBtn").addEventListener("click", loadFiles);
-$("prevPageBtn").addEventListener("click", () => { if (filePageIndex > 0) { filePageIndex--; loadFiles(); } });
-$("nextPageBtn").addEventListener("click", () => { if (nextFileCursor) { filePageCursors[filePageIndex + 1] = nextFileCursor; filePageIndex++; loadFiles(); } });
-function setFolder(prefix) { currentPrefix = prefix; filePageCursors = [null]; filePageIndex = 0; nextFileCursor = null; }
+$("prevPageBtn").addEventListener("click", () => {
+  queueDebugEvent("pagination_click_previous", { prefix: currentPrefix, fromPage: filePageIndex+1, pageSize, targetCursorPresent: !!filePageCursors[filePageIndex-1] });
+  if (filePageIndex > 0) { filePageIndex--; loadFiles(); }
+});
+$("nextPageBtn").addEventListener("click", () => {
+  queueDebugEvent("pagination_click_next", { prefix: currentPrefix, fromPage: filePageIndex+1, pageSize, cursorPresent: !!nextFileCursor });
+  if (nextFileCursor) { filePageCursors[filePageIndex+1]=nextFileCursor; filePageIndex++; loadFiles(); }
+  else queueDebugEvent("pagination_click_ignored", { reason:"next_cursor_missing", prefix:currentPrefix, page:filePageIndex+1 });
+});
+function setFolder(prefix) {
+  queueDebugEvent("library_folder_change", { from: currentPrefix, to: prefix });
+  currentPrefix=prefix; filePageCursors=[null]; filePageIndex=0; nextFileCursor=null;
+  fileLoadSequence++;
+}
 $("fileInput").addEventListener("change", async (event) => {
   const files = [...event.target.files];
   event.target.value = "";

@@ -112,3 +112,14 @@ The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READA
 - Scan history is stored in `admin_scan_logs` in the dedicated Admin D1. It records scan ID, status, scanned/changed/skipped counts, error/warning counts, duration, rule version and Cloudflare Ray ID. It does not store OTPs, cookies, tokens or file contents.
 - The Debug tab shows recent server scan history and the current tab's in-memory API request log, and can export both as JSON. Browser request logs are cleared when the tab/session is closed; server scan history persists in D1.
 - After adding the new tables to an existing production D1 database, apply the updated `admin/schema.sql` once (it uses `CREATE TABLE IF NOT EXISTS`). Never apply it to the Private Comic Reader database.
+
+
+### Library pagination diagnostics (2026-10-30)
+
+- Library pagination disables navigation controls while a page request is active and ignores stale responses after folder/page state changes.
+- It validates response shape, requires a cursor when R2 reports more results, and detects repeated cursor state. Errors appear in the Library table and status line.
+- Browser telemetry records page navigation clicks, load start/success/failure, folder changes, stale responses, missing/repeated cursor state, API status/duration/Ray ID, JavaScript errors and unhandled promise rejections.
+- Browser events are sent in small batches to the authenticated `debug/events` endpoint and persisted in `admin_client_events` in the dedicated Admin D1.
+- Every Library listing request is recorded in `admin_library_requests`: prefix, page size, cursor-present flag, folder/file counts, R2 truncation state, HTTP status, duration, Ray ID and error. Raw cursor values are never stored.
+- The Debug tab displays scan history, server-side pagination requests, persisted browser events and current-tab API logs; JSON export includes all sources.
+- Apply the appended `admin/schema.sql` additions to **read-along-admin-db only** before deploying. Never apply them to Comic Reader D1.
