@@ -285,3 +285,11 @@ Quy tắc bảo trì:
 - Path filters tiếp tục giới hạn workflow vào mã nguồn, module, test, package và workflow; thay đổi tài liệu đơn thuần không kích hoạt CI này.
 - **Chưa có kết quả CI sau thay đổi tại thời điểm ghi chú.** Commit workflow: `3e7874193c7f0c94d4ed59bbd07b7b5c21d76572`. Cần kiểm tra run mới của PR #37 trước khi đánh dấu tối ưu CI hoàn tất.
 - Quy ước kiểm thử: phân biệt rõ unit/regression, CI, build APK và kiểm thử thiết bị. Không build APK cho thay đổi tài liệu hoặc logic thuần đã được test đầy đủ; vẫn phải build/kiểm tra Android khi thay đổi native, Capacitor, WebView, audio/PDF, lưu trữ hoặc OTA.
+
+
+### Cập nhật xử lý CI #41102931325 — 2026-10-31
+
+- Đã đọc log chi tiết. Workflow không thất bại do concurrency hoặc do test logic mới; thất bại tại assertion cũ trong `tests/catalog.test.js:10`: test tìm `typeof value === 'string'` và `item.sync || item.json` trong `app.js`, trong khi các biểu thức này đã chuyển sang `modules/catalog-playlist.js`.
+- Đã sửa test để kiểm tra hai contract ở đúng module sở hữu logic mới; kiểm tra app vẫn tải manifest trực tiếp từ URL R2 và không phụ thuộc Pages API.
+- Commit sửa test: `79d28e4c98e6fd485c4a0f10f40274299da18a65`.
+- Trạng thái: **đã sửa nguyên nhân được xác định; chờ CI mới chạy trên head cập nhật**. Chưa tuyên bố test pass, chưa build APK/kiểm thử thiết bị.
