@@ -101,7 +101,7 @@ The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READA
 - Orphan per-book timestamp JSON, unmatched names, invalid file signatures, zero-byte files, malformed JSON and unsupported extensions are reported. The root `books.json` catalog manifest is excluded from the entire diagnostics scan and is not treated as a timestamp sidecar.
 - Near-name matches are suggestions only. Rename requires administrator approval; fuzzy matches are never auto-paired.
 
-## Incremental scan cache and Debug
+## Incremental scan cache and automatic diagnostics
 
 - Diagnostics compares R2 listing metadata (key, size, upload timestamp and ETag) against the dedicated Admin D1 table `admin_scan_cache`.
 - Files whose metadata fingerprint and scan rule version are unchanged reuse their saved per-file inspection findings. New/changed files and files evaluated under a new rule version are inspected again.
@@ -110,7 +110,7 @@ The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READA
 - The first scan after installing this feature, and the first scan after a rule-version change, re-inspects all eligible files. R2 inventory listing and global pairing analysis still run each time.
 - Cache entries for objects no longer present in the scanned prefix are removed. Rename naturally creates a new cache key and delete is reconciled on the next scan.
 - Scan history is stored in `admin_scan_logs` in the dedicated Admin D1. It records scan ID, status, scanned/changed/skipped counts, error/warning counts, duration, rule version and Cloudflare Ray ID. It does not store OTPs, cookies, tokens or file contents.
-- Debug UI has been removed. Browser exceptions, unhandled promise rejections, API failures, server exceptions, scan history and library request diagnostics continue to be recorded automatically in the dedicated Admin D1.
+- The manual Debug UI has been removed. Browser exceptions, unhandled promise rejections, API failures, server exceptions, scan history and library request diagnostics continue to be recorded automatically in the dedicated Admin D1.
 - After adding the new tables to an existing production D1 database, apply the updated `admin/schema.sql` once (it uses `CREATE TABLE IF NOT EXISTS`). Never apply it to the Private Comic Reader database.
 
 
