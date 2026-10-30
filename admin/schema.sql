@@ -62,3 +62,30 @@ CREATE TABLE IF NOT EXISTS admin_scan_logs (
 );
 CREATE INDEX IF NOT EXISTS idx_admin_scan_logs_created ON admin_scan_logs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_admin_scan_logs_scan_id ON admin_scan_logs(scan_id);
+
+
+-- Persistent library pagination requests and browser diagnostic events (Admin D1 only).
+CREATE TABLE IF NOT EXISTS admin_library_requests (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  request_id TEXT NOT NULL,
+  prefix TEXT NOT NULL DEFAULT '',
+  page_size INTEGER NOT NULL DEFAULT 25,
+  cursor_present INTEGER NOT NULL DEFAULT 0,
+  folders_count INTEGER NOT NULL DEFAULT 0,
+  files_count INTEGER NOT NULL DEFAULT 0,
+  truncated INTEGER NOT NULL DEFAULT 0,
+  status INTEGER NOT NULL,
+  duration_ms INTEGER NOT NULL DEFAULT 0,
+  ray_id TEXT,
+  error_message TEXT,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_admin_library_requests_created ON admin_library_requests(created_at DESC);
+CREATE TABLE IF NOT EXISTS admin_client_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_type TEXT NOT NULL,
+  details_json TEXT NOT NULL DEFAULT '{}',
+  ray_id TEXT,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_admin_client_events_created ON admin_client_events(created_at DESC);
