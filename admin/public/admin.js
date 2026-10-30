@@ -110,6 +110,7 @@ function startSessionHeartbeat(){
   if(sessionHeartbeatStarted)return;
   sessionHeartbeatStarted=true;
   setInterval(async()=>{
+    if(location.hash!=="#manage" || $("managerPanel").classList.contains("hidden")) return;
     try{
       const result=await api("session",{cache:"no-store"});
       if(!result.authenticated){
