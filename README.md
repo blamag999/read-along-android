@@ -124,7 +124,7 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 
 - Nhánh phát triển beta chuyển sang lấy danh sách sách từ Pages Functions của dự án `private-comic-reader`; không còn đọc `books.json` hoặc URL `r2.dev`.
 - API production dự kiến: `https://private-comic-reader.pages.dev/api/readalong/books` và `/api/readalong/file?key=...`.
-- Pages Functions dùng R2 binding `COMICS` để liệt kê và đọc file từ Bucket `my-manga`; APK không chứa R2 Access Key/Secret.
+- Pages Functions dùng R2 binding `READALONG` trỏ tới Bucket `my-audio-book`; APK không chứa R2 Access Key/Secret. Binding này tách biệt với `COMICS`/`my-manga` đang phục vụ dự án đọc truyện online.
 - API ghép các file PDF, MP3 và JSON theo tên cơ sở, giữ riêng nhóm theo thư mục; hậu tố `part/pt/side/disc` được dùng để ghép nhiều phần audio.
 - API file hỗ trợ `HEAD`, HTTP Range (206/416), MIME PDF/MP3/JSON và CORS cho luồng đọc đa nguồn.
 - Đây là phương án A: API đọc công khai. Bucket R2 có thể đặt Private, nhưng bất kỳ ai biết endpoint vẫn có thể đọc/tải nội dung qua API. Không coi đây là DRM hoặc cơ chế xác thực người dùng.
