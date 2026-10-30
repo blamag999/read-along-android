@@ -128,5 +128,5 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 - API ghép các file PDF, MP3 và JSON theo tên cơ sở, giữ riêng nhóm theo thư mục; hậu tố `part/pt/side/disc` được dùng để ghép nhiều phần audio.
 - API file hỗ trợ `HEAD`, HTTP Range (206/416), MIME PDF/MP3/JSON và CORS cho luồng đọc đa nguồn.
 - Đây là phương án A: API đọc công khai. Bucket R2 có thể đặt Private, nhưng bất kỳ ai biết endpoint vẫn có thể đọc/tải nội dung qua API. Không coi đây là DRM hoặc cơ chế xác thực người dùng.
-- Backend được phát triển trong PR của `blamag999/private-comic-reader`. Chỉ khi PR được merge và Cloudflare Pages deploy thành công, API production mới sẵn sàng cho APK beta.
+- Backend đã merge PR [#11](https://github.com/blamag999/private-comic-reader/pull/11) và Cloudflare Pages Production deploy thành công. Bucket `my-audio-book` đã tắt public `r2.dev`; binding `READALONG` hoạt động qua Pages Functions. API runtime và APK vẫn cần kiểm thử đầu-cuối trên thiết bị trước khi coi là hoàn tất.
 - Khi kiểm thử: xác nhận danh sách mới tự xuất hiện sau khi thêm file vào R2; PDF tải theo Range; MP3 tua được; JSON marker nạp được; không có request nào tới `.r2.dev`.
