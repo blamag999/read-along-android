@@ -165,6 +165,79 @@ async function loadFiles() {
   }
 }
 
+
+function diagnosticStat(label, value, kind) {
+  const box = document.createElement("div");
+  box.className = "diagnostic-stat " + kind;
+  const number = document.createElement("strong");
+  number.textContent = String(value);
+  const caption = document.createElement("span");
+  caption.textContent = label;
+  box.append(number, caption);
+  return box;
+}
+
+async function runDiagnostics() {
+  const buttons = [$("scanBtn"), $("scanAgainBtn")];
+  buttons.forEach((button) => { if (button) button.disabled = true; });
+  show("diagnosticsPanel", true);
+  $("diagnosticsSummary").textContent = "Đang quét thư viện và kiểm tra chữ ký tệp…";
+  $("diagnosticStats").replaceChildren();
+  $("diagnosticRows").replaceChildren();
+  try {
+    const result = await api("diagnostics/scan?prefix=" + encodeURIComponent(currentPrefix));
+    $("diagnosticsSummary").textContent =
+      "Đã kiểm tra " + result.scanned + " tệp trong " + (result.prefix || "toàn bộ thư viện") +
+      " · " + formatDate(result.checkedAt);
+    $("diagnosticStats").append(
+      diagnosticStat("Tệp đã quét", result.scanned, "neutral"),
+      diagnosticStat("Lỗi cần xử lý", result.errors, result.errors ? "bad" : "good"),
+      diagnosticStat("Cảnh báo", result.warnings, result.warnings ? "warn" : "good")
+    );
+    if (!result.findings.length) {
+      const row = document.createElement("tr");
+      const cell = addCell(row, "Không phát hiện lỗi theo các quy tắc kiểm tra hiện tại.");
+      cell.colSpan = 5;
+      cell.className = "empty";
+      $("diagnosticRows").append(row);
+    }
+    for (const finding of result.findings) {
+      const row = document.createElement("tr");
+      const level = document.createElement("span");
+      level.className = "severity " + finding.severity;
+      level.textContent = finding.severity === "error" ? "Lỗi" : "Cảnh báo";
+      addCell(row, level);
+      const keyCell = addCell(row, finding.key);
+      keyCell.className = "diagnostic-key";
+      addCell(row, finding.message);
+      addCell(row, finding.suggestion || "Kiểm tra tệp gốc.");
+      const actionCell = document.createElement("td");
+      actionCell.append(actionButton("Mở thư mục", () => {
+        const parts = finding.key.split("/");
+        parts.pop();
+        currentPrefix = parts.length ? parts.join("/") + "/" : "";
+        loadFiles();
+        $("currentPath").scrollIntoView({ behavior: "smooth", block: "center" });
+      }));
+      row.append(actionCell);
+      $("diagnosticRows").append(row);
+    }
+    setStatus("Kiểm tra hoàn tất: " + result.errors + " lỗi, " + result.warnings + " cảnh báo.", result.errors > 0);
+  } catch (error) {
+    $("diagnosticsSummary").textContent = "Không thể hoàn tất kiểm tra: " + error.message;
+    const row = document.createElement("tr");
+    const cell = addCell(row, error.message);
+    cell.colSpan = 5;
+    cell.className = "empty error";
+    $("diagnosticRows").append(row);
+    setStatus(error.message, true);
+  } finally {
+    buttons.forEach((button) => { if (button) button.disabled = false; });
+  }
+}
+$("scanBtn").addEventListener("click", runDiagnostics);
+$("scanAgainBtn").addEventListener("click", runDiagnostics);
+
 async function renameEntry(entry) {
   const suggestion = entry.key;
   const destination = prompt("Nhập đường dẫn và tên mới (có thể thay đổi thư mục):", suggestion);
