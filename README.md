@@ -367,3 +367,17 @@ Quy tắc bảo trì:
 1. Mở trực tiếp URL manifest ở trên trên trình duyệt. Xác nhận trang trả JSON (không phải Access denied/404) và có mảng `books` không rỗng; nếu vẫn lỗi, gửi lại mã lỗi hoặc ảnh chụp màn hình.
 2. Khi endpoint được xác nhận, tiếp tục kiểm tra CORS từ WebView/origin của app và xem lại luồng `loadR2Catalog()`; bổ sung telemetry/retry tối thiểu nếu cần.
 3. Chạy lại CI cho đúng HEAD hiện tại của PR #37, xử lý mọi lỗi trước khi merge vào `beta`. Chỉ build APK beta sau khi PR được tích hợp và CI xanh; kiểm thử thiết bị thật vẫn là bước bắt buộc.
+
+### Xác nhận manifest truy cập được từ trình duyệt (2026-10-31)
+
+- Người dùng xác nhận đã mở URL public `books.json` và nhìn thấy nội dung JSON. Ghi nhận **public manifest accessible in user's browser**; công cụ kiểm tra độc lập vẫn không truy cập được hostname R2 nên chưa tự xác nhận HTTP status/body.
+- Đã rà soát `app.js` trên `testing`: app tự gọi `loadR2Catalog()` khi `DOMContentLoaded`; nút `btnLoadR2Catalog` cũng gọi lại hàm này. Hàm fetch trực tiếp URL R2 với `cache: 'no-store'`, kiểm tra `response.ok`, parse JSON, map bằng `ReadAlongCatalogPlaylist.mapRemoteCatalog()`, sau đó cập nhật và render playlist. Khi lỗi, app hiển thị alert; finally luôn tắt loading và khôi phục nút.
+- Kiểm tra DOM mapping: chỉ phát hiện `btnAutoFlipToggle` không có trong HTML; listener tương ứng đã có guard. Không phát hiện listener nào khác đang truy cập DOM ID không tồn tại mà thiếu guard. Chưa có căn cứ để sửa init flow hoặc thay đổi app code trước khi kiểm thử trên thiết bị.
+- CI PR #37 mới nhất tại head `c88c8e09fd8eb36fa4c92cfaea20e71e4b9b6153`: run [#41105388028](https://github.com/blamag999/read-along-android/actions/runs/41105388028) đang `queued`; chưa có conclusion. PR vẫn Draft/open, base `beta`, chưa merge.
+- Trạng thái: **User browser JSON check: Confirmed**; **App code path review: Completed**; **DOM event guard review: Completed**; **PR CI: Queued/Pending**; **Android app runtime test: Pending user device verification**; **APK build: Not started**.
+
+#### Bước tiếp theo
+
+1. Trên thiết bị đang cài Read Along, force stop ứng dụng rồi mở lại để chạy lại yêu cầu catalog tự động; nếu chưa hiện danh sách, mở chọn nguồn truyện và bấm `Truyện trực tuyến` để gọi lại fetch thủ công.
+2. Báo kết quả: số mục sách hiển thị hay nội dung lỗi cụ thể. Nếu vẫn lỗi, gửi log chẩn đoán mới sau lần thử này để phân biệt CORS/WebView, HTTP status, JSON mapping hay lỗi render.
+3. Chờ run #41105388028 kết thúc; chỉ sau CI success mới chuyển PR khỏi Draft/merge vào `beta`. Không build APK hoặc phát hành trước bước này và trước khi xác định cần thay đổi app hay không.
