@@ -1,0 +1,12 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const html = fs.readFileSync(path.join(__dirname, '..', 'admin/public/index.html'), 'utf8');
+const script = fs.readFileSync(path.join(__dirname, '..', 'admin/public/admin.js'), 'utf8');
+const ids = new Set(Array.from(html.matchAll(/\\bid=[\"']([^\"']+)[\"']/g), m => m[1]));
+const refs = Array.from(script.matchAll(/\\$\\([\"']([^\"']+)[\"']\\)/g), m => m[1]);
+const missing = Array.from(new Set(refs.filter(id => !ids.has(id))));
+assert.deepEqual(missing, [], 'Admin JavaScript references missing HTML element IDs');
+assert.ok(script.includes('async function loadPublicStats()'), 'Dashboard stats loader must exist');
+assert.ok(script.includes('window.addEventListener("hashchange", handleRoute)'), 'Admin route handler must be connected');
+console.log('Admin DOM reference tests passed.');
