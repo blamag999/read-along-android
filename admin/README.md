@@ -119,7 +119,7 @@ The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READA
 - Library pagination disables navigation controls while a page request is active and ignores stale responses after folder/page state changes.
 - It validates response shape, requires a cursor when R2 reports more results, and detects repeated cursor state. Errors appear in the Library table and status line.
 - Browser telemetry records page navigation clicks, load start/success/failure, folder changes, stale responses, missing/repeated cursor state, API status/duration/Ray ID, JavaScript errors and unhandled promise rejections.
-- Browser events are sent in small batches to the authenticated `debug/events` endpoint and persisted in `admin_client_events` in the dedicated Admin D1.
+- Browser events are sent in small batches to the same-origin `telemetry/events` endpoint and persisted in `admin_client_events` in the dedicated Admin D1.
 - Every Library listing request is recorded in `admin_library_requests`: prefix, page size, cursor-present flag, folder/file counts, R2 truncation state, HTTP status, duration, Ray ID and error. Raw cursor values are never stored.
 - No Debug tab or manual JSON export is exposed to end users. Diagnostic events continue to be sent automatically to the telemetry endpoint and stored in Admin D1.
 - Apply the appended `admin/schema.sql` additions to **read-along-admin-db only** before deploying. Never apply them to Comic Reader D1.
@@ -143,8 +143,8 @@ The Admin publishes the manifest stored in `admin/public/books.json` to the root
 
 - The canonical home page is public and does not call the session endpoint. It reads aggregate catalog and usage metrics from GET /api/readalong-admin/usage/stats.
 - The Quản lý nâng cao action switches to #manage, where the existing OTP login and authenticated management UI are shown. Refreshing #manage rechecks the HttpOnly session; the home page remains accessible without OTP.
-- The Android/Web app reports one launch per browser session using a random installation ID in local storage and a random launch ID in session storage. Both IDs are SHA-256 hashed on the server; raw IDs are not stored.
-- Metrics: total recorded launches (lifetime counter), launches in the last 30 days, unique installations ever recorded, and installations active in the last 30 days. Catalog counts are derived from the R2 books.json manifest.
+- The Android/Web app reports one launch per browser session using a random installation ID in local storage and a random launch ID in session storage. Returning to the foreground after at least five minutes creates a new counted session. Both IDs are SHA-256 hashed on the server; raw IDs are not stored.
+- Metrics: total recorded launches (lifetime counter), launches in the last 30 days, unique installations ever recorded, and installations active in the last 30 days. Detailed visit rows are retained for 90 days; the lifetime total remains aggregated. Catalog counts are derived from the R2 books.json manifest.
 - Installation count is an estimate of installations that have launched at least once after telemetry is added. Clearing app data/reinstalling can create a new ID; existing APKs do not report telemetry until updated.
 - The anonymous usage endpoint accepts only random identifiers, platform and app version. Never send account IDs, device serials, advertising IDs, email, phone, OTP, cookies or tokens.
 - Server exceptions are stored in admin_server_errors; browser and API telemetry is stored in admin_client_events. Both are bounded. Query the Admin D1 database only; never use the Comic Reader D1 database.
