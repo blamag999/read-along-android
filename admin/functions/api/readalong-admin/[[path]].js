@@ -240,82 +240,115 @@ async function scanLibrary(bucket, prefix) {
 
   const normalizeBookName = value => String(value || "")
     .normalize("NFKC").replace(/\\.[^/.]+$/, "").replace(/[_-]+/g, " ")
-    .replace(/[’']/g, "").replace(/\\b(?:part|pt|disc|side)\\s*(?:\\d+|[ab])\\b/gi, " ")
-    .replace(/\\b\\d+\\s+of\\s+\\d+\\b/gi, " ").replace(/\\bread\\s+along\\b/gi, " ")
+    .replace(/[’']/g, "").replace(/\\bread\\s+along\\b/gi, " ")
     .replace(/\\bbook\\b/gi, " ").replace(/[^\\p{L}\\p{N}]+/gu, " ")
     .replace(/\\s+/g, " ").trim().toLocaleLowerCase("vi");
   const similarity = (left, right) => {
     if (!left || !right) return 0;
-    const a = left.split(" "), b = right.split(" ");
-    const aa = a.join(""), bb = b.join("");
-    const row = Array.from({length: bb.length + 1}, (_,i) => i);
-    for (let i=1;i<=aa.length;i++) {
-      let diagonal=row[0]; row[0]=i;
-      for (let j=1;j<=bb.length;j++) {
+    const aa=left.replace(/\\s+/g,""),bb=right.replace(/\\s+/g,"");
+    const row=Array.from({length:bb.length+1},(_,i)=>i);
+    for(let i=1;i<=aa.length;i++){
+      let diagonal=row[0];row[0]=i;
+      for(let j=1;j<=bb.length;j++){
         const above=row[j];
         row[j]=Math.min(row[j]+1,row[j-1]+1,diagonal+(aa[i-1]===bb[j-1]?0:1));
         diagonal=above;
       }
     }
     const edit=1-row[bb.length]/Math.max(aa.length,bb.length,1);
-    const leftTokens=new Set(a), rightTokens=new Set(b);
-    const overlap=[...leftTokens].filter(x=>rightTokens.has(x)).length/Math.max(leftTokens.size,rightTokens.size,1);
-    return Math.max(edit, overlap*0.92);
+    const x=new Set(left.split(" ")),y=new Set(right.split(" "));
+    const overlap=[...x].filter(t=>y.has(t)).length/Math.max(x.size,y.size,1);
+    return Math.max(edit,overlap*0.92);
   };
-  const assets = items.filter(item => {
+  const assets=items.filter(item=>{
     const ext=extensionOf(item.key);
-    return ext === ".pdf" || AUDIO_EXTENSIONS.has(ext);
-  }).map(item => ({
-    ...item, ext:extensionOf(item.key),
-    dir:item.key.includes("/")?item.key.slice(0,item.key.lastIndexOf("/")+1):"",
-    stem:item.key.split("/").pop().replace(/\\.[^.]+$/,""),
-    normalized:normalizeBookName(item.key.split("/").pop())
-  })).filter(item=>item.normalized);
-  const groups = new Map();
-  for (const item of assets) {
-    const groupKey=item.dir+item.normalized;
-    if (!groups.has(groupKey)) groups.set(groupKey,{pdf:[],audio:[]});
-    groups.get(groupKey)[item.ext===".pdf"?"pdf":"audio"].push(item);
+    return ext===".pdf" || AUDIO_EXTENSIONS.has(ext) || ext===".json";
+  }).map(item=>{
+    const name=item.key.split("/").pop().replace(/\\.[^.]+$/,"");
+    const ext=extensionOf(item.key);
+    const partMatch=ext!==".pdf" && ext!==".json" ? name.match(/(?:_|-)P(\\d+)$/i) : null;
+    const baseName=partMatch ? name.slice(0,partMatch.index) : name;
+    return {...item,ext,dir:item.key.includes("/")?item.key.slice(0,item.key.lastIndexOf("/")+1):"",
+      stem:name,part:partMatch?Number(partMatch[1]):null,
+      normalized:normalizeBookName(baseName)};
+  }).filter(item=>item.normalized);
+  const groups=new Map();
+  for(const item of assets){
+    const groupKey=item.dir+"|"+item.normalized;
+    if(!groups.has(groupKey))groups.set(groupKey,{pdf:[],audio:[],json:[],items:[]});
+    const group=groups.get(groupKey);group.items.push(item);
+    if(item.ext===".pdf")group.pdf.push(item);
+    else if(item.ext===".json")group.json.push(item);
+    else group.audio.push(item);
   }
-  for (const group of groups.values()) {
-    if (group.pdf.length && !group.audio.length) findings.push({
+  for(const group of groups.values()){
+    const first=group.items[0];
+    if(group.pdf.length>1) findings.push({
+      severity:"error",code:"duplicate_pdf",key:group.pdf[0].key,
+      message:"Có nhiều PDF cùng tên sách sau khi chuẩn hóa.",
+      suggestion:"Chỉ giữ một PDF chính hoặc đổi tên/phân loại rõ ràng các bản khác nhau."
+    });
+    if(group.json.length>1) findings.push({
+      severity:"error",code:"duplicate_timestamp_json",key:group.json[0].key,
+      message:"Có nhiều JSON mốc thời gian cùng tên sách.",
+      suggestion:"Xác định JSON đúng với audio; giữ một tệp JSON có tên gốc trùng PDF."
+    });
+    if(group.pdf.length && !group.audio.length) findings.push({
       severity:"error",code:"missing_audio",key:group.pdf[0].key,
-      message:"Có PDF nhưng chưa có audio trùng tên sau khi chuẩn hóa.",
-      suggestion:"Kiểm tra các tệp audio có tên gần giống bên dưới; chỉ ghép tự động khi tên chuẩn hóa trùng khớp."
+      message:"Có PDF nhưng chưa có MP3/audio cùng tên gốc.",
+      suggestion:"Đặt tên audio trùng tên PDF; nếu chia phần, dùng hậu tố _P1, _P2..."
     });
-    if (group.audio.length && !group.pdf.length) findings.push({
+    if(group.audio.length && !group.pdf.length) findings.push({
       severity:"error",code:"missing_pdf",key:group.audio[0].key,
-      message:"Có audio nhưng chưa có PDF trùng tên sau khi chuẩn hóa.",
-      suggestion:"Kiểm tra các tệp PDF có tên gần giống bên dưới; chỉ ghép tự động khi tên chuẩn hóa trùng khớp."
+      message:"Có MP3/audio nhưng chưa có PDF cùng tên gốc.",
+      suggestion:"Đặt tên PDF trùng tên gốc của audio, bỏ hậu tố _P1/_P2 nếu có."
     });
-    if (group.pdf.length>1 || group.audio.length>1) findings.push({
-      severity:"warning",code:"duplicate_book_assets",key:group.pdf[0]?.key || group.audio[0]?.key,
-      message:"Có nhiều PDF/audio cùng tên chuẩn hóa; cần xác nhận các tệp có phải nhiều phần hay bản trùng.",
-      suggestion:"Kiểm tra thứ tự part/side/disc và tránh để nhiều bản không phân biệt."
-    });
+    if(group.audio.length>1){
+      const parts=group.audio.map(x=>x.part);
+      const valid=parts.every(Number.isInteger) && new Set(parts).size===parts.length &&
+        [...parts].sort((a,b)=>a-b).every((n,i)=>n===i+1);
+      if(!valid) findings.push({
+        severity:"warning",code:"invalid_audio_parts",key:group.audio[0].key,
+        message:"Nhiều audio cùng sách nhưng hậu tố phần chưa đúng quy tắc _P1, _P2... liên tục.",
+        suggestion:"Đổi tên các phần thành _P1, _P2, _P3...; không trộn tệp không hậu tố với tệp có hậu tố."
+      });
+    } else if(group.audio.length===1 && group.audio[0].part!==null && group.audio[0].part!==1){
+      findings.push({
+        severity:"warning",code:"audio_part_sequence",key:group.audio[0].key,
+        message:"Sách chỉ có một tệp audio nhưng hậu tố phần bắt đầu từ P"+group.audio[0].part+".",
+        suggestion:"Nếu đây là phần duy nhất, đổi hậu tố thành _P1; nếu còn phần khác, tải đủ các phần."
+      });
+    }
   }
+  const pairedKeys=new Set(assets.filter(x=>x.ext===".pdf" || x.ext===".json" || AUDIO_EXTENSIONS.has(x.ext))
+    .map(x=>x.key));
   const unmatched=assets.filter(item=>{
-    const group=groups.get(item.dir+item.normalized);
-    return item.ext===".pdf" ? !group.audio.length : !group.pdf.length;
+    const group=groups.get(item.dir+"|"+item.normalized);
+    return item.ext===".pdf" ? !group.audio.length : item.ext===".json" ? (!group.pdf.length || !group.audio.length) : !group.pdf.length;
   });
-  for (const item of unmatched) {
-    const opposite=unmatched.filter(other=>other.dir===item.dir && (item.ext===".pdf" ? other.ext!==".pdf" : other.ext===".pdf"));
+  const reported=new Set();
+  for(const item of unmatched){
+    if(reported.has(item.key))continue;
+    const opposite=unmatched.filter(other=>other.dir===item.dir &&
+      (item.ext===".pdf" ? (other.ext!==".pdf" && other.ext!==".json") :
+       item.ext===".json" ? other.ext===".pdf" : other.ext===".pdf"));
     const ranked=opposite.map(other=>({other,score:similarity(item.normalized,other.normalized)}))
       .filter(x=>x.score>=0.78).sort((a,b)=>b.score-a.score);
-    if (!ranked.length) continue;
+    if(!ranked.length)continue;
     const best=ranked[0];
-    if (ranked.length>1 && best.score-ranked[1].score<0.08) {
+    if(ranked.length>1 && best.score-ranked[1].score<0.08){
       findings.push({severity:"warning",code:"ambiguous_name_match",key:item.key,
-        message:"Có nhiều tệp khác loại tên gần giống; không thể đề xuất ghép an toàn.",
-        suggestion:"Đối chiếu nội dung sách và đổi tên thủ công để tên cơ sở trùng khớp."});
-      continue;
+        message:"Có nhiều tệp khác loại tên gần giống; không thể đề xuất đổi tên an toàn.",
+        suggestion:"Đối chiếu nội dung sách và xác định đúng cặp trước khi sửa tên."});
+      reported.add(item.key);continue;
     }
     const counterpart=best.other;
     const suggestedRename=item.dir+counterpart.stem+(item.ext);
     findings.push({severity:"warning",code:"name_mismatch",key:item.key,candidateKey:counterpart.key,
       similarity:Math.round(best.score*100),suggestedRename,
-      message:"Tên PDF/audio gần giống nhưng chưa trùng khớp; hiện không được ghép tự động.",
-      suggestion:"Nếu xác nhận hai tệp thuộc cùng một sách, đổi tên tệp này thành: "+suggestedRename});
+      message:"Tên tệp gần giống nhưng chưa trùng tên gốc; hiện không được ghép tự động.",
+      suggestion:"Nếu xác nhận cùng một sách, duyệt đổi tên thành: "+suggestedRename});
+    reported.add(item.key);
   }
   const errors = findings.filter((x) => x.severity === "error").length;
   const warnings = findings.filter((x) => x.severity === "warning").length;
@@ -396,13 +429,14 @@ async function handle(request, env) {
     const prefix = url.searchParams.get("prefix") || "";
     if (prefix && !validKey(prefix.endsWith("/") ? prefix.slice(0, -1) : prefix)) return json({ error: "Invalid folder path" }, 400);
     const normalized = prefix ? (prefix.endsWith("/") ? prefix : prefix + "/") : "";
-    const result = await env.READALONG.list({ prefix: normalized, delimiter: "/", limit: 1000 });
+    const requestedCursor = url.searchParams.get("cursor") || undefined;
+    const result = await env.READALONG.list({ prefix: normalized, delimiter: "/", limit: 100, ...(requestedCursor ? { cursor: requestedCursor } : {}) });
     const folders = (result.delimitedPrefixes || []).map((key) => ({ key, name: key.slice(normalized.length), type: "folder" }));
     const files = result.objects.filter((obj) => obj.key !== normalized && !obj.key.endsWith("/")).map((obj) => ({
       key: obj.key, name: obj.key.slice(normalized.length), type: "file", size: obj.size, uploaded: obj.uploaded,
       contentType: obj.httpMetadata?.contentType || ""
     }));
-    return json({ prefix: normalized, folders, files, truncated: result.truncated, cursor: result.cursor || null });
+    return json({ prefix: normalized, folders, files, truncated: result.truncated, cursor: result.cursor || null, pageSize: 100 });
   }
 
   if (route === "folders" && method === "POST") {
