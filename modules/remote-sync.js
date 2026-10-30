@@ -35,7 +35,7 @@ function encodeBase64Utf8(v){const b=new TextEncoder().encode(v);let x='';for(le
 async function getGithubWriteToken(askForToken=false){
  let token=getGithubToken();
  if(!token&&askForToken){
-  token=prompt('Nhập mã truy cập có quyền đọc và ghi tệp đồng bộ. Mã chỉ được giữ trong phiên trình duyệt hiện tại.');
+  token=prompt('Nhập GitHub token có quyền Contents: Read and write trên blamag999/read-along-android. Token chỉ được giữ trong phiên trình duyệt hiện tại.');
   if(token){token=token.trim();if(token)sessionStorage.setItem(GITHUB_TOKEN_SESSION_KEY,token);}
  }
  if(!token&&askForToken)alert('Chưa có mã truy cập. Cần quyền đọc và ghi tệp đồng bộ.');
@@ -110,7 +110,7 @@ async function syncAllFolderJsonToGitHub({askForToken=false}={}){
 }
 async function syncCurrentBookToGitHub({askForToken=false}={}){
  if(!state.currentBookKey||!state.pdfFileName){if(askForToken)alert('Vui lòng mở PDF trước khi đồng bộ mốc.');return false;}
- let token=getGithubToken();if(!token&&askForToken){token=prompt('Nhập mã truy cập có quyền đọc và ghi tệp đồng bộ. Mã chỉ được giữ trong phiên trình duyệt hiện tại.');if(token){token=token.trim();sessionStorage.setItem(GITHUB_TOKEN_SESSION_KEY,token);}}
+ let token=getGithubToken();if(!token&&askForToken){token=prompt('Nhập GitHub token có quyền Contents: Read and write trên blamag999/read-along-android. Token chỉ được giữ trong phiên trình duyệt hiện tại.');if(token){token=token.trim();sessionStorage.setItem(GITHUB_TOKEN_SESSION_KEY,token);}}
  if(!token){if(askForToken)alert('Chưa có mã truy cập. Cần quyền đọc và ghi tệp đồng bộ.');return false;}
  const path=getCloudSyncPath(),url='https://api.github.com/repos/'+GITHUB_OWNER+'/'+GITHUB_REPO+'/contents/'+path.split('/').map(encodeURIComponent).join('/');
  const headers={'Accept':'application/vnd.github+json','Authorization':'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'};
