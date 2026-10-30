@@ -9,7 +9,7 @@ Standalone web file manager for the Read Along R2 library. This app lives in the
 - Pages root directory: `admin`
 - Build command: empty
 - Build output directory: `public`
-- Production branch: `main`; `beta` is a preview branch
+- Production branch: `beta`; `main` and `feature/*` are preview branches
 - R2 binding: `READALONG` -> `my-audio-book` only
 - D1 binding: `DB` -> dedicated `read-along-admin-db`
 - Secret: `READALONG_TOTP_SECRET` (Base32, at least 32 characters); never reuse the Private Comic Reader `TOTP_SECRET`
@@ -20,8 +20,8 @@ Do not add a `COMICS` binding, do not bind the Private Comic Reader D1 database,
 
 - Pages project: `read-along-admin` (`read-along-admin.pages.dev`), project ID `373988ad-1b62-4750-80cb-5a39a37f6281`.
 - Dedicated D1 database: `read-along-admin-db`, ID `6a316068-ef8e-4eaf-af4b-536b4fd7b74c`; schema has been applied, including TOTP replay protection.
-- Pages Git source is this repository; root directory is `admin`, output directory is `public`, production branch is `main`, and preview branches include `beta` and `feature/*`.
-- The only R2 binding is `READALONG` -> `my-audio-book`.
+- Pages Git source is this repository; root directory is `admin`, output directory is `public`, production branch is `beta`, and preview branches include `feature/*` and `main`.
+- The only Production R2 binding is `READALONG` -> `my-audio-book`. Preview has no R2 or D1 bindings.
 
 ## Cloudflare setup
 
@@ -34,10 +34,11 @@ Create/configure the Pages project from the same GitHub repository:
 5. Build output directory: `public`.
 6. Production branch: `main`.
 7. Git path filter is currently `*` because Pages evaluates paths relative to the configured root directory. This keeps the project deployable; the Pages build is separate from the Android APK workflow. If path filtering is tightened later, test a preview deployment before relying on it.
-8. Add bindings in both Preview and Production:
+8. Add bindings to **Production only**:
    - R2 bucket binding named `READALONG`, bucket `my-audio-book`.
    - D1 database binding named `DB`, database `read-along-admin-db`.
-9. Add `READALONG_TOTP_SECRET` as a secret in both environments. Generate a new random Base32 secret of at least 160 bits and add it to an authenticator app. Never reuse the Comic Reader seed.
+   Preview deliberately has no D1 or R2 bindings, so preview builds cannot access production library data.
+9. Add `READALONG_TOTP_SECRET` as a secret in **Production only**. Generate a new random Base32 secret of at least 160 bits and add it to an authenticator app. Never reuse the Comic Reader seed. Do not add the production secret to Preview.
 10. Apply `schema.sql` once to `read-along-admin-db` using the D1 Console or Wrangler.
 
 Example local D1 migration (after installing Wrangler and authenticating):
