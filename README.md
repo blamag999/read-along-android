@@ -133,3 +133,44 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 - Backend đã merge PR [#11](https://github.com/blamag999/private-comic-reader/pull/11) và Cloudflare Pages Production deploy thành công. Bucket `my-audio-book` đã tắt public `r2.dev`; binding `READALONG` hoạt động qua Pages Functions. API runtime và APK vẫn cần kiểm thử đầu-cuối trên thiết bị trước khi coi là hoàn tất.
 - Khi kiểm thử: xác nhận danh sách mới tự xuất hiện sau khi thêm file vào R2; PDF tải theo Range; các định dạng audio hỗ trợ tua được; JSON marker nạp được; không có request nào tới `.r2.dev`.
 - Kiểm kê Bucket tại thời điểm 2026-10-30: 184 object, gồm 87 MP3, 85 PDF, 10 JSON và 2 WMA. Hiện có 84 cặp PDF+MP3 (9 cặp có JSON); `Oliver_Company` chưa xuất hiện do chỉ có PDF và hai track `.wma`, định dạng WMA không được Android WebView hỗ trợ trực tiếp. `books.json` cũ vẫn nằm trên Bucket nhưng API không đọc file này.
+
+
+## 8. Read Along Admin — web quản trị thư viện
+
+Đã phát triển khu vực quản trị độc lập trong cùng repository, tại thư mục `admin/`. Đây là website riêng, không nằm trong APK và không dùng backend/xác thực của Private Comic Reader.
+
+### Kiến trúc và ranh giới bảo mật
+
+- Mã nguồn: `admin/` trong repository `blamag999/read-along-android`.
+- Cloudflare Pages project riêng: `read-along-admin`, URL production `https://read-along-admin.pages.dev`.
+- Pages root directory: `admin`; output directory: `public`; không cần build command.
+- Pages project dùng nhánh `beta` làm production trong giai đoạn thử nghiệm; nhánh `main` và `feature/*` là preview.
+- Production bindings: `READALONG` → R2 bucket `my-audio-book`; `DB` → D1 database `read-along-admin-db`.
+- D1 ID: `6a316068-ef8e-4eaf-af4b-536b4fd7b74c`.
+- Preview deployment cố ý không có D1/R2 binding và không có OTP secret, tránh thao tác lên dữ liệu thật.
+- Không bind `COMICS`, không dùng `private-comic-reader-db`, không dùng cookie/session hoặc TOTP secret của Private Comic Reader.
+- Secret bắt buộc ở Production: `READALONG_TOTP_SECRET` (Base32 mới, tối thiểu 160 bit). Chưa cấu hình secret; phải thêm trong Cloudflare Pages > Settings > Variables and Secrets trước khi đăng nhập. Không commit secret vào GitHub và không thêm vào Preview.
+
+### API và chức năng hiện có
+
+- API namespace riêng: `/api/readalong-admin/*`.
+- OTP 6 số TOTP (HMAC-SHA1, chu kỳ 30 giây, chấp nhận lệch ±1 bước), chống dùng lại cùng OTP.
+- Session random 256-bit, chỉ lưu SHA-256 hash trong D1; cookie HttpOnly/Secure/SameSite=Strict, hết hạn sau 30 phút.
+- Rate limit đăng nhập: tối đa 5 lần/IP hash trong 15 phút.
+- Cùng origin cho mọi request thay đổi dữ liệu; có CSP, anti-framing headers và audit log.
+- Duyệt thư mục/tệp, tạo thư mục, upload multipart theo chunk, đổi tên/di chuyển file, xóa file và xóa thư mục (tối đa 5.000 object/lần).
+- Định dạng: PDF, JSON, MP3, M4A/M4B, AAC, WAV, OGG/OGA, Opus, FLAC, WMA. WMA chỉ lưu trữ; playback Android WebView không được đảm bảo.
+
+### Workflow riêng
+
+- `.github/workflows/check-readalong-admin.yml` kiểm tra cú pháp JS và ranh giới bảo mật cho thay đổi trong `admin/**`.
+- Workflow APK `build-android-apk.yml` không được thay đổi và vẫn chỉ chạy thủ công; thêm Admin không tự build APK.
+- Admin chưa được promote lên `main`; tiếp tục review/kiểm thử trên `beta` trước.
+
+### Việc còn lại
+
+1. Thêm secret `READALONG_TOTP_SECRET` ở Production Pages environment bằng seed Base32 mới và đăng ký seed đó vào Authenticator.
+2. Merge PR Admin vào `beta`, chờ Pages production deploy và kiểm tra đăng nhập/session/OTP.
+3. Kiểm thử upload file lớn, folder, rename/move, xóa file/thư mục và audit log trên dữ liệu thử nghiệm.
+4. Chỉ sau khi kiểm thử ổn định mới đổi Pages production branch sang `main` khi promote stable.
+5. Chuyển đổi audio (FFmpeg) chưa được triển khai. Không chạy FFmpeg dài trong Pages Functions; cần chọn runtime xử lý riêng hoặc thử nghiệm FFmpeg WASM phía trình duyệt, giữ file gốc và xác minh output trước khi publish.
