@@ -507,25 +507,57 @@ async function handle(request, env) {
   }
 
   if (route === "debug/logs" && method === "GET") {
-    const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") || 50)));
-    const result = await env.DB.prepare("SELECT scan_id, prefix, status, scanned, changed, skipped, errors, warnings, duration_ms, rule_version, ray_id, error_message, detail_json, created_at FROM admin_scan_logs ORDER BY created_at DESC LIMIT ?").bind(limit).all();
-    return json({ entries: result.results || [] });
+    const limit=Math.min(100,Math.max(1,Number(url.searchParams.get("limit")||50)));
+    const [scans,requests,events]=await Promise.all([
+      env.DB.prepare("SELECT scan_id,prefix,status,scanned,changed,skipped,errors,warnings,duration_ms,rule_version,ray_id,error_message,detail_json,created_at FROM admin_scan_logs ORDER BY created_at DESC LIMIT ?").bind(limit).all(),
+      env.DB.prepare("SELECT request_id,prefix,page_size,cursor_present,folders_count,files_count,truncated,status,duration_ms,ray_id,error_message,created_at FROM admin_library_requests ORDER BY created_at DESC LIMIT ?").bind(limit).all(),
+      env.DB.prepare("SELECT event_type,details_json,ray_id,created_at FROM admin_client_events ORDER BY created_at DESC LIMIT ?").bind(limit).all()
+    ]);
+    return json({entries:scans.results||[],libraryRequests:requests.results||[],events:events.results||[]});
+  }
+
+  if (route === "debug/events" && method === "POST") {
+    assertOrigin(request);
+    let body;
+    try { body=await request.json(); } catch { return json({error:"Invalid JSON"},400); }
+    if(!Array.isArray(body.events)||body.events.length>25) return json({error:"Invalid event batch"},400);
+    const rayId=request.headers.get("cf-ray")||null;
+    for(const event of body.events) {
+      const type=String(event?.type||"").slice(0,80);
+      if(!type) continue;
+      let details="{}";
+      try { details=JSON.stringify(event.details||{}).slice(0,3000); } catch {}
+      await env.DB.prepare("INSERT INTO admin_client_events (event_type,details_json,ray_id,created_at) VALUES (?,?,?,?)").bind(type,details,rayId,Date.now()).run();
+    }
+    await env.DB.prepare("DELETE FROM admin_client_events WHERE id NOT IN (SELECT id FROM admin_client_events ORDER BY created_at DESC LIMIT 5000)").run();
+    return json({ok:true,accepted:body.events.length});
   }
 
   if (route === "files" && method === "GET") {
-    const prefix = url.searchParams.get("prefix") || "";
-    if (prefix && !validKey(prefix.endsWith("/") ? prefix.slice(0, -1) : prefix)) return json({ error: "Invalid folder path" }, 400);
-    const normalized = prefix ? (prefix.endsWith("/") ? prefix : prefix + "/") : "";
-    const requestedCursor = url.searchParams.get("cursor") || undefined;
-    const requestedLimit = Number(url.searchParams.get("limit") || 25);
-    const pageSize = [25,  50, 100].includes(requestedLimit) ? requestedLimit : 25;
-    const result = await env.READALONG.list({ prefix: normalized, delimiter: "/", limit: pageSize, ...(requestedCursor ? { cursor: requestedCursor } : {}) });
-    const folders = (result.delimitedPrefixes || []).map((key) => ({ key, name: key.slice(normalized.length), type: "folder" }));
-    const files = result.objects.filter((obj) => obj.key !== normalized && !obj.key.endsWith("/")).map((obj) => ({
-      key: obj.key, name: obj.key.slice(normalized.length), type: "file", size: obj.size, uploaded: obj.uploaded,
-      contentType: obj.httpMetadata?.contentType || ""
-    }));
-    return json({ prefix: normalized, folders, files, truncated: result.truncated, cursor: result.cursor || null, pageSize });
+    const startedAt=Date.now(), requestId=crypto.randomUUID(), rayId=request.headers.get("cf-ray")||null;
+    const prefix=url.searchParams.get("prefix")||"";
+    const cursorPresent=!!url.searchParams.get("cursor");
+    let pageSize=25;
+    try {
+      if(prefix&&!validKey(prefix.endsWith("/")?prefix.slice(0,-1):prefix)) return json({error:"Invalid folder path",requestId,rayId},400);
+      const normalized=prefix?(prefix.endsWith("/")?prefix:prefix+"/"):"";
+      const requestedCursor=url.searchParams.get("cursor")||undefined;
+      const requestedLimit=Number(url.searchParams.get("limit")||25);
+      pageSize=[25,50,100].includes(requestedLimit)?requestedLimit:25;
+      const result=await env.READALONG.list({prefix:normalized,delimiter:"/",limit:pageSize,...(requestedCursor?{cursor:requestedCursor}:{})});
+      const folders=(result.delimitedPrefixes||[]).map(key=>({key,name:key.slice(normalized.length),type:"folder"}));
+      const files=result.objects.filter(obj=>obj.key!==normalized&&!obj.key.endsWith("/")).map(obj=>({key:obj.key,name:obj.key.slice(normalized.length),type:"file",size:obj.size,uploaded:obj.uploaded,contentType:obj.httpMetadata?.contentType||""}));
+      await env.DB.prepare("INSERT INTO admin_library_requests (request_id,prefix,page_size,cursor_present,folders_count,files_count,truncated,status,duration_ms,ray_id,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
+        .bind(requestId,normalized,pageSize,cursorPresent?1:0,folders.length,files.length,result.truncated?1:0,200,Date.now()-startedAt,rayId,Date.now()).run();
+      return json({prefix:normalized,folders,files,truncated:result.truncated,cursor:result.cursor||null,pageSize,requestId,rayId});
+    } catch(error) {
+      const message=String(error?.message||"Library listing failed").slice(0,800);
+      try {
+        await env.DB.prepare("INSERT INTO admin_library_requests (request_id,prefix,page_size,cursor_present,folders_count,files_count,truncated,status,duration_ms,ray_id,error_message,created_at) VALUES (?,?,?,?,0,0,0,?,?,?,?,?)")
+          .bind(requestId,prefix,pageSize,cursorPresent?1:0,500,Date.now()-startedAt,rayId,message,Date.now()).run();
+      } catch {}
+      return json({error:message,requestId,rayId},500);
+    }
   }
 
   if (route === "folders" && method === "POST") {
