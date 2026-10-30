@@ -7,7 +7,7 @@
       "audios": [
         "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/20_000_Leagues_Under_the_Sea_Read_Along.mp3"
       ],
-      "sync": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/20_000_leagues_under_the_sea_read_along_sync.json"
+      "sync": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/20_000_Leagues_Under_the_Sea_Read_Along.json"
     },
     {
       "id": "101_dalmations",
@@ -16,7 +16,7 @@
       "audios": [
         "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/101_Dalmations_Read_Along.mp3"
       ],
-      "sync": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/101_dalmations_read_along_sync.json"
+      "sync": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/101_dalmations_read_along.json"
     },
     {
       "id": "aladdin_and_his_lamp",
@@ -41,8 +41,8 @@
       "title": "Bambi",
       "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Bambi-ReadAlong-Book.pdf",
       "audios": [
-        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Bambi-ReadAlong-Book_Side1.mp3",
-        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Bambi-ReadAlong-Book_Side2.mp3"
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Bambi-ReadAlong-Book_P1.mp3",
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Bambi-ReadAlong-Book_P2.mp3"
       ],
       "sync": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Bambi-ReadAlong-Book.json"
     },
@@ -447,7 +447,7 @@
       "title": "Seven Little Postmen",
       "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Seven_Little_Postmen_Read_Along.pdf",
       "audios": [
-        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Seven_Little_Postmen_Read_Along.mp3"
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Seven%20Little%20Postmen.mp3"
       ],
       "sync": null
     },
@@ -465,7 +465,7 @@
       "title": "Snow White and the Seven Dwarfs",
       "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Snow_White_and_the_Seven_Dwarfs_read_along.pdf",
       "audios": [
-        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Snow_White_and_the_Seven_Dwarfs_read_along.mp3"
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Snow%20White%20and%20the%20Seven%20Dwarfs_Read%20Along.mp3"
       ],
       "sync": null
     },
@@ -474,7 +474,7 @@
       "title": "Tawny Scrawny Lion",
       "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Tawny_Scrawny_Lion_book.pdf",
       "audios": [
-        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Tawny_Scrawny_Lion_book.mp3"
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Tawny%20Scrawny%20Lion.mp3"
       ],
       "sync": null
     },
@@ -546,8 +546,8 @@
       "title": "The Jungle",
       "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Jungle_Book_Read_Along.pdf",
       "audios": [
-        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Jungle_Book_Read_Along_Side%201.mp3",
-        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Jungle_Book_Read_Along_Side%202.mp3"
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Jungle_Book_Read_Along_P1.mp3",
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Jungle_Book_Read_Along_P2.mp3"
       ],
       "sync": null
     },
@@ -556,8 +556,8 @@
       "title": "The Lion King",
       "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Lion_King_Read_Along.pdf",
       "audios": [
-        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Lion_King_Read_Along_part%201.mp3",
-        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Lion_King_Read_Along_part%202.mp3"
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Lion_King_Read_Along_P1.mp3",
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Lion_King_Read_Along_P2.mp3"
       ],
       "sync": null
     },
