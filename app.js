@@ -18,7 +18,7 @@ const state = {
   // DANH SÁCH TẬP TRUYỆN (PLAYLIST)
   playlist: [],
   currentStoryIndex: -1,
-  activeFilter: 'paired', // Mặc định chỉ hiện mục đủ PDF và MP3
+  activeFilter: 'paired', // Mặc định chỉ hiện mục đủ PDF và audio
   searchQuery: '',
   playlistPage: 1,
   playlistPageSize: 0,
@@ -1206,7 +1206,7 @@ dom.selPageTurnMode.value = state.pageTurnMode;
     const mediaError = dom.audioElement.error;
     const reason = mediaError && mediaError.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
       ? 'Định dạng hoặc tệp âm thanh không được trình duyệt hỗ trợ.'
-      : 'Không thể tải tệp âm thanh. Hãy thử chọn lại file MP3.';
+      : 'Không thể tải tệp âm thanh. Hãy kiểm tra định dạng/codec hoặc chọn file audio khác.';
     showToast(reason);
     updatePlayButtonState();
   });
@@ -1263,11 +1263,11 @@ async function handlePdfFileSelect(e) {
   dom.audioElement.pause();
   dom.audioElement.removeAttribute('src');
   dom.audioElement.load();
-  dom.audioFileName.textContent = '🎵 Chưa có MP3';
+  dom.audioFileName.textContent = '🎵 Chưa có audio';
   dom.audioFileName.classList.add('empty');
   updateAudioPartUI();
 
-  // Không tự mở hộp thoại MP3; người dùng chủ động bấm nút "Chọn MP3".
+  // Không tự mở hộp thoại chọn audio; người dùng chủ động bấm nút "Chọn audio".
   try {
     await loadPdfFromBlob(file, true);
     saveBookToLibrary({
@@ -1278,7 +1278,7 @@ async function handlePdfFileSelect(e) {
   } finally {
     state.pdfSelectionInProgress = false;
   }
-  showToast('Đã mở PDF. Chọn file MP3 tương ứng để bắt đầu nghe.');
+  showToast('Đã mở PDF. Chọn file audio tương ứng để bắt đầu nghe.');
 }
 
 async function handleAudioFileSelect(e) {
@@ -1509,7 +1509,7 @@ async function loadPdfFromBlob(file, shouldResetSync = true) {
 
 function loadAudioFromBlob(file) {
   if (!(file instanceof Blob)) {
-    showToast('Tệp âm thanh không hợp lệ. Hãy chọn lại MP3.');
+    showToast('Tệp âm thanh không hợp lệ. Hãy chọn lại file audio được hỗ trợ.');
     return false;
   }
 
@@ -1523,7 +1523,7 @@ function loadAudioFromBlob(file) {
 
   // Gán nguồn mới trước khi đặt currentTime. Sau khi chọn PDF, audio element
   // không còn nguồn; gán currentTime=0 lúc này có thể ném InvalidStateError
-  // trên một số trình duyệt và làm dừng luồng xử lý chọn MP3.
+  // trên một số trình duyệt và làm dừng luồng xử lý chọn audio.
   const objectUrl = URL.createObjectURL(file);
   const previousUrl = dom.audioElement.dataset.objectUrl;
   if (previousUrl) URL.revokeObjectURL(previousUrl);
@@ -1872,7 +1872,7 @@ async function togglePlayPause() {
     updatePlayButtonState();
     console.error('Không thể phát âm thanh:', error);
     const message = error && error.name === 'NotAllowedError'
-      ? 'Trình duyệt chặn phát âm thanh. Hãy bấm Play trực tiếp sau khi chọn MP3.'
+      ? 'Trình duyệt chặn phát âm thanh. Hãy bấm Play trực tiếp sau khi chọn audio.'
       : error && error.name === 'NotSupportedError'
         ? 'Định dạng hoặc codec audio này không được trình duyệt hỗ trợ. Hãy chọn file audio khác (M4A, AAC, WAV, OGG/Opus hoặc FLAC).'
         : 'Không phát được âm thanh. Hãy kiểm tra định dạng và codec của file audio rồi thử lại.';
