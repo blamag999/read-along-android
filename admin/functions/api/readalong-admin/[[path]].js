@@ -239,13 +239,13 @@ async function scanLibrary(bucket, prefix) {
   }
 
   const normalizeBookName = value => String(value || "")
-    .normalize("NFKC").replace(/\\.[^/.]+$/, "").replace(/[_-]+/g, " ")
-    .replace(/[’']/g, "").replace(/\\bread\\s+along\\b/gi, " ")
-    .replace(/\\bbook\\b/gi, " ").replace(/[^\\p{L}\\p{N}]+/gu, " ")
-    .replace(/\\s+/g, " ").trim().toLocaleLowerCase("vi");
+    .normalize("NFKC").replace(/\.[^/.]+$/, "").replace(/[_-]+/g, " ")
+    .replace(/[’']/g, "").replace(/\bread\s+along\b/gi, " ")
+    .replace(/\bbook\b/gi, " ").replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ").trim().toLocaleLowerCase("vi");
   const similarity = (left, right) => {
     if (!left || !right) return 0;
-    const aa=left.replace(/\\s+/g,""),bb=right.replace(/\\s+/g,"");
+    const aa=left.replace(/\s+/g,""),bb=right.replace(/\s+/g,"");
     const row=Array.from({length:bb.length+1},(_,i)=>i);
     for(let i=1;i<=aa.length;i++){
       let diagonal=row[0];row[0]=i;
@@ -264,9 +264,9 @@ async function scanLibrary(bucket, prefix) {
     const ext=extensionOf(item.key);
     return ext===".pdf" || AUDIO_EXTENSIONS.has(ext) || ext===".json";
   }).map(item=>{
-    const name=item.key.split("/").pop().replace(/\\.[^.]+$/,"");
+    const name=item.key.split("/").pop().replace(/\.[^.]+$/,"");
     const ext=extensionOf(item.key);
-    const partMatch=ext!==".pdf" && ext!==".json" ? name.match(/_P(\\d+)$/i) : null;
+    const partMatch=ext!==".pdf" && ext!==".json" ? name.match(/_P(\d+)$/i) : null;
     const withoutPart=partMatch ? name.slice(0,partMatch.index) : name;
     const baseName=ext===".json" ? withoutPart.replace(/[_-]sync$/i,"") : withoutPart;
     return {...item,ext,dir:item.key.includes("/")?item.key.slice(0,item.key.lastIndexOf("/")+1):"",
