@@ -123,3 +123,12 @@ The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READA
 - Every Library listing request is recorded in `admin_library_requests`: prefix, page size, cursor-present flag, folder/file counts, R2 truncation state, HTTP status, duration, Ray ID and error. Raw cursor values are never stored.
 - The Debug tab displays scan history, server-side pagination requests, persisted browser events and current-tab API logs; JSON export includes all sources.
 - Apply the appended `admin/schema.sql` additions to **read-along-admin-db only** before deploying. Never apply them to Comic Reader D1.
+
+
+### Admin session persistence and refresh diagnostics (2026-10-30)
+
+- The Admin session remains a server-side D1 session identified by a random HttpOnly, Secure cookie. The session lifetime remains 30 minutes; refreshing the page must not invalidate it.
+- Session cookies are host-only (no Domain attribute), scoped to `Path=/`, and include both `Max-Age` and `Expires`. `SameSite=Lax` supports normal same-site navigation while retaining CSRF protections alongside the existing Origin check for state-changing requests.
+- `GET session` returns safe diagnostics only: whether a cookie was present, whether the server-side session is valid, expiry time/remaining seconds, and a reason code. It never returns the cookie or token hash.
+- The browser records `auth_session_check`, `auth_session_check_error`, login/logout, and API 401 events in the Admin Debug event log. Network/5xx failures are described as inability to verify the session, not automatically as an expired login.
+- Use the canonical Production hostname `https://read-along-admin.pages.dev`; do not mix it with deployment-specific `*.pages.dev` URLs because cookies are host-scoped.
