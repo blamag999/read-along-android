@@ -241,8 +241,6 @@ const dom = {
   btnPlaylistNextPage: document.getElementById('btnPlaylistNextPage'),
   lblPlaylistPage: document.getElementById('lblPlaylistPage'),
   playlistPagination: document.getElementById('playlistPagination'),
-  btnExportR2Catalog: document.getElementById('btnExportR2Catalog'),
-  r2PublicBaseInput: document.getElementById('r2PublicBaseInput'),
 
   btnNode1FolderOnline: document.getElementById('btnNode1FolderOnline'),
   btnToggleSettings: document.getElementById('btnToggleSettings'),
@@ -470,41 +468,38 @@ async function loadR2Catalog() {
   dom.playlistLoading.classList.remove('hidden');
   dom.playlistItemsList.replaceChildren();
   try {
-    // Catalog được đóng gói sẵn trong ứng dụng; không hỏi người dùng nhập URL.
-    const catalogUrl = new URL('https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/books.json');
-    const response = await fetch(catalogUrl.href, { cache: 'no-store' });
-    if (!response.ok) throw new Error('Không tải được books.json (' + response.status + ').');
+    const catalogUrl = 'https://private-comic-reader.pages.dev/api/readalong/books';
+    const response = await fetch(catalogUrl, { cache: 'no-store' });
+    if (!response.ok) throw new Error('Không tải được danh sách sách (' + response.status + ').');
     const data = await response.json();
-    const entries = Array.isArray(data) ? data : (data && Array.isArray(data.books) ? data.books : null);
-    if (!entries || !entries.length) throw new Error('books.json không có danh sách sách hợp lệ.');
-    const stories = entries.filter(item => item && item.pdf && (item.audios || item.audio))
-      .map(item => {
-        const audioEntries = item.audios || item.audio || [];
-        const audioList = Array.isArray(audioEntries) ? audioEntries : [audioEntries];
-        const pdfUrl = typeof item.pdf === 'string' ? item.pdf : item.pdf.url;
-        const syncUrl = item.sync || item.json || '';
-        const urls = audioList
-          .map(value => typeof value === 'string' ? value : value && value.url)
-          .filter(isSafeHttpsUrl);
-        if (!isSafeHttpsUrl(pdfUrl) || !urls.length) return null;
-        const safeSyncUrl = isSafeHttpsUrl(syncUrl) ? syncUrl : '';
-        const coverCandidate = item.coverUrl || item.cover || '';
-        const safeTitle = typeof item.title === 'string' && item.title.trim()
-          ? item.title.trim().slice(0, 300)
-          : normalizeStoryTitle(fileNameFromUrl(pdfUrl, 'book.pdf'));
-        return {
-          id: typeof item.id === 'string' || typeof item.id === 'number'
-            ? String(item.id).slice(0, 200)
-            : getBookUniqueKey(fileNameFromUrl(pdfUrl, 'book.pdf')),
-          title: safeTitle,
-          pdf: { name: fileNameFromUrl(pdfUrl, 'book.pdf'), url: pdfUrl },
-          audios: urls.map(url => ({ name: fileNameFromUrl(url, 'audio.mp3'), url })),
-          json: safeSyncUrl ? { name: fileNameFromUrl(safeSyncUrl, 'sync.json'), url: safeSyncUrl } : null,
-          coverUrl: isSafeHttpsUrl(coverCandidate) ? coverCandidate : '',
-          source: 'r2'
-        };
-      }).filter(Boolean);
-    if (!stories.length) throw new Error('Danh mục books.json không có mục nào gồm PDF và MP3 hợp lệ.');
+    if (!data || !Array.isArray(data.books)) throw new Error('API không trả về danh sách sách hợp lệ.');
+    const stories = data.books.map(item => {
+      if (!item || typeof item !== 'object') return null;
+      const pdf = item.pdf && isSafeHttpsUrl(item.pdf.url)
+        ? { name: String(item.pdf.name || 'book.pdf'), url: item.pdf.url, key: item.pdf.key || '' }
+        : null;
+      const audios = (Array.isArray(item.audios) ? item.audios : [])
+        .filter(audio => audio && isSafeHttpsUrl(audio.url))
+        .map(audio => ({
+          name: String(audio.name || 'audio.mp3'),
+          url: audio.url,
+          key: audio.key || '',
+          partLabel: audio.partLabel || null
+        }));
+      const json = item.json && isSafeHttpsUrl(item.json.url)
+        ? { name: String(item.json.name || 'sync.json'), url: item.json.url, key: item.json.key || '' }
+        : null;
+      if (!pdf && !audios.length) return null;
+      return {
+        id: String(item.id || (pdf ? getBookUniqueKey(pdf.name) : getBookUniqueKey(audios[0].name))),
+        title: String(item.title || (pdf ? normalizeStoryTitle(pdf.name) : normalizeStoryTitle(audios[0].name))),
+        pdf,
+        audios,
+        json,
+        coverUrl: '',
+        source: 'r2-private'
+      };
+    }).filter(Boolean);
     state.playlist = stories;
     state.activeFilter = 'paired';
     state.playlistPage = 1;
@@ -512,99 +507,13 @@ async function loadR2Catalog() {
     renderPlaylistView();
     dom.lblPlaylistSubtitle.textContent = stories.length + ' mục trực tuyến';
     openPlaylistModal();
-    showToast('Đã tải ' + stories.length + ' truyện.');
+    showToast('Đã tìm thấy ' + stories.length + ' sách từ kho trực tuyến.');
   } catch (error) {
-    console.error('Không thể tải danh sách truyện:', error);
-    alert('Không thể tải danh sách truyện. Hãy kiểm tra kết nối và cấu hình danh mục. ' + error.message);
+    console.error('Không thể tải danh sách sách từ R2:', error);
+    alert('Không thể tải danh sách sách trực tuyến. ' + error.message);
   } finally {
     dom.playlistLoading.classList.add('hidden');
     if (button) { button.disabled = false; button.textContent = '☁️ Truyện trực tuyến'; }
-  }
-}
-
-function getManualR2PublicBase() {
-  const input = dom.r2PublicBaseInput;
-  const raw = input ? input.value.trim() : '';
-  if (!raw) {
-    alert('Vui lòng nhập địa chỉ gốc của kho tệp trước khi xuất danh mục.');
-    input?.focus();
-    return '';
-  }
-  let parsed;
-  try {
-    parsed = new URL(raw);
-  } catch (error) {
-    alert('Địa chỉ kho tệp không hợp lệ. Hãy nhập địa chỉ HTTPS đầy đủ.');
-    input?.focus();
-    return '';
-  }
-  if (parsed.protocol !== 'https:' || !parsed.hostname.endsWith('.r2.dev') || parsed.pathname !== '/' || parsed.search || parsed.hash) {
-    alert('Hãy nhập địa chỉ gốc HTTPS, không thêm tên tệp, đường dẫn, tham số hoặc dấu #.');
-    input?.focus();
-    return '';
-  }
-  return parsed.origin;
-}
-
-function buildR2ObjectUrl(filename, baseUrl) {
-  const path = String(filename || '').split('/').map(segment => encodeURIComponent(segment)).join('/');
-  return baseUrl + '/' + path;
-}
-
-function exportR2CatalogFromPlaylist() {
-  const baseUrl = getManualR2PublicBase();
-  if (!baseUrl) return;
-
-  const allStories = Array.isArray(state.playlist) ? state.playlist : [];
-  const pairedStories = allStories.filter(story =>
-    story && story.pdf && story.pdf.name && Array.isArray(story.audios) &&
-    story.audios.some(audio => audio && audio.name)
-  );
-
-  if (!pairedStories.length) {
-    alert('Chưa có sách nào đủ PDF và MP3 để xuất. Hãy chọn thư mục chứa sách trước.');
-    return;
-  }
-
-  const books = pairedStories.map(story => ({
-    id: story.id || getBookUniqueKey(story.pdf.name),
-    title: story.title || normalizeStoryTitle(story.pdf.name),
-    pdf: buildR2ObjectUrl(story.pdf.name, baseUrl),
-    audios: story.audios
-      .filter(audio => audio && audio.name)
-      .map(audio => buildR2ObjectUrl(audio.name, baseUrl)),
-    sync: story.json && story.json.name
-      ? buildR2ObjectUrl(story.json.name, baseUrl)
-      : null
-  }));
-
-  const blob = new Blob([JSON.stringify({ books }, null, 2)], {
-    type: 'application/json;charset=utf-8'
-  });
-  const objectUrl = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = objectUrl;
-  link.download = 'books.json';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-
-  const skippedStories = allStories.filter(story =>
-    !(story && story.pdf && story.pdf.name && Array.isArray(story.audios) &&
-      story.audios.some(audio => audio && audio.name))
-  );
-  let message = 'Đã xuất books.json gồm ' + books.length + ' sách.';
-  if (skippedStories.length) {
-    const details = skippedStories.map(story => {
-      const hasPdf = !!(story && story.pdf && story.pdf.name);
-      const hasAudio = !!(story && Array.isArray(story.audios) && story.audios.some(audio => audio && audio.name));
-      const reason = !hasPdf && !hasAudio ? 'thiếu PDF và MP3' : !hasPdf ? 'thiếu PDF' : 'thiếu MP3';
-      return '- ' + ((story && story.title) || (story && story.id) || 'Mục không tên') + ': ' + reason;
-    });
-    alert(message + '\\n\\nBỏ qua ' + skippedStories.length + ' mục chưa đủ tệp:\\n' + details.join('\\n'));
-  } else {
-    showToast(message);
   }
 }
 
@@ -1050,7 +959,7 @@ window.selectAudioPart = function(index) {
   showToast('Đã chuyển sang phần ' + (index + 1) + (shouldResume ? ' — tiếp tục phát' : ' — đang tạm dừng'));
 };
 
-// Nguồn nội dung: tệp PDF và âm thanh cục bộ; chỉ đồng bộ JSON mốc đọc qua GitHub.
+// Nguồn nội dung trực tuyến: API Pages Functions đọc R2 riêng tư; không dùng books.json hoặc URL r2.dev.
 // =======================================================
 // SỰ KIỆN GIAO DIỆN
 // =======================================================
@@ -1062,7 +971,6 @@ function initEvents() {
     openPlaylistModal();
   });
 
-  if (dom.btnExportR2Catalog) dom.btnExportR2Catalog.addEventListener('click', exportR2CatalogFromPlaylist);
 
   dom.btnClosePlaylist.addEventListener('click', () => dom.playlistModal.classList.add('hidden'));
   dom.playlistModal.addEventListener('click', (e) => {
