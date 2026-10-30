@@ -238,31 +238,84 @@ async function scanLibrary(bucket, prefix) {
     findings.push(...batch.flat());
   }
 
+  const normalizeBookName = value => String(value || "")
+    .normalize("NFKC").replace(/\\.[^/.]+$/, "").replace(/[_-]+/g, " ")
+    .replace(/[’']/g, "").replace(/\\b(?:part|pt|disc|side)\\s*(?:\\d+|[ab])\\b/gi, " ")
+    .replace(/\\b\\d+\\s+of\\s+\\d+\\b/gi, " ").replace(/\\bread\\s+along\\b/gi, " ")
+    .replace(/\\bbook\\b/gi, " ").replace(/[^\\p{L}\\p{N}]+/gu, " ")
+    .replace(/\\s+/g, " ").trim().toLocaleLowerCase("vi");
+  const similarity = (left, right) => {
+    if (!left || !right) return 0;
+    const a = left.split(" "), b = right.split(" ");
+    const aa = a.join(""), bb = b.join("");
+    const row = Array.from({length: bb.length + 1}, (_,i) => i);
+    for (let i=1;i<=aa.length;i++) {
+      let diagonal=row[0]; row[0]=i;
+      for (let j=1;j<=bb.length;j++) {
+        const above=row[j];
+        row[j]=Math.min(row[j]+1,row[j-1]+1,diagonal+(aa[i-1]===bb[j-1]?0:1));
+        diagonal=above;
+      }
+    }
+    const edit=1-row[bb.length]/Math.max(aa.length,bb.length,1);
+    const leftTokens=new Set(a), rightTokens=new Set(b);
+    const overlap=[...leftTokens].filter(x=>rightTokens.has(x)).length/Math.max(leftTokens.size,rightTokens.size,1);
+    return Math.max(edit, overlap*0.92);
+  };
+  const assets = items.filter(item => {
+    const ext=extensionOf(item.key);
+    return ext === ".pdf" || AUDIO_EXTENSIONS.has(ext);
+  }).map(item => ({
+    ...item, ext:extensionOf(item.key),
+    dir:item.key.includes("/")?item.key.slice(0,item.key.lastIndexOf("/")+1):"",
+    stem:item.key.split("/").pop().replace(/\\.[^.]+$/,""),
+    normalized:normalizeBookName(item.key.split("/").pop())
+  })).filter(item=>item.normalized);
   const groups = new Map();
-  for (const item of items) {
-    const ext = extensionOf(item.key);
-    if (ext !== ".pdf" && !AUDIO_EXTENSIONS.has(ext)) continue;
-    const name = item.key.split("/").pop().replace(/\\.[^.]+$/, "").normalize("NFKC").toLocaleLowerCase("vi");
-    const groupKey = item.key.includes("/") ? item.key.slice(0, item.key.lastIndexOf("/") + 1) + name : name;
-    if (!groups.has(groupKey)) groups.set(groupKey, { pdf: [], audio: [] });
-    groups.get(groupKey)[ext === ".pdf" ? "pdf" : "audio"].push(item.key);
+  for (const item of assets) {
+    const groupKey=item.dir+item.normalized;
+    if (!groups.has(groupKey)) groups.set(groupKey,{pdf:[],audio:[]});
+    groups.get(groupKey)[item.ext===".pdf"?"pdf":"audio"].push(item);
   }
   for (const group of groups.values()) {
     if (group.pdf.length && !group.audio.length) findings.push({
-      severity: "error", code: "missing_audio", key: group.pdf[0],
-      message: "Có PDF nhưng không tìm thấy audio cùng tên trong thư mục.",
-      suggestion: "Tải audio tương ứng lên cùng thư mục và đặt cùng tên cơ sở với PDF."
+      severity:"error",code:"missing_audio",key:group.pdf[0].key,
+      message:"Có PDF nhưng chưa có audio trùng tên sau khi chuẩn hóa.",
+      suggestion:"Kiểm tra các tệp audio có tên gần giống bên dưới; chỉ ghép tự động khi tên chuẩn hóa trùng khớp."
     });
     if (group.audio.length && !group.pdf.length) findings.push({
-      severity: "error", code: "missing_pdf", key: group.audio[0],
-      message: "Có audio nhưng không tìm thấy PDF cùng tên trong thư mục.",
-      suggestion: "Tải PDF tương ứng lên cùng thư mục và đặt cùng tên cơ sở với audio."
+      severity:"error",code:"missing_pdf",key:group.audio[0].key,
+      message:"Có audio nhưng chưa có PDF trùng tên sau khi chuẩn hóa.",
+      suggestion:"Kiểm tra các tệp PDF có tên gần giống bên dưới; chỉ ghép tự động khi tên chuẩn hóa trùng khớp."
     });
-    if (group.pdf.length > 1 || group.audio.length > 1) findings.push({
-      severity: "warning", code: "duplicate_book_assets", key: group.pdf[0] || group.audio[0],
-      message: "Có nhiều PDF hoặc audio cùng tên cơ sở; cần xác nhận đây là bản thay thế hay dữ liệu trùng.",
-      suggestion: "Kiểm tra các tệp trong cùng thư mục và đổi tên/xóa bản trùng nếu không cần."
+    if (group.pdf.length>1 || group.audio.length>1) findings.push({
+      severity:"warning",code:"duplicate_book_assets",key:group.pdf[0]?.key || group.audio[0]?.key,
+      message:"Có nhiều PDF/audio cùng tên chuẩn hóa; cần xác nhận các tệp có phải nhiều phần hay bản trùng.",
+      suggestion:"Kiểm tra thứ tự part/side/disc và tránh để nhiều bản không phân biệt."
     });
+  }
+  const unmatched=assets.filter(item=>{
+    const group=groups.get(item.dir+item.normalized);
+    return item.ext===".pdf" ? !group.audio.length : !group.pdf.length;
+  });
+  for (const item of unmatched) {
+    const opposite=unmatched.filter(other=>other.dir===item.dir && (item.ext===".pdf" ? other.ext!==".pdf" : other.ext===".pdf"));
+    const ranked=opposite.map(other=>({other,score:similarity(item.normalized,other.normalized)}))
+      .filter(x=>x.score>=0.78).sort((a,b)=>b.score-a.score);
+    if (!ranked.length) continue;
+    const best=ranked[0];
+    if (ranked.length>1 && best.score-ranked[1].score<0.08) {
+      findings.push({severity:"warning",code:"ambiguous_name_match",key:item.key,
+        message:"Có nhiều tệp khác loại tên gần giống; không thể đề xuất ghép an toàn.",
+        suggestion:"Đối chiếu nội dung sách và đổi tên thủ công để tên cơ sở trùng khớp."});
+      continue;
+    }
+    const counterpart=best.other;
+    const suggestedRename=item.dir+counterpart.stem+(item.ext);
+    findings.push({severity:"warning",code:"name_mismatch",key:item.key,candidateKey:counterpart.key,
+      similarity:Math.round(best.score*100),suggestedRename,
+      message:"Tên PDF/audio gần giống nhưng chưa trùng khớp; hiện không được ghép tự động.",
+      suggestion:"Nếu xác nhận hai tệp thuộc cùng một sách, đổi tên tệp này thành: "+suggestedRename});
   }
   const errors = findings.filter((x) => x.severity === "error").length;
   const warnings = findings.filter((x) => x.severity === "warning").length;
