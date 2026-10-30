@@ -266,11 +266,13 @@ async function scanLibrary(bucket, prefix) {
   }).map(item=>{
     const name=item.key.split("/").pop().replace(/\.[^.]+$/,"");
     const ext=extensionOf(item.key);
-    const partMatch=ext!==".pdf" && ext!==".json" ? name.match(/_P(\d+)$/i) : null;
+    const pSuffix=ext!==".pdf" && ext!==".json" ? name.match(/_P(\d+)$/i) : null;
+    const legacySuffix=ext!==".pdf" && ext!==".json" ? name.match(/(?:[_ -](?:side|part|pt|disc)[ _.-]*(\d+))$/i) : null;
+    const partMatch=pSuffix || legacySuffix;
     const withoutPart=partMatch ? name.slice(0,partMatch.index) : name;
     const baseName=ext===".json" ? withoutPart.replace(/[_-]sync$/i,"") : withoutPart;
     return {...item,ext,dir:item.key.includes("/")?item.key.slice(0,item.key.lastIndexOf("/")+1):"",
-      stem:name,part:partMatch?Number(partMatch[1]):null,
+      stem:name,part:partMatch?Number(partMatch[1]):null,partStyle:pSuffix?"P":legacySuffix?"legacy":null,
       normalized:normalizeBookName(baseName)};
   }).filter(item=>item.normalized);
   const groups=new Map();
@@ -304,15 +306,30 @@ async function scanLibrary(bucket, prefix) {
       message:"Có MP3/audio nhưng chưa có PDF cùng tên gốc.",
       suggestion:"Đặt tên PDF trùng tên gốc của audio, bỏ hậu tố _P1/_P2 nếu có."
     });
-    if(group.audio.length>1){
+    const needsPartCheck=group.audio.length>1 || group.audio.some(x=>x.partStyle==="legacy");
+    if(needsPartCheck){
       const parts=group.audio.map(x=>x.part);
-      const valid=parts.every(Number.isInteger) && new Set(parts).size===parts.length &&
+      const sequenceValid=parts.every(Number.isInteger) && new Set(parts).size===parts.length &&
         [...parts].sort((a,b)=>a-b).every((n,i)=>n===i+1);
-      if(!valid) findings.push({
-        severity:"warning",code:"invalid_audio_parts",key:group.audio[0].key,
-        message:"Nhiều audio cùng sách nhưng hậu tố phần chưa đúng quy tắc _P1, _P2... liên tục.",
-        suggestion:"Đổi tên các phần thành _P1, _P2, _P3...; không trộn tệp không hậu tố với tệp có hậu tố."
-      });
+      const canonicalNames=group.audio.every(x=>x.partStyle==="P");
+      if(!sequenceValid || !canonicalNames){
+        findings.push({
+          severity:"warning",code:"invalid_audio_parts",key:group.audio[0].key,
+          message:"Nhiều audio hoặc audio có hậu tố phần chưa đúng quy tắc _P1, _P2... liên tục.",
+          suggestion:"Đổi tên các phần theo mẫu _P1, _P2, _P3...; tên gốc phải trùng PDF."
+        });
+        if(sequenceValid && group.pdf.length===1){
+          const pdfStem=group.pdf[0].key.split("/").pop().replace(/\.[^.]+$/,"");
+          for(const audio of group.audio.filter(x=>x.partStyle==="legacy")){
+            findings.push({
+              severity:"warning",code:"rename_audio_part",key:audio.key,
+              suggestedRename:audio.dir+pdfStem+"_P"+audio.part+audio.ext,
+              message:"Tên phần audio chưa theo quy tắc hậu tố _P"+audio.part+".",
+              suggestion:"Duyệt đổi tên để thống nhất thứ tự các phần audio."
+            });
+          }
+        }
+      }
     } else if(group.audio.length===1 && group.audio[0].part!==null && group.audio[0].part!==1){
       findings.push({
         severity:"warning",code:"audio_part_sequence",key:group.audio[0].key,
@@ -334,7 +351,7 @@ async function scanLibrary(bucket, prefix) {
       (item.ext===".pdf" ? (other.ext!==".pdf" && other.ext!==".json") :
        item.ext===".json" ? other.ext===".pdf" : other.ext===".pdf"));
     const ranked=opposite.map(other=>({other,score:similarity(item.normalized,other.normalized)}))
-      .filter(x=>x.score>=0.78).sort((a,b)=>b.score-a.score);
+      .filter(x=>x.score>=0.65).sort((a,b)=>b.score-a.score);
     if(!ranked.length)continue;
     const best=ranked[0];
     if(ranked.length>1 && best.score-ranked[1].score<0.08){
