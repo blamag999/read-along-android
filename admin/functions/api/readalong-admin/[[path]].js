@@ -222,20 +222,57 @@ async function inspectLibraryObject(bucket, item) {
   return issues;
 }
 
-async function scanLibrary(bucket, prefix) {
-  const keys = (await listAllKeys(bucket, prefix)).filter((key) => !key.endsWith("/"));
-  const items = [];
-  for (let i = 0; i < keys.length; i += 10) {
-    const batch = await Promise.all(keys.slice(i, i + 10).map(async (key) => {
-      const head = await bucket.head(key);
-      return head ? { key, size: head.size, uploaded: head.uploaded } : { key, size: 0 };
-    }));
-    items.push(...batch);
-  }
+const SCAN_RULE_VERSION = "2026-10-30.2";
+
+async function listAllObjects(bucket, prefix) {
+  const objects = [];
+  let cursor;
+  do {
+    const page = await bucket.list({ prefix, cursor, limit: 1000 });
+    objects.push(...page.objects.filter((item) => !item.key.endsWith("/")));
+    cursor = page.truncated ? page.cursor : undefined;
+    if (objects.length > 5000) throw new Error("Thư mục có hơn 5.000 đối tượng; hãy quét từng thư mục con để thu hẹp phạm vi.");
+  } while (cursor);
+  return objects;
+}
+
+async function scanLibrary(bucket, prefix, db) {
+  const startedAt = Date.now();
+  const listed = await listAllObjects(bucket, prefix);
+  const cachedRows = await db.prepare("SELECT object_key, fingerprint, rule_version, findings_json FROM admin_scan_cache").all();
+  const cache = new Map((cachedRows.results || []).filter((row) => row.object_key.startsWith(prefix)).map((row) => [row.object_key, row]));
+  const items = listed.map((object) => ({
+    key: object.key, size: object.size, uploaded: object.uploaded,
+    etag: object.etag || object.httpEtag || ""
+  }));
+  const present = new Set(items.map((item) => item.key));
+  const stale = [...cache.keys()].filter((key) => !present.has(key));
+  const changed = [];
   const findings = [];
+  let skipped = 0;
+  const fingerprint = (item) => JSON.stringify([Number(item.size || 0), String(item.uploaded || ""), String(item.etag || "")]);
   for (let i = 0; i < items.length; i += 10) {
-    const batch = await Promise.all(items.slice(i, i + 10).map((item) => inspectLibraryObject(bucket, item)));
-    findings.push(...batch.flat());
+    const batch = items.slice(i, i + 10);
+    const inspected = await Promise.all(batch.map(async (item) => {
+      const fp = fingerprint(item);
+      const previous = cache.get(item.key);
+      if (previous && previous.fingerprint === fp && previous.rule_version === SCAN_RULE_VERSION) {
+        skipped++;
+        try { return { item, fp, findings: JSON.parse(previous.findings_json || "[]"), cached: true }; }
+        catch { /* malformed cache is rechecked */ }
+      }
+      return { item, fp, findings: await inspectLibraryObject(bucket, item), cached: false };
+    }));
+    for (const result of inspected) {
+      findings.push(...result.findings);
+      if (!result.cached) changed.push(result.item.key);
+      await db.prepare(
+        "INSERT INTO admin_scan_cache (object_key, fingerprint, rule_version, findings_json, scanned_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(object_key) DO UPDATE SET fingerprint=excluded.fingerprint, rule_version=excluded.rule_version, findings_json=excluded.findings_json, scanned_at=excluded.scanned_at"
+      ).bind(result.item.key, result.fp, SCAN_RULE_VERSION, JSON.stringify(result.findings), Date.now()).run();
+    }
+  }
+  for (const key of stale) {
+    await db.prepare("DELETE FROM admin_scan_cache WHERE object_key = ?").bind(key).run();
   }
 
   const normalizeBookName = value => String(value || "")
@@ -378,7 +415,7 @@ async function scanLibrary(bucket, prefix) {
   }
   const errors = findings.filter((x) => x.severity === "error").length;
   const warnings = findings.filter((x) => x.severity === "warning").length;
-  return { prefix, scanned: items.length, errors, warnings, findings, complete: true, checkedAt: new Date().toISOString() };
+  return { prefix, scanned: items.length, changed: changed.length, skipped, removed: stale.length, errors, warnings, findings, complete: true, checkedAt: new Date().toISOString(), durationMs: Date.now() - startedAt, ruleVersion: SCAN_RULE_VERSION };
 }
 
 async function handle(request, env) {
@@ -444,11 +481,27 @@ async function handle(request, env) {
   if (route === "diagnostics/scan" && method === "GET") {
     const prefix = url.searchParams.get("prefix") || "";
     if (prefix && !validKey(prefix.endsWith("/") ? prefix.slice(0, -1) : prefix)) return json({ error: "Invalid folder path" }, 400);
+    const normalized = prefix ? (prefix.endsWith("/") ? prefix : prefix + "/") : "";
+    const scanId = crypto.randomUUID();
+    const startedAt = Date.now();
+    const rayId = request.headers.get("cf-ray") || null;
     try {
-      return json(await scanLibrary(env.READALONG, prefix ? (prefix.endsWith("/") ? prefix : prefix + "/") : ""));
+      const result = await scanLibrary(env.READALONG, normalized, env.DB);
+      await env.DB.prepare("INSERT INTO admin_scan_logs (scan_id, prefix, status, scanned, changed, skipped, errors, warnings, duration_ms, rule_version, ray_id, detail_json, created_at) VALUES (?, ?, 'success', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        .bind(scanId, normalized, result.scanned, result.changed, result.skipped, result.errors, result.warnings, Date.now() - startedAt, result.ruleVersion, rayId, JSON.stringify({ removed: result.removed }), Date.now()).run();
+      return json({ ...result, scanId, rayId });
     } catch (error) {
-      return json({ error: error.message || "Library scan failed" }, 422);
+      const message = String(error?.message || "Library scan failed").slice(0, 1000);
+      await env.DB.prepare("INSERT INTO admin_scan_logs (scan_id, prefix, status, scanned, changed, skipped, errors, warnings, duration_ms, rule_version, ray_id, error_message, created_at) VALUES (?, ?, 'failed', 0, 0, 0, 0, 0, ?, ?, ?, ?, ?)")
+        .bind(scanId, normalized, Date.now() - startedAt, SCAN_RULE_VERSION, rayId, message, Date.now()).run();
+      return json({ error: message, scanId, rayId, durationMs: Date.now() - startedAt }, 503);
     }
+  }
+
+  if (route === "debug/logs" && method === "GET") {
+    const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") || 50)));
+    const result = await env.DB.prepare("SELECT scan_id, prefix, status, scanned, changed, skipped, errors, warnings, duration_ms, rule_version, ray_id, error_message, detail_json, created_at FROM admin_scan_logs ORDER BY created_at DESC LIMIT ?").bind(limit).all();
+    return json({ entries: result.results || [] });
   }
 
   if (route === "files" && method === "GET") {
