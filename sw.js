@@ -6,6 +6,7 @@ const APP_SHELL = [
   './app.js',
   './modules/page-sync.js',
   './modules/playlist-layout.js',
+  './modules/catalog-playlist.js',
   './modules/remote-sync.js',
   './modules/diagnostics.js',
   './manifest.json',

@@ -5,7 +5,6 @@ on:
     branches:
       - beta
       - main
-      - testing
       - "feature/**"
     paths:
       - "admin/**"
@@ -32,23 +31,30 @@ on:
       - "tests/**"
       - ".github/workflows/check-readalong-admin.yml"
 
+# Keep only the newest run for a branch/PR; stale queued or running checks
+# are not useful once a newer commit supersedes them.
+# The testing branch is validated by its PR event, avoiding duplicate push + PR runs.
+concurrency:
+  group: readalong-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
-  syntax-and-isolation:
+  regression-and-isolation:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-      - name: Check Admin browser JavaScript
-        run: node --check admin/public/admin.js
-      - name: Run regression and JavaScript syntax tests
+      # npm test already includes all unit/regression suites and check:js.
+      # Do not repeat admin.js/catalog module syntax checks in separate steps.
+      - name: Run regression tests and JavaScript syntax checks
         run: npm test
       - name: Check Pages Functions module syntax
-        run: node --check --input-type=module < ''admin/functions/api/readalong-admin/[[path]].js''
+        run: node --check --input-type=module < 'admin/functions/api/readalong-admin/[[path]].js'
       - name: Verify isolation constraints
         run: |
           ! grep -R -nE '(^|[^A-Z_])COMICS([^A-Z_]|$)|(^|[^A-Z_])TOTP_SECRET([^A-Z_]|$)|comic_manager_session' admin/functions admin/public

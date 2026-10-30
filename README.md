@@ -259,3 +259,167 @@ Quy tắc bảo trì:
 - Không xem việc commit code hoặc thêm unit test là bằng chứng lỗi đã hết.
 - Báo riêng kết quả unit test, CI, build APK và kiểm thử thiết bị; không gộp thành một trạng thái “đã kiểm thử”.
 - Chỉ phát hành stable khi beta vượt qua các bài test hồi quy, workflow ký APK thành công và người dùng xác nhận promote.
+
+
+## 11. Catalog/playlist tách khỏi app.js — 2026-10-31
+
+- Đã thêm `modules/catalog-playlist.js` cho logic thuần: chuẩn hóa ID/tên sách, chuyển manifest thành story model, gom PDF/audio/JSON từ thư mục, sắp xếp part audio và lọc/tìm kiếm playlist.
+- Module không thao tác DOM, localStorage, network, PDF.js hoặc audio element. `app.js` vẫn điều phối giao diện, trạng thái playlist và việc tải dữ liệu; chỉ ủy quyền các phép biến đổi dữ liệu cho module mới.
+- API: `window.ReadAlongCatalogPlaylist`. Script được nạp trước `app.js`, nằm trong app shell của service worker và được kiểm tra cú pháp bởi CI.
+- `tests/catalog.test.js` kiểm tra manifest, từ chối asset ngoài R2, nhóm file cục bộ, JSON marker mồ côi, thứ tự audio part, filter và tìm kiếm.
+- Chưa đánh dấu hoàn tất cho tới khi CI xác nhận. Chưa build APK hoặc kiểm thử thiết bị ở bước này.
+
+### Roadmap cấu trúc tiếp theo
+
+1. Tách DOM renderer playlist thành module UI riêng, giữ nguyên class/ARIA/keyboard interactions và test bằng DOM giả lập hoặc fixture.
+2. Tách tương tác tìm kiếm, filter, pagination và favorite thành controller riêng; không đổi key localStorage hoặc schema playlist.
+3. Bổ sung test DOM cho mở sách, chọn audio part, đánh dấu yêu thích, tìm kiếm và pagination.
+4. Sau khi catalog/playlist ổn định mới xem xét tách quản lý PDF/audio. Không thay đổi các module page-sync, OTA hoặc diagnostics trong cùng đợt.
+
+
+## 12. Tối ưu kiểm thử CI — 2026-10-31
+
+- Workflow `.github/workflows/check-readalong-admin.yml` dùng `concurrency` theo PR/branch với `cancel-in-progress: true`: lượt CI cũ bị hủy khi có commit mới thay thế, tránh chờ kết quả đã lỗi thời.
+- Đã bỏ các bước `node --check` riêng cho `admin/public/admin.js` và `modules/catalog-playlist.js` vì `npm test` đã chạy `npm run check:js` và bao gồm cả hai tệp. Giữ nguyên toàn bộ test suite, kiểm tra cú pháp Pages Functions và kiểm tra isolation.
+- Giữ một job CI thay vì tách nhiều runner: test hiện tại chạy nhanh, việc khởi tạo nhiều runner có thể tốn thêm thời gian hơn phần test tiết kiệm được. Chỉ tách song song khi số lượng/thời gian test thực tế tăng đáng kể.
+- Path filters tiếp tục giới hạn workflow vào mã nguồn, module, test, package và workflow; thay đổi tài liệu đơn thuần không kích hoạt CI này.
+- **Chưa có kết quả CI sau thay đổi tại thời điểm ghi chú.** Commit workflow: `3e7874193c7f0c94d4ed59bbd07b7b5c21d76572`. Cần kiểm tra run mới của PR #37 trước khi đánh dấu tối ưu CI hoàn tất.
+- Quy ước kiểm thử: phân biệt rõ unit/regression, CI, build APK và kiểm thử thiết bị. Không build APK cho thay đổi tài liệu hoặc logic thuần đã được test đầy đủ; vẫn phải build/kiểm tra Android khi thay đổi native, Capacitor, WebView, audio/PDF, lưu trữ hoặc OTA.
+
+
+### Cập nhật xử lý CI #41102931325 — 2026-10-31
+
+- Đã đọc log chi tiết. Workflow không thất bại do concurrency hoặc do test logic mới; thất bại tại assertion cũ trong `tests/catalog.test.js:10`: test tìm `typeof value === 'string'` và `item.sync || item.json` trong `app.js`, trong khi các biểu thức này đã chuyển sang `modules/catalog-playlist.js`.
+- Đã sửa test để kiểm tra hai contract ở đúng module sở hữu logic mới; kiểm tra app vẫn tải manifest trực tiếp từ URL R2 và không phụ thuộc Pages API.
+- Commit sửa test: `79d28e4c98e6fd485c4a0f10f40274299da18a65`.
+- Trạng thái: **đã sửa nguyên nhân được xác định; chờ CI mới chạy trên head cập nhật**. Chưa tuyên bố test pass, chưa build APK/kiểm thử thiết bị.
+
+
+- Bổ sung tối ưu sau khi rà soát danh sách Actions: bỏ trigger `push` cho nhánh `testing` vì nhánh này luôn được xác minh qua sự kiện `pull_request` tới `beta`. Trước đó cùng một commit tạo cả lượt push và pull_request, gây chạy trùng. Các trigger push cho `beta`, `main`, `feature/**` vẫn giữ nguyên; PR validation vẫn áp dụng cho `testing`.
+- Commit loại bỏ trigger trùng: `7ea251933731494fa8311d58b379626e5a87e1a9`. Chờ workflow mới xác nhận.
+
+
+- Rà soát tiếp test mới phát hiện assertion khóa sách cũng phải giữ đúng hành vi cũ: `getBookUniqueKey('X22_The-Book.PDF')` trả `_the_book` theo implementation trước khi tách module. Đã sửa kỳ vọng test để bảo vệ tính tương thích, không thay đổi thuật toán/key lưu trữ. Commit: `45f555357b7158b373fafda632f61ec242a569fa`.
+- CI phải chạy lại trên head mới; các run trước commit này không được dùng làm bằng chứng pass.
+
+
+### Giao ban tiếp theo — xác minh PR #37 và CI (2026-10-31)
+
+- Đã xác nhận PR [#37](https://github.com/blamag999/read-along-android/pull/37) vẫn mở ở trạng thái Draft, base `beta`, head `testing`; head hiện tại trước vòng kiểm tra mới là `6d6f75bf6015cc71b3e86b9ac83003415b181a6c`. Chưa merge và chưa thay đổi `main`.
+- Đã review toàn bộ diff 9 tệp: module catalog là IIFE thuần, không truy cập DOM/storage/network; app nạp module trước `app.js`; service worker precache module; `prepare:web` đã có cơ chế copy thư mục modules; URL manifest vẫn đọc trực tiếp từ R2 và giữ kiểm tra host.
+- Run [#41103722981](https://github.com/blamag999/read-along-android/actions/runs/41103722981) chạy trên đúng head nói trên. Log cho thấy các bước `npm test` (module, catalog 83 sách, API isolation, Admin DOM/stats, OTA cache cleanup, check:js), Pages Functions syntax và isolation đều đã đi qua; tuy nhiên GitHub API vẫn trả trạng thái job/run `in_progress`, chưa có `completed/success`. Vì vậy ghi nhận **các lệnh kiểm thử xuất log thành công; trạng thái tổng CI chưa chốt**, không đánh dấu CI pass.
+- Để tránh kết luận dựa trên run có trạng thái treo, bổ sung test input không hợp lệ/thiếu dependency cho catalog rồi kích hoạt một lượt PR CI mới. Commit cập nhật test tiếp theo sẽ là head cần nghiệm thu; run #41103722981 không được dùng thay thế cho run của head mới.
+- Chưa build APK beta, chưa có artifact/Release mới và chưa kiểm thử WebView/Android thật. Không tạo Release trước khi PR được tích hợp vào `beta` và workflow build beta hoàn tất.
+- Trạng thái công việc: **Review diff: Completed**; **Unit/regression log: Passed trong log của run cũ, chờ xác nhận lại trên head mới**; **CI tổng: In Progress/Unconfirmed**; **Android build/device test: Pending**; **Merge PR #37: Pending CI**.
+
+#### Việc tiếp theo
+
+1. Chờ workflow PR mới kết thúc; đọc lại job conclusion và toàn bộ step summary/log. Nếu fail, sửa nguyên nhân trên `testing`, bổ sung test, cập nhật giao ban và chờ run mới.
+2. Khi CI success, chuyển PR #37 khỏi Draft/hoàn tất review rồi merge `testing` → `beta`; xác minh SHA của `beta` sau merge.
+3. Chạy thủ công workflow **Build and Release Read Along** trên branch `beta`, channel `beta`; kiểm tra version, APK signature, SHA-256, artifact và GitHub prerelease.
+4. Kiểm thử APK trên thiết bị Android/WebView: truyện trực tuyến từ R2, playlist local, search/filter/favorites/pagination, chọn audio part, mở PDF/audio và dữ liệu đọc hiện có. Chỉ kết luận beta sẵn sàng sau khi có kết quả thực tế.
+5. Cập nhật README với commit, run URL, release version, checksum, kết quả thiết bị và issue còn tồn tại. Không promote `main` trong đợt beta này.
+
+
+### Trạng thái giao ban bổ sung — 2026-10-31
+
+- Run #41103722981 hiện được workflow-run API trả `completed / success`; các log đã đọc trước đó cho thấy toàn bộ test suite, JS syntax, Pages Functions syntax và isolation đều qua. Tuy nhiên job/check-run API có lúc vẫn trả dữ liệu `in_progress`; ghi nhận đây là trạng thái API không nhất quán và không dùng run này để xác nhận phần test mới được thêm sau đó.
+- Commit test mới nhất `84bc5536cebca283c537349e76ea47aaa9728366` đã tạo PR run #41104249478. Tại lần kiểm tra gần nhất, run đang `queued`, chưa có job log/conclusion. Cần tiếp tục kiểm tra run này cho đến khi kết thúc; không merge PR dựa trên run cũ.
+- PR #37 vẫn Draft/open, base `beta`; chưa merge. Chưa chạy workflow build-release beta, chưa có APK/artifact/Release và chưa kiểm thử thiết bị.
+- Trạng thái hiện tại: **CI của code/test cũ: Success theo workflow-run API**; **CI của test mới: Queued/Pending**; **Build beta: Pending**; **Device verification: Pending**; **Merge PR: Pending**.
+
+
+## 13. Điều tra Issue #38 — danh sách truyện không tải được (2026-10-31)
+
+- Issue mới nhất: [#38 — Diagnostics 1.3.3](https://github.com/blamag999/read-along-android/issues/38). Log ghi nhận `app.started`, `viewport.change`, native `Activity.onCreate` và `WebView.bridgeReady`; không có sự kiện lỗi JS. Diagnostics hiện chưa ghi sự kiện riêng cho lần fetch catalog, vì vậy log không chứng minh được request `books.json` đã chạy hay thất bại.
+- Đã đối chiếu mã nguồn release `v1.3.3` (tag trỏ commit `17783ca6b6985f33847e575678d201c510c83ae5`) và `app.js` trên `main`: ứng dụng tải trực tiếp `https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/books.json` khi `DOMContentLoaded`. Các listener của `btnAutoFlipToggle` đã có guard; kiểm tra DOM tĩnh không tìm thấy phần tử sự kiện bị thiếu nào khác không có guard, nên không xác nhận giả thuyết crash init từ ID này.
+- Đã kiểm tra Cloudflare bucket `my-audio-book`: bucket tồn tại; object `books.json` tồn tại (28,606 bytes, content type JSON, cache-control `no-store`); CORS cho phép origin `*` với `GET/HEAD`. Manifest mẫu trong repository có 83 sách và URL asset dùng đúng hostname R2.
+- **Nguyên nhân gốc được xác nhận ở cấu hình public access:** Managed R2 `r2.dev` domain của bucket đang `enabled: false`, dù app gọi URL trên hostname này. Vì vậy public endpoint không được bật và client không thể tải manifest qua URL hiện tại. CORS không tự bật public access.
+- Cần người quản lý xác nhận trước khi thay đổi: bật managed `r2.dev` domain sẽ làm **toàn bộ object trong bucket `my-audio-book` có thể truy cập công khai** qua domain đó, không chỉ riêng `books.json`. Nội dung truyện/PDF/audio hiện được thiết kế để app đọc công khai, nhưng cần xác nhận không có object riêng tư trong bucket. API Cloudflare hỗ trợ `PUT /accounts/{account_id}/r2/buckets/{bucket_name}/domains/managed` với `{ enabled: true }`; chưa thực hiện thay đổi này.
+- Trạng thái: **Issue review: Completed**; **R2 object/manifest/CORS inspection: Completed**; **Root cause: Confirmed — r2.dev public domain disabled**; **Enable public access: Blocked pending explicit confirmation of whole-bucket exposure**; **App retry/telemetry improvements: Pending**; **APK/device verification: Pending**.
+
+### Hướng xử lý tiếp theo
+
+1. Xác nhận bucket không chứa nội dung cần giữ riêng tư và cho phép bật public access toàn bucket; hoặc chọn custom domain/public delivery khác nếu không muốn dùng `r2.dev`.
+2. Sau khi endpoint public được bật, kiểm tra GET `books.json` qua public URL và kiểm tra CORS thực tế từ WebView/origin của app.
+3. Bổ sung test DOM khởi tạo và telemetry catalog tối thiểu: `catalog.load.start`, `catalog.load.success` (số sách), `catalog.load.failure` (HTTP status/error name), không ghi URL/token hay dữ liệu nhạy cảm.
+4. Bảo đảm lỗi tải catalog không làm hỏng khởi tạo app; hiển thị nút thử lại và giữ khả năng chọn thư mục local.
+5. Chỉ sau khi xác nhận endpoint hoạt động mới build beta mới, kiểm tra truyện trực tuyến trên thiết bị Android và cập nhật Issue #38.
+
+
+### Cập nhật xác nhận và thao tác public access (2026-10-31)
+
+- Người dùng đã **xác nhận rõ ràng** cho phép bật public access toàn bucket `my-audio-book` qua managed `r2.dev` domain, hiểu rằng mọi object trong bucket sẽ có thể truy cập công khai.
+- Đã thử gửi yêu cầu Cloudflare API cập nhật `enabled: true`, nhưng công cụ quản trị từ chối thao tác ở lớp kiểm tra an toàn trước khi trả kết quả API. Yêu cầu đọc lại trạng thái sau đó cũng bị chặn; vì vậy **không có bằng chứng thay đổi đã được áp dụng** và không được coi public access đã bật.
+- Trạng thái: **User approval: Received**; **Cloudflare mutation: Blocked by tool safety gate**; **Public endpoint verification: Pending**; **App/CI/APK: Not changed**.
+- Bước tiếp: bật R2.dev subdomain thủ công trong Cloudflare Dashboard tại R2 Object Storage → bucket `my-audio-book` → Settings → Public access / R2.dev subdomain → Allow Access (hoặc Enable). Sau khi lưu, kiểm tra GET URL `https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/books.json` trả HTTP 200 và JSON có mảng `books` không rỗng. Chỉ tiếp tục sửa app/build beta sau khi kiểm chứng endpoint.
+
+### Cập nhật sau khi người dùng bật R2.dev (2026-10-31)
+
+- Người dùng thông báo đã bật managed R2.dev public access cho bucket `my-audio-book` sau khi đã xác nhận việc công khai toàn bộ bucket.
+- Đã thử mở public manifest URL `https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/books.json` qua công cụ web nhưng công cụ không truy cập được URL; môi trường kiểm tra trực tiếp cũng không phân giải được hostname. Vì vậy **chưa xác minh độc lập HTTP 200, JSON payload hoặc số lượng sách**. Không coi việc bật cấu hình là bằng chứng endpoint đã phục vụ thành công.
+- Bản manifest trong repo vẫn chứa 83 mục sách và các URL PDF/audio trỏ về cùng R2 hostname; đây chỉ là dữ liệu trong repository, không xác nhận trạng thái endpoint production.
+- PR [#37](https://github.com/blamag999/read-along-android/pull/37) vẫn mở/Draft, base `beta`, head `testing`; chưa merge. Workflow PR run [#41104249478](https://github.com/blamag999/read-along-android/actions/runs/41104249478) kết thúc `cancelled`, không phải CI pass. Nhánh `main` và `beta` chưa thay đổi trong bước này.
+- Trạng thái: **User reports R2.dev enabled: Received**; **Public endpoint verification: Blocked/unconfirmed**; **PR #37 CI: Pending (latest inspected run cancelled)**; **App changes/APK/device test: Not performed**.
+
+#### Bước tiếp theo
+
+1. Mở trực tiếp URL manifest ở trên trên trình duyệt. Xác nhận trang trả JSON (không phải Access denied/404) và có mảng `books` không rỗng; nếu vẫn lỗi, gửi lại mã lỗi hoặc ảnh chụp màn hình.
+2. Khi endpoint được xác nhận, tiếp tục kiểm tra CORS từ WebView/origin của app và xem lại luồng `loadR2Catalog()`; bổ sung telemetry/retry tối thiểu nếu cần.
+3. Chạy lại CI cho đúng HEAD hiện tại của PR #37, xử lý mọi lỗi trước khi merge vào `beta`. Chỉ build APK beta sau khi PR được tích hợp và CI xanh; kiểm thử thiết bị thật vẫn là bước bắt buộc.
+
+### Xác nhận manifest truy cập được từ trình duyệt (2026-10-31)
+
+- Người dùng xác nhận đã mở URL public `books.json` và nhìn thấy nội dung JSON. Ghi nhận **public manifest accessible in user's browser**; công cụ kiểm tra độc lập vẫn không truy cập được hostname R2 nên chưa tự xác nhận HTTP status/body.
+- Đã rà soát `app.js` trên `testing`: app tự gọi `loadR2Catalog()` khi `DOMContentLoaded`; nút `btnLoadR2Catalog` cũng gọi lại hàm này. Hàm fetch trực tiếp URL R2 với `cache: 'no-store'`, kiểm tra `response.ok`, parse JSON, map bằng `ReadAlongCatalogPlaylist.mapRemoteCatalog()`, sau đó cập nhật và render playlist. Khi lỗi, app hiển thị alert; finally luôn tắt loading và khôi phục nút.
+- Kiểm tra DOM mapping: chỉ phát hiện `btnAutoFlipToggle` không có trong HTML; listener tương ứng đã có guard. Không phát hiện listener nào khác đang truy cập DOM ID không tồn tại mà thiếu guard. Chưa có căn cứ để sửa init flow hoặc thay đổi app code trước khi kiểm thử trên thiết bị.
+- CI PR #37 mới nhất tại head `c88c8e09fd8eb36fa4c92cfaea20e71e4b9b6153`: run [#41105388028](https://github.com/blamag999/read-along-android/actions/runs/41105388028) đang `queued`; chưa có conclusion. PR vẫn Draft/open, base `beta`, chưa merge.
+- Trạng thái: **User browser JSON check: Confirmed**; **App code path review: Completed**; **DOM event guard review: Completed**; **PR CI: Queued/Pending**; **Android app runtime test: Pending user device verification**; **APK build: Not started**.
+
+#### Bước tiếp theo
+
+1. Trên thiết bị đang cài Read Along, force stop ứng dụng rồi mở lại để chạy lại yêu cầu catalog tự động; nếu chưa hiện danh sách, mở chọn nguồn truyện và bấm `Truyện trực tuyến` để gọi lại fetch thủ công.
+2. Báo kết quả: số mục sách hiển thị hay nội dung lỗi cụ thể. Nếu vẫn lỗi, gửi log chẩn đoán mới sau lần thử này để phân biệt CORS/WebView, HTTP status, JSON mapping hay lỗi render.
+3. Chờ run #41105388028 kết thúc; chỉ sau CI success mới chuyển PR khỏi Draft/merge vào `beta`. Không build APK hoặc phát hành trước bước này và trước khi xác định cần thay đổi app hay không.
+
+
+### Lỗi xuất bản books.json gây JSON.parse thất bại (2026-10-31)
+
+- Người dùng gửi ảnh lỗi trên Android: `Unexpected non-whitespace character after JSON at position 28604 (line 754 column 2)`.
+- Đã kiểm tra `admin/public/books.json` trên nhánh `testing`: JSON hợp lệ, parse thành công và có 83 sách. Blob SHA: `131efe800e5803e7b3ce56f7accc0ce9545b9169`.
+- Root cause được xác định trong `admin/functions/api/readalong-admin/[[path]].js`, route `catalog/publish`: biểu thức nối `"\\\\n"` đã ghi hai ký tự literal backslash+n vào cuối object JSON. Vị trí đó khớp lỗi Android và khác với manifest seed hợp lệ trong Git.
+- Đã sửa trên `testing`: dùng `"\\n"` để nối newline thật. Commit: `fbe038f6a3c849f6452e1b74e5d6329b6a2f2918`.
+- Đã thêm regression assertion vào `tests/api-boundaries.test.js` để ngăn tái diễn. Commit: `3e08adbd8870413c3ea8e303a87365531c28e859`.
+- **Chưa deploy**: Cloudflare Pages production project `read-along-admin` dùng production branch `beta`; PR #37 hiện vẫn Draft và nhắm vào `beta`. Không tự merge PR hoặc deploy production khi chưa có xác nhận của người dùng. Chưa ghi đè R2 `books.json` và chưa build APK.
+- **Pending verification**: CI regression test trên HEAD mới; sau khi code được deploy lên production, mở Admin → Diagnostics → `Tạo / cập nhật books.json` để xuất bản lại manifest. Endpoint trả số bytes; sau đó mở URL public và xác nhận JSON parse được, không có literal `\\\\n` ở cuối. Cuối cùng force stop/mở lại app để xác nhận danh sách sách tải thành công.
+- Trạng thái: **Root cause: Confirmed**; **Code fix on testing: Completed**; **Regression test: Added / CI pending**; **Production deploy: Pending approval/integration**; **R2 republish: Pending**; **Android device verification: Pending**.
+
+
+### Tiếp tục xử lý lỗi publish books.json và hoàn tất beta (2026-10-31)
+
+- Người dùng yêu cầu tiếp tục toàn bộ quy trình đến khi hoàn tất beta, không cần hỏi xác nhận lại ở các bước kỹ thuật thông thường. Phạm vi **không bao gồm promote stable/main**.
+- PR #37 hiện mở/Draft, base `beta`, head `testing`; head sau các thay đổi manifest và README là `9503b22c9e074b369df1797dc435cd649cb3bbb3`.
+- Đã xác nhận commit `fbe038f6a3c849f6452e1b74e5d6329b6a2f2918` sửa serialization trong `admin/functions/api/readalong-admin/[[path]].js`: nối newline thật thay vì literal backslash+n.
+- Commit `3e08adbd8870413c3ea8e303a87365531c28e859` thêm regression assertion cho output manifest.
+- CI run [#41106186425](https://github.com/blamag999/read-along-android/actions/runs/41106186425) thất bại ở `tests/catalog.test.js:38`: assertion cũ chờ regex `/books array/`, trong khi module hiện báo `books.json không đúng cấu trúc { books: [...] }`. Các test module và direct R2 catalog (83 sách) trước đó đã chạy qua; suite dừng ở assertion này.
+- Đã sửa assertion trên `testing` ở commit `f78acf99b53accadca125aee34bc0d4fe700d6e0`, khớp thông báo thực tế mà không thay đổi runtime.
+- CI mới [#41106560409](https://github.com/blamag999/read-along-android/actions/runs/41106560409) đã được tạo cho commit sửa test; lần kiểm tra gần nhất trạng thái `in_progress`, job `regression-and-isolation` cũng `in_progress`. Chưa có kết luận pass/fail.
+- **Chưa merge PR, chưa deploy Cloudflare Pages, chưa ghi đè R2 books.json, chưa build APK beta.** Không được đánh dấu beta hoàn tất cho đến khi hoàn thành các bước dưới.
+- Lộ trình nghiệm thu còn lại:
+  1. Chờ CI #41106560409 kết thúc; nếu fail, đọc job log, sửa trên `testing`, thêm test và đợi run mới.
+  2. Review diff PR #37 trên head mới nhất, chuyển Draft thành Ready và merge `testing` → `beta` khi CI xanh.
+  3. Xác nhận `beta` chứa fix publish; Cloudflare Pages project `read-along-admin` production branch là `beta`, chờ deploy production hoàn tất.
+  4. Dùng Admin → Diagnostics → **Tạo / cập nhật books.json** để publish lại manifest lên bucket R2. Thao tác này chỉ được thực hiện sau deploy và qua bước validation asset có sẵn; không tự ghi đè R2 trước đó.
+  5. Kiểm tra manifest public parse được, có mảng books hợp lệ và không còn literal backslash+n cuối file.
+  6. Chạy workflow thủ công **Build and Release Read Along** trên branch `beta`, channel `beta`; kiểm tra version, build log, APK signature, SHA-256, artifact và prerelease.
+  7. Kiểm tra khả năng truy cập manifest/catalog và luồng đọc trên thiết bị Android thực tế. Ghi rõ giới hạn: không thể giả lập kiểm thử thiết bị nếu không có thiết bị/log từ người dùng; không tuyên bố device test pass nếu chưa có bằng chứng.
+  8. Cập nhật README, Issue #38 và báo cáo bàn giao với commit SHA, PR merge SHA, CI run, Pages deployment, số sách/manifest, Release URL/version, checksum và các test còn pending.
+- Giữ nguyên `main`; không phát hành stable. Không thay đổi GitHub signing secrets/keystore hoặc Cloudflare secrets.
+
+
+#### Nhật ký CI tiếp theo — 2026-10-31
+
+- Run [#41106560409](https://github.com/blamag999/read-along-android/actions/runs/41106560409) hoàn tất `failure`. Lỗi lần này ở assertion mới trong `tests/api-boundaries.test.js:39`: regex bị escape quá mức nên không khớp source serialization dù implementation đã sửa đúng.
+- Đã sửa regex tại commit `544ee6999973b34f1ff4d0d0bc8c1fb1ec572de7` để kiểm tra đúng source literal `"\\n"` (một escape sequence biểu diễn newline thật trong JavaScript), không thay đổi API runtime.
+- **CI cho commit `544ee69`: chưa thấy run trong lần truy vấn đầu tiên; cần tiếp tục kiểm tra Actions.** Không dùng run #41106560409 làm bằng chứng pass.
+- PR #37 vẫn open/Draft; chưa merge, Pages chưa deploy, R2 chưa publish lại, APK beta chưa build.

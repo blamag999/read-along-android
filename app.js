@@ -143,30 +143,12 @@ function initIndexedDB() {
   });
 }
 
-// Tạo key định danh duy nhất không trùng lặp cho mỗi truyện
 function getBookUniqueKey(pdfName, audioName) {
-  const name = pdfName || audioName || 'unnamed';
-  return name
-    .toLowerCase()
-    .replace(/\.[^/.]+$/, "")
-    .replace(/^[xX]22/g, "")
-    .replace(/[_\-\s,\.]+/g, "_")
-    .trim();
+  return window.ReadAlongCatalogPlaylist.getBookUniqueKey(pdfName, audioName);
 }
 
 function normalizeStoryTitle(filename) {
-  if (!filename) return '';
-  return filename
-    .replace(/\.[^/.]+$/, "")
-    .replace(/^[xX]22/g, "")
-    .replace(/[_\-]+/g, " ")
-    .replace(/\bread[\s_-]*along\b/gi, "")
-    .replace(/\bbook\b/gi, "")
-    .replace(/\bside[\s_-]*[0-9]+\b/gi, "")
-    .replace(/\bpart[\s_-]*[0-9]+\b/gi, "")
-    .replace(/[,\.]+/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return window.ReadAlongCatalogPlaylist.normalizeStoryTitle(filename);
 }
 
 async function saveBookToLibrary(bookData) {
@@ -495,48 +477,10 @@ async function loadR2Catalog() {
     if (!response.ok) throw new Error('Không tải được books.json (' + response.status + ').');
 
     const data = await response.json();
-    if (!data || !Array.isArray(data.books)) {
-      throw new Error('books.json không đúng cấu trúc { books: [...] }.');
-    }
-
-    const toAsset = (value, fallbackName) => {
-      if (typeof value === 'string') {
-        if (!isReadAlongR2Url(value)) return null;
-        return { name: fileNameFromUrl(value, fallbackName), url: value, key: '' };
-      }
-      if (value && typeof value === 'object' && isReadAlongR2Url(value.url)) {
-        return {
-          name: String(value.name || fileNameFromUrl(value.url, fallbackName)),
-          url: value.url,
-          key: value.key || ''
-        };
-      }
-      return null;
-    };
-
-    const stories = data.books.map(item => {
-      if (!item || typeof item !== 'object') return null;
-      const pdf = toAsset(item.pdf, 'book.pdf');
-      const audios = (Array.isArray(item.audios) ? item.audios : [])
-        .map(audio => toAsset(audio, 'audio.mp3'))
-        .filter(Boolean)
-        .map(audio => ({
-          ...audio,
-          partLabel: null
-        }));
-      const json = toAsset(item.sync || item.json, 'sync.json');
-      if (!pdf && !audios.length) return null;
-
-      return {
-        id: String(item.id || (pdf ? getBookUniqueKey(pdf.name) : getBookUniqueKey(audios[0].name))),
-        title: String(item.title || (pdf ? normalizeStoryTitle(pdf.name) : normalizeStoryTitle(audios[0].name))),
-        pdf,
-        audios,
-        json,
-        coverUrl: '',
-        source: 'r2-books-json'
-      };
-    }).filter(Boolean);
+    const stories = window.ReadAlongCatalogPlaylist.mapRemoteCatalog(data, {
+      isAllowedUrl: isReadAlongR2Url,
+      fileNameFromUrl
+    });
 
     state.playlist = stories;
     state.activeFilter = 'paired';
@@ -556,85 +500,13 @@ async function loadR2Catalog() {
 }
 
 function buildPlaylistFromItems(rawItems) {
-  const groups = {};
-  const jsonItems = [];
-
-  // Pass 1: Gom PDF va Audio truoc
-  rawItems.forEach(function(item) {
-    if (item.type === 'json') {
-      jsonItems.push(item);
-      return;
-    }
-
-    const norm = normalizeStoryTitle(item.name);
-    const key = norm.toLowerCase().replace(/\s+/g, "_");
-
-    if (!groups[key]) {
-      groups[key] = {
-        id: key,
-        title: norm.charAt(0).toUpperCase() + norm.slice(1),
-        pdf: null,
-        audios: [],
-        json: null
-      };
-    }
-
-    if (item.type === 'pdf') {
-      groups[key].pdf = item;
-    } else if (item.type === 'audio') {
-      const partMatch = item.name.match(/part[_\s-]*(\d+)|side[_\s-]*([ab])|disc[_\s-]*(\d+)|\b(\d+)\s*of\s*\d+/i);
-      item.partLabel = partMatch
-        ? (partMatch[1] ? ('Phần ' + partMatch[1]) : partMatch[2] ? ('Mặt ' + partMatch[2].toUpperCase()) : partMatch[3] ? ('Đĩa ' + partMatch[3]) : ('Phần ' + partMatch[4]))
-        : null;
-      groups[key].audios.push(item);
-    }
-  });
-
-  // Bước 2: Gán các tệp JSON vào đúng truyện
-  jsonItems.forEach(function(jItem) {
-    const jNorm = normalizeStoryTitle(jItem.name).toLowerCase().replace(/\s+/g, "_");
-    // 1. Khop chinh xac id
-    if (groups[jNorm]) {
-      groups[jNorm].json = jItem;
-      return;
-    }
-    // 2. Tim nhom nao co id nam trong ten file json hoac nguoc lai
-    for (const key of Object.keys(groups)) {
-      if (jNorm.includes(key) || key.includes(jNorm)) {
-        groups[key].json = jItem;
-        return;
-      }
-    }
-  });
-
-  // Chỉ giữ nhóm có PDF hoặc âm thanh; không tạo thẻ giả từ tệp JSON mốc đọc.
-  const playlistArray = Object.values(groups).filter(function(g) {
-    return g.pdf || (g.audios && g.audios.length > 0);
-  });
-
-  playlistArray.forEach(function(story) {
-    // Sap xep audio parts theo ten file (part 1 truoc part 2, v.v.)
-    story.audios.sort(function(a, b) {
-      return a.name.localeCompare(b.name, 'vi', { numeric: true });
-    });
-    // Gan label mac dinh neu chua co
-    if (story.audios.length > 1) {
-      story.audios.forEach(function(aud, i) {
-        if (!aud.partLabel) aud.partLabel = 'Phần ' + (i + 1);
-      });
-    }
-  });
-  playlistArray.sort(function(a, b) {
-    return a.title.localeCompare(b.title, 'vi', { numeric: true });
-  });
-
+  const playlistArray = window.ReadAlongCatalogPlaylist.buildPlaylistFromFiles(rawItems);
   state.playlist = playlistArray;
   state.playlistPage = 1;
   updatePlaylistBadgeCount();
   renderPlaylistView();
 
   if (playlistArray.length > 0) {
-    dom.lblPlaylistSubtitle = document.getElementById('lblPlaylistSubtitle');
     if (dom.lblPlaylistSubtitle) {
       dom.lblPlaylistSubtitle.textContent = 'Tìm thấy ' + playlistArray.length + ' tập truyện trong thư mục';
     }
@@ -642,6 +514,7 @@ function buildPlaylistFromItems(rawItems) {
     showToast('Đã nạp danh sách ' + playlistArray.length + ' tập truyện!');
   }
 }
+
 function updatePlaylistBadgeCount() {
   const count = state.playlist.length;
   const available = count > 0;
@@ -679,24 +552,12 @@ function updatePlaylistPagination(totalPages, totalItems) {
 
 function renderPlaylistView() {
   dom.playlistItemsList.replaceChildren();
-  const query = state.searchQuery.toLowerCase().trim();
-  const filter = state.activeFilter;
-
   const favorites = getFavoriteBooks();
-  const filtered = state.playlist.filter(story => {
-    const matchQuery = !query || story.title.toLowerCase().includes(query) ||
-      (story.pdf && story.pdf.name.toLowerCase().includes(query)) ||
-      (story.audios.some(a => a.name.toLowerCase().includes(query)));
-
-    if (!matchQuery) return false;
-    if (filter === 'favorites') return favorites.includes(story.id);
-    if (filter === 'paired') return story.pdf && story.audios.length > 0;
-    if (filter === 'pdf') return !!story.pdf;
-    if (filter === 'mp3') return story.audios.length > 0;
-    return true;
+  const filtered = window.ReadAlongCatalogPlaylist.filterPlaylist(state.playlist, {
+    query: state.searchQuery,
+    filter: state.activeFilter,
+    favorites
   });
-
-  filtered.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'vi', { sensitivity: 'base', numeric: true }));
 
   if (filtered.length === 0) {
     const empty = document.createElement('div');
