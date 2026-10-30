@@ -471,6 +471,17 @@ function isSafeHttpsUrl(value) {
   }
 }
 
+const READ_ALONG_R2_HOST = 'pub-763a3a5ae235415cbef15b64f7a20820.r2.dev';
+function isReadAlongR2Url(value) {
+  if (!isSafeHttpsUrl(value)) return false;
+  try {
+    const url = new URL(value);
+    return url.hostname === READ_ALONG_R2_HOST && !url.port;
+  } catch (_) {
+    return false;
+  }
+}
+
 async function loadR2Catalog() {
   const button = dom.btnLoadR2Catalog;
   if (button) { button.disabled = true; button.textContent = '⏳ Đang tải sách...'; }
@@ -489,10 +500,10 @@ async function loadR2Catalog() {
 
     const toAsset = (value, fallbackName) => {
       if (typeof value === 'string') {
-        if (!isSafeHttpsUrl(value)) return null;
+        if (!isReadAlongR2Url(value)) return null;
         return { name: fileNameFromUrl(value, fallbackName), url: value, key: '' };
       }
-      if (value && typeof value === 'object' && isSafeHttpsUrl(value.url)) {
+      if (value && typeof value === 'object' && isReadAlongR2Url(value.url)) {
         return {
           name: String(value.name || fileNameFromUrl(value.url, fallbackName)),
           url: value.url,
