@@ -639,16 +639,6 @@ async function handle(request, env) {
     }
   }
 
-  if (route === "debug/logs" && method === "GET") {
-    const limit=Math.min(100,Math.max(1,Number(url.searchParams.get("limit")||50)));
-    const [scans,requests,events]=await Promise.all([
-      env.DB.prepare("SELECT scan_id,prefix,status,scanned,changed,skipped,errors,warnings,duration_ms,rule_version,ray_id,error_message,detail_json,created_at FROM admin_scan_logs ORDER BY created_at DESC LIMIT ?").bind(limit).all(),
-      env.DB.prepare("SELECT request_id,prefix,page_size,cursor_present,folders_count,files_count,truncated,status,duration_ms,ray_id,error_message,created_at FROM admin_library_requests ORDER BY created_at DESC LIMIT ?").bind(limit).all(),
-      env.DB.prepare("SELECT event_type,details_json,ray_id,created_at FROM admin_client_events ORDER BY created_at DESC LIMIT ?").bind(limit).all()
-    ]);
-    return json({entries:scans.results||[],libraryRequests:requests.results||[],events:events.results||[]});
-  }
-
   if (route === "files/all" && method === "GET") {
     const startedAt=Date.now(), requestId=crypto.randomUUID(), rayId=request.headers.get("cf-ray")||null;
     const prefix=url.searchParams.get("prefix")||"";
@@ -815,6 +805,9 @@ export async function onRequest(context) {
   const request = context.request, origin = request.headers.get("Origin") || "";
   const allowedOrigins = new Set(["https://localhost", "http://localhost", "capacitor://localhost", "https://private-comic-reader.pages.dev"]);
   const corsAllowed = allowedOrigins.has(origin);
+  if (new URL(request.url).pathname.endsWith("/usage/track") && origin && !corsAllowed) {
+    return new Response(JSON.stringify({ error: "Origin not allowed" }), { status: 403, headers: { "content-type": "application/json" } });
+  }
   try {
     const response = await handle(request, context.env), headers = new Headers(response.headers);
     headers.set("x-content-type-options", "nosniff");
