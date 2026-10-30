@@ -47,9 +47,9 @@ async function verifyTotp(secret, code) {
     const offset = mac[mac.length - 1] & 0x0f;
     const binary = ((mac[offset] & 0x7f) << 24) | ((mac[offset + 1] & 0xff) << 16) |
       ((mac[offset + 2] & 0xff) << 8) | (mac[offset + 3] & 0xff);
-    if (String(binary % 1000000).padStart(6, "0") === String(code)) return true;
+    if (String(binary % 1000000).padStart(6, "0") === String(code)) return counter + drift;
   }
-  return false;
+  return null;
 }
 
 function getCookie(request, name) {
@@ -160,12 +160,20 @@ async function handle(request, env) {
     if ((count?.total || 0) >= MAX_ATTEMPTS) return json({ error: "Too many attempts. Try again in 15 minutes." }, 429);
     let body;
     try { body = await request.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
-    const ok = await verifyTotp(env.READALONG_TOTP_SECRET, body.code);
-    if (!ok) {
+    const acceptedCounter = await verifyTotp(env.READALONG_TOTP_SECRET, body.code);
+    if (acceptedCounter === null) {
       await env.DB.prepare("INSERT INTO admin_auth_attempts (ip_hash, attempted_at) VALUES (?, ?)").bind(ipHash, Date.now()).run();
       return json({ error: "Invalid authentication code" }, 401);
     }
+    const replayGuard = await env.DB.prepare(
+      "UPDATE admin_totp_state SET last_counter = ? WHERE id = 1 AND last_counter < ?"
+    ).bind(acceptedCounter, acceptedCounter).run();
+    if (!replayGuard.meta?.changes) {
+      await env.DB.prepare("INSERT INTO admin_auth_attempts (ip_hash, attempted_at) VALUES (?, ?)").bind(ipHash, Date.now()).run();
+      return json({ error: "This OTP code has already been used. Wait for the next code." }, 401);
+    }
     await env.DB.prepare("DELETE FROM admin_auth_attempts WHERE ip_hash = ?").bind(ipHash).run();
+    await env.DB.prepare("DELETE FROM admin_sessions WHERE expires_at <= ?").bind(Date.now()).run();
     const raw = new Uint8Array(32);
     crypto.getRandomValues(raw);
     const token = base64url(raw);
@@ -273,7 +281,7 @@ async function handle(request, env) {
     const body = await request.json();
     const source = String(body.source || "");
     const destination = String(body.destination || "");
-    if (!validKey(source) || !validKey(destination) || !ALLOWED_EXTENSIONS.has(extensionOf(destination))) return json({ error: "Invalid file name or format" }, 400);
+    if (!validKey(source) || !validKey(destination) || !ALLOWED_EXTENSIONS.has(extensionOf(destination)) || extensionOf(source) !== extensionOf(destination)) return json({ error: "Invalid file name or format; keep the original extension" }, 400);
     await moveObject(env.READALONG, source, destination);
     await audit(env, "rename_or_move", source, { destination });
     return json({ ok: true });
