@@ -232,3 +232,30 @@ Quy tắc bảo trì:
 - Các tệp trong repository công khai có thể được đọc công khai. Chỉ đồng bộ marker JSON không chứa thông tin cá nhân; không lưu PDF, audio, tên người dùng, email hoặc dữ liệu riêng tư vào `sync_data/`.
 - Token cũ từng dùng cho repository `pdf-audio-sync` không còn được sử dụng; ứng dụng xóa key session cũ và yêu cầu nhập token có quyền trên repository Read Along.
 - Nguồn marker ưu tiên vẫn là file JSON người dùng chọn hoặc URL `sync` trong `books.json`; GitHub sync là bản đồng bộ bổ sung theo thao tác/thiết lập của người dùng. Nếu cần thay đổi thứ tự ưu tiên, phải bổ sung test hồi quy trước.
+
+
+## 10. Roadmap cập nhật — 2026-10-31
+
+### Đợt sửa hiện tại: xác nhận seek lùi trước khi đồng bộ trang
+
+- Đã rà soát `app.js`, `modules/page-sync.js`, `tests/modules.test.js` và workflow OTA trên nhánh `beta`.
+- Phát hiện quyền đồng bộ trang lùi trước đây được bật ngay ở sự kiện `seeking`, trong khi thao tác tua có thể chưa hoàn tất. Điều này tạo cửa sổ race condition để một `timeupdate` trung gian sử dụng trạng thái tua lùi chưa được xác nhận.
+- Đã thay đổi để ghi nhận ý định seek lùi, bỏ qua đồng bộ trang trong khi `audio.seeking` còn đúng, và chỉ cấp quyền đồng bộ lùi sau `seeked` nếu thời gian thực tế gần đích seek.
+- Đã tách phép xác nhận thành helper thuần `ReadAlongPageSync.isConfirmedBackwardSeek()` và thêm test cho seek lùi hợp lệ, seek chưa tới đích và seek tiến.
+- Các commit đã ghi trên `beta`: `321db030`, `104eb47`, `9399e5a`, `2c7950f`.
+- **Chưa xác nhận test/build:** phiên làm việc này chưa chạy được `npm test` hoặc build APK trong runner cục bộ; chưa có workflow run gắn với commit mới. Không coi lỗi PDF/audio đã được khắc phục hoàn toàn cho tới khi CI và kiểm thử thiết bị xác nhận.
+
+### Thứ tự roadmap tiếp theo
+
+1. **P0 — Kiểm chứng đồng bộ audio:** chạy `npm test` và `npm run check:js`; sau đó kiểm thử thiết bị với seek lùi/tiến, lật trang thủ công liên tiếp, marker thiếu/trùng/0 giây, audio nhiều phần và xoay portrait ↔ landscape. Theo dõi Issue #12 và #13; không đóng khi chưa có log xác nhận.
+2. **P0 — Loại bỏ race condition render:** rà soát `pageNumPending`, `pageNumPendingSyncAudio` và vòng đời `renderCurrentSpread()`. Bổ sung test để render cũ không ghi đè trang mới, resize không tua audio và thay đổi tài liệu không dùng callback của PDF cũ.
+3. **P1 — Gia cố OTA:** xác minh redirect cuối cùng vẫn thuộc GitHub Releases/host tải GitHub được cho phép; đối chiếu SHA-256 nếu manifest/checksum có sẵn; kiểm tra APK tải về, versionCode và chứng thư ký trước khi mở trình cài đặt. Giữ nguyên xác nhận cài đặt của Android.
+4. **P1 — Kiểm thử phát hành:** chạy workflow thủ công trên `beta`; xác minh artifact, `apksigner`, SHA-256 và Release. Cài đè OTA trên thiết bị thật, kiểm tra dữ liệu đọc còn nguyên. Chỉ promote `main` khi có xác nhận riêng.
+5. **P2 — UI/Android TV:** kiểm tra safe area/notch/status bar, bố cục nút điều khiển, D-pad/remote và các kích thước màn hình sau khi P0 ổn định.
+6. **P3 — Bảo trì:** giữ log có cấu trúc và không chứa nội dung sách/URL riêng tư; mỗi lỗi có test tái hiện; tránh thêm API/proxy/phụ thuộc nếu luồng hiện tại đã đáp ứng.
+
+### Quy tắc nghiệm thu đợt này
+
+- Không xem việc commit code hoặc thêm unit test là bằng chứng lỗi đã hết.
+- Báo riêng kết quả unit test, CI, build APK và kiểm thử thiết bị; không gộp thành một trạng thái “đã kiểm thử”.
+- Chỉ phát hành stable khi beta vượt qua các bài test hồi quy, workflow ký APK thành công và người dùng xác nhận promote.
