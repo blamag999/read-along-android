@@ -32,7 +32,7 @@ function decodeBase32(value) {
 }
 
 async function verifyTotp(secret, code) {
-  if (!/^\d{6}$/.test(String(code || ""))) return false;
+  if (!/^\d{6}$/.test(String(code || ""))) return null;
   let key;
   try {
     key = await crypto.subtle.importKey("raw", decodeBase32(secret), { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
