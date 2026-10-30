@@ -169,3 +169,14 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 3. Kiểm thử upload file lớn, folder, rename/move, xóa file/thư mục và audit log trên dữ liệu thử nghiệm.
 4. Chỉ sau khi kiểm thử ổn định mới đổi Pages production branch sang `main` khi promote stable.
 5. Chuyển đổi audio (FFmpeg) chưa được triển khai. Không chạy FFmpeg dài trong Pages Functions; cần chọn runtime xử lý riêng hoặc thử nghiệm FFmpeg WASM phía trình duyệt, giữ file gốc và xác minh output trước khi publish.
+
+
+## 8. Read Along Admin dashboard and app usage metrics (2026-10-30)
+
+- Admin home page: https://read-along-admin.pages.dev. It is public and shows catalog counts plus app usage metrics; the advanced manager is opened with **Quản lý nâng cao** and requires OTP.
+- The management view is on the same canonical hostname and uses the existing HttpOnly Secure session cookie. A refresh at the `#manage` route revalidates the session; the public home page does not prompt for OTP.
+- The Debug tab and manual log export were removed from the Admin UI. Browser/API telemetry and server exceptions are recorded automatically in the dedicated Admin D1. See `admin/README.md` for the schema, privacy model and investigation notes.
+- `modules/diagnostics.js` sends anonymous usage events to the Admin Pages endpoint. It uses a random local installation ID and session launch ID; the server stores SHA-256 hashes only. No device serial, advertising ID, email, phone, OTP, cookie or access token is collected.
+- The dashboard reports total app launches, launches in the last 30 days, installations recorded, and installations active in the last 30 days. Counts start only after an updated app opens and reports telemetry; old APKs and historical installations cannot be backfilled. Clearing app data/reinstalling can create a new installation ID.
+- The Admin D1 tables are in `read-along-admin-db` only. Never apply Admin migrations to the Private Comic Reader D1 database.
+- To package the Android telemetry change, open **Actions → Build and Release Read Along → Run workflow**, select branch `beta` and channel `beta`. The workflow is manual (`workflow_dispatch`); no APK build or Release is created automatically by merging PR #30.
