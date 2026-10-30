@@ -7,6 +7,7 @@ const diagnostics = read('modules/diagnostics.js');
 const adminApi = read('admin/functions/api/readalong-admin/[[path]].js');
 const diagnosticsWorker = read('services/diagnostics/worker.js');
 const adminClient = read('admin/public/admin.js');
+const remoteSync = read('modules/remote-sync.js');
 
 const runtimeSources = [app, diagnostics, adminApi, diagnosticsWorker, adminClient].join('\n');
 assert.doesNotMatch(runtimeSources, /private-comic-reader|comic-reader\.pages\.dev/i,
