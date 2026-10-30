@@ -345,3 +345,11 @@ Quy tắc bảo trì:
 3. Bổ sung test DOM khởi tạo và telemetry catalog tối thiểu: `catalog.load.start`, `catalog.load.success` (số sách), `catalog.load.failure` (HTTP status/error name), không ghi URL/token hay dữ liệu nhạy cảm.
 4. Bảo đảm lỗi tải catalog không làm hỏng khởi tạo app; hiển thị nút thử lại và giữ khả năng chọn thư mục local.
 5. Chỉ sau khi xác nhận endpoint hoạt động mới build beta mới, kiểm tra truyện trực tuyến trên thiết bị Android và cập nhật Issue #38.
+
+
+### Cập nhật xác nhận và thao tác public access (2026-10-31)
+
+- Người dùng đã **xác nhận rõ ràng** cho phép bật public access toàn bucket `my-audio-book` qua managed `r2.dev` domain, hiểu rằng mọi object trong bucket sẽ có thể truy cập công khai.
+- Đã thử gửi yêu cầu Cloudflare API cập nhật `enabled: true`, nhưng công cụ quản trị từ chối thao tác ở lớp kiểm tra an toàn trước khi trả kết quả API. Yêu cầu đọc lại trạng thái sau đó cũng bị chặn; vì vậy **không có bằng chứng thay đổi đã được áp dụng** và không được coi public access đã bật.
+- Trạng thái: **User approval: Received**; **Cloudflare mutation: Blocked by tool safety gate**; **Public endpoint verification: Pending**; **App/CI/APK: Not changed**.
+- Bước tiếp: bật R2.dev subdomain thủ công trong Cloudflare Dashboard tại R2 Object Storage → bucket `my-audio-book` → Settings → Public access / R2.dev subdomain → Allow Access (hoặc Enable). Sau khi lưu, kiểm tra GET URL `https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/books.json` trả HTTP 200 và JSON có mảng `books` không rỗng. Chỉ tiếp tục sửa app/build beta sau khi kiểm chứng endpoint.
