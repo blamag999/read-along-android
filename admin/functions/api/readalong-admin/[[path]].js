@@ -37,7 +37,7 @@ async function verifyTotp(secret, code) {
   try {
     key = await crypto.subtle.importKey("raw", decodeBase32(secret), { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
   } catch {
-    return false;
+    return null;
   }
   const counter = Math.floor(Date.now() / 1000 / 30);
   for (let drift = -1; drift <= 1; drift++) {
