@@ -10,9 +10,6 @@ let filteredLibraryEntries = [];
 let dialogResolve = null;
 let pageSize = [25, 50, 100].includes(Number(sessionStorage.getItem("readalong-page-size"))) ? Number(sessionStorage.getItem("readalong-page-size")) : 25;
 let clientLogs = [];
-let serverLogs = [];
-let serverEvents = [];
-let libraryRequests = [];
 let fileLoadSequence = 0;
 let debugEventQueue = [];
 let debugFlushScheduled = false;
@@ -31,9 +28,8 @@ const api = async (path, options = {}) => {
     data = await response.json().catch(() => ({}));
     if (response.status === 401) {
       queueDebugEvent("auth_api_unauthorized", { path: String(path).split("?")[0], status: 401 });
-      show("managerPanel", false);
-      show("loginPanel", true);
-      show("logoutBtn", false);
+      show("managerPanel", false); show("loginPanel", true); show("homePanel", false);
+      show("logoutBtn", false); show("homeBtn", false);
     }
     if (!response.ok) {
       const error = new Error(data.error || "Yêu cầu thất bại (" + response.status + ")");
@@ -95,13 +91,13 @@ async function flushDebugEvents() {
   if (!debugEventQueue.length) return;
   const events=debugEventQueue.splice(0,25);
   try {
-    const response=await fetch(API+"/debug/events",{method:"POST",credentials:"same-origin",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({events})});
+    const response=await fetch(API+"/telemetry/events",{method:"POST",credentials:"same-origin",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({events})});
     if(!response.ok) {
-      clientLogs.unshift({at:new Date().toISOString(),method:"POST",path:"debug/events",status:response.status,durationMs:0,rayId:response.headers.get("cf-ray")||"",error:"Không đồng bộ được log sự kiện"});
+      clientLogs.unshift({at:new Date().toISOString(),method:"POST",path:"telemetry/events",status:response.status,durationMs:0,rayId:response.headers.get("cf-ray")||"",error:"Không đồng bộ được log sự kiện"});
       clientLogs=clientLogs.slice(0,100);
     }
   } catch(error) {
-    clientLogs.unshift({at:new Date().toISOString(),method:"POST",path:"debug/events",status:"NETWORK",durationMs:0,rayId:"",error:String(error.message||error)});
+    clientLogs.unshift({at:new Date().toISOString(),method:"POST",path:"telemetry/events",status:"NETWORK",durationMs:0,rayId:"",error:String(error.message||error)});
     clientLogs=clientLogs.slice(0,100);
   }
   if(debugEventQueue.length&&!debugFlushScheduled){debugFlushScheduled=true;setTimeout(flushDebugEvents,250);}
@@ -135,7 +131,9 @@ async function checkSession() {
     });
     show("loginPanel", !result.authenticated);
     show("managerPanel", result.authenticated);
+    show("homePanel", false);
     show("logoutBtn", result.authenticated);
+    show("homeBtn", result.authenticated);
     if (result.authenticated) {
       $("loginError").textContent = "";
       await loadFiles();
@@ -143,7 +141,7 @@ async function checkSession() {
       startSessionHeartbeat();
     } else {
       $("loginError").textContent = result.reason === "cookie_missing"
-        ? "Không tìm thấy cookie phiên đăng nhập trên hostname hiện tại. Hãy đăng nhập lại; nếu lỗi lặp lại sau khi tải lại trang, gửi log Debug."
+        ? "Không tìm thấy cookie phiên đăng nhập trên hostname hiện tại. Hãy đăng nhập lại; nếu lỗi lặp lại sau khi tải lại trang, gửi thông tin lỗi tự động."
         : "Cookie phiên không còn hợp lệ hoặc đã hết hạn. Hãy đăng nhập lại.";
     }
   } catch (error) {
@@ -154,6 +152,7 @@ async function checkSession() {
     show("loginPanel", true);
     show("managerPanel", false);
     show("logoutBtn", false);
+    show("homeBtn", false);
     $("loginError").textContent = "Không thể kiểm tra phiên đăng nhập do lỗi kết nối hoặc máy chủ: " + error.message + ". Đây chưa chắc là phiên đã hết hạn; hãy thử lại.";
   }
 }
@@ -169,6 +168,8 @@ $("loginForm").addEventListener("submit", async (event) => {
     show("loginPanel", false);
     show("managerPanel", true);
     show("logoutBtn", true);
+    show("homeBtn", true);
+    show("homePanel", false);
     await loadFiles();
     startSessionHeartbeat();
   } catch (error) {
@@ -180,9 +181,16 @@ $("logoutBtn").addEventListener("click", async () => {
   try { await postJson("logout", {}); } catch {}
   queueDebugEvent("auth_logout", { host: location.host });
   show("managerPanel", false);
-  show("loginPanel", true);
+  show("loginPanel", false);
+  show("homePanel", true);
   show("logoutBtn", false);
+  show("homeBtn", false);
+  location.hash = "";
+  loadPublicStats();
 });
+
+$("homeBtn").addEventListener("click", () => { location.hash = ""; });
+$("manageBtn").addEventListener("click", () => { location.hash = "manage"; });
 
 function addCell(row, value) {
   const cell = document.createElement("td");
@@ -299,18 +307,13 @@ function activateTab(name) {
   const library = name === "library";
   show("libraryPanel", library);
   const diagnostics = name === "diagnostics";
-  const debug = name === "debug";
   show("diagnosticsPanel", diagnostics);
-  show("debugPanel", debug);
   $("libraryTabBtn").classList.toggle("active", library);
   $("diagnosticsTabBtn").classList.toggle("active", diagnostics);
-  $("debugTabBtn").classList.toggle("active", debug);
   if (diagnostics && $("diagnosticsPanel").dataset.scanned !== "true") runDiagnostics();
-  if (debug) loadDebugLogs();
 }
 $("libraryTabBtn").addEventListener("click", () => activateTab("library"));
 $("diagnosticsTabBtn").addEventListener("click", () => activateTab("diagnostics"));
-$("debugTabBtn").addEventListener("click", () => activateTab("debug"));
 $("pageSizeSelect").value=String(pageSize);
 $("pageSizeSelect").addEventListener("change",()=>{
   pageSize=Math.min(100,Math.max(25,Number($("pageSizeSelect").value)||25));
@@ -448,125 +451,6 @@ $("publishBooksBtn").addEventListener("click", async () => {
 $("scanBtn").addEventListener("click", runDiagnostics);
 $("scanAgainBtn").addEventListener("click", runDiagnostics);
 
-async function loadDebugLogs() {
-  const button = $("refreshDebugBtn");
-  if (button) { button.disabled = true; button.textContent = "Đang tải log…"; }
-  queueDebugEvent("debug_refresh_clicked", { host: location.host });
-  try {
-    const result = await api("debug/logs?limit=100", { cache: "no-store" });
-    serverLogs = Array.isArray(result.entries) ? result.entries : [];
-    libraryRequests = Array.isArray(result.libraryRequests) ? result.libraryRequests : [];
-    serverEvents = Array.isArray(result.events) ? result.events : [];
-    renderDebugLogs();
-    setStatus("Đã làm mới log: " + serverLogs.length + " lượt quét, " + libraryRequests.length + " yêu cầu thư viện, " + serverEvents.length + " sự kiện.");
-  } catch (error) {
-    const target = $("serverLogRows");
-    if (target) {
-      target.replaceChildren();
-      const row = document.createElement("tr");
-      const cell = addCell(row, "Không tải được log máy chủ: " + error.message);
-      cell.colSpan = 6; cell.className = "empty error"; target.append(row);
-    }
-    setStatus("Làm mới log thất bại: " + error.message, true);
-  } finally {
-    if (button) { button.disabled = false; button.textContent = "Làm mới log"; }
-  }
-}
-function renderDebugLogs() {
-  const server = $("serverLogRows");
-  const client = $("clientLogRows");
-  const requests = $("libraryRequestRows");
-  const events = $("serverEventRows");
-  if (server) {
-    server.replaceChildren();
-    if (!serverLogs.length) {
-      const row = document.createElement("tr"); const cell = addCell(row, "Chưa có lịch sử quét.");
-      cell.colSpan = 6; cell.className = "empty"; server.append(row);
-    }
-    for (const log of serverLogs) {
-      const row = document.createElement("tr");
-      addCell(row, formatDate(log.created_at));
-      addCell(row, log.status === "success" ? "Thành công" : "Thất bại");
-      addCell(row, (log.scanned || 0) + " / " + (log.changed || 0) + " / " + (log.skipped || 0));
-      addCell(row, (log.errors || 0) + " / " + (log.warnings || 0));
-      addCell(row, (log.duration_ms || 0) + " ms");
-      addCell(row, [log.ray_id, log.error_message].filter(Boolean).join(" · ") || "—");
-      server.append(row);
-    }
-  }
-  if (requests) {
-    requests.replaceChildren();
-    if (!libraryRequests.length) { const row=document.createElement("tr"); const cell=addCell(row,"Chưa có yêu cầu phân trang được ghi nhận."); cell.colSpan=8; cell.className="empty"; requests.append(row); }
-    for (const log of libraryRequests) {
-      const row=document.createElement("tr");
-      addCell(row,formatDate(log.created_at)); addCell(row,log.prefix||"/");
-      addCell(row,String(log.page_size||"—")); addCell(row,log.cursor_present ? "Có" : "Không");
-      addCell(row,(log.folders_count||0)+" / "+(log.files_count||0)); addCell(row,log.truncated ? "Còn" : "Hết");
-      addCell(row,log.status+" · "+(log.duration_ms||0)+" ms");
-      addCell(row,[log.ray_id,log.error_message].filter(Boolean).join(" · ")||"—"); requests.append(row);
-    }
-  }
-  if (events) {
-    events.replaceChildren();
-    if (!serverEvents.length) { const row=document.createElement("tr"); const cell=addCell(row,"Chưa có sự kiện giao diện được đồng bộ."); cell.colSpan=4; cell.className="empty"; events.append(row); }
-    for (const event of serverEvents) {
-      const row=document.createElement("tr");
-      addCell(row,formatDate(event.created_at)); addCell(row,event.event_type);
-      addCell(row,event.ray_id||"—"); addCell(row,event.details_json||"—"); events.append(row);
-    }
-  }
-  if (client) {
-    client.replaceChildren();
-    if (!clientLogs.length) {
-      const row = document.createElement("tr"); const cell = addCell(row, "Chưa ghi nhận yêu cầu API.");
-      cell.colSpan = 6; cell.className = "empty"; client.append(row);
-    }
-    for (const log of clientLogs) {
-      const row = document.createElement("tr");
-      addCell(row, formatDate(log.at)); addCell(row, log.path);
-      addCell(row, String(log.status)); addCell(row, log.durationMs + " ms");
-      addCell(row, log.rayId || "—"); addCell(row, log.error || "—");
-      client.append(row);
-    }
-  }
-}
-$("refreshDebugBtn").addEventListener("click", () => {
-  loadDebugLogs().catch(error => setStatus("Làm mới log thất bại: " + error.message, true));
-});
-$("exportDebugBtn").addEventListener("click", async () => {
-  const button = $("exportDebugBtn");
-  button.disabled = true;
-  const oldLabel = button.textContent;
-  button.textContent = "Đang chuẩn bị…";
-  try {
-    while (debugEventQueue.length) await flushDebugEvents();
-    await loadDebugLogs();
-    const payload = {
-      exportedAt: new Date().toISOString(),
-      host: location.host,
-      serverLogs, libraryRequests, serverEvents, clientLogs,
-      pendingBrowserEvents: debugEventQueue
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "read-along-admin-debug-" + new Date().toISOString().replace(/[:.]/g, "-") + ".json";
-    link.style.display = "none";
-    document.body.append(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1500);
-    setStatus("Đã tạo tệp JSON log để tải xuống.");
-  } catch (error) {
-    setStatus("Xuất JSON thất bại: " + error.message, true);
-  } finally {
-    button.disabled = false;
-    button.textContent = oldLabel;
-  }
-});
-
-
 async function renameEntry(entry) {
   const suggestion = entry.key;
   const destination = prompt("Nhập đường dẫn và tên mới (có thể thay đổi thư mục):", suggestion);
@@ -682,4 +566,32 @@ $("auditRows").closest("details").addEventListener("toggle", async (event) => {
   } catch (error) { $("auditRows").textContent = error.message; }
 });
 
-checkSession();
+async function loadPublicStats() {
+  const status = $("homeStatus");
+  try {
+    const response = await fetch(API + "/usage/stats", { cache: "no-store" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "HTTP " + response.status);
+    $("statBooks").textContent = Number(data.books || 0).toLocaleString("vi-VN");
+    $("statPdfs").textContent = Number(data.pdfs || 0).toLocaleString("vi-VN");
+    $("statAudios").textContent = Number(data.audios || 0).toLocaleString("vi-VN");
+    $("statSync").textContent = Number(data.sync || 0).toLocaleString("vi-VN");
+    $("statVisits").textContent = Number(data.totalVisits || 0).toLocaleString("vi-VN");
+    $("statVisitsRecent").textContent = "Trong 30 ngày: " + Number(data.visits30d || 0).toLocaleString("vi-VN");
+    $("statDevices").textContent = Number(data.totalDevices || 0).toLocaleString("vi-VN");
+    $("statDevicesRecent").textContent = "Hoạt động 30 ngày: " + Number(data.devices30d || 0).toLocaleString("vi-VN");
+    status.textContent = "Cập nhật lúc " + formatDate(data.updatedAt) + ". Thiết bị được đếm theo mã cài đặt ẩn danh.";
+  } catch (error) { status.textContent = "Chưa tải được thống kê: " + error.message; }
+}
+async function handleRoute() {
+  if (location.hash !== "#manage") {
+    show("homePanel", true); show("loginPanel", false); show("managerPanel", false);
+    show("logoutBtn", false); show("homeBtn", false);
+    await loadPublicStats();
+    return;
+  }
+  show("homePanel", false);
+  await checkSession();
+}
+window.addEventListener("hashchange", handleRoute);
+handleRoute();
