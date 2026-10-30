@@ -26,6 +26,9 @@ assert.equal(sync.findTargetPage({
   pageTimestamps: { 2: 120 }, totalPages: 3, currentTime: 130,
   currentPart: 0, audioCount: 1, duration: 100
 }), null, 'markers beyond the audio duration must be ignored');
+assert.equal(sync.isConfirmedBackwardSeek(92, 87.9, 87.9), true, 'a completed backward seek to its target is confirmed');
+assert.equal(sync.isConfirmedBackwardSeek(92, 87.9, 92), false, 'an unfinished or mismatched seek must not authorize backward sync');
+assert.equal(sync.isConfirmedBackwardSeek(87.9, 92, 92), false, 'a forward seek must not authorize backward sync');
 assert.equal(sync.shouldAllowPageChange(4, 2, false), false, 'stale markers must not move pages backwards');
 assert.equal(sync.shouldAllowPageChange(4, 2, true), true, 'an explicit backward seek may move pages backwards');
 assert.equal(sync.shouldAllowPageChange(2, 4, false), true, 'forward synchronization remains enabled');
