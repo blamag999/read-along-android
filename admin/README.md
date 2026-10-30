@@ -33,7 +33,7 @@ Create/configure the Pages project from the same GitHub repository:
 4. Build command: leave empty.
 5. Build output directory: `public`.
 6. Production branch: `beta`.
-7. Git path filter is currently `*` because Pages evaluates paths relative to the configured root directory. This keeps the project deployable; the Pages build is separate from the Android APK workflow. If path filtering is tightened later, test a preview deployment before relying on it.
+7. Git path filter is currently `*` to keep automatic deployments reliable. Depending on Pages path-filter semantics, commits elsewhere in the repository may also trigger this separate Pages build. The Android APK workflow remains independent and is not triggered by this Pages deployment.
 8. Add bindings to **Production only**:
    - R2 bucket binding named `READALONG`, bucket `my-audio-book`.
    - D1 database binding named `DB`, database `read-along-admin-db`.
