@@ -513,13 +513,15 @@ async function handle(request, env) {
     if (prefix && !validKey(prefix.endsWith("/") ? prefix.slice(0, -1) : prefix)) return json({ error: "Invalid folder path" }, 400);
     const normalized = prefix ? (prefix.endsWith("/") ? prefix : prefix + "/") : "";
     const requestedCursor = url.searchParams.get("cursor") || undefined;
-    const result = await env.READALONG.list({ prefix: normalized, delimiter: "/", limit: 100, ...(requestedCursor ? { cursor: requestedCursor } : {}) });
+    const requestedLimit = Number(url.searchParams.get("limit") || 25);
+    const pageSize = [25,  50, 100].includes(requestedLimit) ? requestedLimit : 25;
+    const result = await env.READALONG.list({ prefix: normalized, delimiter: "/", limit: pageSize, ...(requestedCursor ? { cursor: requestedCursor } : {}) });
     const folders = (result.delimitedPrefixes || []).map((key) => ({ key, name: key.slice(normalized.length), type: "folder" }));
     const files = result.objects.filter((obj) => obj.key !== normalized && !obj.key.endsWith("/")).map((obj) => ({
       key: obj.key, name: obj.key.slice(normalized.length), type: "file", size: obj.size, uploaded: obj.uploaded,
       contentType: obj.httpMetadata?.contentType || ""
     }));
-    return json({ prefix: normalized, folders, files, truncated: result.truncated, cursor: result.cursor || null, pageSize: 100 });
+    return json({ prefix: normalized, folders, files, truncated: result.truncated, cursor: result.cursor || null, pageSize });
   }
 
   if (route === "folders" && method === "POST") {
