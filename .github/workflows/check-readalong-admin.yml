@@ -5,7 +5,6 @@ on:
     branches:
       - beta
       - main
-      - testing
       - "feature/**"
     paths:
       - "admin/**"
@@ -34,6 +33,7 @@ on:
 
 # Keep only the newest run for a branch/PR; stale queued or running checks
 # are not useful once a newer commit supersedes them.
+# The testing branch is validated by its PR event, avoiding duplicate push + PR runs.
 concurrency:
   group: readalong-check-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
