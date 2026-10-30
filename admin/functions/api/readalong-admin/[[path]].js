@@ -474,16 +474,23 @@ async function handle(request, env) {
   }
 
   if (route === "session" && method === "GET") {
-    const cookiePresent = !!getCookie(request, SESSION_COOKIE);
+    const token = getCookie(request, SESSION_COOKIE);
+    const cookiePresent = !!token;
     const session = await authenticate(request, env);
     const now = Date.now();
-    return json({
-      authenticated: !!session,
-      cookiePresent,
-      expiresAt: session?.expiresAt || null,
-      expiresIn: session ? Math.max(0, Math.floor((session.expiresAt - now) / 1000)) : 0,
-      reason: session ? "valid" : (cookiePresent ? "expired_or_unknown" : "cookie_missing")
+    if (!session) return json({
+      authenticated: false, cookiePresent, expiresAt: null, expiresIn: 0,
+      reason: cookiePresent ? "expired_or_unknown" : "cookie_missing"
     });
+    // Sliding idle timeout: renew both the D1 expiry and browser cookie whenever
+    // the session is checked. The browser never stores the session token in JS.
+    const expiresAt = now + SESSION_TTL * 1000;
+    await env.DB.prepare("UPDATE admin_sessions SET expires_at = ? WHERE token_hash = ?")
+      .bind(expiresAt, session.tokenHash).run();
+    return json({
+      authenticated: true, cookiePresent: true, expiresAt,
+      expiresIn: SESSION_TTL, reason: "valid"
+    }, 200, { "set-cookie": cookie(token, SESSION_TTL) });
   }
 
   if (route === "logout" && method === "POST") {
@@ -587,6 +594,37 @@ async function handle(request, env) {
     }
     await env.DB.prepare("DELETE FROM admin_client_events WHERE id NOT IN (SELECT id FROM admin_client_events ORDER BY created_at DESC LIMIT 5000)").run();
     return json({ok:true,accepted:body.events.length});
+  }
+
+  if (route === "files/all" && method === "GET") {
+    const startedAt=Date.now(), requestId=crypto.randomUUID(), rayId=request.headers.get("cf-ray")||null;
+    const prefix=url.searchParams.get("prefix")||"";
+    try {
+      if(prefix&&!validKey(prefix.endsWith("/")?prefix.slice(0,-1):prefix)) return json({error:"Invalid folder path",requestId,rayId},400);
+      const normalized=prefix?(prefix.endsWith("/")?prefix:prefix+"/"):"";
+      const folders=new Set(), files=[];
+      let cursor, scanned=0;
+      do {
+        const result=await env.READALONG.list({prefix:normalized,delimiter:"/",limit:1000,...(cursor?{cursor}:{})});
+        for(const key of result.delimitedPrefixes||[]) folders.add(key);
+        for(const object of result.objects||[]) {
+          if(object.key===normalized||object.key.endsWith("/")) continue;
+          files.push({key:object.key,name:object.key.slice(normalized.length),type:"file",size:object.size,uploaded:object.uploaded,contentType:object.httpMetadata?.contentType||""});
+        }
+        scanned += (result.objects||[]).length + (result.delimitedPrefixes||[]).length;
+        if(scanned>5000) throw new Error("Thư mục có hơn 5.000 mục; hãy thu hẹp bằng cách mở thư mục con.");
+        cursor=result.truncated?result.cursor:undefined;
+      } while(cursor);
+      const folderItems=[...folders].map(key=>({key,name:key.slice(normalized.length).replace(/\/$/,""),type:"folder"}));
+      await env.DB.prepare("INSERT INTO admin_library_requests (request_id,prefix,page_size,cursor_present,folders_count,files_count,truncated,status,duration_ms,ray_id,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
+        .bind(requestId,normalized,5000,0,folderItems.length,files.length,0,200,Date.now()-startedAt,rayId,Date.now()).run();
+      return json({prefix:normalized,folders:folderItems,files,truncated:false,total:folderItems.length+files.length,requestId,rayId});
+    } catch(error) {
+      const message=String(error?.message||"Library listing failed").slice(0,800);
+      try { await env.DB.prepare("INSERT INTO admin_library_requests (request_id,prefix,page_size,cursor_present,folders_count,files_count,truncated,status,duration_ms,ray_id,error_message,created_at) VALUES (?,?,?,?,0,0,0,?,?,?,?,?)")
+        .bind(requestId,prefix,5000,0,500,Date.now()-startedAt,rayId,message,Date.now()).run(); } catch {}
+      return json({error:message,requestId,rayId},message.includes("5.000")?413:500);
+    }
   }
 
   if (route === "files" && method === "GET") {
