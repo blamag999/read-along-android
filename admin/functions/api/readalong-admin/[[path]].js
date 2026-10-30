@@ -257,9 +257,11 @@ async function scanLibrary(bucket, prefix, db) {
       const fp = fingerprint(item);
       const previous = cache.get(item.key);
       if (previous && previous.fingerprint === fp && previous.rule_version === SCAN_RULE_VERSION) {
-        skipped++;
-        try { return { item, fp, findings: JSON.parse(previous.findings_json || "[]"), cached: true }; }
-        catch { /* malformed cache is rechecked */ }
+        try {
+          const cachedFindings = JSON.parse(previous.findings_json || "[]");
+          skipped++;
+          return { item, fp, findings: cachedFindings, cached: true };
+        } catch { /* malformed cache is rechecked */ }
       }
       return { item, fp, findings: await inspectLibraryObject(bucket, item), cached: false };
     }));
