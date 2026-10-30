@@ -456,7 +456,8 @@ async function handle(request, env) {
       await env.DB.batch([
         env.DB.prepare("INSERT INTO admin_app_installations (install_hash, first_seen, last_seen, platform, app_version) VALUES (?, ?, ?, ?, ?) ON CONFLICT(install_hash) DO UPDATE SET last_seen=excluded.last_seen, platform=excluded.platform, app_version=excluded.app_version")
           .bind(installHash, now, now, platform, appVersion),
-        env.DB.prepare("UPDATE admin_app_totals SET total_visits = total_visits + 1 WHERE id = 1")
+        env.DB.prepare("UPDATE admin_app_totals SET total_visits = total_visits + 1 WHERE id = 1"),
+        env.DB.prepare("INSERT INTO admin_app_platform_totals (platform, total_visits) VALUES (?, 1) ON CONFLICT(platform) DO UPDATE SET total_visits = total_visits + 1").bind(platform)
       ]);
     }
     await env.DB.prepare("DELETE FROM admin_app_visits WHERE visited_at < ?").bind(now - 90 * 86400000).run();
@@ -467,10 +468,10 @@ async function handle(request, env) {
     try { const object = await env.READALONG.get("books.json"); if (object) { const parsed = JSON.parse(await object.text()); if (Array.isArray(parsed.books)) manifest = parsed; } } catch {}
     const now = Date.now();
     const [totals, devices, recentVisits, recentDevices] = await Promise.all([
-      env.DB.prepare("SELECT total_visits FROM admin_app_totals WHERE id = 1").first(),
-      env.DB.prepare("SELECT COUNT(*) AS total FROM admin_app_installations").first(),
-      env.DB.prepare("SELECT COUNT(*) AS total FROM admin_app_visits WHERE visited_at >= ?").bind(now - 30 * 86400000).first(),
-      env.DB.prepare("SELECT COUNT(*) AS total FROM admin_app_installations WHERE last_seen >= ?").bind(now - 30 * 86400000).first()
+      env.DB.prepare("SELECT total_visits FROM admin_app_platform_totals WHERE platform = 'android'").first(),
+      env.DB.prepare("SELECT COUNT(*) AS total FROM admin_app_installations WHERE platform = 'android'").first(),
+      env.DB.prepare("SELECT COUNT(*) AS total FROM admin_app_visits WHERE visited_at >= ? AND platform = 'android'").bind(now - 30 * 86400000).first(),
+      env.DB.prepare("SELECT COUNT(*) AS total FROM admin_app_installations WHERE last_seen >= ? AND platform = 'android'").bind(now - 30 * 86400000).first()
     ]);
     const books = manifest.books;
     return json({
