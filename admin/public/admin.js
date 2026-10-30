@@ -217,21 +217,27 @@ async function uploadOne(file, index, total) {
   const key = currentPrefix + file.name;
   const started = await postJson("multipart/start", { key, size: file.size, contentType: file.type || "application/octet-stream" });
   const parts = [];
-  const count = Math.ceil(file.size / CHUNK_SIZE);
-  for (let partNumber = 1; partNumber <= count; partNumber++) {
-    const start = (partNumber - 1) * CHUNK_SIZE;
-    const chunk = file.slice(start, Math.min(start + CHUNK_SIZE, file.size));
-    const response = await fetch(API + "/multipart/part", {
-      method: "PUT", credentials: "same-origin", body: chunk,
-      headers: { "X-Upload-Key": key, "X-Upload-Id": started.uploadId, "X-Part-Number": String(partNumber) }
-    });
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(result.error || "Tải phần " + partNumber + " thất bại");
-    parts.push({ partNumber, etag: result.etag });
-    const percent = Math.round(((index + (partNumber / count)) / total) * 100);
-    $("progress").querySelector("span").style.width = percent + "%";
+  const chunkSize = Math.max(CHUNK_SIZE, Math.ceil(file.size / 10000));
+  const count = Math.ceil(file.size / chunkSize);
+  try {
+    for (let partNumber = 1; partNumber <= count; partNumber++) {
+      const start = (partNumber - 1) * chunkSize;
+      const chunk = file.slice(start, Math.min(start + chunkSize, file.size));
+      const response = await fetch(API + "/multipart/part", {
+        method: "PUT", credentials: "same-origin", body: chunk,
+        headers: { "X-Upload-Key": key, "X-Upload-Id": started.uploadId, "X-Part-Number": String(partNumber) }
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Tải phần " + partNumber + " thất bại");
+      parts.push({ partNumber, etag: result.etag });
+      const percent = Math.round(((index + (partNumber / count)) / total) * 100);
+      $("progress").querySelector("span").style.width = percent + "%";
+    }
+    await postJson("multipart/complete", { key, uploadId: started.uploadId, parts, size: file.size });
+  } catch (error) {
+    try { await postJson("multipart/abort", { key, uploadId: started.uploadId }); } catch {}
+    throw error;
   }
-  await postJson("multipart/complete", { key, uploadId: started.uploadId, parts, size: file.size });
 }
 async function uploadFiles(files) {
   show("progress", true);
