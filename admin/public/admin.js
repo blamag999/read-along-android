@@ -2,6 +2,9 @@ const API = "/api/readalong-admin";
 const CHUNK_SIZE = 8 * 1024 * 1024;
 const allowed = /\.(pdf|json|mp3|m4a|m4b|aac|wav|ogg|oga|opus|flac|wma)$/i;
 let currentPrefix = "";
+let filePageCursors = [null];
+let filePageIndex = 0;
+let nextFileCursor = null;
 let dialogResolve = null;
 
 const $ = (id) => document.getElementById(id);
@@ -52,7 +55,7 @@ async function checkSession() {
     show("loginPanel", !result.authenticated);
     show("managerPanel", result.authenticated);
     show("logoutBtn", result.authenticated);
-    if (result.authenticated) await loadFiles();
+    if (result.authenticated) { await loadFiles(); activateTab("library"); }
   } catch (error) {
     show("loginPanel", true);
     show("managerPanel", false);
@@ -105,7 +108,7 @@ function addEntry(row, entry) {
     link.className = "folder-name";
     link.type = "button";
     link.textContent = "📁 " + entry.name;
-    link.addEventListener("click", () => { currentPrefix = entry.key; loadFiles(); });
+    link.addEventListener("click", () => { setFolder(entry.key); loadFiles(); });
     nameCell.append(link);
   } else {
     nameCell.textContent = "📄 " + entry.name;
@@ -120,7 +123,7 @@ function addEntry(row, entry) {
     actions.append(actionButton("Đổi tên / Di chuyển", () => renameEntry(entry)));
     actions.append(actionButton("Xóa", () => deleteFile(entry), "delete"));
   } else {
-    actions.append(actionButton("Mở", () => { currentPrefix = entry.key; loadFiles(); }));
+    actions.append(actionButton("Mở", () => { setFolder(entry.key); loadFiles(); }));
     actions.append(actionButton("Xóa thư mục", () => deleteFolder(entry), "delete"));
   }
   const actionCell = document.createElement("td");
@@ -133,7 +136,12 @@ async function loadFiles() {
   $("fileRows").replaceChildren();
   $("currentPath").textContent = "/" + currentPrefix;
   try {
-    const result = await api("files?prefix=" + encodeURIComponent(currentPrefix));
+    const cursor = filePageCursors[filePageIndex];
+    const result = await api("files?prefix=" + encodeURIComponent(currentPrefix) + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""));
+    nextFileCursor = result.truncated ? result.cursor : null;
+    $("prevPageBtn").disabled = filePageIndex === 0;
+    $("nextPageBtn").disabled = !nextFileCursor;
+    $("pageLabel").textContent = "Trang " + (filePageIndex + 1);
     const entries = [...result.folders, ...result.files].sort((a, b) => {
       if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
       return a.name.localeCompare(b.name, "vi");
@@ -142,7 +150,7 @@ async function loadFiles() {
       const parent = document.createElement("tr");
       const up = document.createElement("button");
       up.className = "folder-name"; up.type = "button"; up.textContent = "↰ ..";
-      up.addEventListener("click", () => { currentPrefix = currentPrefix.split("/").filter(Boolean).slice(0, -1).join("/"); currentPrefix = currentPrefix ? currentPrefix + "/" : ""; loadFiles(); });
+      up.addEventListener("click", () => { const parent = currentPrefix.split("/").filter(Boolean).slice(0, -1).join("/"); setFolder(parent ? parent + "/" : ""); loadFiles(); });
       const cell = document.createElement("td"); cell.append(up); parent.append(cell);
       addCell(parent, "Thư mục cha"); addCell(parent, "—"); addCell(parent, "—"); addCell(parent, "—");
       $("fileRows").append(parent);
@@ -159,12 +167,23 @@ async function loadFiles() {
       const row = document.createElement("tr"); const cell = addCell(row, "Thư mục trống.");
       cell.colSpan = 5; cell.className = "empty"; $("fileRows").append(row);
     }
-    setStatus(result.truncated ? "Đang hiển thị 1.000 mục đầu tiên; hãy mở thư mục con để thu hẹp danh sách." : "Đã tải " + entries.length + " mục.");
+    setStatus("Đã tải " + entries.length + " mục · Trang " + (filePageIndex + 1) + (result.truncated ? " · Còn trang tiếp theo" : " · Trang cuối"));
   } catch (error) {
     setStatus(error.message, true);
   }
 }
 
+
+function activateTab(name) {
+  const library = name === "library";
+  show("libraryPanel", library);
+  show("diagnosticsPanel", !library);
+  $("libraryTabBtn").classList.toggle("active", library);
+  $("diagnosticsTabBtn").classList.toggle("active", !library);
+  if (!library && $("diagnosticsPanel").dataset.scanned !== "true") runDiagnostics();
+}
+$("libraryTabBtn").addEventListener("click", () => activateTab("library"));
+$("diagnosticsTabBtn").addEventListener("click", () => activateTab("diagnostics"));
 
 function diagnosticStat(label, value, kind) {
   const box = document.createElement("div");
@@ -184,8 +203,10 @@ async function runDiagnostics() {
   $("diagnosticsSummary").textContent = "Đang quét thư viện và kiểm tra chữ ký tệp…";
   $("diagnosticStats").replaceChildren();
   $("diagnosticRows").replaceChildren();
+  $("diagnosticsPanel").dataset.scanned = "false";
   try {
-    const result = await api("diagnostics/scan?prefix=" + encodeURIComponent(currentPrefix));
+    const result = await api("diagnostics/scan?prefix=");
+    $("diagnosticsPanel").dataset.scanned = "true";
     $("diagnosticsSummary").textContent =
       "Đã kiểm tra " + result.scanned + " tệp trong " + (result.prefix || "toàn bộ thư viện") +
       " · " + formatDate(result.checkedAt);
@@ -234,7 +255,7 @@ async function runDiagnostics() {
       actionCell.append(actionButton("Mở thư mục", () => {
         const parts = finding.key.split("/");
         parts.pop();
-        currentPrefix = parts.length ? parts.join("/") + "/" : "";
+        setFolder(parts.length ? parts.join("/") + "/" : "");
         loadFiles();
         $("currentPath").scrollIntoView({ behavior: "smooth", block: "center" });
       }));
@@ -296,8 +317,11 @@ $("newFolderBtn").addEventListener("click", async () => {
     await loadFiles();
   } catch (error) { setStatus(error.message, true); }
 });
-$("rootBtn").addEventListener("click", () => { currentPrefix = ""; loadFiles(); });
+$("rootBtn").addEventListener("click", () => { setFolder(""); loadFiles(); });
 $("refreshBtn").addEventListener("click", loadFiles);
+$("prevPageBtn").addEventListener("click", () => { if (filePageIndex > 0) { filePageIndex--; loadFiles(); } });
+$("nextPageBtn").addEventListener("click", () => { if (nextFileCursor) { filePageCursors[filePageIndex + 1] = nextFileCursor; filePageIndex++; loadFiles(); } });
+function setFolder(prefix) { currentPrefix = prefix; filePageCursors = [null]; filePageIndex = 0; nextFileCursor = null; }
 $("fileInput").addEventListener("change", async (event) => {
   const files = [...event.target.files];
   event.target.value = "";

@@ -89,3 +89,14 @@ The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READA
 - PDF checks inspect the `%PDF-` header and look for `%%EOF` near the end. Audio checks inspect container/frame signatures only; they do not fully decode or certify every audio frame or duration.
 - The scan is read-only: it never deletes, renames, converts, or modifies library objects.
 - After correcting files, run the scan again to verify the result.
+
+## Library UI and matching rules
+
+- Admin has two tabs: Library for file browsing and Diagnostics for full-library checks.
+- Library listing uses server-side R2 cursor pagination, 100 entries per page. Changing folders resets the page.
+- R2 objects are the only catalog source; books.json is not used.
+- PDF, timestamp JSON and audio use the same normalized book stem.
+- A single audio can use the book stem. Multiple audio parts must be named _P1, _P2, _P3... with no gaps or duplicate part numbers.
+- Correctly numbered audio parts are valid and are not duplicate warnings.
+- Orphan timestamp JSON, unmatched names, invalid file signatures, zero-byte files, malformed JSON and unsupported extensions are reported.
+- Near-name matches are suggestions only. Rename requires administrator approval; fuzzy matches are never auto-paired.
