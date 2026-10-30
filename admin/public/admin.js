@@ -123,7 +123,7 @@ function addEntry(row, entry) {
     actions.append(actionButton("Đổi tên / Di chuyển", () => renameEntry(entry)));
     actions.append(actionButton("Xóa", () => deleteFile(entry), "delete"));
   } else {
-    actions.append(actionButton("Mở", () => { currentPrefix = entry.key; loadFiles(); }));
+    actions.append(actionButton("Mở", () => { setFolder(entry.key); loadFiles(); }));
     actions.append(actionButton("Xóa thư mục", () => deleteFolder(entry), "delete"));
   }
   const actionCell = document.createElement("td");
@@ -150,7 +150,7 @@ async function loadFiles() {
       const parent = document.createElement("tr");
       const up = document.createElement("button");
       up.className = "folder-name"; up.type = "button"; up.textContent = "↰ ..";
-      up.addEventListener("click", () => { currentPrefix = currentPrefix.split("/").filter(Boolean).slice(0, -1).join("/"); currentPrefix = currentPrefix ? currentPrefix + "/" : ""; loadFiles(); });
+      up.addEventListener("click", () => { const parent = currentPrefix.split("/").filter(Boolean).slice(0, -1).join("/"); setFolder(parent ? parent + "/" : ""); loadFiles(); });
       const cell = document.createElement("td"); cell.append(up); parent.append(cell);
       addCell(parent, "Thư mục cha"); addCell(parent, "—"); addCell(parent, "—"); addCell(parent, "—");
       $("fileRows").append(parent);
