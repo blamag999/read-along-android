@@ -28,10 +28,11 @@
     </section>
 
     <section id="managerPanel" class="hidden">
+      <nav class="tabbar" aria-label="Khu vực quản lý"><button id="libraryTabBtn" class="tab-button active" type="button">Thư viện</button><button id="diagnosticsTabBtn" class="tab-button" type="button">Kiểm tra lỗi</button></nav>
+      <section id="libraryPanel">
       <div class="summary-row">
         <div><div class="eyebrow">THƯ VIỆN R2</div><h2>Quản lý nội dung</h2><p class="muted">Chỉ thao tác trên bucket Read Along.</p></div>
         <div class="toolbar">
-          <button id="scanBtn" class="button secondary" type="button">✓ Kiểm tra thư viện</button>
           <button id="newFolderBtn" class="button secondary" type="button">＋ Thư mục</button>
           <label class="button primary file-button">↑ Tải tệp lên<input id="fileInput" type="file" multiple accept=".pdf,.json,.mp3,.m4a,.m4b,.aac,.wav,.ogg,.oga,.opus,.flac,.wma"></label>
         </div>
@@ -51,13 +52,14 @@
             <tbody id="fileRows"><tr><td colspan="5" class="empty">Chưa tải danh sách.</td></tr></tbody>
           </table>
         </div>
+<div class="pagination"><button id="prevPageBtn" class="button secondary small" type="button" disabled>← Trước</button><span id="pageLabel">Trang 1</span><button id="nextPageBtn" class="button secondary small" type="button" disabled>Tiếp →</button></div>
       </div>
-
+      </section>
 
       <section id="diagnosticsPanel" class="panel diagnostics-panel hidden" aria-live="polite">
         <div class="diagnostics-heading">
           <div><div class="eyebrow">KIỂM TRA TÍNH TOÀN VẸN</div><h3>Kết quả kiểm tra thư viện</h3><p id="diagnosticsSummary" class="muted">Chưa chạy kiểm tra.</p></div>
-          <button id="scanAgainBtn" class="button secondary" type="button">Quét lại</button>
+          <button id="scanBtn" class="button secondary" type="button">Quét thư viện</button>
         </div>
         <div id="diagnosticStats" class="diagnostic-stats"></div>
         <div class="table-wrap">
