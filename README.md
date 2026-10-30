@@ -1,6 +1,6 @@
 # Read Along Android
 
-Ứng dụng Android/Web hỗ trợ đọc tài liệu PDF đồng bộ với lời đọc âm thanh (MP3), có điều khiển cảm ứng, bàn phím/remote và cập nhật APK OTA.
+Ứng dụng Android/Web hỗ trợ đọc tài liệu PDF đồng bộ với lời đọc âm thanh (MP3, M4A/M4B, AAC, WAV, OGG/Opus, FLAC), có điều khiển cảm ứng, bàn phím/remote và cập nhật APK OTA.
 
 - Repository: https://github.com/blamag999/read-along-android
 - Nhánh phát triển/kiểm thử: `beta`
@@ -126,6 +126,8 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 - API production: `https://private-comic-reader.pages.dev/api/readalong/books` và `/api/readalong/file?key=...` (Pages Functions đã deploy thành công).
 - Pages Functions dùng R2 binding `READALONG` trỏ tới Bucket `my-audio-book`; APK không chứa R2 Access Key/Secret. Binding này tách biệt với `COMICS`/`my-manga` đang phục vụ dự án đọc truyện online.
 - API ghép các file PDF, MP3 và JSON theo tên cơ sở, giữ riêng nhóm theo thư mục; hậu tố `part/pt/side/disc` được dùng để ghép nhiều phần audio.
+- API và trình phát beta hiện hỗ trợ các định dạng audio phổ biến: MP3, M4A/M4B, AAC, WAV, OGG/OGA, Opus và FLAC; MIME type được trả đúng theo phần mở rộng, vẫn hỗ trợ HTTP Range để tua audio.
+- WMA không được Android WebView/Chromium hỗ trợ phát trực tiếp ổn định nên hiện không đưa vào danh sách audio có thể phát. Hai file `Oliver_Company_part 1/2.wma` cần chuyển sang MP3 hoặc M4A/AAC để xuất hiện trong danh sách.
 - API file hỗ trợ `HEAD`, HTTP Range (206/416), MIME PDF/MP3/JSON và CORS cho luồng đọc đa nguồn.
 - Đây là phương án A: API đọc công khai. Bucket R2 có thể đặt Private, nhưng bất kỳ ai biết endpoint vẫn có thể đọc/tải nội dung qua API. Không coi đây là DRM hoặc cơ chế xác thực người dùng.
 - Backend đã merge PR [#11](https://github.com/blamag999/private-comic-reader/pull/11) và Cloudflare Pages Production deploy thành công. Bucket `my-audio-book` đã tắt public `r2.dev`; binding `READALONG` hoạt động qua Pages Functions. API runtime và APK vẫn cần kiểm thử đầu-cuối trên thiết bị trước khi coi là hoàn tất.
