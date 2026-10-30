@@ -415,3 +415,11 @@ Quy tắc bảo trì:
   7. Kiểm tra khả năng truy cập manifest/catalog và luồng đọc trên thiết bị Android thực tế. Ghi rõ giới hạn: không thể giả lập kiểm thử thiết bị nếu không có thiết bị/log từ người dùng; không tuyên bố device test pass nếu chưa có bằng chứng.
   8. Cập nhật README, Issue #38 và báo cáo bàn giao với commit SHA, PR merge SHA, CI run, Pages deployment, số sách/manifest, Release URL/version, checksum và các test còn pending.
 - Giữ nguyên `main`; không phát hành stable. Không thay đổi GitHub signing secrets/keystore hoặc Cloudflare secrets.
+
+
+#### Nhật ký CI tiếp theo — 2026-10-31
+
+- Run [#41106560409](https://github.com/blamag999/read-along-android/actions/runs/41106560409) hoàn tất `failure`. Lỗi lần này ở assertion mới trong `tests/api-boundaries.test.js:39`: regex bị escape quá mức nên không khớp source serialization dù implementation đã sửa đúng.
+- Đã sửa regex tại commit `544ee6999973b34f1ff4d0d0bc8c1fb1ec572de7` để kiểm tra đúng source literal `"\\n"` (một escape sequence biểu diễn newline thật trong JavaScript), không thay đổi API runtime.
+- **CI cho commit `544ee69`: chưa thấy run trong lần truy vấn đầu tiên; cần tiếp tục kiểm tra Actions.** Không dùng run #41106560409 làm bằng chứng pass.
+- PR #37 vẫn open/Draft; chưa merge, Pages chưa deploy, R2 chưa publish lại, APK beta chưa build.
