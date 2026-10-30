@@ -1,0 +1,39 @@
+name: Check Read Along Admin
+
+on:
+  push:
+    branches:
+      - beta
+      - main
+      - "feature/**"
+    paths:
+      - "admin/**"
+      - ".github/workflows/check-readalong-admin.yml"
+  pull_request:
+    branches:
+      - beta
+      - main
+    paths:
+      - "admin/**"
+      - ".github/workflows/check-readalong-admin.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  syntax-and-isolation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Check Admin browser JavaScript
+        run: node --check admin/public/admin.js
+      - name: Check Pages Functions module syntax
+        run: node --check --input-type=module < 'admin/functions/api/readalong-admin/[[path]].js'
+      - name: Verify isolation constraints
+        run: |
+          ! grep -R -nE 'COMICS|TOTP_SECRET([^A-Z_]|$)|comic_manager_session|private-comic-reader-db' admin/
+          grep -q 'READALONG' admin/functions/api/readalong-admin/[[path]].js
+          grep -q 'admin_totp_state' admin/functions/api/readalong-admin/[[path]].js
