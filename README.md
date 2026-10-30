@@ -116,7 +116,7 @@ Hướng điều tra:
 - `app.js`: luồng giao diện và logic chính phía web, bao gồm đồng bộ đọc.
 - `modules/page-sync.js`: logic đồng bộ trang và marker; ưu tiên xem khi trang tự nhảy/lùi.
 - `modules/playlist-layout.js`: bố cục danh sách/playlist.
-- `modules/remote-sync.js`: hỗ trợ đồng bộ/điều khiển liên quan remote.
+- `modules/remote-sync.js`: đồng bộ marker JSON tuỳ chọn trong thư mục `sync_data/` của chính repository Read Along.
 - `modules/diagnostics.js`: thu thập log chẩn đoán.
 - `native/android/ApkUpdaterPlugin.java`: cầu nối Android để tải APK và mở trình cài đặt.
 - `native/android/file_paths.xml`: phạm vi file được chia sẻ qua Android `FileProvider`.
@@ -224,3 +224,11 @@ Quy tắc bảo trì:
 - Mỗi endpoint phải có một mục đích duy nhất, được ghi trong README và có test kiểm tra ranh giới.
 - Không thay đổi đồng thời luồng đọc PDF/audio, đồng bộ trang và OTA trong một đợt sửa nếu không có nguyên nhân bắt buộc.
 - Mọi thay đổi cấu trúc phải có test hồi quy trước; giữ API/contract cũ cho tới khi đã xác nhận không còn caller.
+
+### Đồng bộ mốc đọc qua GitHub — phạm vi repository
+
+- Tất cả thao tác đọc/ghi marker JSON của `modules/remote-sync.js` dùng duy nhất repository `blamag999/read-along-android`, thư mục `sync_data/`, nhánh `main`; không gọi repository `pdf-audio-sync` hoặc repository khác.
+- Cần GitHub fine-grained token được cấp riêng cho `read-along-android` với quyền **Contents: Read and write**. Token chỉ lưu trong `sessionStorage` của phiên hiện tại và không được commit vào mã nguồn.
+- Các tệp trong repository công khai có thể được đọc công khai. Chỉ đồng bộ marker JSON không chứa thông tin cá nhân; không lưu PDF, audio, tên người dùng, email hoặc dữ liệu riêng tư vào `sync_data/`.
+- Token cũ từng dùng cho repository `pdf-audio-sync` không còn được sử dụng; ứng dụng xóa key session cũ và yêu cầu nhập token có quyền trên repository Read Along.
+- Nguồn marker ưu tiên vẫn là file JSON người dùng chọn hoặc URL `sync` trong `books.json`; GitHub sync là bản đồng bộ bổ sung theo thao tác/thiết lập của người dùng. Nếu cần thay đổi thứ tự ưu tiên, phải bổ sung test hồi quy trước.
