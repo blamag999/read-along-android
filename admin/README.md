@@ -149,3 +149,8 @@ The Admin publishes the manifest stored in `admin/public/books.json` to the root
 - The anonymous usage endpoint accepts only random identifiers, platform and app version. Never send account IDs, device serials, advertising IDs, email, phone, OTP, cookies or tokens.
 - Server exceptions are stored in admin_server_errors; browser and API telemetry is stored in admin_client_events. Both are bounded. Query the dedicated Read Along Admin D1 database only.
 - Apply the new tables in schema.sql to read-along-admin-db only before production deployment.
+
+
+## Catalog/playlist boundary in the Android/web app
+
+The pure catalog and playlist data transformations are implemented in `modules/catalog-playlist.js` in the same repository. The module is browser/Node compatible and owns only naming normalization, manifest-to-model mapping, local file grouping, sorting, and filtering. It must not perform DOM operations, storage access, network requests, or PDF/audio playback. `app.js` retains UI rendering and app-state orchestration. Admin continues to own `books.json` authoring and R2 object management; do not move Admin bindings or write operations into the client module.
