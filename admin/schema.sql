@@ -26,3 +26,9 @@ CREATE TABLE IF NOT EXISTS admin_audit_log (
 );
 CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created
   ON admin_audit_log(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS admin_totp_state (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  last_counter INTEGER NOT NULL
+);
+INSERT OR IGNORE INTO admin_totp_state (id, last_counter) VALUES (1, -1);
