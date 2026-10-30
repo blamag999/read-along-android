@@ -840,7 +840,7 @@ async function handle(request, env) {
 
 export async function onRequest(context) {
   const request = context.request, origin = request.headers.get("Origin") || "";
-  const allowedOrigins = new Set(["https://localhost", "http://localhost", "capacitor://localhost", "https://private-comic-reader.pages.dev"]);
+  const allowedOrigins = new Set(["https://localhost", "http://localhost", "capacitor://localhost"]);
   const corsAllowed = allowedOrigins.has(origin);
   if (new URL(request.url).pathname.endsWith("/usage/track") && origin && !corsAllowed) {
     return new Response(JSON.stringify({ error: "Origin not allowed" }), { status: 403, headers: { "content-type": "application/json" } });
