@@ -968,7 +968,7 @@ window.selectAudioPart = function(index) {
   showToast('Đã chuyển sang phần ' + (index + 1) + (shouldResume ? ' — tiếp tục phát' : ' — đang tạm dừng'));
 };
 
-// Nguồn nội dung trực tuyến: API Pages Functions đọc R2 riêng tư; không dùng books.json hoặc URL r2.dev.
+// Nguồn danh mục trực tuyến: API Pages Functions đọc books.json trong R2; APK nhận danh mục và URL proxy từ API, không truy cập r2.dev trực tiếp.
 // =======================================================
 // SỰ KIỆN GIAO DIỆN
 // =======================================================
