@@ -353,3 +353,17 @@ Quy tắc bảo trì:
 - Đã thử gửi yêu cầu Cloudflare API cập nhật `enabled: true`, nhưng công cụ quản trị từ chối thao tác ở lớp kiểm tra an toàn trước khi trả kết quả API. Yêu cầu đọc lại trạng thái sau đó cũng bị chặn; vì vậy **không có bằng chứng thay đổi đã được áp dụng** và không được coi public access đã bật.
 - Trạng thái: **User approval: Received**; **Cloudflare mutation: Blocked by tool safety gate**; **Public endpoint verification: Pending**; **App/CI/APK: Not changed**.
 - Bước tiếp: bật R2.dev subdomain thủ công trong Cloudflare Dashboard tại R2 Object Storage → bucket `my-audio-book` → Settings → Public access / R2.dev subdomain → Allow Access (hoặc Enable). Sau khi lưu, kiểm tra GET URL `https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/books.json` trả HTTP 200 và JSON có mảng `books` không rỗng. Chỉ tiếp tục sửa app/build beta sau khi kiểm chứng endpoint.
+
+### Cập nhật sau khi người dùng bật R2.dev (2026-10-31)
+
+- Người dùng thông báo đã bật managed R2.dev public access cho bucket `my-audio-book` sau khi đã xác nhận việc công khai toàn bộ bucket.
+- Đã thử mở public manifest URL `https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/books.json` qua công cụ web nhưng công cụ không truy cập được URL; môi trường kiểm tra trực tiếp cũng không phân giải được hostname. Vì vậy **chưa xác minh độc lập HTTP 200, JSON payload hoặc số lượng sách**. Không coi việc bật cấu hình là bằng chứng endpoint đã phục vụ thành công.
+- Bản manifest trong repo vẫn chứa 83 mục sách và các URL PDF/audio trỏ về cùng R2 hostname; đây chỉ là dữ liệu trong repository, không xác nhận trạng thái endpoint production.
+- PR [#37](https://github.com/blamag999/read-along-android/pull/37) vẫn mở/Draft, base `beta`, head `testing`; chưa merge. Workflow PR run [#41104249478](https://github.com/blamag999/read-along-android/actions/runs/41104249478) kết thúc `cancelled`, không phải CI pass. Nhánh `main` và `beta` chưa thay đổi trong bước này.
+- Trạng thái: **User reports R2.dev enabled: Received**; **Public endpoint verification: Blocked/unconfirmed**; **PR #37 CI: Pending (latest inspected run cancelled)**; **App changes/APK/device test: Not performed**.
+
+#### Bước tiếp theo
+
+1. Mở trực tiếp URL manifest ở trên trên trình duyệt. Xác nhận trang trả JSON (không phải Access denied/404) và có mảng `books` không rỗng; nếu vẫn lỗi, gửi lại mã lỗi hoặc ảnh chụp màn hình.
+2. Khi endpoint được xác nhận, tiếp tục kiểm tra CORS từ WebView/origin của app và xem lại luồng `loadR2Catalog()`; bổ sung telemetry/retry tối thiểu nếu cần.
+3. Chạy lại CI cho đúng HEAD hiện tại của PR #37, xử lý mọi lỗi trước khi merge vào `beta`. Chỉ build APK beta sau khi PR được tích hợp và CI xanh; kiểm thử thiết bị thật vẫn là bước bắt buộc.
