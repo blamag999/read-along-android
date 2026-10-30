@@ -410,18 +410,28 @@ $("scanBtn").addEventListener("click", runDiagnostics);
 $("scanAgainBtn").addEventListener("click", runDiagnostics);
 
 async function loadDebugLogs() {
+  const button = $("refreshDebugBtn");
+  if (button) { button.disabled = true; button.textContent = "Đang tải log…"; }
+  queueDebugEvent("debug_refresh_clicked", { host: location.host });
   try {
-    const result = await api("debug/logs?limit=100");
-    serverLogs = result.entries || [];
-    libraryRequests = result.libraryRequests || [];
-    serverEvents = result.events || [];
+    const result = await api("debug/logs?limit=100", { cache: "no-store" });
+    serverLogs = Array.isArray(result.entries) ? result.entries : [];
+    libraryRequests = Array.isArray(result.libraryRequests) ? result.libraryRequests : [];
+    serverEvents = Array.isArray(result.events) ? result.events : [];
+    renderDebugLogs();
+    setStatus("Đã làm mới log: " + serverLogs.length + " lượt quét, " + libraryRequests.length + " yêu cầu thư viện, " + serverEvents.length + " sự kiện.");
   } catch (error) {
-    $("serverLogRows").replaceChildren();
-    const row = document.createElement("tr");
-    const cell = addCell(row, "Không tải được log máy chủ: " + error.message);
-    cell.colSpan = 6; cell.className = "empty error"; $("serverLogRows").append(row);
+    const target = $("serverLogRows");
+    if (target) {
+      target.replaceChildren();
+      const row = document.createElement("tr");
+      const cell = addCell(row, "Không tải được log máy chủ: " + error.message);
+      cell.colSpan = 6; cell.className = "empty error"; target.append(row);
+    }
+    setStatus("Làm mới log thất bại: " + error.message, true);
+  } finally {
+    if (button) { button.disabled = false; button.textContent = "Làm mới log"; }
   }
-  renderDebugLogs();
 }
 function renderDebugLogs() {
   const server = $("serverLogRows");
@@ -481,14 +491,40 @@ function renderDebugLogs() {
     }
   }
 }
-$("refreshDebugBtn").addEventListener("click", loadDebugLogs);
-$("exportDebugBtn").addEventListener("click", () => {
-  const payload = { exportedAt: new Date().toISOString(), serverLogs, libraryRequests, serverEvents, clientLogs };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a"); link.href = url;
-  link.download = "read-along-admin-debug-" + new Date().toISOString().replace(/[:.]/g, "-") + ".json";
-  link.click(); URL.revokeObjectURL(url);
+$("refreshDebugBtn").addEventListener("click", () => {
+  loadDebugLogs().catch(error => setStatus("Làm mới log thất bại: " + error.message, true));
+});
+$("exportDebugBtn").addEventListener("click", async () => {
+  const button = $("exportDebugBtn");
+  button.disabled = true;
+  const oldLabel = button.textContent;
+  button.textContent = "Đang chuẩn bị…";
+  try {
+    while (debugEventQueue.length) await flushDebugEvents();
+    await loadDebugLogs();
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      host: location.host,
+      serverLogs, libraryRequests, serverEvents, clientLogs,
+      pendingBrowserEvents: debugEventQueue
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "read-along-admin-debug-" + new Date().toISOString().replace(/[:.]/g, "-") + ".json";
+    link.style.display = "none";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    setStatus("Đã tạo tệp JSON log để tải xuống.");
+  } catch (error) {
+    setStatus("Xuất JSON thất bại: " + error.message, true);
+  } finally {
+    button.disabled = false;
+    button.textContent = oldLabel;
+  }
 });
 
 
@@ -533,14 +569,25 @@ $("newFolderBtn").addEventListener("click", async () => {
 });
 $("rootBtn").addEventListener("click", () => { setFolder(""); loadFiles(); });
 $("refreshBtn").addEventListener("click", loadFiles);
-$("prevPageBtn").addEventListener("click", () => {
+$("prevPageBtn").addEventListener("click", async () => {
   queueDebugEvent("pagination_click_previous", { prefix: currentPrefix, fromPage: filePageIndex+1, pageSize, targetCursorPresent: !!filePageCursors[filePageIndex-1] });
-  if (filePageIndex > 0) { filePageIndex--; loadFiles(); }
+  if (filePageIndex <= 0 || !filePageCursors[filePageIndex-1] && filePageIndex-1 > 0) {
+    setStatus("Không có cursor của trang trước. Hãy tải lại thư mục từ trang đầu.", true);
+    return;
+  }
+  filePageIndex--;
+  await loadFiles();
 });
-$("nextPageBtn").addEventListener("click", () => {
+$("nextPageBtn").addEventListener("click", async () => {
   queueDebugEvent("pagination_click_next", { prefix: currentPrefix, fromPage: filePageIndex+1, pageSize, cursorPresent: !!nextFileCursor });
-  if (nextFileCursor) { filePageCursors[filePageIndex+1]=nextFileCursor; filePageIndex++; loadFiles(); }
-  else queueDebugEvent("pagination_click_ignored", { reason:"next_cursor_missing", prefix:currentPrefix, page:filePageIndex+1 });
+  if (!nextFileCursor) {
+    queueDebugEvent("pagination_click_ignored", { reason:"next_cursor_missing", prefix:currentPrefix, page:filePageIndex+1 });
+    setStatus("Không có cursor trang tiếp theo. Hãy làm mới thư viện để cập nhật danh sách.", true);
+    return;
+  }
+  filePageCursors[filePageIndex+1] = nextFileCursor;
+  filePageIndex++;
+  await loadFiles();
 });
 function setFolder(prefix) {
   queueDebugEvent("library_folder_change", { from: currentPrefix, to: prefix });
