@@ -170,6 +170,7 @@ $("loginForm").addEventListener("submit", async (event) => {
     show("managerPanel", true);
     show("logoutBtn", true);
     await loadFiles();
+    startSessionHeartbeat();
   } catch (error) {
     $("loginError").textContent = error.message;
   }
@@ -229,7 +230,7 @@ function addEntry(row, entry) {
 }
 
 function normalizeSearch(value) {
-  return String(value || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("vi");
+  return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("vi");
 }
 function renderLibraryPage() {
   const term=normalizeSearch($("searchFilesInput").value.trim());
