@@ -381,3 +381,15 @@ Quy tắc bảo trì:
 1. Trên thiết bị đang cài Read Along, force stop ứng dụng rồi mở lại để chạy lại yêu cầu catalog tự động; nếu chưa hiện danh sách, mở chọn nguồn truyện và bấm `Truyện trực tuyến` để gọi lại fetch thủ công.
 2. Báo kết quả: số mục sách hiển thị hay nội dung lỗi cụ thể. Nếu vẫn lỗi, gửi log chẩn đoán mới sau lần thử này để phân biệt CORS/WebView, HTTP status, JSON mapping hay lỗi render.
 3. Chờ run #41105388028 kết thúc; chỉ sau CI success mới chuyển PR khỏi Draft/merge vào `beta`. Không build APK hoặc phát hành trước bước này và trước khi xác định cần thay đổi app hay không.
+
+
+### Lỗi xuất bản books.json gây JSON.parse thất bại (2026-10-31)
+
+- Người dùng gửi ảnh lỗi trên Android: `Unexpected non-whitespace character after JSON at position 28604 (line 754 column 2)`.
+- Đã kiểm tra `admin/public/books.json` trên nhánh `testing`: JSON hợp lệ, parse thành công và có 83 sách. Blob SHA: `131efe800e5803e7b3ce56f7accc0ce9545b9169`.
+- Root cause được xác định trong `admin/functions/api/readalong-admin/[[path]].js`, route `catalog/publish`: biểu thức nối `"\\\\n"` đã ghi hai ký tự literal backslash+n vào cuối object JSON. Vị trí đó khớp lỗi Android và khác với manifest seed hợp lệ trong Git.
+- Đã sửa trên `testing`: dùng `"\\n"` để nối newline thật. Commit: `fbe038f6a3c849f6452e1b74e5d6329b6a2f2918`.
+- Đã thêm regression assertion vào `tests/api-boundaries.test.js` để ngăn tái diễn. Commit: `3e08adbd8870413c3ea8e303a87365531c28e859`.
+- **Chưa deploy**: Cloudflare Pages production project `read-along-admin` dùng production branch `beta`; PR #37 hiện vẫn Draft và nhắm vào `beta`. Không tự merge PR hoặc deploy production khi chưa có xác nhận của người dùng. Chưa ghi đè R2 `books.json` và chưa build APK.
+- **Pending verification**: CI regression test trên HEAD mới; sau khi code được deploy lên production, mở Admin → Diagnostics → `Tạo / cập nhật books.json` để xuất bản lại manifest. Endpoint trả số bytes; sau đó mở URL public và xác nhận JSON parse được, không có literal `\\\\n` ở cuối. Cuối cùng force stop/mở lại app để xác nhận danh sách sách tải thành công.
+- Trạng thái: **Root cause: Confirmed**; **Code fix on testing: Completed**; **Regression test: Added / CI pending**; **Production deploy: Pending approval/integration**; **R2 republish: Pending**; **Android device verification: Pending**.
