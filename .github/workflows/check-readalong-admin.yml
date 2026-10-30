@@ -5,9 +5,13 @@ on:
     branches:
       - beta
       - main
+      - testing
       - "feature/**"
     paths:
       - "admin/**"
+      - "app.js"
+      - "package.json"
+      - "tests/**"
       - ".github/workflows/check-readalong-admin.yml"
   pull_request:
     branches:
@@ -30,6 +34,8 @@ jobs:
           node-version: 24
       - name: Check Admin browser JavaScript
         run: node --check admin/public/admin.js
+      - name: Run regression and JavaScript syntax tests
+        run: npm test
       - name: Check Pages Functions module syntax
         run: node --check --input-type=module < ''admin/functions/api/readalong-admin/[[path]].js''
       - name: Verify isolation constraints
