@@ -16,6 +16,13 @@ Standalone web file manager for the Read Along R2 library. This app lives in the
 
 Do not add a `COMICS` binding, do not bind the Private Comic Reader D1 database, and do not copy its authentication secrets or cookies into this project.
 
+## Provisioned Cloudflare resources
+
+- Pages project: `read-along-admin` (`read-along-admin.pages.dev`), project ID `373988ad-1b62-4750-80cb-5a39a37f6281`.
+- Dedicated D1 database: `read-along-admin-db`, ID `6a316068-ef8e-4eaf-af4b-536b4fd7b74c`; schema has been applied, including TOTP replay protection.
+- Pages Git source is this repository; root directory is `admin`, output directory is `public`, production branch is `main`, and preview branches include `beta` and `feature/*`.
+- The only R2 binding is `READALONG` -> `my-audio-book`.
+
 ## Cloudflare setup
 
 Create/configure the Pages project from the same GitHub repository:
@@ -26,7 +33,7 @@ Create/configure the Pages project from the same GitHub repository:
 4. Build command: leave empty.
 5. Build output directory: `public`.
 6. Production branch: `main`.
-7. Configure Git path filters so changes under `admin/**` trigger Admin builds. Keep the Android APK workflow independent.
+7. Git path filter is currently `*` because Pages evaluates paths relative to the configured root directory. This keeps the project deployable; the Pages build is separate from the Android APK workflow. If path filtering is tightened later, test a preview deployment before relying on it.
 8. Add bindings in both Preview and Production:
    - R2 bucket binding named `READALONG`, bucket `my-audio-book`.
    - D1 database binding named `DB`, database `read-along-admin-db`.
