@@ -477,28 +477,44 @@ async function loadR2Catalog() {
   dom.playlistLoading.classList.remove('hidden');
   dom.playlistItemsList.replaceChildren();
   try {
-    const catalogUrl = 'https://private-comic-reader.pages.dev/api/readalong/books';
-    const response = await fetch(catalogUrl, { cache: 'no-store' });
-    if (!response.ok) throw new Error('Không tải được danh sách sách (' + response.status + ').');
+    // Đọc manifest công khai trực tiếp từ R2; không phụ thuộc Pages Functions/API trung gian.
+    const catalogUrl = 'https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/books.json';
+    const response = await fetch(catalogUrl, { cache: 'no-store', mode: 'cors' });
+    if (!response.ok) throw new Error('Không tải được books.json (' + response.status + ').');
+
     const data = await response.json();
-    if (!data || !Array.isArray(data.books)) throw new Error('API không trả về danh sách sách hợp lệ.');
+    if (!data || !Array.isArray(data.books)) {
+      throw new Error('books.json không đúng cấu trúc { books: [...] }.');
+    }
+
+    const toAsset = (value, fallbackName) => {
+      if (typeof value === 'string') {
+        if (!isSafeHttpsUrl(value)) return null;
+        return { name: fileNameFromUrl(value, fallbackName), url: value, key: '' };
+      }
+      if (value && typeof value === 'object' && isSafeHttpsUrl(value.url)) {
+        return {
+          name: String(value.name || fileNameFromUrl(value.url, fallbackName)),
+          url: value.url,
+          key: value.key || ''
+        };
+      }
+      return null;
+    };
+
     const stories = data.books.map(item => {
       if (!item || typeof item !== 'object') return null;
-      const pdf = item.pdf && isSafeHttpsUrl(item.pdf.url)
-        ? { name: String(item.pdf.name || 'book.pdf'), url: item.pdf.url, key: item.pdf.key || '' }
-        : null;
+      const pdf = toAsset(item.pdf, 'book.pdf');
       const audios = (Array.isArray(item.audios) ? item.audios : [])
-        .filter(audio => audio && isSafeHttpsUrl(audio.url))
+        .map(audio => toAsset(audio, 'audio.mp3'))
+        .filter(Boolean)
         .map(audio => ({
-          name: String(audio.name || 'audio.mp3'),
-          url: audio.url,
-          key: audio.key || '',
-          partLabel: audio.partLabel || null
+          ...audio,
+          partLabel: null
         }));
-      const json = item.json && isSafeHttpsUrl(item.json.url)
-        ? { name: String(item.json.name || 'sync.json'), url: item.json.url, key: item.json.key || '' }
-        : null;
+      const json = toAsset(item.sync || item.json, 'sync.json');
       if (!pdf && !audios.length) return null;
+
       return {
         id: String(item.id || (pdf ? getBookUniqueKey(pdf.name) : getBookUniqueKey(audios[0].name))),
         title: String(item.title || (pdf ? normalizeStoryTitle(pdf.name) : normalizeStoryTitle(audios[0].name))),
@@ -506,20 +522,21 @@ async function loadR2Catalog() {
         audios,
         json,
         coverUrl: '',
-        source: 'r2-private'
+        source: 'r2-books-json'
       };
     }).filter(Boolean);
+
     state.playlist = stories;
     state.activeFilter = 'paired';
     state.playlistPage = 1;
     updatePlaylistBadgeCount();
     renderPlaylistView();
-    dom.lblPlaylistSubtitle.textContent = stories.length + ' mục trực tuyến';
+    if (dom.lblPlaylistSubtitle) dom.lblPlaylistSubtitle.textContent = stories.length + ' mục trực tuyến';
     openPlaylistModal();
-    showToast('Đã tìm thấy ' + stories.length + ' sách từ kho trực tuyến.');
+    showToast('Đã tải ' + stories.length + ' sách trực tiếp từ books.json.');
   } catch (error) {
-    console.error('Không thể tải danh sách sách từ R2:', error);
-    alert('Không thể tải danh sách sách trực tuyến. ' + error.message);
+    console.error('Không thể tải books.json từ R2:', error);
+    alert('Không thể tải danh sách truyện từ books.json. ' + error.message);
   } finally {
     dom.playlistLoading.classList.add('hidden');
     if (button) { button.disabled = false; button.textContent = '☁️ Truyện trực tuyến'; }
@@ -968,7 +985,7 @@ window.selectAudioPart = function(index) {
   showToast('Đã chuyển sang phần ' + (index + 1) + (shouldResume ? ' — tiếp tục phát' : ' — đang tạm dừng'));
 };
 
-// Nguồn danh mục trực tuyến: API Pages Functions đọc books.json trong R2; APK nhận danh mục và URL proxy từ API, không truy cập r2.dev trực tiếp.
+// Nguồn danh mục trực tuyến: ứng dụng đọc trực tiếp books.json và các URL asset công khai trên R2.
 // =======================================================
 // SỰ KIỆN GIAO DIỆN
 // =======================================================

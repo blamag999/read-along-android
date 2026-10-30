@@ -137,9 +137,10 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 - Nguồn dữ liệu duy nhất của thư viện Read Along là `books.json` tại thư mục gốc Bucket R2 `my-audio-book`.
 - Manifest dùng đúng cấu trúc: `{ "books": [{ "id", "title", "pdf", "audios", "sync" }] }`; `pdf` là URL PDF, `audios` là mảng URL audio (có thể nhiều track), `sync` là URL JSON hoặc `null`.
 - Admin có nút **Tạo / cập nhật books.json** trong tab **Kiểm tra lỗi**. Nút nạp bản mẫu `admin/public/books.json` (83 sách theo file được cung cấp), kiểm tra host R2, phần mở rộng và sự tồn tại của mọi PDF/audio/sync, rồi mới ghi manifest vào R2. Nếu có tệp thiếu, thao tác dừng và báo danh sách; không ghi đè manifest hiện tại.
-- API production `https://private-comic-reader.pages.dev/api/readalong/books` đọc trực tiếp manifest R2, chuyển URL thành URL proxy `/api/readalong/file?key=...` và giữ nguyên id/title/thứ tự audio/sync. API không tự dò hoặc ghép sách theo tên tệp nữa.
-- APK đã gọi API này khi mở **Truyện trực tuyến**; do đó APK đọc danh mục từ chính `books.json` thông qua API. Không cần nhúng manifest vào APK hoặc phát hành APK mới chỉ để cập nhật danh sách sách.
-- API file vẫn phục vụ nội dung qua binding `READALONG`, hỗ trợ HTTP Range để tua audio và không đưa R2 Access Key/Secret vào APK.
+- APK đọc trực tiếp `https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/books.json` khi mở **Truyện trực tuyến**; không gọi `private-comic-reader.pages.dev/api/readalong/books` và không phụ thuộc Pages Functions trung gian.
+- Manifest có cấu trúc `{ "books": [{ "id", "title", "pdf", "audios", "sync" }] }`; `pdf`, từng phần tử `audios` và `sync` là URL HTTPS công khai trên R2. Ứng dụng hỗ trợ dạng URL chuỗi trong manifest và giữ hỗ trợ tương thích dạng object `{ "url", "name" }`.
+- Ứng dụng tải PDF/audio/JSON đồng bộ trực tiếp từ URL trong manifest. R2 CORS hiện cho phép origin `*` với GET/HEAD; nếu thay đổi CORS, cần giữ quyền GET để WebView/Capacitor đọc `books.json` và các tệp công khai.
+- Cập nhật danh mục bằng cách publish `admin/public/books.json` lên root bucket R2; không cần build APK mới chỉ để thay đổi danh sách truyện.
 - Để bổ sung hoặc sửa sách: cập nhật file mẫu `admin/public/books.json` theo cùng cấu trúc, commit lên nhánh `beta`, sau đó vào Admin và bấm **Tạo / cập nhật books.json**. Nút xác minh trước khi ghi đè file trên R2.
 
 ## 8. Read Along Admin — web quản trị thư viện
@@ -192,3 +193,11 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 - The dashboard reports total app launches, launches in the last 30 days, installations recorded, and installations active in the last 30 days. Counts start only after an updated app opens and reports telemetry; old APKs and historical installations cannot be backfilled. Clearing app data/reinstalling can create a new installation ID.
 - The Admin D1 tables are in `read-along-admin-db` only. Never apply Admin migrations to the Private Comic Reader D1 database.
 - To package the Android telemetry change, open **Actions → Build and Release Read Along → Run workflow**, select branch `beta` and channel `beta`. The workflow is manual (`workflow_dispatch`); no APK build or Release is created automatically by merging PR #30.
+
+
+### Khôi phục tải danh mục trực tiếp (2026-10-31)
+
+- Đã bỏ phụ thuộc API `/api/readalong/books` trong ứng dụng Android/Web. `loadR2Catalog()` tải trực tiếp `books.json` từ public R2 URL.
+- Parser xử lý đúng manifest hiện tại: `pdf` là chuỗi URL, `audios` là mảng URL, `sync` là URL hoặc `null`; vẫn chấp nhận dạng object `{ url, name }` để tương thích.
+- Việc tải nội dung PDF/audio và JSON marker cũng dùng trực tiếp URL từ manifest. Không thay đổi API proxy phía backend hoặc các chức năng khác.
+- R2 CORS được kiểm tra hiện cho phép `GET`/`HEAD` từ mọi origin; nếu chính sách CORS thay đổi, tải trực tiếp từ Capacitor WebView có thể bị chặn.
