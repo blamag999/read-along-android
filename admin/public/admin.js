@@ -582,7 +582,10 @@ async function loadPublicStats() {
     $("statDevices").textContent = Number(data.totalDevices || 0).toLocaleString("vi-VN");
     $("statDevicesRecent").textContent = "Hoạt động 30 ngày: " + Number(data.devices30d || 0).toLocaleString("vi-VN");
     status.textContent = "Cập nhật lúc " + formatDate(data.updatedAt) + ". Thiết bị được đếm theo mã cài đặt ẩn danh.";
-  } catch (error) { status.textContent = "Chưa tải được thống kê: " + error.message; }
+  } catch (error) {
+    status.textContent = "Chưa tải được thống kê: " + error.message;
+    queueTelemetryEvent("public_dashboard_stats_error", { message: String(error.message || error).slice(0, 300) });
+  }
 }
 async function handleRoute() {
   if (location.hash !== "#manage") {
