@@ -18,12 +18,14 @@
       return value;
     } catch (_) { return randomUsageId(); }
   }
+  let lastUsageReportAt = Date.now();
   function reportAppUsage() {
     let installId, launchId;
     try {
       installId = usageId(localStorage, 'read_along_install_id_v1');
       launchId = usageId(sessionStorage, 'read_along_launch_id_v1');
     } catch (_) { return; }
+    lastUsageReportAt = Date.now();
     const version = document.querySelector('meta[name="app-version"]')?.content || 'unknown';
     const platform = window.Capacitor?.getPlatform?.() || 'web';
     fetch(USAGE_ENDPOINT, { method: 'POST', mode: 'cors', keepalive: true,
@@ -31,6 +33,11 @@
       body: JSON.stringify({ installId, launchId, platform, appVersion: version })
     }).catch(() => {});
   }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden || Date.now() - lastUsageReportAt < 5 * 60 * 1000) return;
+    try { sessionStorage.setItem('read_along_launch_id_v1', randomUsageId()); } catch (_) {}
+    reportAppUsage();
+  });
 
   const SUBMIT_URL = 'https://read-along-diagnostics.ndhung475.workers.dev/submit';
   const events = [];
