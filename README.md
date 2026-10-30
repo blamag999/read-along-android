@@ -275,3 +275,13 @@ Quy tắc bảo trì:
 2. Tách tương tác tìm kiếm, filter, pagination và favorite thành controller riêng; không đổi key localStorage hoặc schema playlist.
 3. Bổ sung test DOM cho mở sách, chọn audio part, đánh dấu yêu thích, tìm kiếm và pagination.
 4. Sau khi catalog/playlist ổn định mới xem xét tách quản lý PDF/audio. Không thay đổi các module page-sync, OTA hoặc diagnostics trong cùng đợt.
+
+
+## 12. Tối ưu kiểm thử CI — 2026-10-31
+
+- Workflow `.github/workflows/check-readalong-admin.yml` dùng `concurrency` theo PR/branch với `cancel-in-progress: true`: lượt CI cũ bị hủy khi có commit mới thay thế, tránh chờ kết quả đã lỗi thời.
+- Đã bỏ các bước `node --check` riêng cho `admin/public/admin.js` và `modules/catalog-playlist.js` vì `npm test` đã chạy `npm run check:js` và bao gồm cả hai tệp. Giữ nguyên toàn bộ test suite, kiểm tra cú pháp Pages Functions và kiểm tra isolation.
+- Giữ một job CI thay vì tách nhiều runner: test hiện tại chạy nhanh, việc khởi tạo nhiều runner có thể tốn thêm thời gian hơn phần test tiết kiệm được. Chỉ tách song song khi số lượng/thời gian test thực tế tăng đáng kể.
+- Path filters tiếp tục giới hạn workflow vào mã nguồn, module, test, package và workflow; thay đổi tài liệu đơn thuần không kích hoạt CI này.
+- **Chưa có kết quả CI sau thay đổi tại thời điểm ghi chú.** Commit workflow: `3e7874193c7f0c94d4ed59bbd07b7b5c21d76572`. Cần kiểm tra run mới của PR #37 trước khi đánh dấu tối ưu CI hoàn tất.
+- Quy ước kiểm thử: phân biệt rõ unit/regression, CI, build APK và kiểm thử thiết bị. Không build APK cho thay đổi tài liệu hoặc logic thuần đã được test đầy đủ; vẫn phải build/kiểm tra Android khi thay đổi native, Capacitor, WebView, audio/PDF, lưu trữ hoặc OTA.
