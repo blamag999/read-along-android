@@ -47,7 +47,7 @@ Example local D1 migration (after installing Wrangler and authenticating):
 npx wrangler d1 execute read-along-admin-db --remote --file=admin/schema.sql
 ```
 
-If the Cloudflare project is configured through the API, verify that the production and preview environments have the same binding names but their own correct configuration. Do not bind this Admin project to the existing `private-comic-reader-db`.
+Production is the only environment with the `DB` and `READALONG` bindings. Preview must have neither binding and must not receive `READALONG_TOTP_SECRET`. Do not bind this Admin project to the existing `private-comic-reader-db`.
 
 ## Authentication and security
 
