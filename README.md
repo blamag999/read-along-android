@@ -393,3 +393,25 @@ Quy tắc bảo trì:
 - **Chưa deploy**: Cloudflare Pages production project `read-along-admin` dùng production branch `beta`; PR #37 hiện vẫn Draft và nhắm vào `beta`. Không tự merge PR hoặc deploy production khi chưa có xác nhận của người dùng. Chưa ghi đè R2 `books.json` và chưa build APK.
 - **Pending verification**: CI regression test trên HEAD mới; sau khi code được deploy lên production, mở Admin → Diagnostics → `Tạo / cập nhật books.json` để xuất bản lại manifest. Endpoint trả số bytes; sau đó mở URL public và xác nhận JSON parse được, không có literal `\\\\n` ở cuối. Cuối cùng force stop/mở lại app để xác nhận danh sách sách tải thành công.
 - Trạng thái: **Root cause: Confirmed**; **Code fix on testing: Completed**; **Regression test: Added / CI pending**; **Production deploy: Pending approval/integration**; **R2 republish: Pending**; **Android device verification: Pending**.
+
+
+### Tiếp tục xử lý lỗi publish books.json và hoàn tất beta (2026-10-31)
+
+- Người dùng yêu cầu tiếp tục toàn bộ quy trình đến khi hoàn tất beta, không cần hỏi xác nhận lại ở các bước kỹ thuật thông thường. Phạm vi **không bao gồm promote stable/main**.
+- PR #37 hiện mở/Draft, base `beta`, head `testing`; head sau các thay đổi manifest và README là `9503b22c9e074b369df1797dc435cd649cb3bbb3`.
+- Đã xác nhận commit `fbe038f6a3c849f6452e1b74e5d6329b6a2f2918` sửa serialization trong `admin/functions/api/readalong-admin/[[path]].js`: nối newline thật thay vì literal backslash+n.
+- Commit `3e08adbd8870413c3ea8e303a87365531c28e859` thêm regression assertion cho output manifest.
+- CI run [#41106186425](https://github.com/blamag999/read-along-android/actions/runs/41106186425) thất bại ở `tests/catalog.test.js:38`: assertion cũ chờ regex `/books array/`, trong khi module hiện báo `books.json không đúng cấu trúc { books: [...] }`. Các test module và direct R2 catalog (83 sách) trước đó đã chạy qua; suite dừng ở assertion này.
+- Đã sửa assertion trên `testing` ở commit `f78acf99b53accadca125aee34bc0d4fe700d6e0`, khớp thông báo thực tế mà không thay đổi runtime.
+- CI mới [#41106560409](https://github.com/blamag999/read-along-android/actions/runs/41106560409) đã được tạo cho commit sửa test; lần kiểm tra gần nhất trạng thái `in_progress`, job `regression-and-isolation` cũng `in_progress`. Chưa có kết luận pass/fail.
+- **Chưa merge PR, chưa deploy Cloudflare Pages, chưa ghi đè R2 books.json, chưa build APK beta.** Không được đánh dấu beta hoàn tất cho đến khi hoàn thành các bước dưới.
+- Lộ trình nghiệm thu còn lại:
+  1. Chờ CI #41106560409 kết thúc; nếu fail, đọc job log, sửa trên `testing`, thêm test và đợi run mới.
+  2. Review diff PR #37 trên head mới nhất, chuyển Draft thành Ready và merge `testing` → `beta` khi CI xanh.
+  3. Xác nhận `beta` chứa fix publish; Cloudflare Pages project `read-along-admin` production branch là `beta`, chờ deploy production hoàn tất.
+  4. Dùng Admin → Diagnostics → **Tạo / cập nhật books.json** để publish lại manifest lên bucket R2. Thao tác này chỉ được thực hiện sau deploy và qua bước validation asset có sẵn; không tự ghi đè R2 trước đó.
+  5. Kiểm tra manifest public parse được, có mảng books hợp lệ và không còn literal backslash+n cuối file.
+  6. Chạy workflow thủ công **Build and Release Read Along** trên branch `beta`, channel `beta`; kiểm tra version, build log, APK signature, SHA-256, artifact và prerelease.
+  7. Kiểm tra khả năng truy cập manifest/catalog và luồng đọc trên thiết bị Android thực tế. Ghi rõ giới hạn: không thể giả lập kiểm thử thiết bị nếu không có thiết bị/log từ người dùng; không tuyên bố device test pass nếu chưa có bằng chứng.
+  8. Cập nhật README, Issue #38 và báo cáo bàn giao với commit SHA, PR merge SHA, CI run, Pages deployment, số sách/manifest, Release URL/version, checksum và các test còn pending.
+- Giữ nguyên `main`; không phát hành stable. Không thay đổi GitHub signing secrets/keystore hoặc Cloudflare secrets.
