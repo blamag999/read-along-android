@@ -435,6 +435,76 @@ async function handle(request, env) {
   const route = url.pathname.replace(/^\/api\/readalong-admin\/?/, "").replace(/\/$/, "");
   const method = request.method.toUpperCase();
 
+  if (route === "usage/track" && method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: {
+      "access-control-allow-methods": "POST, OPTIONS",
+      "access-control-allow-headers": "content-type",
+      "access-control-max-age": "86400"
+    }});
+  }
+  if (route === "usage/track" && method === "POST") {
+    let body;
+    try { body = await request.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
+    const installId = String(body.installId || ""), launchId = String(body.launchId || "");
+    const platform = ["android", "ios", "web"].includes(body.platform) ? body.platform : "other";
+    const appVersion = /^[0-9A-Za-z.+-]{1,40}$/.test(String(body.appVersion || "")) ? String(body.appVersion) : "unknown";
+    if (!/^[A-Za-z0-9_-]{16,100}$/.test(installId) || !/^[A-Za-z0-9_-]{16,100}$/.test(launchId)) return json({ error: "Invalid anonymous identifier" }, 400);
+    const installHash = await sha256(installId), launchHash = await sha256(launchId), now = Date.now();
+    const inserted = await env.DB.prepare("INSERT OR IGNORE INTO admin_app_visits (launch_hash, install_hash, platform, app_version, visited_at) VALUES (?, ?, ?, ?, ?)")
+      .bind(launchHash, installHash, platform, appVersion, now).run();
+    if (Number(inserted.meta?.changes || 0) > 0) {
+      await env.DB.batch([
+        env.DB.prepare("INSERT INTO admin_app_installations (install_hash, first_seen, last_seen, platform, app_version) VALUES (?, ?, ?, ?, ?) ON CONFLICT(install_hash) DO UPDATE SET last_seen=excluded.last_seen, platform=excluded.platform, app_version=excluded.app_version")
+          .bind(installHash, now, now, platform, appVersion),
+        env.DB.prepare("UPDATE admin_app_totals SET total_visits = total_visits + 1 WHERE id = 1")
+      ]);
+    }
+    await env.DB.prepare("DELETE FROM admin_app_visits WHERE visited_at < ?").bind(now - 90 * 86400000).run();
+    return json({ ok: true, recorded: Number(inserted.meta?.changes || 0) > 0 });
+  }
+  if (route === "usage/stats" && method === "GET") {
+    let manifest = { books: [] };
+    try { const object = await env.READALONG.get("books.json"); if (object) { const parsed = JSON.parse(await object.text()); if (Array.isArray(parsed.books)) manifest = parsed; } } catch {}
+    const now = Date.now();
+    const [totals, devices, recentVisits, recentDevices] = await Promise.all([
+      env.DB.prepare("SELECT total_visits FROM admin_app_totals WHERE id = 1").first(),
+      env.DB.prepare("SELECT COUNT(*) AS total FROM admin_app_installations").first(),
+      env.DB.prepare("SELECT COUNT(*) AS total FROM admin_app_visits WHERE visited_at >= ?").bind(now - 30 * 86400000).first(),
+      env.DB.prepare("SELECT COUNT(*) AS total FROM admin_app_installations WHERE last_seen >= ?").bind(now - 30 * 86400000).first()
+    ]);
+    const books = manifest.books;
+    return json({
+      books: books.length, pdfs: books.filter(book => typeof book.pdf === "string").length,
+      audios: books.reduce((sum, book) => sum + (Array.isArray(book.audios) ? book.audios.length : 0), 0),
+      sync: books.filter(book => typeof book.sync === "string" && book.sync).length,
+      totalVisits: Number(totals?.total_visits || 0), visits30d: Number(recentVisits?.total || 0),
+      totalDevices: Number(devices?.total || 0), devices30d: Number(recentDevices?.total || 0),
+      updatedAt: new Date().toISOString()
+    });
+  }
+  if (route === "telemetry/events" && method === "POST") {
+    assertOrigin(request);
+    let body;
+    try { body = await request.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
+    if (!Array.isArray(body.events) || body.events.length > 25) return json({ error: "Invalid event batch" }, 400);
+    const rayId = request.headers.get("cf-ray") || null, statements = [];
+    for (const event of body.events) {
+      const type = String(event?.type || "").slice(0, 80);
+      if (!/^[a-zA-Z0-9_.-]+$/.test(type)) continue;
+      const details = {};
+      for (const [key, value] of Object.entries(event.details || {}).slice(0, 30)) {
+        if (/otp|cookie|token|secret|password|authorization/i.test(key)) continue;
+        details[key] = typeof value === "string" ? value.replace(/(otp|cookie|token|secret|password)\s*[:=]\s*[^\s,;]+/ig, "$1=[redacted]").slice(0, 500)
+          : (typeof value === "number" || typeof value === "boolean" || value === null ? value : String(value).slice(0, 200));
+      }
+      statements.push(env.DB.prepare("INSERT INTO admin_client_events (event_type, details_json, ray_id, created_at) VALUES (?, ?, ?, ?)")
+        .bind(type, JSON.stringify(details).slice(0, 3000), rayId, Date.now()));
+    }
+    if (statements.length) await env.DB.batch(statements);
+    await env.DB.prepare("DELETE FROM admin_client_events WHERE id NOT IN (SELECT id FROM admin_client_events ORDER BY created_at DESC LIMIT 5000)").run();
+    return json({ ok: true, accepted: statements.length });
+  }
+
   if (route === "login" && method === "POST") {
     assertOrigin(request);
     if (!env.READALONG_TOTP_SECRET) return json({ error: "TOTP secret is not configured" }, 503);
@@ -577,23 +647,6 @@ async function handle(request, env) {
       env.DB.prepare("SELECT event_type,details_json,ray_id,created_at FROM admin_client_events ORDER BY created_at DESC LIMIT ?").bind(limit).all()
     ]);
     return json({entries:scans.results||[],libraryRequests:requests.results||[],events:events.results||[]});
-  }
-
-  if (route === "debug/events" && method === "POST") {
-    assertOrigin(request);
-    let body;
-    try { body=await request.json(); } catch { return json({error:"Invalid JSON"},400); }
-    if(!Array.isArray(body.events)||body.events.length>25) return json({error:"Invalid event batch"},400);
-    const rayId=request.headers.get("cf-ray")||null;
-    for(const event of body.events) {
-      const type=String(event?.type||"").slice(0,80);
-      if(!type) continue;
-      let details="{}";
-      try { details=JSON.stringify(event.details||{}).slice(0,3000); } catch {}
-      await env.DB.prepare("INSERT INTO admin_client_events (event_type,details_json,ray_id,created_at) VALUES (?,?,?,?)").bind(type,details,rayId,Date.now()).run();
-    }
-    await env.DB.prepare("DELETE FROM admin_client_events WHERE id NOT IN (SELECT id FROM admin_client_events ORDER BY created_at DESC LIMIT 5000)").run();
-    return json({ok:true,accepted:body.events.length});
   }
 
   if (route === "files/all" && method === "GET") {
@@ -759,14 +812,26 @@ async function handle(request, env) {
 }
 
 export async function onRequest(context) {
+  const request = context.request, origin = request.headers.get("Origin") || "";
+  const allowedOrigins = new Set(["https://localhost", "http://localhost", "capacitor://localhost", "https://private-comic-reader.pages.dev"]);
+  const corsAllowed = allowedOrigins.has(origin);
   try {
-    const response = await handle(context.request, context.env);
-    const headers = new Headers(response.headers);
+    const response = await handle(request, context.env), headers = new Headers(response.headers);
     headers.set("x-content-type-options", "nosniff");
     headers.set("referrer-policy", "no-referrer");
     headers.set("cache-control", "no-store");
+    if (corsAllowed) { headers.set("access-control-allow-origin", origin); headers.append("vary", "Origin"); }
     return new Response(response.body, { status: response.status, headers });
-  } catch {
-    return json({ error: "Internal server error" }, 500);
+  } catch (error) {
+    const rayId = request.headers.get("cf-ray") || null;
+    const message = String(error?.message || "Unhandled server exception").replace(/(otp|cookie|token|secret|password)\s*[:=]\s*[^\s,;]+/ig, "$1=[redacted]").slice(0, 1000);
+    try {
+      await context.env.DB?.prepare("INSERT INTO admin_server_errors (route, message, ray_id, created_at) VALUES (?, ?, ?, ?)")
+        .bind(new URL(request.url).pathname.slice(0, 180), message, rayId, Date.now()).run();
+      await context.env.DB?.prepare("DELETE FROM admin_server_errors WHERE id NOT IN (SELECT id FROM admin_server_errors ORDER BY created_at DESC LIMIT 2000)").run();
+    } catch {}
+    const headers = new Headers({ "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" });
+    if (corsAllowed) { headers.set("access-control-allow-origin", origin); headers.append("vary", "Origin"); }
+    return new Response(JSON.stringify({ error: "Internal server error", rayId }), { status: 500, headers });
   }
 }
