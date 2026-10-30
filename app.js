@@ -447,6 +447,15 @@ async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl 
 // =======================================================
 // Danh mục trực tuyến dùng địa chỉ công khai đã cấu hình; không đặt token hay khóa bí mật trong mã nguồn.
 
+const SUPPORTED_AUDIO_EXTENSIONS = new Set([
+  'mp3', 'm4a', 'm4b', 'aac', 'wav', 'ogg', 'oga', 'opus', 'flac'
+]);
+
+function isSupportedAudioFileName(name) {
+  const match = String(name || '').toLowerCase().match(/\.([a-z0-9]+)$/);
+  return Boolean(match && SUPPORTED_AUDIO_EXTENSIONS.has(match[1]));
+}
+
 function fileNameFromUrl(url, fallback) {
   try { return decodeURIComponent(new URL(url).pathname.split('/').pop()) || fallback; }
   catch (error) { return fallback || String(url || ''); }
@@ -1334,8 +1343,8 @@ async function handleAudioFileSelect(e) {
   });
   showToast('Đã tải audio. Nhấn Phát để nghe.');
   } catch (error) {
-    console.error('Lỗi khi nạp MP3:', error);
-    showToast('Không thể nạp MP3: ' + (error && error.message ? error.message : 'Lỗi không xác định'));
+    console.error('Lỗi khi nạp audio:', error);
+    showToast('Không thể nạp audio: ' + (error && error.message ? error.message : 'Lỗi không xác định'));
   } finally {
     dom.pdfLoadingIndicator.classList.add('hidden');
   }
@@ -1374,7 +1383,7 @@ function handleFileList(files) {
     const l = f.name.toLowerCase();
     let type = 'unknown';
     if (l.endsWith('.pdf')) type = 'pdf';
-    else if (l.endsWith('.mp3') || l.endsWith('.m4a') || l.endsWith('.wav') || l.endsWith('.ogg')) type = 'audio';
+    else if (isSupportedAudioFileName(l)) type = 'audio';
     else if (l.endsWith('.json')) type = 'json';
 
     if (type === 'json') state.folderJsonFiles.push({ name: f.name, blob: f });
@@ -1839,7 +1848,7 @@ function updatePlayButtonState() {
 async function togglePlayPause() {
   const hasAudioSource = Boolean(dom.audioElement.currentSrc || dom.audioElement.src);
   if (!hasAudioSource || !state.currentStoryAudios || state.currentStoryAudios.length === 0) {
-    showToast('Chưa có MP3. Hãy chọn PDF (nếu cần), sau đó bấm “Chọn MP3” để nạp âm thanh.');
+    showToast('Chưa có audio. Hãy chọn PDF (nếu cần), sau đó bấm “Chọn audio” để nạp âm thanh.');
     dom.btnChooseAudio.classList.remove('hidden');
     dom.btnChooseAudio.focus({ preventScroll: true });
     return;
@@ -1865,8 +1874,8 @@ async function togglePlayPause() {
     const message = error && error.name === 'NotAllowedError'
       ? 'Trình duyệt chặn phát âm thanh. Hãy bấm Play trực tiếp sau khi chọn MP3.'
       : error && error.name === 'NotSupportedError'
-        ? 'File âm thanh không được trình duyệt hỗ trợ. Hãy chọn file MP3 khác.'
-        : 'Không phát được âm thanh. Hãy kiểm tra file MP3 rồi thử lại.';
+        ? 'Định dạng hoặc codec audio này không được trình duyệt hỗ trợ. Hãy chọn file audio khác (M4A, AAC, WAV, OGG/Opus hoặc FLAC).'
+        : 'Không phát được âm thanh. Hãy kiểm tra định dạng và codec của file audio rồi thử lại.';
     showToast(message);
   }
 }
