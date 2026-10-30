@@ -650,7 +650,7 @@ async function handle(request, env) {
       const missing = batch.filter(item => !item.exists);
       if (missing.length) return json({ error: "Không tìm thấy " + missing.length + " tệp trong R2: " + missing.slice(0, 8).map(item => item.key).join(", "), missing: missing.map(item => item.key) }, 409);
     }
-    const output = JSON.stringify({ books: normalized }, null, 2) + "\\n";
+    const output = JSON.stringify({ books: normalized }, null, 2) + "\n";
     await env.READALONG.put("books.json", output, { httpMetadata: { contentType: "application/json; charset=utf-8", cacheControl: "no-store" } });
     await audit(env, "publish_books_manifest", "books.json", { books: normalized.length, files: refs.length });
     return json({ ok: true, key: "books.json", books: normalized.length, files: refs.length, bytes: new TextEncoder().encode(output).length });
