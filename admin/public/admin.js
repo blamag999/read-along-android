@@ -11,8 +11,8 @@ let dialogResolve = null;
 let pageSize = [25, 50, 100].includes(Number(sessionStorage.getItem("readalong-page-size"))) ? Number(sessionStorage.getItem("readalong-page-size")) : 25;
 let clientLogs = [];
 let fileLoadSequence = 0;
-let debugEventQueue = [];
-let debugFlushScheduled = false;
+let telemetryEventQueue = [];
+let telemetryFlushScheduled = false;
 
 const $ = (id) => document.getElementById(id);
 const show = (id, visible) => $(id).classList.toggle("hidden", !visible);
@@ -27,7 +27,7 @@ const api = async (path, options = {}) => {
     response = await fetch(API + "/" + path, { credentials: "same-origin", ...options });
     data = await response.json().catch(() => ({}));
     if (response.status === 401) {
-      queueDebugEvent("auth_api_unauthorized", { path: String(path).split("?")[0], status: 401 });
+      queueTelemetryEvent("auth_api_unauthorized", { path: String(path).split("?")[0], status: 401 });
       show("managerPanel", false); show("loginPanel", true); show("homePanel", false);
       show("logoutBtn", false); show("homeBtn", false);
     }
@@ -52,7 +52,7 @@ const api = async (path, options = {}) => {
     };
     clientLogs.unshift(log);
     clientLogs = clientLogs.slice(0, 100);
-    queueDebugEvent("api_request", log);
+    queueTelemetryEvent("api_request", log);
   }
 };
 const postJson = (path, body) => api(path, {
@@ -80,16 +80,16 @@ function confirmAction(title, message, accept = "Xác nhận") {
 $("cancelDialog").addEventListener("click", () => { show("confirmDialog", false); dialogResolve?.(false); dialogResolve = null; });
 $("acceptDialog").addEventListener("click", () => { show("confirmDialog", false); dialogResolve?.(true); dialogResolve = null; });
 
-function queueDebugEvent(type, details = {}) {
-  debugEventQueue.push({ type: String(type).slice(0,80), details });
-  if (debugEventQueue.length>100) debugEventQueue=debugEventQueue.slice(-100);
-  if (debugFlushScheduled) return;
-  debugFlushScheduled=true; setTimeout(flushDebugEvents,250);
+function queueTelemetryEvent(type, details = {}) {
+  telemetryEventQueue.push({ type: String(type).slice(0,80), details });
+  if (telemetryEventQueue.length>100) telemetryEventQueue=telemetryEventQueue.slice(-100);
+  if (telemetryFlushScheduled) return;
+  telemetryFlushScheduled=true; setTimeout(flushTelemetryEvents,250);
 }
-async function flushDebugEvents() {
-  debugFlushScheduled=false;
-  if (!debugEventQueue.length) return;
-  const events=debugEventQueue.splice(0,25);
+async function flushTelemetryEvents() {
+  telemetryFlushScheduled=false;
+  if (!telemetryEventQueue.length) return;
+  const events=telemetryEventQueue.splice(0,25);
   try {
     const response=await fetch(API+"/telemetry/events",{method:"POST",credentials:"same-origin",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({events})});
     if(!response.ok) {
@@ -100,10 +100,10 @@ async function flushDebugEvents() {
     clientLogs.unshift({at:new Date().toISOString(),method:"POST",path:"telemetry/events",status:"NETWORK",durationMs:0,rayId:"",error:String(error.message||error)});
     clientLogs=clientLogs.slice(0,100);
   }
-  if(debugEventQueue.length&&!debugFlushScheduled){debugFlushScheduled=true;setTimeout(flushDebugEvents,250);}
+  if(telemetryEventQueue.length&&!telemetryFlushScheduled){telemetryFlushScheduled=true;setTimeout(flushTelemetryEvents,250);}
 }
-window.addEventListener("error",event=>queueDebugEvent("javascript_error",{message:String(event.message||"Unknown error").slice(0,500),source:String(event.filename||"").split("/").pop().slice(0,120),line:event.lineno||0,column:event.colno||0}));
-window.addEventListener("unhandledrejection",event=>queueDebugEvent("unhandled_promise_rejection",{reason:String(event.reason?.message||event.reason||"Unknown rejection").slice(0,500)}));
+window.addEventListener("error",event=>queueTelemetryEvent("javascript_error",{message:String(event.message||"Unknown error").slice(0,500),source:String(event.filename||"").split("/").pop().slice(0,120),line:event.lineno||0,column:event.colno||0}));
+window.addEventListener("unhandledrejection",event=>queueTelemetryEvent("unhandled_promise_rejection",{reason:String(event.reason?.message||event.reason||"Unknown rejection").slice(0,500)}));
 
 let sessionHeartbeatStarted=false;
 function startSessionHeartbeat(){
@@ -113,18 +113,18 @@ function startSessionHeartbeat(){
     try{
       const result=await api("session",{cache:"no-store"});
       if(!result.authenticated){
-        queueDebugEvent("auth_session_expired_during_use",{reason:result.reason||"unknown",cookiePresent:!!result.cookiePresent,host:location.host});
+        queueTelemetryEvent("auth_session_expired_during_use",{reason:result.reason||"unknown",cookiePresent:!!result.cookiePresent,host:location.host});
         show("managerPanel",false);show("loginPanel",true);show("logoutBtn",false);
         $("loginError").textContent="Phiên quản trị đã hết hạn. Vui lòng đăng nhập lại.";
       }
-    }catch(error){queueDebugEvent("auth_session_heartbeat_error",{error:String(error.message||error).slice(0,300)});}
+    }catch(error){queueTelemetryEvent("auth_session_heartbeat_error",{error:String(error.message||error).slice(0,300)});}
   },5*60*1000);
 }
 async function checkSession() {
   const startedAt = performance.now();
   try {
     const result = await api("session", { cache: "no-store" });
-    queueDebugEvent("auth_session_check", {
+    queueTelemetryEvent("auth_session_check", {
       authenticated: !!result.authenticated, cookiePresent: !!result.cookiePresent,
       reason: result.reason || "unknown", expiresIn: Number(result.expiresIn || 0),
       expiresAt: result.expiresAt || null, durationMs: Math.round(performance.now() - startedAt), host: location.host
@@ -145,7 +145,7 @@ async function checkSession() {
         : "Cookie phiên không còn hợp lệ hoặc đã hết hạn. Hãy đăng nhập lại.";
     }
   } catch (error) {
-    queueDebugEvent("auth_session_check_error", {
+    queueTelemetryEvent("auth_session_check_error", {
       error: String(error.message || error).slice(0, 500),
       durationMs: Math.round(performance.now() - startedAt), host: location.host
     });
@@ -163,7 +163,7 @@ $("loginForm").addEventListener("submit", async (event) => {
   const code = $("otpCode").value.trim();
   try {
     await postJson("login", { code });
-    queueDebugEvent("auth_login_success", { host: location.host });
+    queueTelemetryEvent("auth_login_success", { host: location.host });
     $("otpCode").value = "";
     show("loginPanel", false);
     show("managerPanel", true);
@@ -179,7 +179,7 @@ $("loginForm").addEventListener("submit", async (event) => {
 
 $("logoutBtn").addEventListener("click", async () => {
   try { await postJson("logout", {}); } catch {}
-  queueDebugEvent("auth_logout", { host: location.host });
+  queueTelemetryEvent("auth_logout", { host: location.host });
   show("managerPanel", false);
   show("loginPanel", false);
   show("homePanel", true);
@@ -279,7 +279,7 @@ function renderLibraryPage() {
 }
 async function loadFiles() {
   const requestSeq=++fileLoadSequence,requestedPrefix=currentPrefix,startedAt=performance.now();
-  queueDebugEvent("library_load_start",{requestSeq,prefix:requestedPrefix,mode:"full_snapshot"});
+  queueTelemetryEvent("library_load_start",{requestSeq,prefix:requestedPrefix,mode:"full_snapshot"});
   $("currentPath").textContent="/"+requestedPrefix;
   $("refreshBtn").disabled=true;
   $("fileRows").replaceChildren();
@@ -291,12 +291,12 @@ async function loadFiles() {
     allLibraryEntries=[...result.folders,...result.files];
     filePageIndex=0;
     renderLibraryPage();
-    queueDebugEvent("library_load_success",{requestSeq,prefix:requestedPrefix,mode:"full_snapshot",folderCount:result.folders.length,fileCount:result.files.length,total:allLibraryEntries.length,durationMs:Math.round(performance.now()-startedAt)});
+    queueTelemetryEvent("library_load_success",{requestSeq,prefix:requestedPrefix,mode:"full_snapshot",folderCount:result.folders.length,fileCount:result.files.length,total:allLibraryEntries.length,durationMs:Math.round(performance.now()-startedAt)});
     setStatus("Đã tải "+allLibraryEntries.length+" mục trong thư mục hiện tại.");
   }catch(error){
     if(requestSeq!==fileLoadSequence)return;
     allLibraryEntries=[];filteredLibraryEntries=[];renderLibraryPage();
-    queueDebugEvent("library_load_error",{requestSeq,prefix:requestedPrefix,durationMs:Math.round(performance.now()-startedAt),error:String(error.message||error).slice(0,500)});
+    queueTelemetryEvent("library_load_error",{requestSeq,prefix:requestedPrefix,durationMs:Math.round(performance.now()-startedAt),error:String(error.message||error).slice(0,500)});
     setStatus(error.message,true);
     const row=document.createElement("tr"),cell=addCell(row,"Không tải được thư viện: "+error.message);
     cell.colSpan=5;cell.className="empty error";$("fileRows").append(row);
@@ -493,7 +493,7 @@ $("newFolderBtn").addEventListener("click", async () => {
 $("rootBtn").addEventListener("click",()=>{setFolder("");loadFiles();});
 $("refreshBtn").addEventListener("click",loadFiles);
 function setFolder(prefix) {
-  queueDebugEvent("library_folder_change", { from: currentPrefix, to: prefix });
+  queueTelemetryEvent("library_folder_change", { from: currentPrefix, to: prefix });
   currentPrefix=prefix; filePageCursors=[null]; filePageIndex=0; nextFileCursor=null; allLibraryEntries=[]; filteredLibraryEntries=[];
   fileLoadSequence++;
 }
