@@ -36,7 +36,7 @@ assert.match(diagnostics, /read-along-diagnostics\.ndhung475\.workers\.dev\/subm
 assert.match(diagnosticsWorker, /api\.github\.com\/repos\/blamag999\/read-along-android\/issues/,
   'diagnostics service must create issues in this repository only');
 
-assert.match(adminApi, /JSON\\.stringify\\(\\{ books: normalized \\}, null, 2\\) \\+ "\\n"/,
+assert.match(adminApi, /JSON\.stringify\(\{ books: normalized \}, null, 2\) \+ "\\n"/,
   "published books.json must end with a real newline, not literal backslash-n characters");
 
 assert.match(adminApi, /const allowedOrigins = new Set\(\["https:\/\/localhost", "http:\/\/localhost", "capacitor:\/\/localhost"\]\)/,
