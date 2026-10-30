@@ -6,7 +6,7 @@ let filePageCursors = [null];
 let filePageIndex = 0;
 let nextFileCursor = null;
 let dialogResolve = null;
-let pageSize = Number(sessionStorage.getItem("readalong-page-size") || 25);
+let pageSize = [25, 50, 100].includes(Number(sessionStorage.getItem("readalong-page-size"))) ? Number(sessionStorage.getItem("readalong-page-size")) : 25;
 let clientLogs = [];
 let serverLogs = [];
 
