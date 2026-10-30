@@ -6,6 +6,9 @@ let filePageCursors = [null];
 let filePageIndex = 0;
 let nextFileCursor = null;
 let dialogResolve = null;
+let pageSize = Number(sessionStorage.getItem("readalong-page-size") || 25);
+let clientLogs = [];
+let serverLogs = [];
 
 const $ = (id) => document.getElementById(id);
 const show = (id, visible) => $(id).classList.toggle("hidden", !visible);
@@ -14,15 +17,32 @@ const setStatus = (message, error = false) => {
   $("status").classList.toggle("error", error);
 };
 const api = async (path, options = {}) => {
-  const response = await fetch(API + "/" + path, { credentials: "same-origin", ...options });
-  const data = await response.json().catch(() => ({}));
-  if (response.status === 401) {
-    show("managerPanel", false);
-    show("loginPanel", true);
-    show("logoutBtn", false);
+  const started = performance.now();
+  let response = null, data = {}, failure = "";
+  try {
+    response = await fetch(API + "/" + path, { credentials: "same-origin", ...options });
+    data = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      show("managerPanel", false);
+      show("loginPanel", true);
+      show("logoutBtn", false);
+    }
+    if (!response.ok) throw new Error(data.error || "Yêu cầu thất bại (" + response.status + ")");
+    return data;
+  } catch (error) {
+    failure = error.message || String(error);
+    throw error;
+  } finally {
+    clientLogs.unshift({
+      at: new Date().toISOString(),
+      path: String(path).split("?")[0],
+      status: response ? response.status : "NETWORK",
+      durationMs: Math.round(performance.now() - started),
+      rayId: response?.headers.get("cf-ray") || data.rayId || "",
+      error: failure
+    });
+    clientLogs = clientLogs.slice(0, 100);
   }
-  if (!response.ok) throw new Error(data.error || "Yêu cầu thất bại (" + response.status + ")");
-  return data;
 };
 const postJson = (path, body) => api(path, {
   method: "POST",
@@ -137,7 +157,7 @@ async function loadFiles() {
   $("currentPath").textContent = "/" + currentPrefix;
   try {
     const cursor = filePageCursors[filePageIndex];
-    const result = await api("files?prefix=" + encodeURIComponent(currentPrefix) + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""));
+    const result = await api("files?prefix=" + encodeURIComponent(currentPrefix) + "&limit=" + pageSize + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""));
     nextFileCursor = result.truncated ? result.cursor : null;
     $("prevPageBtn").disabled = filePageIndex === 0;
     $("nextPageBtn").disabled = !nextFileCursor;
@@ -177,13 +197,26 @@ async function loadFiles() {
 function activateTab(name) {
   const library = name === "library";
   show("libraryPanel", library);
-  show("diagnosticsPanel", !library);
+  const diagnostics = name === "diagnostics";
+  const debug = name === "debug";
+  show("diagnosticsPanel", diagnostics);
+  show("debugPanel", debug);
   $("libraryTabBtn").classList.toggle("active", library);
-  $("diagnosticsTabBtn").classList.toggle("active", !library);
-  if (!library && $("diagnosticsPanel").dataset.scanned !== "true") runDiagnostics();
+  $("diagnosticsTabBtn").classList.toggle("active", diagnostics);
+  $("debugTabBtn").classList.toggle("active", debug);
+  if (diagnostics && $("diagnosticsPanel").dataset.scanned !== "true") runDiagnostics();
+  if (debug) loadDebugLogs();
 }
 $("libraryTabBtn").addEventListener("click", () => activateTab("library"));
 $("diagnosticsTabBtn").addEventListener("click", () => activateTab("diagnostics"));
+$("debugTabBtn").addEventListener("click", () => activateTab("debug"));
+$("pageSizeSelect").value = String(pageSize);
+$("pageSizeSelect").addEventListener("change", () => {
+  pageSize = Math.min(100, Math.max(25, Number($("pageSizeSelect").value) || 25));
+  sessionStorage.setItem("readalong-page-size", String(pageSize));
+  setFolder(currentPrefix);
+  loadFiles();
+});
 
 function diagnosticStat(label, value, kind) {
   const box = document.createElement("div");
@@ -208,10 +241,14 @@ async function runDiagnostics() {
     const result = await api("diagnostics/scan?prefix=");
     $("diagnosticsPanel").dataset.scanned = "true";
     $("diagnosticsSummary").textContent =
-      "Đã kiểm tra " + result.scanned + " tệp trong " + (result.prefix || "toàn bộ thư viện") +
+      "Đã đối chiếu " + result.scanned + " tệp · kiểm tra mới/thay đổi " + result.changed +
+      " · bỏ qua " + result.skipped + " tệp đã hoàn chỉnh" +
+      (result.removed ? " · đã xóa khỏi cache " + result.removed : "") +
       " · " + formatDate(result.checkedAt);
     $("diagnosticStats").append(
-      diagnosticStat("Tệp đã quét", result.scanned, "neutral"),
+      diagnosticStat("Tệp trong thư viện", result.scanned, "neutral"),
+      diagnosticStat("Quét mới / thay đổi", result.changed, "neutral"),
+      diagnosticStat("Bỏ qua từ cache", result.skipped, "good"),
       diagnosticStat("Lỗi cần xử lý", result.errors, result.errors ? "bad" : "good"),
       diagnosticStat("Cảnh báo", result.warnings, result.warnings ? "warn" : "good")
     );
@@ -262,9 +299,9 @@ async function runDiagnostics() {
       row.append(actionCell);
       $("diagnosticRows").append(row);
     }
-    setStatus("Kiểm tra hoàn tất: " + result.errors + " lỗi, " + result.warnings + " cảnh báo.", result.errors > 0);
+    setStatus("Kiểm tra hoàn tất: " + result.changed + " file mới/thay đổi, bỏ qua " + result.skipped + " file · " + result.errors + " lỗi, " + result.warnings + " cảnh báo.", result.errors > 0);
   } catch (error) {
-    $("diagnosticsSummary").textContent = "Không thể hoàn tất kiểm tra: " + error.message;
+    $("diagnosticsSummary").textContent = "Không thể hoàn tất kiểm tra: " + error.message + (error.rayId ? " · Ray ID: " + error.rayId : "");
     const row = document.createElement("tr");
     const cell = addCell(row, error.message);
     cell.colSpan = 5;
@@ -277,6 +314,65 @@ async function runDiagnostics() {
 }
 $("scanBtn").addEventListener("click", runDiagnostics);
 $("scanAgainBtn").addEventListener("click", runDiagnostics);
+
+async function loadDebugLogs() {
+  try {
+    const result = await api("debug/logs?limit=50");
+    serverLogs = result.entries || [];
+    renderDebugLogs();
+  } catch (error) {
+    $("serverLogRows").replaceChildren();
+    const row = document.createElement("tr");
+    const cell = addCell(row, "Không tải được log máy chủ: " + error.message);
+    cell.colSpan = 6; cell.className = "empty error"; $("serverLogRows").append(row);
+  }
+  renderDebugLogs();
+}
+function renderDebugLogs() {
+  const server = $("serverLogRows");
+  const client = $("clientLogRows");
+  if (server) {
+    server.replaceChildren();
+    if (!serverLogs.length) {
+      const row = document.createElement("tr"); const cell = addCell(row, "Chưa có lịch sử quét.");
+      cell.colSpan = 6; cell.className = "empty"; server.append(row);
+    }
+    for (const log of serverLogs) {
+      const row = document.createElement("tr");
+      addCell(row, formatDate(log.created_at));
+      addCell(row, log.status === "success" ? "Thành công" : "Thất bại");
+      addCell(row, (log.scanned || 0) + " / " + (log.changed || 0) + " / " + (log.skipped || 0));
+      addCell(row, (log.errors || 0) + " / " + (log.warnings || 0));
+      addCell(row, (log.duration_ms || 0) + " ms");
+      addCell(row, [log.ray_id, log.error_message].filter(Boolean).join(" · ") || "—");
+      server.append(row);
+    }
+  }
+  if (client) {
+    client.replaceChildren();
+    if (!clientLogs.length) {
+      const row = document.createElement("tr"); const cell = addCell(row, "Chưa ghi nhận yêu cầu API.");
+      cell.colSpan = 6; cell.className = "empty"; client.append(row);
+    }
+    for (const log of clientLogs) {
+      const row = document.createElement("tr");
+      addCell(row, formatDate(log.at)); addCell(row, log.path);
+      addCell(row, String(log.status)); addCell(row, log.durationMs + " ms");
+      addCell(row, log.rayId || "—"); addCell(row, log.error || "—");
+      client.append(row);
+    }
+  }
+}
+$("refreshDebugBtn").addEventListener("click", loadDebugLogs);
+$("exportDebugBtn").addEventListener("click", () => {
+  const payload = { exportedAt: new Date().toISOString(), serverLogs, clientLogs };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a"); link.href = url;
+  link.download = "read-along-admin-debug-" + new Date().toISOString().replace(/[:.]/g, "-") + ".json";
+  link.click(); URL.revokeObjectURL(url);
+});
+
 
 async function renameEntry(entry) {
   const suggestion = entry.key;
