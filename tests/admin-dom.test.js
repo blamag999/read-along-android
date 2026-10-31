@@ -44,6 +44,10 @@ assert.ok(html.includes('id="uploadProgressText"'), 'Upload progress details mus
 assert.ok(script.includes('failures.push({ name: file.name'), 'Upload must retain per-file failures');
 assert.ok(script.includes('await uploadOne(file, i, files.length)'), 'Upload must report per-file progress');
 assert.ok(script.includes('Xác nhận xóa tệp?') && script.includes('entry.key'), 'Delete confirmation must identify the exact file');
+assert.ok(script.includes('if (file.key === "books.json") continue;'), 'Root books.json must be hidden from ordinary file-management rows');
+assert.ok(api.includes('if (key === "books.json") return json({ error: "books.json không thể xóa trực tiếp; hãy dùng Xuất bản danh mục" }, 403);'), 'API must reject direct deletion of the root catalog manifest');
+assert.ok(api.includes('if (source === "books.json" || destination === "books.json") return json({ error: "books.json chỉ được cập nhật qua Xuất bản danh mục" }, 403);'), 'API must reject rename/move into or out of the root catalog manifest');
+assert.ok(api.includes('if (key === "books.json") return json({ error: "books.json chỉ được cập nhật qua Xuất bản danh mục" }, 403);'), 'API must reject manual upload of the root catalog manifest');
 assert.ok(script.includes('Đang đổi tên/di chuyển: '), 'Rename must report its in-progress state');
 assert.ok(script.includes('Đã đổi tên/di chuyển thành công: '), 'Rename must report its result');
 
