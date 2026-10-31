@@ -8,6 +8,15 @@ const marker = readJson('marker.schema.json');
 const analytics = readJson('analytics-event.schema.json');
 const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'admin', 'public', 'books.json'), 'utf8'));
 
+const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+assert.ok(appSource.includes("window.confirm('Đóng sách “' + title + '”?')"), 'Close-book confirmation uses the approved concise copy');
+assert.ok(appSource.includes("window.confirm('Bạn muốn thoát Read Along?')"), 'Exit confirmation uses the approved concise copy');
+assert.ok(appSource.includes("window.confirm('Tiếp tục xem: ' + resumeLabel + '?')"), 'Reading-position confirmation uses the approved concise copy');
+assert.ok(appSource.includes("confirm('Xóa tất cả mốc thời gian của sách?')"), 'Clear-markers confirmation uses the approved concise copy');
+assert.ok(appSource.includes("if (!shouldResume) {") && appSource.includes("state.sessionRestorePending = false;"), 'Declining reading-position restore keeps the existing start-from-beginning path');
+assert.ok(appSource.includes("if (confirm('Xóa tất cả mốc thời gian của sách?')) {") && appSource.includes('state.pageTimestamps = {};'), 'Marker deletion remains guarded by confirmation');
+assert.ok(appSource.includes("'Tải và cài đặt bản cập nhật? Android có thể yêu cầu xác nhận.'"), 'OTA installation confirmation remains unchanged');
+
 for (const schema of [catalog, marker, analytics]) {
   assert.equal(schema.$schema, 'https://json-schema.org/draft/2020-12/schema');
   assert.ok(schema.$id.startsWith('https://read-along-admin.pages.dev/'));
