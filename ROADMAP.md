@@ -17,7 +17,7 @@ Giảm số lần build APK bằng cách tách catalog, marker, cấu hình, ana
 | Mốc | Nội dung | Trạng thái |
 |---|---|---|
 | R0 | Hợp nhất Analytics plan và APK decoupling thành master planning | <badge>Hoàn tất</badge> |
-| R1 | Kiểm kê API, URL, nguồn dữ liệu và caller; chuẩn hóa contract | Gần hoàn tất — API overlap review xong; marker sources đã kiểm kê, còn chờ versioned conflict policy/backward compatibility |
+| R1 | Kiểm kê API, URL, nguồn dữ liệu và caller; chuẩn hóa contract | Gần hoàn tất — API review xong; marker envelope v1 draft tương thích legacy; runtime revision policy/CI còn pending |
 | R2 | Remote Config + Data Client + fallback offline | Chưa bắt đầu |
 | R3 | Analytics ingest/D1 và sự kiện thời lượng đọc/nghe | Chưa bắt đầu |
 | R4 | Admin Analytics dashboard ngày/tuần/tháng/năm | Chưa bắt đầu |
@@ -26,7 +26,7 @@ Giảm số lần build APK bằng cách tách catalog, marker, cấu hình, ana
 
 ## Tiến độ hiện tại — 2026-10-31
 - R0 hoàn tất: quyết định A–E đã được người dùng xác nhận và kế hoạch tổng đã được hợp nhất.
-- R1 gần hoàn tất: API overlap review đã xong và không gộp các endpoint có mục đích/quyền khác nhau. Marker source precedence hiện tại được ghi tại [marker-and-api-review.md](./docs/architecture/marker-and-api-review.md); phát hiện code comment nói GitHub 'mới hơn' nhưng thực tế không có so sánh revision/timestamp. Còn pending thiết kế marker envelope/conflict policy trước khi đổi runtime.
+- R1 gần hoàn tất: API overlap review đã xong và không gộp các endpoint có mục đích/quyền khác nhau. Marker source precedence được ghi tại [marker-and-api-review.md](./docs/architecture/marker-and-api-review.md). Schema marker envelope v1 đã draft, vẫn chấp nhận legacy map và empty map; runtime revision policy/migration và CI mới còn pending.
 - Inventory endpoint/caller và schema đã được CI kiểm tra tại [41158627378](https://github.com/blamag999/read-along-android/actions/runs/41158627378).
 - Chưa thay đổi mã runtime, chưa build APK, chưa promote stable.
 - Usage API hiện có chỉ ghi lượt mở/installation và thống kê inventory; analytics thời lượng đọc/nghe vẫn cần thiết kế và triển khai.
