@@ -8,7 +8,7 @@
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
 - Last formal handover commit: `650c56059d774ccb2d29131a05d8aed6dfd9dda3`
-- Last reviewed functional HEAD on beta: `b0a542e75692e5ab3711d43bda68b07e8b328019`
+- Last reviewed functional HEAD on beta: `163abfbeab279b479e358e39ada6f3fa63fda3dd`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
 - Latest recovery checkpoint: touch UI/menu simplification implementation `b0a542e75692e5ab3711d43bda68b07e8b328019` (CI/device validation pending)
@@ -170,9 +170,9 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 
 ## Batch touch UI và tinh gọn menu — 2026-10-31
 
-- Functional source đã cập nhật trên beta tới commit `b0a542e75692e5ab3711d43bda68b07e8b328019`; thay đổi tiếp theo tại thời điểm ghi nhận là tài liệu bàn giao.
+- Functional source đã cập nhật trên beta tới commit `163abfbeab279b479e358e39ada6f3fa63fda3dd`; regression contract bổ sung tại `f2bebf47071a712021e29e6645551e8bdc910475`.
 - Header portrait được bổ sung responsive rules; nhãn chữ playlist/đóng sách ẩn ở màn hình hẹp để tránh chồng nút. Cần kiểm tra thực tế nhiều kích thước màn hình cảm ứng.
-- UI cập nhật marker GitHub, token và diagnostics đã được gỡ khỏi app; client remote-sync và diagnostics không còn được nạp từ index.html. Marker JSON từ catalog/R2 và nhập/xuất JSON cục bộ được giữ lại.
+- UI cập nhật marker GitHub, token và diagnostics đã được gỡ khỏi app; client remote-sync và diagnostics không còn được nạp từ index.html. Marker JSON từ catalog/R2 và nhập/xuất JSON cục bộ được giữ lại; fallback `loadCloudSyncForBook()` đã bị loại khỏi reader.
 - Analytics consent UI đã bỏ; collector ghi nhận mặc định bật. Giữ nguyên schema ingest và trường dữ liệu đã cho phép; không gửi book title, filename, URL, nội dung PDF hoặc audio.
 - Checkpoint label đổi thành “Mốc đọc gần đây”. Regression assertions đã thêm, nhưng chưa có bằng chứng full CI sau batch này.
 - Chưa build APK, chưa chạy smoke test marker R2, chưa nghiệm thu thiết bị; không cập nhật main, không thay đổi R2/D1/Cloudflare resource hoặc signing key.
