@@ -34,7 +34,7 @@
 - [x] URL HTTPS và hostname cố định `read-along-admin.pages.dev`; không nhận URL/hostname từ payload.
 - [x] Có timeout 4 giây, tối đa 1 retry, validate schema v1, cache bản hợp lệ gần nhất và fallback defaults; cache hết hạn/hỏng bị bỏ qua.
 - [x] Không thực thi JavaScript/HTML và không có native command/permission trong contract.
-- [ ] Hoàn thiện test timeout, cache hỏng, response field thiếu, retry/backoff và xác minh Content-Type/status trên endpoint thực tế; test hiện tại đã bao phủ JSON lỗi, HTTP error, sai Content-Type, field lạ/sai kiểu, schemaVersion, expiry, version rollback, cache hợp lệ và offline lần đầu.
+- [x] Test JSON lỗi, field thiếu/thừa, schemaVersion, config hết hạn, configVersion rollback, timeout, HTTP error, sai Content-Type, cache hợp lệ/hỏng, retry giới hạn, response quá lớn và offline lần đầu. HTTP status/Content-Type của production endpoint vẫn cần xác minh độc lập.
 - [ ] Tích hợp vào APK sau khi endpoint được xác minh HTTP status/Content-Type; hiện module chưa được nạp trong `index.html` và không ảnh hưởng runtime.
 
 ## P1 — Chốt marker conflict policy và migration an toàn
