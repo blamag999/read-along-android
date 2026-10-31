@@ -716,6 +716,19 @@ async function handle(request, env) {
     const eventCount = rows.reduce((sum, row) => sum + Number(row.event_count || 0), 0);
     const rawAvailable = startMs >= cutoff;
     const breakdownRows = breakdown.results || [];
+    let libraryStats = { books: null, pdfs: null, audioParts: null, syncedBooks: null, status: "invalid_manifest" };
+    try {
+      if (manifestObject) {
+        const manifest = JSON.parse(await manifestObject.text());
+        if (Array.isArray(manifest.books)) libraryStats = {
+          books: manifest.books.length,
+          pdfs: manifest.books.filter(book => typeof book.pdf === "string" && book.pdf).length,
+          audioParts: manifest.books.reduce((sum, book) => sum + (Array.isArray(book.audios) ? book.audios.length : 0), 0),
+          syncedBooks: manifest.books.filter(book => typeof book.sync === "string" && book.sync).length,
+          status: "published_manifest"
+        };
+      } else libraryStats.status = "manifest_missing";
+    } catch {}
     return json({
       start: startText, end: endText, timezone: "UTC",
       hasData: rows.length > 0 && eventCount > 0,
@@ -745,24 +758,7 @@ async function handle(request, env) {
         }, []),
         note: rawAvailable ? "Thiết bị/phiên/nền tảng lấy từ dữ liệu chi tiết còn lưu tối đa 90 ngày." : "Dữ liệu chi tiết đã quá thời hạn 90 ngày; chỉ còn số tổng hợp theo ngày."
       },
-      library: (() => {
-        let manifest = null;
-        try {
-          // Manifest is the published, reader-visible catalog; never count orphan PDFs as books.
-          return manifestObject ? (async () => {
-            const parsed = JSON.parse(await manifestObject.text());
-            if (!Array.isArray(parsed.books)) return { books: null, status: "invalid_manifest" };
-            manifest = parsed;
-            return {
-              books: manifest.books.length,
-              pdfs: manifest.books.filter(book => typeof book.pdf === "string" && book.pdf).length,
-              audioParts: manifest.books.reduce((sum, book) => sum + (Array.isArray(book.audios) ? book.audios.length : 0), 0),
-              syncedBooks: manifest.books.filter(book => typeof book.sync === "string" && book.sync).length,
-              status: "published_manifest"
-            };
-          })() : { books: 0, status: "manifest_missing" };
-        } catch { return { books: null, status: "invalid_manifest" }; }
-      })(),
+      library: libraryStats,
       latestScan: latestScan ? {
         status: latestScan.status, scanned: Number(latestScan.scanned || 0),
         errors: Number(latestScan.errors || 0), warnings: Number(latestScan.warnings || 0),
