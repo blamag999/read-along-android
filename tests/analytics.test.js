@@ -35,5 +35,6 @@ const assert = require('node:assert/strict');
   assert.equal(validateAnalyticsBatch({ consent: true, events: [event(), event({ sessionId: 'session_abcdefghijkl' })] }).valid, false, 'one batch must contain one session');
   assert.equal(validateAnalyticsBatch({ consent: true, extra: true, events: [event()] }).valid, false);
   assert.equal(validateAnalyticsBatch({ consent: true, events: [event(), event({ sequence: 0, eventId: 'event_abcdefghijkl' })] }).valid, false, 'sequence collisions in a batch are rejected');
+  assert.equal(validateAnalyticsBatch({ consent: true, events: [event(), event({ readingSeconds: 1 })] }).valid, false, 'same eventId with different payload is rejected');
   console.log('Analytics privacy and validation tests passed.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
