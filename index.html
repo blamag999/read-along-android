@@ -162,6 +162,11 @@
         </label>
         <span id="lblPageTimestamp" class="page-time-badge">Mốc: Chưa gán</span>
         <span id="lblSaveStatus" class="save-status-badge">💾 Sẵn sàng</span>
+        <label class="reading-checkpoint-control" for="readingCheckpointSelect" title="Ba mốc đọc gần nhất của sách này">
+          <span>↶ Mốc đọc</span>
+          <select id="readingCheckpointSelect" aria-label="Chọn một trong ba mốc đọc gần nhất" disabled class="hidden"></select>
+        </label>
+        <button id="btnRestoreReadingCheckpoint" class="btn-restore-checkpoint hidden" type="button" disabled>Khôi phục</button>
       </div>
       
       <div class="sync-actions-mini">
