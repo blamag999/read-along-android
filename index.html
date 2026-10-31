@@ -38,14 +38,15 @@
 
     <div class="header-right">
       <!-- NÚT MỞ DANH SÁCH TẬP TRUYỆN (PLAYLIST) -->
-      <button id="btnOpenPlaylist" class="icon-btn playlist-btn" title="Chọn thư mục hoặc mở danh sách truyện trực tuyến" disabled aria-disabled="true">
-        📚 <span>Danh sách truyện</span>
+      <button id="btnOpenPlaylist" class="icon-btn playlist-btn" title="Mở thư viện sách" disabled aria-disabled="true">
+        📚 <span>Thư viện sách</span>
         <span id="lblPlaylistCount" class="badge-count hidden">0</span>
       </button>
-      <button id="btnCloseBook" class="icon-btn close-book-btn hidden" type="button" title="Đóng sách đang đọc">✕ <span>Đóng sách</span></button>
 
-      <button id="btnOpenReadMenu" class="icon-btn read-menu-button" type="button" aria-label="Mở menu đọc sách" aria-controls="readOptionsMenu" aria-expanded="false" title="Tùy chọn đọc">☰</button>
-      <div id="readOptionsMenu" class="read-options-menu hidden" role="group" aria-label="Tùy chọn đọc sách">
+      <button id="btnOpenReadMenu" class="icon-btn read-menu-button" type="button" aria-label="Mở menu" aria-controls="readOptionsMenu" aria-expanded="false" title="Menu">☰ <span>Menu</span></button>
+      <div id="readOptionsMenu" class="read-options-menu hidden" role="group" aria-label="Menu ứng dụng">
+        <button id="menuToggleSettings" class="read-menu-option" type="button" aria-expanded="true"><span class="menu-option-icon" aria-hidden="true">⚙️</span><span>Ẩn/hiện chọn tệp và tùy chọn</span></button>
+        <button id="menuOpenSyncModal" class="read-menu-option" type="button"><span class="menu-option-icon" aria-hidden="true">⏱️</span><span>Mốc thời gian</span></button>
         <button id="menuTwoPages" class="read-menu-option" type="button" aria-pressed="false"><span class="menu-option-icon" aria-hidden="true">📖</span><span>Hiện 2 trang</span><span class="menu-option-state" id="menuTwoPagesState">Tắt</span></button>
         <button id="menuAutoFlip" class="read-menu-option" type="button" aria-pressed="true"><span class="menu-option-icon" aria-hidden="true">🔄</span><span>Tự lật trang</span><span class="menu-option-state" id="menuAutoFlipState">Bật</span></button>
 
@@ -66,8 +67,6 @@
         <button id="menuCheckUpdates" class="read-menu-option hidden" type="button"><span class="menu-option-icon" aria-hidden="true">⬆️</span><span>Kiểm tra cập nhật</span></button>
       </div>
 
-      <button id="btnOpenSyncModal" class="icon-btn" title="Quản lý mốc thời gian">⚙️ <span class="hide-mobile">Mốc thời gian</span></button>
-      <button id="btnToggleSettings" class="icon-btn menu-toggle-btn" type="button" aria-controls="filePickerSection syncBanner" aria-expanded="true" title="Ẩn/hiện dòng chọn tệp và tùy chọn">☰ <span>Menu</span></button>
     </div>
   </header>
 
