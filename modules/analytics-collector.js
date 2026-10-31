@@ -14,7 +14,6 @@
   const modal = document.getElementById('analyticsModal');
   const consentInput = document.getElementById('chkAnalyticsConsent');
   const status = document.getElementById('analyticsStatus');
-  const menuButton = document.getElementById('menuAnalytics');
   const closeButton = document.getElementById('btnCloseAnalytics');
 
   let consent = false;
@@ -55,7 +54,9 @@
   }
 
   function readConsent() {
-    return storageGet(CONSENT_KEY) === 'true';
+    // Personal app: usage statistics are enabled by default; no consent prompt is shown.
+    storageSet(CONSENT_KEY, 'true');
+    return true;
   }
 
   function ensureInstallId() {
@@ -279,11 +280,6 @@
   consent = readConsent();
   if (consent) ensureInstallId();
 
-  menuButton?.addEventListener('click', () => {
-    document.getElementById('readOptionsMenu')?.classList.add('hidden');
-    document.getElementById('btnOpenReadMenu')?.setAttribute('aria-expanded', 'false');
-    openSettings();
-  });
   closeButton?.addEventListener('click', () => modal?.classList.add('hidden'));
   modal?.addEventListener('click', event => {
     if (event.target === modal) modal.classList.add('hidden');
