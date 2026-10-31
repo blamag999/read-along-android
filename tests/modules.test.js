@@ -87,4 +87,10 @@ assert.ok(styleSource.includes('Compact touch header') && styleSource.includes('
 assert.ok(appSource.includes('saveSyncToDirectoryOrDownload'), 'local marker JSON export must remain available');
 assert.ok(!appSource.includes('loadCloudSyncForBook'), 'marker loading must not depend on online cloud synchronization');
 assert.ok(!htmlSource.includes('remote-sync.js'), 'the obsolete remote marker sync client must not be loaded');
+
+for (const requiredId of ['syncModal', 'btnCloseSyncModal', 'btnExportSync', 'importSyncInput', 'btnClearSync', 'syncTableBody']) {
+  assert.ok(htmlSource.includes('id="' + requiredId + '"'), 'local marker modal must include ' + requiredId + ' so app initialization does not abort');
+}
+assert.ok(!appSource.includes('scheduleGitHubSync('), 'local marker edits must not call the removed GitHub sync client');
+assert.ok(appSource.includes("replace(/[\\\\/:*?\"<>|]/g, '_')"), 'local JSON export filename must be generated without the removed sync client');
 console.log('Module behavior and touch-reader UI contract tests passed.');
