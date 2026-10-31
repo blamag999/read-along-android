@@ -755,3 +755,13 @@ Khi một công việc trong PLANNING hoàn tất:
 - Release assets: APK, SHA-256 file, Web Local ZIP. Workflow artifact `read-along-v1.3.21-build` ID `13047033500` (expires 2026-11-30).
 - Release Notes generator correctly used previous beta tag `v1.3.20` and generated `1.3.21`; however, actual notes include English/technical commit subjects for workflow/test fixes. This is a content-quality defect; generator is implemented but Release Notes quality remains pending correction before stable promotion.
 - Runtime notification/UI terminology batch is complete. Device acceptance remains pending; do not promote main.
+
+
+## 2026-10-31 — Quyết định bỏ mở sách cục bộ và tinh gọn Menu (beta)
+
+- Người dùng xác nhận bỏ hoàn toàn khả năng mở PDF/audio/thư mục tùy ý từ thiết bị; nội dung mở qua thư viện R2.
+- Phân biệt mở tệp cục bộ với cache/offline: vẫn giữ kho offline/cache 1 GiB cho nội dung tải từ R2, cùng marker, session và vị trí đọc. Không xóa dữ liệu đã tải hoặc dữ liệu đọc.
+- Header chỉ có hai action **Thư viện sách** và **Menu**; không có nút Đóng sách riêng vì Android Back đảm nhiệm thao tác này.
+- Kế hoạch Menu: gỡ UI chọn file và vùng điều khiển cũ không còn cần; giữ điều khiển reader, checkpoint “Vị trí đọc gần đây” / “Xem tiếp” và OTA. Rà soát UI quản lý marker thủ công riêng; không xóa marker runtime, marker JSON R2, schema hoặc dữ liệu.
+- Kế hoạch chi tiết và kiểm thử được ghi trong PLANNING.md. Đây là phạm vi đã duyệt, chưa phải code đã triển khai.
+- Chưa sửa HTML/CSS/JavaScript/native, chưa chạy test/CI, chưa build APK, chưa thay đổi R2/Cloudflare/OTA hoặc main.
