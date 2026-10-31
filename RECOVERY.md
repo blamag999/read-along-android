@@ -7,7 +7,7 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover commit: `d83b284d8d57863763560f812f41521f897c9a3e`
+- Last formal handover commit: `650c56059d774ccb2d29131a05d8aed6dfd9dda3`
 - Last reviewed functional HEAD on beta: `d83b284d8d57863763560f812f41521f897c9a3e`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
@@ -163,3 +163,6 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Device acceptance is pending. Do not mark accepted or promote main/stable until the user verifies the APK on a touch-screen Android phone.
 - No changes to main, signing key, R2/D1 resources or OTA endpoint architecture. Android TV remains outside this batch.
 
+
+
+- Documentation handover commit for beta v1.3.13: `650c56059d774ccb2d29131a05d8aed6dfd9dda3`. Runtime source was reviewed at functional commit `d83b284d8d57863763560f812f41521f897c9a3e`; subsequent changes are documentation-only.
