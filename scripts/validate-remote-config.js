@@ -18,7 +18,7 @@ const DEFAULT_RULES = {
 
 function isDateTime(value) {
   if (typeof value !== 'string') return false;
-  const match = /^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})(?:\\.\\d+)?(Z|[+-](\\d{2}):(\\d{2}))$/.exec(value);
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\\.\d+)?(Z|[+-](\d{2}):(\d{2}))$/.exec(value);
   if (!match) return false;
   const [, year, month, day, hour, minute, second, , offsetHour, offsetMinute] = match;
   const y = Number(year), m = Number(month), d = Number(day);
