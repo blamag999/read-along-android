@@ -516,3 +516,13 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Destination collision check remains in place. New folder creation uses the existing authenticated `folders` route; each file uses the existing `rename` route (copy, verify size, delete source).
 - The post-move catalog preview and explicit publish confirmation are unchanged.
 - This is Admin-only; no APK build is required. R2 remains unchanged until an administrator runs the action.
+
+
+## R2 inventory recheck after folder migration — 2026-11-01
+
+- Read-only inventory of `my-audio-book` now returns 204 objects total: 179 under `DISNEY/`, 24 under `ONE STORY A DAY LEVEL 2 FULL/`, and one root object (`books.json`). No root-level media objects remain.
+- `DISNEY/` composition: 84 PDF, 87 MP3, 8 JSON; total size 1,647,458,551 bytes.
+- `ONE STORY A DAY LEVEL 2 FULL/` remains at 24 objects.
+- Root `books.json` metadata is now 38,453 bytes with ETag `509b78ea46ee0cca7c36a5ac44cbcf73`, compared with the initial inventory 34,440 bytes / ETag `65ea559196d5fc691ce7e366903a36a0`. This indicates the object changed, but the available connector cannot read the public R2 object body (public fetch is blocked); therefore book count, folder metadata and URL validation remain unverified.
+- Do not assume catalog publication is correct solely from the changed size/ETag. Use authenticated Admin preview/publish or verify through the running app before closing the R2 catalog task.
+- The selectable destination picker is deployed; no APK build was part of the Admin-only refinement.
