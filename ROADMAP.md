@@ -942,7 +942,7 @@ Khi một công việc trong PLANNING hoàn tất:
 
 - Beta source commit: `410e292477519143176fc7b5bf45b9b8099ccc0a`.
 - Regression and isolation: PASS — [GitHub Actions run 41226438099](https://github.com/blamag999/read-along-android/actions/runs/41226438099).
-- Cloudflare Pages deployment: `c3dbf307-e516-43f5-8421-5a1714edd902`; build stage passed, deploy stage was active at the last check. Confirm completion before using Admin.
+- Cloudflare Pages deployment: [c3dbf307](https://c3dbf307.read-along-admin.pages.dev), production deployment for beta commit `410e292...`; build and deploy stages both completed successfully.
 - **R2 data migration has not yet run.** No source objects were deleted or moved during this implementation batch.
 - **Live `books.json` has not yet been rebuilt/published.**
 - Expected catalog after successful preview: 84 books in `DISNEY` and 12 in `ONE STORY A DAY LEVEL 2 FULL` (96 total); this is a target to verify, not a result.
