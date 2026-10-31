@@ -1425,8 +1425,6 @@ async function handleAudioFileSelect(e) {
     showToast('Định dạng âm thanh không được hỗ trợ. Hãy chọn MP3, M4A hoặc định dạng tương thích.');
     return;
   }
-  if (skippedCount > 0) showToast('Đã bỏ qua ' + skippedCount + ' tệp không hỗ trợ.');
-
   dom.pdfLoadingIndicator.classList.remove('hidden');
   dom.lblLoadingText.textContent = 'Đang nạp tệp âm thanh...';
   try {
@@ -1469,7 +1467,6 @@ async function handleAudioFileSelect(e) {
     if (saved && saved.pdfBlob) {
       state.currentBookKey = key;
       await loadPdfFromBlob(saved.pdfBlob, true);
-      showToast(`Đã tự động mở sách: ${saved.pdfName}`);
     }
   }
 
@@ -1480,7 +1477,7 @@ async function handleAudioFileSelect(e) {
     audioBlob: audioItems[0].blob,
     audios: audioItems
   });
-  showToast('Đã tải âm thanh. Nhấn Phát để nghe.');
+  showToast('Đã tải âm thanh.' + (skippedCount > 0 ? ' Đã bỏ qua ' + skippedCount + ' tệp không hỗ trợ.' : ' Nhấn Phát để nghe.'));
   } catch (error) {
     console.error('Lỗi khi nạp audio:', error);
     showToast('Không tải được âm thanh. Vui lòng chọn lại tệp.');
@@ -1640,7 +1637,6 @@ async function loadPdfFromBlob(file, shouldResetSync = true) {
     dom.canvasWrapper.classList.remove('hidden');
   } catch (error) {
     state.pdfDoc = null;
-    console.error('Không thể mở sách:', error);
     alert('Không mở được sách. Vui lòng chọn tệp khác.');
   } finally {
     state.pdfLoading = false;
