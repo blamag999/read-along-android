@@ -93,6 +93,19 @@ class Target {
   assert.equal(pause.listeningSeconds, 10);
   assert.equal(pause.readingSeconds, 10);
 
+  audio.paused = false;
+  audio.ended = false;
+  audio.dispatch('play');
+  await Promise.resolve();
+  await tick(3000);
+  audio.ended = true;
+  audio.paused = true;
+  audio.dispatch('ended');
+  await Promise.resolve();
+  sent = requests.map(x => JSON.parse(x.options.body).events[0]);
+  const stoppedAudio = sent.find(x => x.type === 'audio_stop');
+  assert.equal(stoppedAudio.listeningSeconds, 3);
+
   const countBeforeHidden = requests.length;
   document.visibilityState = 'hidden';
   document.dispatch('visibilitychange');
@@ -101,6 +114,21 @@ class Target {
   assert.equal(requests.length, countBeforeHidden + 1, 'hidden time must not create heartbeat telemetry');
   const hiddenEvent = requests.slice(countBeforeHidden).map(x => JSON.parse(x.options.body).events[0]);
   assert.equal(hiddenEvent[0].type, 'reader_pause');
+
+  document.visibilityState = 'visible';
+  document.dispatch('visibilitychange');
+  await Promise.resolve();
+  assert.equal(JSON.parse(requests.at(-1).options.body).events[0].type, 'reader_resume');
+  window.dispatch('pagehide');
+  await Promise.resolve();
+  assert.equal(JSON.parse(requests.at(-1).options.body).events[0].type, 'reader_pause');
+  window.dispatch('pageshow');
+  await Promise.resolve();
+  assert.equal(JSON.parse(requests.at(-1).options.body).events[0].type, 'reader_resume');
+
+  context.state.pdfDoc = null;
+  await tick();
+  assert.equal(JSON.parse(requests.at(-1).options.body).events[0].type, 'reader_stop');
 
   checkbox.checked = false;
   checkbox.dispatch('change');
