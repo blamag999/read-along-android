@@ -906,3 +906,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - Removed unused filename-pill CSS and added regression guards.
 - Commits: HTML `b7c696a45e856e383b1c9859cae07b5a3d3d546f`; JS `86d3a95a2491fffa61a0289d79fb7513a389f696`; CSS `b527223e38ac2943cfa288af4432b47f26e80cc6`; contract tests `ced2edb14dca5b398f2dced0f899b94ade4fdbe1`; module test correction `921833ce96b1740e103f99828db55f481bdc859e`.
 - Regression passed in workflow run #550. APK build and device acceptance remain pending.
+
+
+## Bàn giao — Tinh gọn nhóm cập nhật OTA trong Menu (2026-11-01)
+
+- [x] Gom **Kênh OTA**, **Phiên bản đang cài** và **Kiểm tra cập nhật** vào một nhóm “Cập nhật ứng dụng”.
+- [x] Bỏ icon trang trí và dòng mô tả phụ “Đánh dấu để dùng Beta”; công tắc vẫn có nhãn trợ năng mô tả rõ Beta/Official.
+- [x] Thu gọn chiều cao, padding và kiểu chữ của phiên bản; nút kiểm tra cập nhật hiển thị gọn trong cùng nhóm.
+- [x] Giữ nguyên ID DOM và luồng JavaScript OTA hiện có; không thay endpoint, lưu lựa chọn kênh, installer hay cơ chế ký APK.
+- [ ] Chờ CI regression, sau đó build APK beta và kiểm tra Menu trên thiết bị thật; chưa nghiệm thu runtime.
