@@ -439,12 +439,12 @@ $("publishBooksBtn").addEventListener("click", async () => {
     if (!preview.manifest || !Array.isArray(preview.manifest.books)) throw new Error("Không nhận được bản xem trước hợp lệ.");
     const included = preview.included;
     const excluded = preview.excluded || [];
-    const details = excluded.slice(0, 8).map(item => "• " + item.title + ": " + item.reasons.join("; ")).join("\\n");
-    const message = "Sẽ xuất bản " + included + " sách từ thư viện R2.\\n" +
-      "Loại khỏi danh mục: " + excluded.length + " nhóm.\\n" +
-      "Quét: " + preview.scanned + " tệp · " + preview.errors + " lỗi · " + preview.warnings + " cảnh báo.\\n\\n" +
-      (details ? "Một số nhóm bị loại:\\n" + details + (excluded.length > 8 ? "\\n… và " + (excluded.length - 8) + " nhóm khác.\\n" : "\\n") : "") +
-      "\\nChỉ books.json được ghi lại; tệp PDF/audio/JSON trong R2 không bị thay đổi.";
+    const details = excluded.slice(0, 8).map(item => "• " + item.title + ": " + item.reasons.join("; ")).join("\n");
+    const message = "Sẽ xuất bản " + included + " sách từ thư viện R2.\n" +
+      "Loại khỏi danh mục: " + excluded.length + " nhóm.\n" +
+      "Quét: " + preview.scanned + " tệp · " + preview.errors + " lỗi · " + preview.warnings + " cảnh báo.\n\n" +
+      (details ? "Một số nhóm bị loại:\n" + details + (excluded.length > 8 ? "\n… và " + (excluded.length - 8) + " nhóm khác.\n" : "\n") : "") +
+      "\nChỉ books.json được ghi lại; tệp PDF/audio/JSON trong R2 không bị thay đổi.";
     if (!await confirmAction("Duyệt và xuất bản danh mục?", message, "Xuất bản books.json")) return;
     button.textContent = "Đang xác minh và xuất bản…";
     const result = await postJson("catalog/publish", preview.manifest);
