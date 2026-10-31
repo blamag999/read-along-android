@@ -3073,3 +3073,10 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
   .playlist-btn .playlist-label { font-size: .72rem; }
   .read-menu-button { min-width: 58px !important; padding-inline: 7px !important; }
 }
+
+
+.playlist-btn:focus-visible,
+.read-menu-button:focus-visible {
+  outline: 3px solid #fde68a;
+  outline-offset: 2px;
+}
