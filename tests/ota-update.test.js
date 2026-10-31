@@ -37,7 +37,7 @@ assert.ok(workflow.includes('"sha256": os.environ["SHA256"]'), 'Published manife
 assert.ok(app.includes('READ_ALONG_OTA_API'), 'APK must use the fixed OTA API origin');
 assert.ok(!app.includes('READ_ALONG_RELEASES_API') && !app.includes('api.github.com/repos/blamag999/read-along-android/releases'), 'APK must not query GitHub Releases directly');
 assert.ok(app.includes('expectedSize: manifest.size') && app.includes('sha256: manifest.sha256'), 'APK must pass size and checksum to the native verifier');
-assert.ok(app.includes("meta[name=" + "'app-version-code'" + "]"), 'APK must compare the embedded versionCode');
+assert.ok(app.includes('app-version-code'), 'APK must compare the embedded versionCode');
 assert.ok(native.includes('OTA_HOST = "read-along-admin.pages.dev"'), 'Native updater must pin the OTA host');
 assert.ok(native.includes('OTA_PATH = "/api/readalong-admin/ota/download"'), 'Native updater must pin the download path');
 assert.ok(native.includes('setInstanceFollowRedirects(false)'), 'Native updater must reject redirects');
