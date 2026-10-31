@@ -7,10 +7,10 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover code/documentation checkpoint: `410e292477519143176fc7b5bf45b9b8099ccc0a` (source checkpoint; this folder-migration batch is still awaiting live R2 execution and final handover).
-- Last reviewed functional/source HEAD on beta: `410e292477519143176fc7b5bf45b9b8099ccc0a`
+- Last formal handover code/documentation checkpoint: `424f00e0b3ad78ce31442afa62898f01c9593a14` (selectable R2 migration destination UI; CI is running, live R2 migration has not started).
+- Last reviewed functional/source HEAD on beta: `424f00e0b3ad78ce31442afa62898f01c9593a14`
 - Stable main HEAD: `c1ad733b50d1514679d7c6868f3763859ac45b87` (PR #44 promotion; no new stable APK was built by this batch).
-- Recovery status: `PARTIAL — folder-aware catalog and guarded Admin migration UI implemented; regression CI passed; Cloudflare Pages deploy, live R2 move/catalog publication and APK/device acceptance remain pending`
+- Recovery status: `PARTIAL — folder-aware catalog and selectable Admin migration UI implemented; regression CI for the latest UI refinement is pending; live R2 move/catalog publication and APK/device acceptance remain pending`
 - Recovery reviewed on: 2026-11-01
 - Latest policy update: quyết định không lưu PDF/audio offline đã được ghi vào README/ROADMAP/PLANNING/RECOVERY. Xem mục “Quyết định thay thế kế hoạch kho offline”; các checkpoint cũ bên dưới chỉ là lịch sử.
 - README shared policy: PR #44 promoted the accepted beta snapshot to main. Before the next release, verify README parity between main and beta; do not assume PR #40 was merged.
@@ -506,3 +506,13 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - CI và APK beta chưa được xác minh tại thời điểm ghi nhật ký; tiếp tục từ HEAD mới nhất của beta, không checkout theo commit bàn giao cũ.
 
 - CI verification update: GitHub Actions run #554 completed successfully on beta commit 0243a8177c282758369f11e0503c7a89cd467d2b; all job steps passed. APK build and device acceptance remain pending.
+
+## Admin migration destination picker — 2026-11-01
+
+- Latest source commit: `424f00e0b3ad78ce31442afa62898f01c9593a14`; regression run [41227122514](https://github.com/blamag999/read-along-android/actions/runs/41227122514) was queued/running at handover time.
+- Replaced the DISNEY-specific action with **Chuyển tệp ngoài thư mục…**.
+- The picker recursively lists existing R2 folders, including nested folders, and supports creating a new top-level folder. The destination is selected before the move confirmation.
+- Root-only source scope is unchanged: supported PDF/audio/JSON assets only; exclude root `books.json`; do not move any existing folder contents.
+- Destination collision check remains in place. New folder creation uses the existing authenticated `folders` route; each file uses the existing `rename` route (copy, verify size, delete source).
+- The post-move catalog preview and explicit publish confirmation are unchanged.
+- This is Admin-only; no APK build is required. R2 remains unchanged until an administrator runs the action.
