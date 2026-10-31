@@ -396,3 +396,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Commit chốt batch: `c9450a150add931fb971934a6234b7b452f4f10b`; marker `[test]` yêu cầu chạy full regression.
 - Code collector đã bỏ in-flight serialization guard theo finding trước đó. Chờ run mới; không build APK trước khi CI pass và review xong.
 
+
+### 2026-10-31 — AN3 collector follow-up: PDF switch and pagehide duration coverage
+
+- Sửa collector để `pagehide` gửi cả readingSeconds và listeningSeconds, tránh mất phần nghe foreground đã tích lũy.
+- Mở rộng test: không tạo install ID trước opt-in; đổi PDF tạo session mới; pagehide khi audio đang phát flush đúng reading/listening duration.
+- Commits: collector `577416ac22e21b2d9ffd8626ed8374dc6fd665fb`; test `197eb3c23d65b4e4af404d689aa0dcad9deb6c9f`.
+- Chờ CI trên commit test mới; không build APK.
+
