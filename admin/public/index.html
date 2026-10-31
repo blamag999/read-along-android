@@ -12,7 +12,7 @@
   <main class="shell">
     <header class="topbar">
       <div class="brand"><span class="brand-icon">RA</span><div><h1>Read Along Admin</h1><p>Quản lý thư viện sách và audio</p></div></div>
-      <div class="topbar-actions"><button id="homeBtn" class="button subtle hidden" type="button">Trang chủ</button><button id="logoutBtn" class="button subtle hidden" type="button">Đăng xuất</button></div>
+      <div class="topbar-actions"><button id="themeToggleBtn" class="button subtle" type="button" aria-label="Đổi giao diện">Giao diện: Hệ thống</button><button id="homeBtn" class="button subtle hidden" type="button">Trang chủ</button><button id="logoutBtn" class="button subtle hidden" type="button">Đăng xuất</button></div>
     </header>
 
     <section id="homePanel" class="home-panel">
@@ -34,9 +34,17 @@
     </section>
 
     <section id="managerPanel" class="hidden">
-      <div class="manager-nav"><button id="showLibraryBtn" class="button secondary active" type="button">Quản lý thư viện</button></div>
-      <section id="analyticsPanel" class="panel"><h2>Thống kê đọc và nghe</h2><label for="analyticsRange">Khoảng thời gian<select id="analyticsRange"><option value="7">7 ngày</option><option value="30" selected>30 ngày</option><option value="90">90 ngày</option><option value="365">12 tháng</option><option value="730">24 tháng</option></select></label><button id="refreshAnalyticsBtn" class="button secondary" type="button">Làm mới</button><p id="analyticsUpdated" class="muted">Chưa cập nhật</p><p id="analyticsStatus" role="status">Chưa tải dữ liệu.</p><div class="analytics-kpis"><article><span>Thời gian đọc</span><strong id="analyticsReading">—</strong></article><article><span>Thời gian nghe</span><strong id="analyticsListening">—</strong></article><article><span>Tổng thời gian sử dụng</span><strong id="analyticsTotal">—</strong></article><article><span>Thiết bị hoạt động</span><strong id="analyticsDevices">—</strong><small id="analyticsDevicesNote">Tối đa 90 ngày dữ liệu chi tiết</small></article></div><section class="analytics-section"><h3>Tình trạng thư viện</h3><div class="analytics-kpis"><article><span>Đầu sách hợp lệ</span><strong id="libraryBooks">—</strong></article><article><span>PDF trong danh mục</span><strong id="libraryPdfs">—</strong></article><article><span>Phần audio</span><strong id="libraryAudioParts">—</strong></article><article><span>Sách có đồng bộ mốc thời gian</span><strong id="librarySyncedBooks">—</strong></article></div><div class="analytics-kpis"><article><span>Lỗi nghiêm trọng lần quét gần nhất</span><strong id="libraryErrors">—</strong></article><article><span>Cảnh báo lần quét gần nhất</span><strong id="libraryWarnings">—</strong></article><article><span>Tệp đã kiểm tra</span><strong id="libraryScanned">—</strong></article><article><span>Thời điểm quét gần nhất</span><strong id="libraryScanAt">—</strong></article></div><p id="libraryScanStatus" role="status"></p></section><h3>Xu hướng theo ngày UTC</h3><div id="analyticsTrend"></div><h3>Phân bổ nền tảng</h3><div class="table-wrap"><table><thead><tr><th>Nền tảng</th><th>Thiết bị</th><th>Đọc</th><th>Nghe</th><th>Sự kiện</th></tr></thead><tbody id="analyticsPlatforms"><tr><td colspan="5">Chưa có dữ liệu.</td></tr></tbody></table></div><p id="analyticsRetentionNote"></p><p class="footnote">Không thu thập tên sách, tên tệp hoặc nội dung. Dữ liệu chi tiết lưu tối đa 90 ngày; tổng hợp theo ngày lưu 24 tháng.</p></section>
-      <section id="libraryPanel">
+      <div class="manager-heading"><div><div class="eyebrow">KHU VỰC QUẢN TRỊ</div><h2>Quản lý Read Along</h2><p class="muted">Quản lý nội dung, kiểm tra chất lượng và theo dõi hoạt động.</p></div><span class="session-indicator">Phiên quản trị đang hoạt động</span></div>
+      <nav class="tabbar" role="tablist" aria-label="Khu vực quản lý">
+        <button id="tabLibraryBtn" class="tab-button active" type="button" role="tab" aria-selected="true" aria-controls="libraryTab">Thư viện</button>
+        <button id="tabOverviewBtn" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="overviewTab">Tổng quan</button>
+        <button id="tabDiagnosticsBtn" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="diagnosticsTab">Kiểm tra</button>
+        <button id="tabAnalyticsBtn" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="analyticsTab">Thống kê</button>
+        <button id="tabAuditBtn" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="auditTab">Nhật ký</button>
+      </nav>
+      <section id="libraryTab" class="tab-panel" role="tabpanel">
+        <div class="tab-status" id="libraryStatusBar" role="status" aria-live="polite"><span class="status-dot"></span><span id="status">Sẵn sàng.</span></div>
+        <section id="libraryPanel">
       <div class="summary-row">
         <div><div class="eyebrow">THƯ VIỆN R2</div><h2>Quản lý nội dung</h2><p class="muted">Chỉ thao tác trên bucket Read Along.</p></div>
         <div class="toolbar library-actions">
@@ -52,7 +60,7 @@
           <button id="refreshBtn" class="button subtle small" type="button">Làm mới</button>
         </div>
         <div id="status" class="status" role="status"></div>
-        <div id="progress" class="progress hidden"><span></span></div>
+        <div id="progress" class="progress hidden"><span></span></div><p id="uploadProgressText" class="muted upload-progress-text hidden" aria-live="polite"></p>
         <div class="library-tools"><label class="search-label" for="searchFilesInput">Tìm nhanh trong thư mục<input id="searchFilesInput" type="search" placeholder="Nhập tên sách, file hoặc thư mục…"></label><label class="sort-label" for="sortFilesSelect">Sắp xếp<select id="sortFilesSelect"><option value="asc">Tên A → Z</option><option value="desc">Tên Z → A</option></select></label></div>
         <div class="table-wrap">
           <table>
@@ -64,7 +72,22 @@
         <div class="pagination"><label class="page-size-label" for="pageSizeSelect">Hiển thị <select id="pageSizeSelect"><option value="25" selected>25</option><option value="50">50</option><option value="100">100</option></select> mục quản lý mỗi trang</label><button id="firstPageBtn" class="button secondary small" type="button" disabled>« Đầu</button><button id="prevPageBtn" class="button secondary small" type="button" disabled>← Trước</button><label class="page-jump-label">Trang <input id="pageJumpInput" type="number" min="1" value="1"> <span id="pageTotal">/ 1</span></label><button id="nextPageBtn" class="button secondary small" type="button" disabled>Tiếp →</button><button id="lastPageBtn" class="button secondary small" type="button" disabled>Cuối »</button><span id="pageStatus">0 mục</span></div>
       </div>
 
-      <details id="diagnosticsPanel" class="panel diagnostics-panel" aria-live="polite">
+
+      </section>
+      </section>
+      <section id="overviewTab" class="tab-panel hidden" role="tabpanel">
+        <div class="tab-status" id="overviewStatusBar" role="status" aria-live="polite"><span class="status-dot"></span><span id="overviewStatus">Tổng quan sẵn sàng.</span></div>
+        <div class="overview-grid">
+          <article class="overview-card"><span>Thời gian đọc</span><strong id="overviewReading">—</strong></article>
+          <article class="overview-card"><span>Thời gian nghe</span><strong id="overviewListening">—</strong></article>
+          <article class="overview-card"><span>Đầu sách</span><strong id="overviewBooks">—</strong></article>
+          <article class="overview-card"><span>Lỗi lần quét gần nhất</span><strong id="overviewErrors">—</strong></article>
+        </div>
+        <section class="panel overview-trend"><div class="section-heading"><div><h3>Xu hướng đọc và nghe</h3><p class="muted">Tổng hợp theo khoảng thời gian đã chọn.</p></div><button id="overviewRefreshBtn" class="button secondary small" type="button">Làm mới</button></div><div id="overviewTrend"></div></section>
+      </section>
+      <section id="diagnosticsTab" class="tab-panel hidden" role="tabpanel">
+        <div class="tab-status" id="diagnosticsStatusBar" role="status" aria-live="polite"><span class="status-dot"></span><span id="diagnosticsStatus">Chưa chạy kiểm tra.</span></div>
+              <details id="diagnosticsPanel" class="panel diagnostics-panel" aria-live="polite">
         <summary class="diagnostics-summary">
           <span><strong>Kiểm tra &amp; xuất bản danh mục</strong><small id="diagnosticsSummary" class="muted">Chưa chạy kiểm tra.</small></span>
           <span class="details-hint">Mở công cụ ▾</span>
@@ -85,13 +108,19 @@
         </div>
       </details>
       </section>
-
-      <details class="panel audit-panel">
+      <section id="analyticsTab" class="tab-panel hidden" role="tabpanel">
+        <div class="tab-status" id="analyticsStatusBar" role="status" aria-live="polite"><span class="status-dot"></span><span id="analyticsTabStatus">Chưa tải thống kê.</span></div>
+        <section id="analyticsPanel" class="panel"><h2>Thống kê đọc và nghe</h2><label for="analyticsRange">Khoảng thời gian<select id="analyticsRange"><option value="7">7 ngày</option><option value="30" selected>30 ngày</option><option value="90">90 ngày</option><option value="365">12 tháng</option><option value="730">24 tháng</option></select></label><button id="refreshAnalyticsBtn" class="button secondary" type="button">Làm mới</button><p id="analyticsUpdated" class="muted">Chưa cập nhật</p><p id="analyticsStatus" role="status">Chưa tải dữ liệu.</p><div class="analytics-kpis"><article><span>Thời gian đọc</span><strong id="analyticsReading">—</strong></article><article><span>Thời gian nghe</span><strong id="analyticsListening">—</strong></article><article><span>Tổng thời gian sử dụng</span><strong id="analyticsTotal">—</strong></article><article><span>Thiết bị hoạt động</span><strong id="analyticsDevices">—</strong><small id="analyticsDevicesNote">Tối đa 90 ngày dữ liệu chi tiết</small></article></div><section class="analytics-section"><h3>Tình trạng thư viện</h3><div class="analytics-kpis"><article><span>Đầu sách hợp lệ</span><strong id="libraryBooks">—</strong></article><article><span>PDF trong danh mục</span><strong id="libraryPdfs">—</strong></article><article><span>Phần audio</span><strong id="libraryAudioParts">—</strong></article><article><span>Sách có đồng bộ mốc thời gian</span><strong id="librarySyncedBooks">—</strong></article></div><div class="analytics-kpis"><article><span>Lỗi nghiêm trọng lần quét gần nhất</span><strong id="libraryErrors">—</strong></article><article><span>Cảnh báo lần quét gần nhất</span><strong id="libraryWarnings">—</strong></article><article><span>Tệp đã kiểm tra</span><strong id="libraryScanned">—</strong></article><article><span>Thời điểm quét gần nhất</span><strong id="libraryScanAt">—</strong></article></div><p id="libraryScanStatus" role="status"></p></section><h3>Xu hướng theo ngày UTC</h3><div id="analyticsTrend"></div><h3>Phân bổ nền tảng</h3><div class="table-wrap"><table><thead><tr><th>Nền tảng</th><th>Thiết bị</th><th>Đọc</th><th>Nghe</th><th>Sự kiện</th></tr></thead><tbody id="analyticsPlatforms"><tr><td colspan="5">Chưa có dữ liệu.</td></tr></tbody></table></div><p id="analyticsRetentionNote"></p><p class="footnote">Không thu thập tên sách, tên tệp hoặc nội dung. Dữ liệu chi tiết lưu tối đa 90 ngày; tổng hợp theo ngày lưu 24 tháng.</p></section>
+      </section>
+      <section id="auditTab" class="tab-panel hidden" role="tabpanel">
+        <div class="tab-status" id="auditStatusBar" role="status" aria-live="polite"><span class="status-dot"></span><span id="auditStatus">Chưa tải nhật ký.</span></div>
+        <details class="panel audit-panel">
         <summary>Lịch sử thao tác quản trị</summary>
         <div id="auditRows" class="audit-list muted">Mở để tải lịch sử.</div>
       </details>
       <p class="footnote">Phiên quản trị tự gia hạn khi còn hoạt động và hết hạn sau 30 phút không hoạt động. Thao tác quản trị được ghi nhật ký tự động.</p>
-    </section>
+      </section>
+    </section>    </section>
   </main>
   <div id="confirmDialog" class="dialog hidden" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
     <div class="dialog-card"><h3 id="dialogTitle">Xác nhận</h3><p id="dialogText"></p><div class="dialog-actions"><button id="cancelDialog" class="button secondary" type="button">Hủy</button><button id="acceptDialog" class="button danger" type="button">Xác nhận</button></div></div>
