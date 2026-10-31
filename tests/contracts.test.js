@@ -95,4 +95,11 @@ assert.ok(releaseNotesGenerator.includes('"security": "Bảo mật"'), 'Release 
 assert.ok(appSource.includes("showToast('Đã tải âm thanh. Nhấn Phát để nghe.');"), 'Audio success copy uses Vietnamese terminology');
 assert.ok(appSource.includes("showToast('Đã tự động chuyển sang phần âm thanh '"), 'Automatic part switching uses Vietnamese terminology');
 
+
+assert.ok(appSource.includes("showToast('Đã khôi phục vị trí đọc. Nhấn Phát để nghe.');"), 'Resume notification uses concise Vietnamese terminology');
+assert.ok(appSource.includes("showToast('Đang đọc: ' + story.title);"), 'Reader status toast avoids decorative emoji');
+assert.ok(appSource.includes("Trình duyệt chưa cho phép phát. Hãy nhấn Phát để thử lại."), 'Autoplay errors provide a direct recovery action');
+assert.ok(appSource.includes("Đến mốc trang kế tiếp, âm thanh sẽ dừng chờ bạn lật trang"), 'Page-turn mode guidance uses Vietnamese media terminology');
+assert.ok(appSource.includes("Không tải được sách trực tuyến. Hãy kiểm tra kết nối hoặc chọn tệp khác."), 'Remote book errors do not expose exception details');
+
 console.log('Read Along data contract schema tests passed.');
