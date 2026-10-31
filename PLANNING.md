@@ -1,16 +1,5 @@
 # Read Along Android — PLANNING (công việc còn lại)
 
-## P1 — Nghiệm thu Admin Dashboard beta
-
-> Phần triển khai đã hoàn tất và được deploy trên Pages beta; còn chờ người dùng kiểm tra thao tác thực tế trước khi đóng hạng mục.
-
-- [ ] Đăng nhập OTP, xác nhận mặc định mở tab Thư viện; chuyển qua lại đủ 4 tab và xác nhận không mất trạng thái tác vụ. Kiểm tra thứ tự 4 tab: Thư viện → Kiểm tra → Thống kê → Nhật ký; Dashboard công khai vẫn hiển thị KPI riêng.
-- [ ] Thử upload nhiều file gồm file hợp lệ và file lỗi; xác nhận tiến trình, kết quả riêng từng file và tổng kết thành công/thất bại.
-- [ ] Thử đổi tên và xóa một file thử nghiệm; xác nhận thông báo đang chạy/kết quả và hộp thoại xóa hiển thị đúng tên file.
-- [ ] Chạy rà soát; xác nhận chỉ gợi ý đổi tên khi độ tương đồng tên file >=95% (ngoại lệ là quy tắc hậu tố audio-part xác định được), còn WMA/định dạng không hỗ trợ chỉ cảnh báo thay file thủ công.
-- [ ] Kiểm tra Light/Dark, chế độ theo hệ thống, màn hình desktop/mobile, Tổng quan, Thống kê và Nhật ký.
-- [ ] Sau khi người dùng xác nhận đạt, ghi nghiệm thu cuối vào ROADMAP và xóa mục P1 này khỏi PLANNING.
-
 > **Quy tắc nhánh hiện hành (2026-10-31):** chỉ còn hai nhánh dài hạn `beta` (phát triển/tích hợp) và `main` (stable). Làm việc trực tiếp trên beta; chỉ promote qua PR beta → main khi người dùng xác nhận. Không dùng testing. Xem README mục 3. Việc xóa branch testing và bật branch protection cho main đang chờ thao tác quản trị GitHub ngoài khả năng connector hiện tại; không được coi là đã hoàn tất.
 
 > **Chỉ quản lý việc chưa hoàn thành.** Quy tắc làm việc ở [README.md](./README.md); lịch sử và tiến độ đã hoàn thành ở [ROADMAP.md](./ROADMAP.md). Khi một mục hoàn tất, ghi bằng chứng vào ROADMAP trước rồi xóa mục đó khỏi file này. Không giữ checklist đã xong hoặc nhật ký công việc tại đây.
@@ -122,8 +111,9 @@
 
 ## Thứ tự thực hiện khuyến nghị
 
-1. **P1 — DA1 đến DA6:** cải tiến Admin Dashboard theo đặc tả ở trên; đây là ưu tiên triển khai tiếp theo.
-2. **P2 — Các công việc còn lại:** xử lý các mục APK Core, marker migration, backend/Admin độc lập, regression và nghiệm thu theo thứ tự phụ thuộc và mức độ rủi ro.
+1. **Ưu tiên kỹ thuật:** hoàn tất marker migration an toàn và kiểm tra hợp đồng dữ liệu APK Core trước khi thay đổi runtime.
+2. **Tiếp theo:** regression/OTA/Android TV và đánh giá mức độ sẵn sàng đóng băng APK Core.
+3. **Các công việc độc lập:** hoàn thiện ranh giới backend/Admin và chỉ bổ sung tính năng vận hành khi có nhu cầu thực tế.
 
 
 Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên xử lý lỗi đó trước; cập nhật ROADMAP/PLANNING sau khi có bằng chứng.

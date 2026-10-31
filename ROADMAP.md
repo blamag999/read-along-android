@@ -565,3 +565,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - Điều hướng quản trị còn 4 tab: **Thư viện → Kiểm tra → Thống kê → Nhật ký**; mặc định sau đăng nhập/khôi phục session vẫn là Thư viện.
 - Dashboard công khai giữ nguyên KPI và trạng thái; thống kê chi tiết vẫn tải trong tab Thống kê. Không thay đổi API, D1, R2, TOTP/session, dữ liệu thư viện hoặc APK.
 - Cập nhật regression DOM để xác nhận không còn tab/panel/handler Tổng quan và Dashboard công khai vẫn còn số liệu. CI/deployment sẽ được ghi bổ sung sau khi xác minh.
+
+
+### 2026-10-31 — Người dùng nghiệm thu Admin Dashboard beta
+
+- Người dùng xác nhận Dashboard đã chạy ổn sau khi triển khai; đóng hạng mục nghiệm thu Dashboard trong PLANNING.
+- Điều hướng Admin đã được tinh gọn còn 4 tab: **Thư viện → Kiểm tra → Thống kê → Nhật ký**; tab Tổng quan trùng với Dashboard công khai đã bị loại bỏ. Dashboard công khai và các KPI vẫn được giữ.
+- Commit bỏ tab Tổng quan: `fb1facd2478e7afd80b934a5056fecb559d92126`; commit cập nhật kiểm thử: `7d88475bfaf2d6e3676228eeb1244d3a6afa7ccf`.
+- Phạm vi nghiệm thu theo xác nhận người dùng: Dashboard beta hoạt động ổn. Không suy diễn đây là nghiệm thu toàn bộ regression APK Core, Android TV, OTA hoặc marker migration; các việc đó tiếp tục nằm trong PLANNING.
+- Không thay đổi `main`, APK, D1 schema hoặc dữ liệu R2.
