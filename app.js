@@ -725,7 +725,8 @@ async function loadR2Catalog() {
     showToast('Đã tải ' + stories.length + ' sách trực tiếp từ books.json.');
   } catch (error) {
     console.error('Không thể tải books.json từ R2:', error);
-    alert('Không thể tải danh sách truyện từ books.json. ' + error.message);
+    console.error('Không thể tải danh sách truyện:', error);
+    alert('Không tải được thư viện sách. Vui lòng thử lại.');
   } finally {
     dom.playlistLoading.classList.add('hidden');
     if (button) { button.disabled = false; button.textContent = '☁️ Truyện trực tuyến'; }
@@ -972,7 +973,8 @@ async function loadStoryFromPlaylist(story, audioPartIndex) {
     updateAudioPartUI();
   } catch (err) {
     console.error('Lỗi khi mở truyện từ playlist:', err);
-    alert('Không thể mở truyện: ' + err.message);
+    console.error('Không thể mở sách:', err);
+    alert('Không mở được sách. Vui lòng kiểm tra tệp sách và âm thanh.');
   } finally {
     dom.pdfLoadingIndicator.classList.add('hidden');
   }
@@ -1009,7 +1011,7 @@ function loadAudioPart(index, options = {}) {
       if (state.audioLoadRequestId !== requestId || state.currentAudioIndex !== clampedIdx) return;
       dom.audioElement.play().catch((error) => {
         console.warn('Không thể tự phát phần audio mới:', error);
-        showToast('Đã chuyển phần audio nhưng chưa thể tự phát. Hãy bấm Play để thử lại.');
+        showToast('Đã chuyển phần âm thanh. Nhấn Phát để tiếp tục.');
         updatePlayButtonState();
       });
     });
@@ -1090,7 +1092,7 @@ window.selectAudioPart = function(index) {
   // paused -> switch source but remain paused.
   const shouldResume = !dom.audioElement.paused && !dom.audioElement.ended;
   loadAudioPart(index, { resumePlayback: shouldResume });
-  showToast('Đã chuyển sang phần ' + (index + 1) + (shouldResume ? ' — tiếp tục phát' : ' — đang tạm dừng'));
+  showToast('Đã chuyển sang phần âm thanh ' + (index + 1) + (shouldResume ? ' — tiếp tục phát' : ' — đang tạm dừng'));
 };
 
 // Nguồn danh mục trực tuyến: ứng dụng đọc trực tiếp books.json và các URL asset công khai trên R2.
@@ -1339,8 +1341,8 @@ dom.selPageTurnMode.value = state.pageTurnMode;
     if (!dom.audioElement.src) return;
     const mediaError = dom.audioElement.error;
     const reason = mediaError && mediaError.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
-      ? 'Định dạng hoặc tệp âm thanh không được trình duyệt hỗ trợ.'
-      : 'Không thể tải tệp âm thanh. Hãy kiểm tra định dạng/codec hoặc chọn file audio khác.';
+      ? 'Định dạng âm thanh không được hỗ trợ.'
+      : 'Không tải được âm thanh. Hãy kiểm tra tệp và thử lại.';
     showToast(reason);
     updatePlayButtonState();
   });
@@ -1412,7 +1414,7 @@ async function handlePdfFileSelect(e) {
   } finally {
     state.pdfSelectionInProgress = false;
   }
-  showToast('Đã mở PDF. Chọn file audio tương ứng để bắt đầu nghe.');
+  showToast('Đã mở sách. Chọn tệp âm thanh tương ứng để bắt đầu nghe.');
 }
 
 async function handleAudioFileSelect(e) {
@@ -1422,10 +1424,10 @@ async function handleAudioFileSelect(e) {
   const files = selectedFiles.filter(file => isSupportedAudioFileName(file.name));
   const skippedCount = selectedFiles.length - files.length;
   if (files.length === 0) {
-    showToast('Định dạng audio chưa được hỗ trợ. Dùng MP3, M4A/M4B, AAC, WAV, OGG/Opus hoặc FLAC.');
+    showToast('Định dạng âm thanh không được hỗ trợ. Hãy chọn MP3, M4A hoặc định dạng tương thích.');
     return;
   }
-  if (skippedCount > 0) showToast('Đã bỏ qua ' + skippedCount + ' file có định dạng chưa hỗ trợ.');
+  if (skippedCount > 0) showToast('Đã bỏ qua ' + skippedCount + ' tệp không hỗ trợ.');
 
   dom.pdfLoadingIndicator.classList.remove('hidden');
   dom.lblLoadingText.textContent = 'Đang nạp tệp âm thanh...';
@@ -1461,7 +1463,7 @@ async function handleAudioFileSelect(e) {
   updateAudioPartUI();
 
   if (audioItems.length > 1) {
-    showToast('Đã tải audio.');
+    showToast('Đã tải âm thanh.');
   }
 
   // Tìm kiếm PDF tương ứng nếu chưa mở PDF
@@ -1482,10 +1484,11 @@ async function handleAudioFileSelect(e) {
     audioBlob: audioItems[0].blob,
     audios: audioItems
   });
-  showToast('Đã tải audio. Nhấn Phát để nghe.');
+  showToast('Đã tải âm thanh. Nhấn Phát để nghe.');
   } catch (error) {
     console.error('Lỗi khi nạp audio:', error);
-    showToast('Không thể nạp audio: ' + (error && error.message ? error.message : 'Lỗi không xác định'));
+    console.error('Không thể nạp âm thanh:', error);
+    showToast('Không tải được âm thanh. Vui lòng chọn lại tệp.');
   } finally {
     dom.pdfLoadingIndicator.classList.add('hidden');
   }
@@ -1545,7 +1548,7 @@ function handleFileList(files) {
       loadStoryFromPlaylist(state.playlist[0]);
     }
   } else {
-    alert('Không tìm thấy file PDF hoặc audio được hỗ trợ nào trong thư mục!');
+    alert('Không tìm thấy sách hoặc tệp âm thanh phù hợp trong thư mục.');
   }
 }
 
@@ -1641,7 +1644,8 @@ async function loadPdfFromBlob(file, shouldResetSync = true) {
     dom.canvasWrapper.classList.remove('hidden');
   } catch (error) {
     state.pdfDoc = null;
-    alert('Không thể mở file PDF: ' + error.message);
+    console.error('Không thể mở sách:', error);
+    alert('Không mở được sách. Vui lòng chọn tệp khác.');
   } finally {
     state.pdfLoading = false;
     dom.pdfLoadingIndicator.classList.add('hidden');
@@ -1652,7 +1656,7 @@ async function loadPdfFromBlob(file, shouldResetSync = true) {
 
 function loadAudioFromBlob(file) {
   if (!(file instanceof Blob)) {
-    showToast('Tệp âm thanh không hợp lệ. Hãy chọn lại file audio được hỗ trợ.');
+    showToast('Tệp âm thanh không hợp lệ. Vui lòng chọn lại.');
     return false;
   }
 
@@ -1942,7 +1946,7 @@ function updateSaveStatusBadge(text) {
 // =======================================================
 async function pinCurrentTimeToPage() {
   if (!state.pdfDoc) {
-    alert('Vui lòng chọn file PDF trước!');
+    alert('Vui lòng mở sách trước!');
     return;
   }
   const currentTime = dom.audioElement.currentTime || 0;
@@ -2025,7 +2029,7 @@ function updatePlayButtonState() {
 async function togglePlayPause() {
   const hasAudioSource = Boolean(dom.audioElement.currentSrc || dom.audioElement.src);
   if (!hasAudioSource || !state.currentStoryAudios || state.currentStoryAudios.length === 0) {
-    showToast('Chưa có audio. Hãy chọn PDF (nếu cần), sau đó bấm “Chọn audio” để nạp âm thanh.');
+    showToast('Chưa có âm thanh. Hãy chọn tệp âm thanh trước.');
     dom.btnChooseAudio.classList.remove('hidden');
     dom.btnChooseAudio.focus({ preventScroll: true });
     return;
@@ -2058,7 +2062,7 @@ async function togglePlayPause() {
 }
 
 function jumpToEnteredPage() {
-  if (!state.pdfDoc) { showToast('Vui lòng mở PDF trước.'); return; }
+  if (!state.pdfDoc) { showToast('Vui lòng mở sách trước.'); return; }
   const raw = dom.pageJumpInput.value.trim();
   const target = Number(raw);
   if (!raw || !Number.isInteger(target) || target < 1 || target > state.totalPages) {
@@ -2097,7 +2101,7 @@ function waitForAudioMetadata(audio, timeoutMs = 15000) {
 }
 
 async function replayCurrentPage() {
-  if (!state.pdfDoc) { showToast('Vui lòng mở PDF trước.'); return; }
+  if (!state.pdfDoc) { showToast('Vui lòng mở sách trước.'); return; }
   const page = state.pageNum;
   const marker = getCurrentPageTimestamp(page);
   window.__raDiagRecord?.('page.replay', {
@@ -2107,7 +2111,7 @@ async function replayCurrentPage() {
   });
   if (!marker) { showToast('Trang này chưa có mốc thời gian.'); return; }
   if (!dom.audioElement.currentSrc && !(state.currentStoryAudios && state.currentStoryAudios.length)) {
-    showToast('Chưa có audio.'); return;
+    showToast('Chưa có âm thanh để đọc lại trang.'); return;
   }
   try {
     if (state.currentStoryAudios && state.currentStoryAudios.length > 1 &&
@@ -2128,7 +2132,7 @@ async function replayCurrentPage() {
       errorName: error?.name || 'Error', errorMessage: error?.message || String(error)
     });
     console.warn('Không thể đọc lại trang:', error);
-    showToast('Không thể đọc lại trang. Hãy thử bấm Phát.');
+    showToast('Không thể phát lại trang này. Hãy thử nhấn Phát.');
   }
 }
 
@@ -2228,7 +2232,7 @@ function onAudioTimeUpdate() {
       });
       audio.currentTime = nextMarker.time;
       audio.pause();
-      showToast('Đến cuối trang. Lật trang để tiếp tục.');
+      showToast('Đã đến cuối trang. Lật trang để tiếp tục.');
     }
     return;
   }
@@ -2435,7 +2439,7 @@ window.setManualSync = function(page) {
     updateSyncCountBadge();
     renderSyncTable();
   } else {
-    alert('Giá trị thời gian không hợp lệ!');
+    alert('Thời gian không hợp lệ. Hãy nhập giây hoặc MM:SS.');
   }
 };
 
@@ -2475,10 +2479,10 @@ function importSyncData(e) {
         updatePageTimestampBadge();
         updateSyncCountBadge();
         renderSyncTable();
-        showToast('🎉 Nhập mốc thời gian thành công!');
+        showToast('Đã nhập mốc thời gian.');
       }
     } catch (err) {
-      alert('File JSON không hợp lệ!');
+      alert('Tệp mốc thời gian không hợp lệ.');
     }
   };
   reader.readAsText(file);
