@@ -226,3 +226,13 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 - [ ] Build và xác minh signed beta APK (đang chạy workflow 41193683584); kiểm thử portrait trên thiết bị cảm ứng (nhiều chiều rộng), xác nhận nút playlist hoạt động và menu gọn.
 - [ ] Kiểm tra mở truyện R2 tải đúng JSON marker đi kèm PDF/audio; xác nhận không còn request đồng bộ marker GitHub.
 - [ ] Chỉ đóng batch sau nghiệm thu thiết bị; không promote main trước xác nhận của người dùng.
+
+
+## Incident: không tải được sách sau batch menu — 2026-10-31
+
+- [x] Xác định nguyên nhân: HTML của `syncModal` bị rút gọn nhầm, làm thiếu `importSyncInput` và `btnClearSync` (cùng bảng `syncTableBody`). `initEvents()` gọi `addEventListener()` trên null, dừng khởi tạo trước khi chạy `loadR2Catalog()`.
+- [x] Khôi phục modal marker JSON cục bộ gồm export/import/xóa và bảng marker; không khôi phục GitHub sync/token UI.
+- [x] Gỡ toàn bộ lời gọi `scheduleGitHubSync()` còn sót trong app; filename JSON export tự xử lý cục bộ, không phụ thuộc `remote-sync.js`.
+- [x] Thêm regression assertions cho các DOM ID bắt buộc của modal và việc không còn gọi online sync.
+- [x] Full regression + Pages syntax/isolation pass trong workflow [41202909931](https://github.com/blamag999/read-along-android/actions/runs/41202909931) trên commit `9c4bf18861122df8f5dc29ac080b17aa2dd456c1`.
+- [ ] Xác nhận APK ký số và OTA R2 publish hoàn tất; kiểm tra tải catalog và mở PDF/audio thực tế trên thiết bị.
