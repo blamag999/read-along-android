@@ -404,3 +404,10 @@ Khi một công việc trong PLANNING hoàn tất:
 - Commits: collector `577416ac22e21b2d9ffd8626ed8374dc6fd665fb`; test `197eb3c23d65b4e4af404d689aa0dcad9deb6c9f`.
 - Chờ CI trên commit test mới; không build APK.
 
+
+### 2026-10-31 — AN3 collector offline/session sequence tests added
+
+- Bổ sung test cho PDF switch tạo sessionId mới; heartbeat lỗi mạng chỉ được thử một lần, không retry/queue; eventId duy nhất và sequence tăng đơn điệu trong từng session; tên PDF không xuất hiện trong payload.
+- Commit test: `723a38ead8458cf04e4a3b8bb31cf13dda946737`.
+- Chờ CI; chưa build APK hoặc kiểm thử Android thật.
+
