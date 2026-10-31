@@ -36,8 +36,9 @@
 - [x] Có timeout 4 giây, tối đa 1 retry, validate schema v1, cache bản hợp lệ gần nhất và fallback defaults; cache hết hạn/hỏng bị bỏ qua.
 - [x] Không thực thi JavaScript/HTML và không có native command/permission trong contract.
 - [x] Test JSON lỗi, field thiếu/thừa, schemaVersion, config hết hạn, configVersion rollback, timeout, HTTP error, sai Content-Type, cache hợp lệ/hỏng, retry giới hạn, response quá lớn và offline lần đầu. HTTP status/Content-Type của production endpoint vẫn cần xác minh độc lập.
-- [ ] Chạy workflow build beta trên GitHub Actions, kiểm tra APK artifact/signature/SHA-256; workflow hiện là `workflow_dispatch` và cần thao tác Run workflow.
-- [ ] Cài APK beta lên thiết bị thật; xác minh online nhận source=network, offline lần đầu fallback default, offline lần sau dùng cache; reader/audio vẫn hoạt động bình thường và không bị chặn startup.
+- [x] Build beta v1.3.5 đã chạy trên HEAD `a30c6a011456befc04e5af83a51694e5e19eaa1d`; workflow run 41162360209 success, artifact đã upload, bước build signed APK và verify signature/SHA-256 đều success; GitHub Release beta đã tạo. Bằng chứng ở ROADMAP.
+- [ ] Cài APK beta v1.3.5 lên thiết bị thật; xác minh online nhận source=network, offline lần đầu fallback default, offline lần sau dùng cache; reader/audio vẫn hoạt động bình thường và không bị chặn startup.
+- [x] Điều chỉnh workflow: các push beta thông thường không build APK; chỉ commit chốt có `[build-apk]` mới tự build một lần. Manual dispatch vẫn giữ cho stable/ngoại lệ.
 
 ## P1 — Chốt marker conflict policy và migration an toàn
 
