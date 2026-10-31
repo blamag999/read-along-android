@@ -386,6 +386,7 @@ jobs:
           aws --no-cli-pager --endpoint-url "$R2_ENDPOINT" s3api put-object --bucket read-along-releases --key "releases/$CHANNEL/$APK" --body "$APK" --content-type "application/vnd.android.package-archive" --cache-control "public, max-age=31536000, immutable" --metadata "sha256=$SHA256"
           aws --no-cli-pager --endpoint-url "$R2_ENDPOINT" s3api put-object --bucket read-along-releases --key "channels/$CHANNEL/latest.json" --body "dist/ota/latest.json" --content-type "application/json" --cache-control "no-store"
           echo "Published OTA manifest for $CHANNEL $VERSION (sha256=$SHA256)"
+          python3 scripts/prune-ota-releases.py "$CHANNEL" "$APK"
 
       - name: Upload versioned workflow artifacts
         uses: actions/upload-artifact@v6
