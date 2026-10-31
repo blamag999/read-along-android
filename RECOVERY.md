@@ -7,11 +7,11 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover commit: `48386107f6a924d8bb2f4eff0d8f9f3f9a5ec938`
-- Last reviewed HEAD on beta: `48386107f6a924d8bb2f4eff0d8f9f3f9a5ec938`
+- Last formal handover commit: `6b821546ac5f4e420214782b0859aa38f26f556a`
+- Last reviewed HEAD on beta: `6b821546ac5f4e420214782b0859aa38f26f556a`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
-- Latest recovery checkpoint: Online Reading Progress plan handover [handover] commit `cc09fddd5554c7c39760a9e37122fa0ae181d6ed`
+- Latest recovery checkpoint: Provider-neutral OTA architecture audit/plan commit `6b821546ac5f4e420214782b0859aa38f26f556a`
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
 
 ## Phát hiện sau mốc bàn giao trước
@@ -60,6 +60,8 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 6. Ghi `last_reviewed_head` bằng HEAD đã được đối chiếu đầy đủ.
 
 ## Lịch sử mốc
+
+- 2026-10-31 — Đối chiếu beta HEAD `cf019c1db5af56f8a59d75938ed7f9e2f2d860bf`; audit OTA provider-neutral và cập nhật PLANNING (`2cab87514c159ea211d72589abdd38c2161669ba`) + ROADMAP (`6b821546ac5f4e420214782b0859aa38f26f556a`). Cloudflare Pages/Functions và OTA code được kiểm tra chỉ đọc; chưa tạo/sửa tài nguyên Cloudflare, chưa thay đổi APK/workflow/router, chưa build hoặc chạy OTA test. `last_reviewed_head` được đặt tại commit ROADMAP trước commit RECOVERY này.
 
 - 2026-10-31 — Khởi tạo RECOVERY. Handover cũ: `1ea6bb3124bafc9c5819d78146fa2cafb8206f40`; beta HEAD đã review: `fb521a9927fa4e81d414049208f30e296266c80e`.
 
