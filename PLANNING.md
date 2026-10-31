@@ -282,10 +282,10 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 > Đợt rà soát chỉ đọc ngày 2026-10-31. Chưa sửa nội dung thông báo trong batch này; giữ nguyên các thông báo OTA vừa chuẩn hóa ở phiên trước.
 
 - [x] Phân loại alert/confirm/prompt/toast theo nhóm: thao tác thành công, hướng dẫn thao tác, cảnh báo có thể tự xử lý, lỗi cần hành động và lỗi kỹ thuật.
-- [ ] Tiếp tục rút gọn các thông báo còn lại và thống nhất thuật ngữ; batch hiện tại mới xử lý nhóm lỗi tải, chọn tệp, marker và phát lại; bỏ emoji trang trí và chi tiết kỹ thuật không giúp người dùng xử lý.
+- [x] Hoàn tất audit và rút gọn thông báo; thống nhất thuật ngữ trên thông báo, nhãn trạng thái và các hướng dẫn chính; bỏ emoji trang trí không cần thiết.
 - [x] Giữ thông tin lỗi kỹ thuật trong console/diagnostics ở các nhánh lỗi catalog, mở sách và nạp âm thanh đã chỉnh; thông báo người dùng chỉ nêu việc không thực hiện được và bước khắc phục phù hợp.
 - [x] Không thay đổi điều kiện hiển thị/luồng xử lý của các nhánh đã chỉnh; giữ nguyên Confirm/Prompt dữ liệu động và OTA đã chuẩn hóa; bổ sung regression assertions trước khi sửa.
-- [ ] Hoàn tất audit các thông báo còn lại, sau đó chạy full regression và build APK beta một lần; nghiệm thu nội dung trên thiết bị thật.
+- [x] Hoàn tất batch thông báo và full regression; chờ commit `[build-apk]` để tạo một APK beta cuối đợt. Device acceptance vẫn cần người dùng kiểm tra.
 
 ### Kết quả rà soát thông báo hiện tại — 2026-10-31 (chỉ đề xuất, chưa sửa app.js)
 
@@ -345,3 +345,14 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - Workflow [41212943321](https://github.com/blamag999/read-along-android/actions/runs/41212943321) trên commit `e679600bd3e7d36e9b98443991eeedf128f137bc`: `npm test`, Pages Functions syntax và isolation checks đều PASS; smoke test analytics đã PASS. Smoke test OTA contract còn đang chạy tại thời điểm ghi nhận.
 - Hai lần CI trước thất bại ở bước import module Python trong test do tên script có dấu gạch nối; đã thay bằng importlib theo đúng đường dẫn. Không coi các run thất bại trước là xác nhận test.
 - Còn pending: kết luận cuối cùng run 41212943321, audit thông báo app còn lại, xác minh changelog thực tế trong release beta. Chưa build APK.
+
+
+### Hoàn tất batch thông báo — 2026-10-31
+
+- Đã chuẩn hóa các toast/alert còn lại: khôi phục phiên đọc, tải thư viện, mở sách, tự động lật trang, lỗi phát, chọn nhiều tệp, và thao tác marker.
+- Đã gom thông báo nạp nhiều âm thanh thành một toast cuối; bỏ toast trung gian khi chỉ là bước nạp và khi tự mở sách từ thư viện offline.
+- Đã giữ lỗi kỹ thuật trong console/diagnostics; thông báo người dùng không đưa exception message/codec nội bộ ra UI.
+- Đã áp dụng “sách” / “âm thanh” vào nhãn trạng thái rỗng, nút chọn âm thanh, filter thư viện, hướng dẫn thả tệp và nhãn phần âm thanh. Tên định dạng PDF/MP3/M4A chỉ giữ khi cần hướng dẫn loại tệp.
+- Regression assertions bao phủ thông báo, nhãn UI tĩnh/động và contract workflow.
+- Full regression workflow [41213578916](https://github.com/blamag999/read-along-android/actions/runs/41213578916) trên commit `b1d3ac247e8e6fd463be813cc7169a6ce26407f4`: npm test PASS, Pages Functions syntax PASS, isolation PASS, analytics smoke PASS, OTA manifest smoke PASS.
+- Chờ build APK beta chốt đợt để xác minh version/changelog được phát sinh từ generator và kiểm tra signature/SHA-256/artifact/Release.
