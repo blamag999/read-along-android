@@ -32,3 +32,5 @@ assert.ok(script.includes('$("loginHomeBtn").addEventListener("click"'), "OTP sc
 assert.ok(!html.includes('id="showAnalyticsBtn"'), "Analytics must not be hidden behind admin navigation");
 
 // [test] Public dashboard landing page and OTP return navigation batch.
+
+// [test] Re-run after removing obsolete home-stat DOM references.
