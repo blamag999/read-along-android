@@ -161,7 +161,7 @@ class Target {
   await Promise.resolve();
   const pageHideEvent = JSON.parse(requests.at(-1).options.body).events[0];
   assert.equal(pageHideEvent.type, 'reader_pause');
-  assert.equal(pageHideEvent.readingSeconds, 4);
+  assert.equal(pageHideEvent.readingSeconds, 9, 'only time since the failed heartbeat should remain pending');
   assert.equal(pageHideEvent.listeningSeconds, 4, 'pagehide must preserve foreground listening duration');
 
   checkbox.checked = false;
