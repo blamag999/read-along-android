@@ -944,6 +944,7 @@ Khi một công việc trong PLANNING hoàn tất:
 - Regression and isolation: PASS — [GitHub Actions run 41226438099](https://github.com/blamag999/read-along-android/actions/runs/41226438099).
 - Cloudflare Pages deployment: [c3dbf307](https://c3dbf307.read-along-admin.pages.dev), production deployment for beta commit `410e292...`; build and deploy stages both completed successfully.
 - **R2 data migration has not yet run.** No source objects were deleted or moved during this implementation batch.
+- Post-deploy read-only inventory recheck confirms no R2 mutation: still 204 objects total, 180 root objects, 24 under `ONE STORY A DAY LEVEL 2 FULL/`, 0 under `DISNEY/`; root `books.json` remains 34,440 bytes with ETag `65ea559196d5fc691ce7e366903a36a0`.
 - **Live `books.json` has not yet been rebuilt/published.**
 - Expected catalog after successful preview: 84 books in `DISNEY` and 12 in `ONE STORY A DAY LEVEL 2 FULL` (96 total); this is a target to verify, not a result.
 - APK build and device acceptance remain pending. Do not promote to main as part of this batch.
