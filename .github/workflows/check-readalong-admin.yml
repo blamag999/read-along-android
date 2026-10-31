@@ -128,11 +128,11 @@ jobs:
               const latest = await fetch(endpoint + '?channel=beta');
               const latestBody = await latest.json();
               if (!latest.ok || latestBody.schemaVersion !== 1 || latestBody.channel !== 'beta' ||
-                  !/^\\d+\\.\\d+\\.\\d+$/.test(latestBody.version || '') ||
+                  !/^\d+\.\d+\.\d+$/.test(latestBody.version || '') ||
                   !Number.isInteger(latestBody.versionCode) || latestBody.versionCode < 1 ||
                   !Number.isInteger(latestBody.size) || latestBody.size < 1 ||
                   !/^[a-f0-9]{64}$/i.test(latestBody.sha256 || '') ||
-                  !/^read-along-v.+-android\\.apk$/.test(latestBody.filename || '') ||
+                  !/^read-along-v.+-android\.apk$/.test(latestBody.filename || '') ||
                   typeof latestBody.notes !== 'string' ||
                   !latestBody.downloadUrl?.startsWith('https://read-along-admin.pages.dev/api/readalong-admin/ota/download?channel=beta&version=')) {
                 throw new Error('OTA manifest contract failed: ' + latest.status + ' ' + JSON.stringify(latestBody));
