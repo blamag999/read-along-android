@@ -438,12 +438,10 @@ const dom = {
   btnFitHeight: document.getElementById('btnFitHeight'),
   btnTwoPages: document.getElementById('btnTwoPages'),
   btnAutoFlipToggle: document.getElementById('btnAutoFlipToggle'),
-  btnReloadMarkers: document.getElementById('btnReloadMarkers'),
   btnOpenReadMenu: document.getElementById('btnOpenReadMenu'),
   readOptionsMenu: document.getElementById('readOptionsMenu'),
   menuTwoPages: document.getElementById('menuTwoPages'),
   menuAutoFlip: document.getElementById('menuAutoFlip'),
-  menuReloadMarkers: document.getElementById('menuReloadMarkers'),
   menuCheckUpdates: document.getElementById('menuCheckUpdates'),
   chkBetaOta: document.getElementById('chkBetaOta'),
   menuTwoPagesState: document.getElementById('menuTwoPagesState'),
@@ -529,12 +527,6 @@ const dom = {
   syncModal: document.getElementById('syncModal'),
   syncTableBody: document.getElementById('syncTableBody'),
   btnExportSync: document.getElementById('btnExportSync'),
-  btnSaveToGithubFolder: document.getElementById('btnSaveToGithubFolder'),
-  btnLoadFromGithub: document.getElementById('btnLoadFromGithub'),
-  githubTokenInput: document.getElementById('githubTokenInput'),
-  githubTokenStatus: document.getElementById('githubTokenStatus'),
-  btnSaveGithubToken: document.getElementById('btnSaveGithubToken'),
-  btnClearGithubToken: document.getElementById('btnClearGithubToken'),
   importSyncInput: document.getElementById('importSyncInput'),
   btnClearSync: document.getElementById('btnClearSync'),
   toastMessage: document.getElementById('toastMessage'),
@@ -1258,11 +1250,6 @@ function initEvents() {
     }
     updateReadMenuState();
   });
-  if (dom.menuReloadMarkers) dom.menuReloadMarkers.addEventListener('click', () => {
-    reloadCurrentBookFromGitHub();
-    dom.readOptionsMenu.classList.add('hidden');
-    dom.btnOpenReadMenu.setAttribute('aria-expanded', 'false');
-  });
   if (dom.btnAutoFlipToggle) {
     dom.btnAutoFlipToggle.addEventListener('click', () => {
       const enabled = state.pageTurnMode !== 'next';
@@ -1275,7 +1262,6 @@ function initEvents() {
       showToast(enabled ? 'Đã bật tự động lật trang theo mốc.' : 'Đã tắt tự động lật trang.');
     });
   }
-  if (dom.btnReloadMarkers) dom.btnReloadMarkers.addEventListener('click', reloadCurrentBookFromGitHub);
   dom.btnZoomIn.addEventListener('click', () => changeZoom(0.15));
   dom.btnZoomOut.addEventListener('click', () => changeZoom(-0.15));
 
@@ -1377,14 +1363,6 @@ dom.selPageTurnMode.value = state.pageTurnMode;
   });
 
   dom.btnExportSync.addEventListener('click', exportSyncData);
-  dom.btnSaveGithubToken.addEventListener('click', saveGithubTokenFromInput);
-  dom.btnClearGithubToken.addEventListener('click', clearGithubToken);
-  updateGithubTokenStatus();
-  dom.btnSaveToGithubFolder.addEventListener('click', () => {
-    if (state.dirHandle || (state.folderJsonFiles && state.folderJsonFiles.length)) syncAllFolderJsonToGitHub({ askForToken: true });
-    else syncCurrentBookToGitHub({ askForToken: true });
-  });
-  dom.btnLoadFromGithub.addEventListener('click', reloadCurrentBookFromGitHub);
   dom.importSyncInput.addEventListener('change', importSyncData);
   dom.btnClearSync.addEventListener('click', clearAllSync);
 
