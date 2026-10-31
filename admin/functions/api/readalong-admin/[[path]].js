@@ -1129,6 +1129,7 @@ async function handle(request, env) {
     const body = await request.json();
     const source = String(body.source || "");
     const destination = String(body.destination || "");
+    if (source === "books.json" || destination === "books.json") return json({ error: "books.json chỉ được cập nhật qua Xuất bản danh mục" }, 403);
     if (!validKey(source) || !validKey(destination) || !ALLOWED_EXTENSIONS.has(extensionOf(destination)) || extensionOf(source) !== extensionOf(destination)) return json({ error: "Invalid file name or format; keep the original extension" }, 400);
     await moveObject(env.READALONG, source, destination);
     await audit(env, "rename_or_move", source, { destination });
