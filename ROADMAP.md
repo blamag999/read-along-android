@@ -612,5 +612,17 @@ Khi một công việc trong PLANNING hoàn tất:
 - Work item 3 — checkpoints: move the existing per-book three-position selector/restore action into the reader menu so it is reachable while reading. The underlying local checkpoint storage remains unchanged; restore must not autoplay.
 - Work item 4 — backward timestamp navigation: when the requested previous page lacks a marker, resolve the nearest preceding valid marker for the current audio part, render its page spread, and seek to that marker. Preserve forward auto-sync and do not accept markers from another audio part.
 - Work item 5 — PDF touch bounds: compute the visible PDF canvas bounds and constrain both tap zones and horizontal swipe handling to that region. Recalculate after rendering and resize/orientation changes.
-- Verification status at planning time: implementation pending CI regression, signed APK build and device acceptance. Do not promote to main/stable until the user accepts the APK on a touch-screen phone.
+- Verification result: implementation and automated regression passed; signed beta APK v1.3.13 was built, verified and published to R2 OTA. Device acceptance remains pending. Do not promote to main/stable until the user accepts the APK on a touch-screen phone.
+
+
+
+### Delivery result — beta v1.3.13
+
+- Code commit: d83b284d8d57863763560f812f41521f897c9a3e.
+- GitHub Actions run 41191629320 completed SUCCESS: full npm regression suite, JavaScript/Pages checks, Android integration, signed Gradle APK build, APK signature verification, R2 beta OTA publication, workflow artifact upload and GitHub Release creation.
+- Release: [Read Along Beta v1.3.13](https://github.com/blamag999/read-along-android/releases/tag/v1.3.13).
+- APK size: 3,438,317 bytes. SHA-256: 51ee1ff153d093633a3f7125c31cb85ff1e3adc86f136c18a466ee93c854d689.
+- Release notes now contain only the user-facing new feature, improvements/fixes and one performance/stability line; no commit hashes or versionCode are shown.
+- Device acceptance is still pending. Test on a touch-screen phone, especially page 5 → pages 3–4 with page 4 unmarked, three checkpoints, single-row header, notifications and touch zones limited to the PDF canvas.
+- No main/stable promotion. Android TV remains out of scope.
 

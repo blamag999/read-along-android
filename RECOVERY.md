@@ -7,8 +7,8 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover commit: `d34378926e02ee5226e7ffb589ddc99250e86e07`
-- Last reviewed HEAD on beta: `d34378926e02ee5226e7ffb589ddc99250e86e07`
+- Last formal handover commit: `d83b284d8d57863763560f812f41521f897c9a3e`
+- Last reviewed functional HEAD on beta: `d83b284d8d57863763560f812f41521f897c9a3e`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
 - Latest recovery checkpoint: OTA backend + fixed client endpoint implementation commit `d34378926e02ee5226e7ffb589ddc99250e86e07`
@@ -148,4 +148,18 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Header actions are compacted to keep Playlist, Close Book and Read Menu on one row. Toasts preserve line breaks; OTA confirmation copy is shortened. Release notes are generated from explicit user-facing [feature], [fix], and [perf] entries rather than raw commit subjects/hashes.
 - Runtime changes and regression coverage are being prepared on beta. CI, signed APK verification, R2 OTA publication and device acceptance are not yet confirmed for this batch. Do not promote to main or describe the batch as accepted until the relevant evidence exists.
 - Preserve existing OTA endpoints, R2/D1 resources, package signing key and beta/stable separation.
+
+
+
+## Touch reader corrections — delivery and recovery checkpoint
+
+- Functional commit: d83b284d8d57863763560f812f41521f897c9a3e.
+- GitHub Actions run [41191629320](https://github.com/blamag999/read-along-android/actions/runs/41191629320) completed SUCCESS. Full npm regression, JavaScript and Pages checks, native integration, signed Gradle APK build, APK signature verification, R2 beta OTA publication, artifact upload and release creation all passed.
+- Beta release [v1.3.13](https://github.com/blamag999/read-along-android/releases/tag/v1.3.13) is published. APK size: 3,438,317 bytes. SHA-256: 51ee1ff153d093633a3f7125c31cb85ff1e3adc86f136c18a466ee93c854d689.
+- Workflow artifact: read-along-v1.3.13-build, artifact ID 13038719304; expires 2026-11-30.
+- OTA manifest notes are concise and user-facing: new checkpoint entry point, improvements/fixes, and one performance/stability line.
+- The existing three-checkpoint local storage schema is unchanged. The selector/restore UI is now in the reader menu; restore does not autoplay.
+- Backward navigation resolves the nearest valid prior marker and corresponding spread; PDF tap/swipe controls use actual rendered canvas bounds.
+- Device acceptance is pending. Do not mark accepted or promote main/stable until the user verifies the APK on a touch-screen Android phone.
+- No changes to main, signing key, R2/D1 resources or OTA endpoint architecture. Android TV remains outside this batch.
 

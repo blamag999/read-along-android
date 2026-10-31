@@ -193,12 +193,23 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 
 ## P0 — Touch reader usability and timestamp back-navigation (2026-10-31)
 
-- [ ] Fix manual previous-page navigation when the immediate previous page has no valid timestamp: resolve the nearest prior valid marker, display the corresponding spread (for example pages 3–4 when page 4 has no marker), and seek audio to that marker when auto-seek is enabled.
-- [ ] Prevent stale audio timeupdate events from immediately undoing a manual backward page turn; preserve normal forward marker synchronization and multi-part audio behavior.
-- [ ] Make toast/confirmation text readable with preserved line breaks; keep OTA update notes limited to new features, meaningful improvements/fixes, and one performance/stability line. Do not expose commit IDs, versionCode, or internal build details in the user prompt.
-- [ ] Keep the Playlist, Close Book, and Read Menu controls on one row on narrow touch screens; compact labels without clipping or overlap.
-- [ ] Expose the current reading position plus two prior checkpoints directly from the reader menu; selecting a checkpoint restores position without autoplay.
-- [ ] Constrain touch navigation and play/pause zones to the actual rendered PDF canvas bounds. Touches and swipes outside the PDF must not trigger reader actions. Recalculate bounds after render, zoom, resize, and orientation changes.
-- [ ] Add regression tests for page 5 → pages 3–4 when page 4 has no marker, exact previous-page markers, other-audio-part markers, touch-zone boundaries, visible checkpoint entry point, notification line breaks, and single-row header layout.
-- [ ] Build one beta APK only after the full regression suite passes. Keep main/stable unchanged until on-device acceptance.
+- [x] Fix manual previous-page navigation when the immediate previous page has no valid timestamp: resolve the nearest prior valid marker, display the corresponding spread (for example pages 3–4 when page 4 has no marker), and seek audio to that marker when auto-seek is enabled.
+- [x] Prevent stale audio timeupdate events from immediately undoing a manual backward page turn; preserve normal forward marker synchronization and multi-part audio behavior.
+- [x] Make toast/confirmation text readable with preserved line breaks; keep OTA update notes limited to new features, meaningful improvements/fixes, and one performance/stability line. Do not expose commit IDs, versionCode, or internal build details in the user prompt.
+- [x] Keep the Playlist, Close Book, and Read Menu controls on one row on narrow touch screens; compact labels without clipping or overlap.
+- [x] Expose the current reading position plus two prior checkpoints directly from the reader menu; selecting a checkpoint restores position without autoplay.
+- [x] Constrain touch navigation and play/pause zones to the actual rendered PDF canvas bounds. Touches and swipes outside the PDF must not trigger reader actions. Recalculate bounds after render, zoom, resize, and orientation changes.
+- [x] Add regression tests for page 5 → pages 3–4 when page 4 has no marker, exact previous-page markers, other-audio-part markers, touch-zone boundaries, visible checkpoint entry point, notification line breaks, and single-row header layout.
+- [x] Build one beta APK after the full regression suite passed. Device acceptance remains pending.
+
+
+
+### Beta v1.3.13 — build verified; device acceptance pending
+
+- Commit: d83b284d8d57863763560f812f41521f897c9a3e
+- Workflow: https://github.com/blamag999/read-along-android/actions/runs/41191629320 — SUCCESS (full npm test, signed APK build/verification and R2 OTA publication).
+- APK: read-along-v1.3.13-android.apk; 3,438,317 bytes.
+- SHA-256: 51ee1ff153d093633a3f7125c31cb85ff1e3adc86f136c18a466ee93c854d689
+- Release: https://github.com/blamag999/read-along-android/releases/tag/v1.3.13
+- Remaining gate: user acceptance on a touch-screen Android phone. Do not promote to main/stable before acceptance.
 
