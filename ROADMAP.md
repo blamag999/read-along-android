@@ -967,5 +967,15 @@ Khi một công việc trong PLANNING hoàn tất:
 - Selected destination is shown in the confirmation step and progress status. Existing collision protection, root-only file scope, `books.json` exclusion, and copy → verify size → delete source behavior are retained.
 - Catalog preview and explicit `books.json` publication confirmation remain unchanged.
 - Source commit: `73a95d5d03d3cd61739fb703751f7079faaec396`; regression/isolation [41227211811](https://github.com/blamag999/read-along-android/actions/runs/41227211811) passed. Cloudflare Pages production deployment [daa09798](https://daa09798.read-along-admin.pages.dev) completed successfully.
-- No R2 object has been moved; no APK build is needed for this Admin-only refinement.
+- The destination-picker code change did not itself move R2 objects. A later read-only inventory recheck is recorded below; no APK build is needed for this Admin-only refinement.
+
+
+
+## R2 data inventory recheck (2026-11-01)
+
+- Read-only inventory now shows 204 objects: 179 in `DISNEY/`, 24 in `ONE STORY A DAY LEVEL 2 FULL/`, and one root object `books.json`. No root-level media remains.
+- `DISNEY/`: 84 PDF, 87 MP3, 8 JSON; total 1,647,458,551 bytes.
+- The root `books.json` metadata changed from the initial 34,440 bytes / ETag `65ea559196d5fc691ce7e366903a36a0` to 38,453 bytes / ETag `509b78ea46ee0cca7c36a5ac44cbcf73`.
+- The public object body could not be retrieved through the available connector; do not claim its book count, folder fields or URL validation until Admin preview or app smoke testing confirms them.
+- The R2 object inventory reflects that the media move has occurred; the exact operator/time of that action is not asserted here.
 
