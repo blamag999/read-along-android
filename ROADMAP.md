@@ -647,3 +647,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Regression guard tại `0e16c8b21533f997a8bc5e3dd8368a3a6e500c69` kiểm tra DOM IDs thiết yếu và không có cloud sync invocation.
 - Full regression, Pages syntax/isolation, channel validation và chuẩn bị assets đều pass trong workflow [41202909931](https://github.com/blamag999/read-along-android/actions/runs/41202909931); signed APK build/verification/R2 publish đang chạy tại thời điểm ghi nhận.
 - Trạng thái: code fix implemented + regression pass; device acceptance pending. Không promote main.
+
+
+## Header hai action và kế hoạch kho offline — 2026-10-31
+
+- Đã sửa beta: header chỉ còn Thư viện sách và Menu. Nút Đóng sách riêng bị loại bỏ; Android Back vẫn đi qua luồng đóng sách hiện hữu và lưu phiên đọc.
+- Các thao tác ẩn/hiện vùng chọn tệp và quản lý mốc thời gian được chuyển vào Menu; chức năng quản lý marker local vẫn được giữ.
+- Đã bổ sung regression assertions cho cấu trúc header và menu. Chưa có CI sau batch này và chưa nghiệm thu trên thiết bị.
+- Kho offline 1 GiB với LRU, lưu trọn bộ PDF/audio/JSON và bảo toàn qua OTA mới là kế hoạch; chưa triển khai. Cần audit native storage và OTA cleanup trước khi chọn cách lưu.
