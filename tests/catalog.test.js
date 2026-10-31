@@ -3,10 +3,16 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 const app = fs.readFileSync('app.js', 'utf8');
+const readerHtml = fs.readFileSync('index.html', 'utf8');
+const adminScriptSource = fs.readFileSync('admin/public/admin.js', 'utf8');
 const catalogSource = fs.readFileSync('modules/catalog-playlist.js', 'utf8');
 const manifest = JSON.parse(fs.readFileSync('admin/public/books.json', 'utf8'));
 
 assert.match(app, /https:\/\/pub-763a3a5ae235415cbef15b64f7a20820\.r2\.dev\/books\.json/, 'app must fetch the public R2 manifest directly');
+assert.match(readerHtml, /id="selPlaylistFolder"/, 'reader must expose the folder selector');
+assert.match(app, /selPlaylistFolder\.addEventListener\('change'/, 'reader must apply folder selection');
+assert.match(adminScriptSource, /moveRootAssetsToDisney/, 'Admin must expose the guarded root-to-DISNEY migration');
+
 assert.doesNotMatch(app, /private-comic-reader\.pages\.dev\/api\/readalong\/books/, 'catalog loading must not depend on the Pages API');
 assert.match(catalogSource, /typeof value === 'string'/, 'catalog module must accept URL strings from books.json');
 assert.match(catalogSource, /item\.sync \|\| item\.json/, 'catalog module must read the manifest sync URL');
