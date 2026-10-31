@@ -433,3 +433,15 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Added regression assertions that the menu control and wiring are absent and that legacy sessions normalize to `next`.
 - Runtime commits: HTML `0f022d816ffadaab633bf086431ddfc902771e80`; JS `21edd11be35570fd21bdcb0e36a4b84135d1c77d`; test `[test]` `8dae0179bc64c98bd91ddc7e3b5635d70dc540a0`.
 - The latest test commit's combined status and PR-associated workflow run lookup returned no entries. CI is not confirmed. Do not build or promote until regression evidence is available.
+
+
+## Recovery update — CSS legacy cleanup and regression guard (2026-11-01)
+
+- Starting reviewed runtime baseline: [test] commit 8dae0179bc64c98bd91ddc7e3b5635d70dc540a0; the 3 commits already on beta after it before this batch were documentation-only.
+- Audited styles.css against index.html, app.js, modules/page-sync.js, modules/playlist-layout.js, modules/catalog-playlist.js, modules/remote-sync.js and modules/diagnostics.js.
+- Removed obsolete style selectors for removed local-media/file-picker and drag/drop UI, old view/zoom/two-page/speed controls, old marker manager/history/table, obsolete diagnostics/checkpoint controls and unused tutorial layouts. Preserved current reader styles and uncertain APK/native styling (including the .apk-mode family not proven unused).
+- styles.css reduced from 91,946 to 66,287 characters (~27.9%). Added tests in tests/modules.test.js to reject removed CSS selectors and legacy IDs.
+- Static verification performed through the repository source: removed selectors/IDs are absent from active CSS after stripping comments; no removed classes are referenced in the audited runtime source files; CSS opening/closing brace counts match. This is not a substitute for the full npm regression suite.
+- Commits: CSS 03826306ddcb4c53d2f721c9363448e7832beb3c, fe22a15e917c3a5f350c7fa4b26ea899384d0dd8; regression tests 9c20bd867a1dc5995f97dc44ea23e708fd9a2c6d, aa251299b56779bff0675099ed4e4abc0e1cee87, f50d1c766ce084cde6d2a08e19cb513ed4a85774.
+- Latest test commit carries [test]: f50d1c766ce084cde6d2a08e19cb513ed4a85774. GitHub combined-status query returned no entries; the available workflow-run wrapper only reports PR-triggered runs, so push CI cannot be confirmed from the current connector. Do not claim regression pass.
+- No APK build, OTA publication, device test or main promotion has occurred. Next: obtain a confirmed full regression result; then inspect the complete beta diff and build one beta APK for acceptance.
