@@ -12,6 +12,8 @@
 
 ## P0 — Hoàn tất Remote Config bootstrap và Data Client
 
+> Người dùng đã xác nhận đã kiểm thử APK trên điện thoại; chưa cung cấp chi tiết riêng về online/offline Data Client. Kiểm thử Android TV được quản lý riêng ở P2 và hiện pending.
+
 ### P0.1 Xác minh static config đang được publish
 
 - [x] Người dùng mở endpoint và gửi lại JSON body trùng khớp file `admin/public/remote-config.json`; ghi nhận xác nhận thủ công ngày 2026-10-31. HTTP status và Content-Type vẫn chưa được kiểm tra độc lập.
@@ -42,12 +44,12 @@
 
 ## P1 — Chốt marker conflict policy và migration an toàn
 
-- [ ] Đọc lại modules/remote-sync.js, modules/page-sync.js, các caller trong app.js và docs/architecture/marker-and-api-review.md trước khi sửa.
-- [ ] Chốt thứ tự ưu tiên nguồn: file người dùng chủ động import, marker versioned từ cloud, local recovery/cache và legacy sources; phân biệt rõ import có chủ ý với tự động đồng bộ.
-- [ ] Dùng revision để so sánh các bản versioned thuộc cùng một logical book; không dùng timestamp thiết bị làm bằng chứng freshness duy nhất.
-- [ ] Định nghĩa xử lý khi hai nguồn cùng revision nhưng khác nội dung, revision thiếu, schema không hỗ trợ, marker map rỗng (clear-all) và dữ liệu legacy.
+- [x] Đọc lại modules/remote-sync.js, modules/page-sync.js, các caller trong app.js và docs/architecture/marker-and-api-review.md; ghi nhận thứ tự nguồn thực tế và điểm ghi đè không có freshness check.
+- [x] Chốt policy: explicit import có chủ ý ưu tiên cao nhất; versioned candidates so sánh revision trong cùng book key; legacy fallback giữ nguyên thứ tự tương thích.
+- [x] Dùng revision để so sánh các bản versioned thuộc cùng một logical book; updatedAt chỉ tie-break khi revision và marker content giống nhau.
+- [x] Định nghĩa conflict cùng revision khác nội dung (không tự ghi đè, ưu tiên local recovery), revision/schema lỗi, clear-all bằng envelope rỗng và legacy data.
 - [ ] Thiết kế migration tương thích ngược: không ghi đè nguồn cũ trước khi bản mới được validate và lưu thành công; không tự xóa marker hoặc file JSON.
-- [ ] Bổ sung test cho precedence, revision, stale copy, import, clear-all, legacy numeric seconds, object {time,part}, marker hỏng và mất mạng.
+- [x] Bổ sung pure resolver và regression tests cho revision, stale copy, conflict, import, clear-all, legacy numeric seconds, object {time,part}, marker lỗi và audio-part bounds; chờ CI xác nhận.
 - [ ] Chỉ thay đổi runtime sau khi policy/test hoàn chỉnh; nếu cần APK thì gom cùng một đợt Data Client hoặc một đợt APK riêng có phạm vi rõ ràng.
 
 ## P1 — Analytics thời lượng đọc/nghe độc lập
@@ -97,7 +99,8 @@
 - [ ] Kiểm tra lại các Issues/log hiện hành liên quan page/audio sync và rotation; xác định lỗi nào còn tái hiện trước khi kết luận.
 - [ ] Regression PDF/audio: mở PDF, tải audio, seek tiến/lùi, next/previous page, marker thiếu/trùng/0 giây/ngoài thời lượng, multi-part audio và metadata load.
 - [ ] Regression orientation: portrait ↔ landscape không làm audio tua về marker cũ hoặc phát lại trang; giữ currentTime, play/pause và current page.
-- [ ] Regression UI: status bar/notch/camera safe area, màn hình nhỏ/lớn, touch, keyboard, remote và Android TV.
+- [ ] Regression UI điện thoại: status bar/notch/camera safe area, màn hình nhỏ/lớn, touch và keyboard.
+- [ ] **PENDING — Android TV:** chưa kiểm thử trên thiết bị thật; để ngoài phạm vi batch hiện tại, không chặn các công việc độc lập khác.
 - [ ] Regression OTA: có update/không update, mạng lỗi, APK lỗi, chữ ký không khớp, phiên bản cũ, quyền cài đặt, người dùng hủy và dữ liệu đọc sau update.
 - [ ] Xác minh offline và cache; không xóa dữ liệu đọc khi dọn shell cache.
 - [ ] Chỉ build APK beta khi tất cả thay đổi APK đã được gom nhóm và CI pass.
