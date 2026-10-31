@@ -149,10 +149,6 @@ async function closeCurrentBook() {
   dom.canvasWrapper.classList.remove('two-page-mode');
   dom.emptyState.classList.remove('hidden');
   dom.readerPageStatus.classList.add('hidden');
-  dom.pdfFileName.textContent = '📖 Chưa có sách';
-  dom.pdfFileName.classList.add('empty');
-  dom.audioFileName.textContent = '🎵 Chưa có âm thanh';
-  dom.audioFileName.classList.add('empty');
   dom.lblCurrentPage.textContent = '0';
   dom.lblTotalPages.textContent = '0';
   updateAudioPartUI();
@@ -363,8 +359,6 @@ const dom = {
 
 
 
-  pdfFileName: document.getElementById('pdfFileName'),
-  audioFileName: document.getElementById('audioFileName'),
   syncBanner: document.getElementById('syncBanner'),
 
 
@@ -834,8 +828,6 @@ function loadAudioFromUrl(url, name) {
     delete dom.audioElement.dataset.objectUrl;
   }
   dom.audioElement.playbackRate = 1.0;
-  dom.audioFileName.textContent = '🎵 ' + state.audioFileName;
-  dom.audioFileName.classList.remove('empty');
   if (dom.audioSeeker) dom.audioSeeker.value = 0;
   if (dom.lblAudioCurrentTime) dom.lblAudioCurrentTime.textContent = '00:00';
   dom.audioElement.src = url;
@@ -1080,8 +1072,6 @@ function initEvents() {
 
 async function loadPdfFromUrl(url, fileName, shouldResetSync = true) {
   state.pdfFileName = fileName || url.split('/').pop() || 'book.pdf';
-  dom.pdfFileName.textContent = '📄 ' + state.pdfFileName;
-  dom.pdfFileName.classList.remove('empty');
   dom.lblLoadingText.textContent = 'Đang tải truyện trực tuyến...';
   dom.pdfLoadingIndicator.classList.remove('hidden');
 
