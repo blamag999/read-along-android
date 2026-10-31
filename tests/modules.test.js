@@ -77,6 +77,9 @@ assert.ok(!appSource.includes("dom.viewerContainer.addEventListener('touchstart'
 assert.ok(appSource.includes('getRenderedPdfBounds'), 'touch zones must be bounded by rendered PDF canvases');
 assert.ok(htmlSource.includes('readingCheckpointMenuGroup'), 'three recent checkpoints must be reachable from the reader menu');
 assert.ok(htmlSource.includes('id="btnOpenPlaylist"') && htmlSource.includes('id="btnOpenReadMenu"'), 'header must retain the library and menu actions');
+assert.ok(!htmlSource.includes('id="menuAutoFlip"') && !htmlSource.includes('Tự lật trang'), 'auto page-turn is a built-in default and must not expose a manual menu toggle');
+assert.ok(!appSource.includes('menuAutoFlip') && !appSource.includes('updateReadMenuState'), 'auto page-turn must not retain obsolete menu toggle wiring');
+assert.ok(appSource.includes("state.pageTurnMode = 'next'; // Auto page-turn is always enabled; legacy off values are normalized."), 'legacy sessions must normalize auto page-turn to the always-on default');
 const libraryButton = htmlSource.match(/<button id="btnOpenPlaylist"[^>]*>/)?.[0] || '';
 assert.ok(!/\sdisabled(?:\s|>)/.test(libraryButton) && /aria-disabled="false"/.test(libraryButton), 'Library action must be enabled on first launch so it can retry after an initial R2 catalog failure');
 assert.ok(/title="Mở thư viện sách"/.test(libraryButton) && /aria-label="Thư viện sách, 0 cuốn"/.test(libraryButton), 'first-launch Library action must retain its title and accessible empty-catalog label');
