@@ -32,7 +32,7 @@
 - [x] Xác minh live `books.json` trên R2: 96 truyện, DISNEY 84, ONE STORY A DAY LEVEL 2 FULL 12; 96 PDF, 99 audio, 8 sync JSON; 0 đường dẫn tài nguyên thiếu. Không cần publish lại manifest.
 - [x] Thêm retention OTA cho R2: chỉ giữ APK mới nhất trong từng prefix beta/official, chạy sau khi upload APK và cập nhật `latest.json`; giữ nguyên hai manifest channel.
 - [x] Dọn 14 APK beta cũ trong R2 sau khi đối chiếu manifest/checksum; giữ beta v1.3.23, official v1.4.0 và cả hai manifest. Đã giải phóng 48,089,673 bytes (~45.86 MiB).
-- [x] Unit test mới `tests/ota-retention.test.py`: 4/4 test pass khi chạy độc lập trong môi trường kiểm tra.
+- [x] Unit test mới `tests/ota-retention.test.py`: 5/5 test pass khi chạy độc lập trong môi trường kiểm tra.
 - [ ] Chờ GitHub Actions chạy full `npm test` trên commit `[test]` cuối cùng `23a9b02f7a1634832334f7f7bdc325a5b0cf3317`; connector chưa trả được push-triggered run/status.
 - [ ] Ghi nhật ký bàn giao cuối mốc sau khi xác minh dữ liệu R2, catalog live, CI, Pages deploy và APK/device test.
 
