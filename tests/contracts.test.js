@@ -15,7 +15,7 @@ assert.ok(appSource.includes("window.confirm('Tiếp tục xem: ' + resumeLabel 
 assert.ok(appSource.includes("confirm('Xóa tất cả mốc thời gian của sách?')"), 'Clear-markers confirmation uses the approved concise copy');
 assert.ok(appSource.includes("if (!shouldResume) {") && appSource.includes("state.sessionRestorePending = false;"), 'Declining reading-position restore keeps the existing start-from-beginning path');
 assert.ok(appSource.includes("if (confirm('Xóa tất cả mốc thời gian của sách?')) {") && appSource.includes('state.pageTimestamps = {};'), 'Marker deletion remains guarded by confirmation');
-assert.ok(appSource.includes("'Tải và cài đặt bản cập nhật? Android có thể yêu cầu xác nhận.'"), 'OTA installation confirmation remains unchanged');
+assert.ok(appSource.includes("'Có bản cập nhật Read Along ' + manifest.version + '.\\n\\n' +"), 'OTA confirmation identifies the new app version');
 
 for (const schema of [catalog, marker, analytics]) {
   assert.equal(schema.$schema, 'https://json-schema.org/draft/2020-12/schema');
