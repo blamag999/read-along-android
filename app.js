@@ -872,8 +872,7 @@ async function loadStoryFromPlaylist(story, audioPartIndex) {
   dom.pdfLoadingIndicator.classList.remove('hidden');
 
   try {
-    const jsonBlob = story.json ? story.json.blob : null;
-    await resetAndLoadSyncForBook(uniqueKey, jsonBlob, story.json ? story.json.url : '');
+    await resetAndLoadSyncForBook(uniqueKey, story.json ? story.json.url : '');
 
     if (story.pdf) {
       if (story.pdf.blob) await loadPdfFromBlob(story.pdf.blob, false);
