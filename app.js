@@ -439,11 +439,9 @@ const dom = {
   btnAutoFlipToggle: document.getElementById('btnAutoFlipToggle'),
   btnOpenReadMenu: document.getElementById('btnOpenReadMenu'),
   readOptionsMenu: document.getElementById('readOptionsMenu'),
-  menuTwoPages: document.getElementById('menuTwoPages'),
   menuAutoFlip: document.getElementById('menuAutoFlip'),
   menuCheckUpdates: document.getElementById('menuCheckUpdates'),
   chkBetaOta: document.getElementById('chkBetaOta'),
-  menuTwoPagesState: document.getElementById('menuTwoPagesState'),
   menuAutoFlipState: document.getElementById('menuAutoFlipState'),
   btnZoomOut: document.getElementById('btnZoomOut'),
   btnZoomIn: document.getElementById('btnZoomIn'),
@@ -1236,10 +1234,6 @@ function initEvents() {
       }
     });
   }
-  if (dom.menuTwoPages) dom.menuTwoPages.addEventListener('click', () => {
-    setViewMode(state.viewMode === 'two-pages' ? 'fit-height' : 'two-pages');
-    updateReadMenuState();
-  });
   if (dom.menuAutoFlip) dom.menuAutoFlip.addEventListener('click', () => {
     if (dom.btnAutoFlipToggle) dom.btnAutoFlipToggle.click();
     else {
@@ -2572,12 +2566,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Đồng bộ trạng thái hiển thị của các lựa chọn trong menu đọc sách.
 function updateReadMenuState() {
-  if (dom.menuTwoPages) {
-    const enabled = state.viewMode === 'two-pages';
-    dom.menuTwoPages.classList.toggle('is-on', enabled);
-    dom.menuTwoPages.setAttribute('aria-pressed', String(enabled));
-    if (dom.menuTwoPagesState) dom.menuTwoPagesState.textContent = enabled ? 'Bật' : 'Tắt';
-  }
   if (dom.menuAutoFlip) {
     const enabled = state.pageTurnMode === 'next';
     dom.menuAutoFlip.classList.toggle('is-on', enabled);
