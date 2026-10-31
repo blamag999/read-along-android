@@ -49,3 +49,5 @@ assert.ok(workflow.includes('VERSION_CODE: ${{ github.run_number }}'), 'Release 
 assert.ok(workflow.includes('app-version-code'), 'Release build must inject the app-version-code meta tag');
 
 assert.ok(workflow.includes('r2.cloudflarestorage.com'), 'Release workflow must use the account R2 S3 endpoint');
+assert.ok(workflow.includes('R2_ENDPOINT: https://27391a829e8e4a38e9411d17ce76b5ba.r2.cloudflarestorage.com'), 'Release workflow must target the correct Cloudflare account');
+assert.ok(!workflow.includes('CLOUDFLARE_API_TOKEN'), 'R2 uploader must not require an account-wide Cloudflare API token');
