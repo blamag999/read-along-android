@@ -9,7 +9,7 @@
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
 - Last formal handover code/documentation checkpoint: `d13482e6ede435125600328ce05244231af8a14e` (ROADMAP handover record; source review baseline remains `d6faeb3b1667bebf5130a63851c6090785a4945e`).
 - Last reviewed functional/source HEAD on beta: `d6faeb3b1667bebf5130a63851c6090785a4945e`
-- Recovery status: `PARTIAL — source audit caught and fixed a duplicate JavaScript declaration; remaining reader/menu cleanup and regression are pending`
+- Recovery status: `PARTIAL — aggregate Git delta and current Reader/R2 source were reviewed; per-commit reconciliation, CI result and device acceptance remain pending`
 - Recovery reviewed on: 2026-10-31
 - Latest policy update: quyết định không lưu PDF/audio offline đã được ghi vào README/ROADMAP/PLANNING/RECOVERY. Xem mục “Quyết định thay thế kế hoạch kho offline”; các checkpoint cũ bên dưới chỉ là lịch sử.
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
@@ -398,3 +398,14 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Giữ session/checkpoint localStorage, favorites, marker companion R2 read-only, PDF/audio R2 URL và playlist. Không thay đổi cơ chế Back/session save.
 - Các commit: `9eb40d5` (app), `dbec01f` (HTML), `db86284` (tests), `ed97539` (bổ sung remote media status indicator).
 - Chưa chạy `npm test`/CI, chưa build APK và chưa nghiệm thu thiết bị. Chưa xóa CSS dead styles hoặc schema dữ liệu IndexedDB cũ; cleanup CSS chỉ sau khi audit selector usage. Không thay đổi API/Worker/R2/OTA/signing key/main.
+
+## Recovery update — Reader/Menu R2-only implementation and Library retry fix (2026-10-31)
+
+- Current beta HEAD observed after the latest test commit: `ca31fc283a54905831e3913e353820aecd96a9c4`.
+- Compared formal handover checkpoint `d13482e6ede435125600328ce05244231af8a14e` to current beta HEAD: `ahead 50`, `behind 0`. Aggregate compare reports changes only in `app.js`, `index.html`, `tests/contracts.test.js`, `tests/modules.test.js`, `README.md`, `PLANNING.md`, `ROADMAP.md`, and `RECOVERY.md`; no native Android, API/backend, R2/Cloudflare or OTA file appears in the aggregate file list.
+- Reviewed current `app.js`, `index.html`, `styles.css` opening section, `package.json`, `tests/modules.test.js`, and the regression workflow. Reader source now opens media through R2 catalog URLs, retains R2 marker read path, removes marker manager/import/export and local media loading, and preserves local session/checkpoint data. Existing IndexedDB legacy data is not deleted.
+- Found and corrected a first-launch retry defect: `btnOpenPlaylist` had `disabled` in initial HTML and only became enabled after successful catalog load. Commit `588b3808f3d57a36be447d92523d73d72b7d27c9` removes the initial disabled state. Test assertion commits: `f588259634e24d96f12f161af74da2dc4d77b4be` and `[test]` commit `ca31fc283a54905831e3913e353820aecd96a9c4`.
+- Workflow path filters include `tests/**`; push regression job requires `[test]` in the final commit message. The final test commit carries the marker. The GitHub combined-status query returned no status entries at review time, so CI is **not confirmed passed**.
+- README is shared policy; prior RECOVERY record confirms beta/main README blobs were byte-identical after PR #42. No main code was changed in this batch.
+- This is a partial recovery, not a formal handover. The connector exposes aggregate compare but not a complete local working tree or full per-commit diff sequence here; uncommitted/untracked changes in any external clone cannot be observed. Keep `last_reviewed_head` at its previous fully reviewed checkpoint until the remaining commit-by-commit reconciliation is completed.
+- Pending: confirm CI for `ca31fc283a54905831e3913e353820aecd96a9c4`; finish selector/CSS dead-style audit; inspect final diff; then build one beta APK at the end of the runtime batch and obtain device acceptance. Do not promote `main`.
