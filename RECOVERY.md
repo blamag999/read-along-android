@@ -187,3 +187,11 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Added regression assertions at `0e16c8b21533f997a8bc5e3dd8368a3a6e500c69` for required modal IDs and no remote sync invocation.
 - Functional fix commit: `9c4bf18861122df8f5dc29ac080b17aa2dd456c1`. Full regression and Pages checks passed in workflow `41202909931`; APK/R2 completion and device verification pending.
 - Do not promote main until user verifies book catalog, PDF and audio loading on device.
+
+
+## Recovery checkpoint — header hai action / offline library plan — 2026-10-31
+
+- Beta source được cập nhật để header chỉ còn hai action: Thư viện sách và Menu. Nút Đóng sách không còn trong DOM hoặc app event wiring; Android Back tiếp tục gọi requestCloseBook()/closeCurrentBook() và lưu reading session.
+- Mục Mốc thời gian và ẩn/hiện khu vực chọn file được chuyển vào readOptionsMenu; sync modal và local JSON import/export vẫn được giữ nguyên.
+- Regression contract mới ở tests/modules.test.js kiểm tra hai nút header, không còn ID/JS reference của các nút cũ, và các mục đã chuyển vẫn hiện diện trong menu. Cần CI và device acceptance.
+- Kho sách offline 1 GiB, LRU, cùng bảo toàn qua OTA chưa được code. Đây là task tiếp theo; không được tuyên bố đã triển khai. Trước khi sửa cần audit IndexedDB, luồng tải R2, native filesystem và OTA cleanup; không dùng cacheDir hoặc Service Worker Cache cho dữ liệu bền vững.
