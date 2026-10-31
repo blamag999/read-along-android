@@ -38,3 +38,11 @@ console.log('Analytics dashboard API regression tests passed.');
 // [test] Re-run full dashboard regression after fixing library table placement assertion.
 
 // [test] Dashboard no longer returns unused session-count data.
+
+const publicDashboardIndex = worker.indexOf('if (route === "analytics/dashboard" && method === "GET")');
+const otpGuardIndex = worker.indexOf("const auth = await requireAuth(request, env)");
+assert.ok(publicDashboardIndex >= 0 && otpGuardIndex > publicDashboardIndex, "Read-only aggregate dashboard API must be accessible before OTP guard");
+const publicDashboardRoute = worker.slice(publicDashboardIndex, otpGuardIndex);
+assert.ok(publicDashboardRoute.includes("method === \"GET\""), "Public dashboard must be GET-only");
+assert.ok(!/method === "(POST|PUT|PATCH|DELETE)"/.test(publicDashboardRoute), "Public dashboard must not expose mutations");
+console.log("Public dashboard access regression tests passed.");
