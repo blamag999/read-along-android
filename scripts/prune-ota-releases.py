@@ -8,7 +8,7 @@ import sys
 
 BUCKET = "read-along-releases"
 CHANNELS = {"beta", "official"}
-APK_NAME = re.compile(r"read-along-v\\d+\\.\\d+\\.\\d+-android\\.apk$")
+APK_NAME = re.compile(r"read-along-v\d+\.\d+\.\d+-android\.apk$")
 
 
 def stale_apk_keys(objects, prefix, keep_key):
