@@ -114,4 +114,8 @@ assert.ok(appSource.includes("label.textContent = 'Phần âm thanh:';"), 'Audio
 assert.ok(appSource.includes("dom.audioFileName.textContent = '🎵 Chưa có âm thanh';"), 'Dynamic empty media labels use Vietnamese terminology');
 assert.ok(appSource.includes("dom.pdfFileName.textContent = '📖 Chưa có sách';"), 'Dynamic empty book labels use book terminology');
 
+
+assert.ok(readerHtml.includes('📄 Mở một tệp PDF'), 'File format guidance uses concise Vietnamese wording');
+assert.ok(readerHtml.includes('📄 Chọn tệp PDF'), 'PDF picker names the file format clearly');
+
 console.log('Read Along data contract schema tests passed.');
