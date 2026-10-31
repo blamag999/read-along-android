@@ -424,3 +424,12 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Follow-up source inspection found an over-escaped whitespace regex in the new Library disabled-state test. Corrected it in test commit `[test]` `98cd19cda1c307046078f97093d7eb03f0ecd377`.
 - The current assertion now checks the actual `disabled` attribute using a whitespace matcher, alongside `aria-disabled="false"`. No runtime code changed in this correction.
 - CI remains unconfirmed because the combined-status query has not returned status entries. The test marker remains on the latest test commit.
+
+## Recovery update — remove manual auto page-turn toggle (2026-10-31)
+
+- Revisited the confirmed product decision: automatic page-turn is always enabled by default and must not expose a manual toggle in the app menu.
+- Found the old `Tự lật trang` menu button, click listener, DOM references, and `updateReadMenuState()` function still present despite the earlier decision. Removed them from `index.html` and `app.js`.
+- Both legacy session restoration paths now normalize `pageTurnMode` to `next`, preventing older locally saved `off` values from disabling the built-in behavior.
+- Added regression assertions that the menu control and wiring are absent and that legacy sessions normalize to `next`.
+- Runtime commits: HTML `0f022d816ffadaab633bf086431ddfc902771e80`; JS `21edd11be35570fd21bdcb0e36a4b84135d1c77d`; test `[test]` `8dae0179bc64c98bd91ddc7e3b5635d70dc540a0`.
+- The latest test commit's combined status and PR-associated workflow run lookup returned no entries. CI is not confirmed. Do not build or promote until regression evidence is available.
