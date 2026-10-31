@@ -88,7 +88,7 @@ assert.ok(!headerSource.includes('view-controls-bar') && headerSource.indexOf('i
 assert.deepEqual([...headerSource.matchAll(/<button id="([^"]+)"/g)].map(match => match[1]).filter(id => ['btnOpenPlaylist', 'btnOpenReadMenu'].includes(id)).sort(), ['btnOpenPlaylist', 'btnOpenReadMenu'], 'top bar must expose exactly the library and menu buttons');
 assert.ok(htmlSource.includes('class="menu-view-controls"'), 'view and zoom controls must remain available inside the menu');
 assert.ok(!htmlSource.includes('id="btnCloseBook"') && !htmlSource.includes('id="btnToggleSettings"') && !htmlSource.includes('id="btnOpenSyncModal"'), 'header must not expose separate close-book, settings, or marker buttons');
-assert.ok(htmlSource.includes('id="menuToggleSettings"') && htmlSource.includes('id="menuOpenSyncModal"'), 'settings visibility and timestamp management must remain accessible inside the menu');
+assert.ok(!htmlSource.includes('id="menuToggleSettings"') && !htmlSource.includes('id="menuOpenSyncModal"'), 'settings visibility and marker management must be removed from the menu');
 assert.ok(!appSource.includes('btnCloseBook') && !appSource.includes('btnToggleSettings') && !appSource.includes('btnOpenSyncModal'), 'removed header controls must not be referenced by reader initialization');
 assert.ok(appSource.includes('if (state.pdfDoc) {\n    requestCloseBook();'), 'Android Back must retain the existing close-book and save-session flow');
 
@@ -100,13 +100,13 @@ assert.ok(!htmlSource.includes('diagnosticsModal') && !htmlSource.includes('menu
 assert.ok(!htmlSource.includes('menuAnalytics') && !htmlSource.includes('analyticsModal'), 'analytics must not require a settings/consent dialog');
 assert.ok(htmlSource.includes('Mốc đọc gần đây'), 'checkpoint label must use the concise Vietnamese name');
 assert.ok(styleSource.includes('Compact touch header') && styleSource.includes('@media (max-width: 600px)'), 'portrait header must use compact responsive controls');
-assert.ok(appSource.includes('saveSyncToDirectoryOrDownload'), 'local marker JSON export must remain available');
+assert.ok(!appSource.includes('saveSyncToDirectoryOrDownload') && !appSource.includes('exportSyncData') && !appSource.includes('importSyncData'), 'marker editing and import/export must be removed from the APK client');
 assert.ok(!appSource.includes('loadCloudSyncForBook'), 'marker loading must not depend on online cloud synchronization');
 assert.ok(!htmlSource.includes('remote-sync.js'), 'the obsolete remote marker sync client must not be loaded');
 
-for (const requiredId of ['syncModal', 'btnCloseSyncModal', 'btnExportSync', 'importSyncInput', 'btnClearSync', 'syncTableBody']) {
-  assert.ok(htmlSource.includes('id="' + requiredId + '"'), 'local marker modal must include ' + requiredId + ' so app initialization does not abort');
+for (const removedId of ['syncModal', 'btnCloseSyncModal', 'btnExportSync', 'importSyncInput', 'btnClearSync', 'syncTableBody', 'btnPinCurrentTime', 'btnSaveToFolder']) {
+  assert.ok(!htmlSource.includes('id="' + removedId + '"'), 'marker management UI must not contain ' + removedId);
 }
 assert.ok(!appSource.includes('scheduleGitHubSync('), 'local marker edits must not call the removed GitHub sync client');
-assert.ok(appSource.includes("replace(/[\\\\/:*?\"<>|]/g, '_')"), 'local JSON export filename must be generated without the removed sync client');
+
 console.log('Module behavior and touch-reader UI contract tests passed.');
