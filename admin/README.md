@@ -182,3 +182,12 @@ The pure catalog and playlist data transformations are implemented in `modules/c
 - Quét thư viện chỉ chạy khi quản trị viên chủ động bấm **Quét thư viện**. Sau khi tài nguyên thay đổi, kết quả quét cũ được đánh dấu cần quét lại.
 - Dòng phân trang dùng thuật ngữ **mục quản lý** và tách số bộ sách, thư mục, nhóm tệp độc lập để không nhầm số mục R2 với số đầu sách đã xuất bản.
 - Hai nút **Thư mục** và **Tải tệp lên** có cùng chiều cao, căn giữa theo trục dọc; trên màn hình hẹp dùng hai cột cân xứng.
+
+
+## Quy trình chuyển WMA trong kết quả kiểm tra
+
+- Nút chuyển đổi chỉ xuất hiện trong dòng cảnh báo WMA của phần **Kiểm tra & xuất bản danh mục**; danh sách quản lý sách không còn nút chuyển đổi trùng lặp.
+- Các WMA cùng một bộ sách được gom thành một thao tác; không lặp nút cho từng phần.
+- Tiến độ hiển thị ngay dưới nút, theo các giai đoạn tải bộ chuyển đổi, tải WMA, mã hóa MP3 và tải MP3 lên R2; có trạng thái hoàn tất/lỗi.
+- Upload dùng chính xác đường dẫn đích cạnh file WMA nguồn, không phụ thuộc thư mục hiện đang mở trong giao diện.
+- MP3 đích tồn tại thì dừng, không ghi đè; file WMA gốc luôn được giữ lại.
