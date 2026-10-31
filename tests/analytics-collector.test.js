@@ -82,6 +82,7 @@ class Target {
   let sent = requests.map(x => JSON.parse(x.options.body).events[0]);
   assert.equal(sent[0].type, 'reader_start');
   const firstSessionId = sent[0].sessionId;
+  const initialInstallId = sent[0].installId;
   assert.equal(sent[0].platform, 'android');
   assert.equal('bookId' in sent[0], false);
   assert.equal(JSON.stringify(sent).includes('private-book-title'), false, 'book key/title must never leave the device');
@@ -183,7 +184,7 @@ class Target {
   checkbox.dispatch('change');
   await Promise.resolve();
   const reconsentEvent = JSON.parse(requests.at(-1).options.body).events[0];
-  assert.equal(reconsentEvent.installId, allEvents[0].installId, 're-consent on the same app install must retain the same installation identity');
+  assert.equal(reconsentEvent.installId, initialInstallId, 're-consent on the same app install must retain the same installation identity');
   checkbox.checked = false;
   checkbox.dispatch('change');
 
