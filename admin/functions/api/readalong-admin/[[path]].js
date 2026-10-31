@@ -684,7 +684,7 @@ async function handle(request, env) {
 
   if (route === "analytics/dashboard" && method === "GET") {
     const parseDay = value => {
-      if (typeof value !== "string" || !/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return null;
+      if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
       const date = new Date(value + "T00:00:00.000Z");
       return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value ? date : null;
     };
@@ -698,7 +698,7 @@ async function handle(request, env) {
     const startMs = startDate.getTime(), endExclusive = endDate.getTime() + 86400000;
     if (endExclusive - startMs > 731 * 86400000) return json({ error: "Date range cannot exceed 24 months" }, 400);
     const cutoff = Date.now() - 90 * 86400000;
-    const [daily, totals, breakdown] = await Promise.all([
+    const [daily, totals, breakdown, latestScan, manifestObject] = await Promise.all([
       env.DB.prepare("SELECT day_utc, reading_seconds, listening_seconds, event_count, session_count FROM admin_reading_daily WHERE day_utc >= ? AND day_utc <= ? ORDER BY day_utc ASC")
         .bind(startText, endText).all(),
       env.DB.prepare("SELECT MIN(day_utc) AS first_day, MAX(day_utc) AS last_day, COUNT(*) AS days_with_data FROM admin_reading_daily WHERE day_utc >= ? AND day_utc <= ?")
@@ -706,13 +706,14 @@ async function handle(request, env) {
       startMs >= cutoff
         ? env.DB.prepare("SELECT platform, app_version, COUNT(DISTINCT install_hash) AS devices, COUNT(DISTINCT session_id) AS sessions, SUM(reading_seconds) AS reading_seconds, SUM(listening_seconds) AS listening_seconds, COUNT(*) AS events FROM admin_reading_events WHERE received_at >= ? AND received_at < ? GROUP BY platform, app_version ORDER BY events DESC LIMIT 20")
           .bind(Math.max(startMs, cutoff), endExclusive).all()
-        : Promise.resolve({ results: [] })
+        : Promise.resolve({ results: [] }),
+      env.DB.prepare("SELECT status, scanned, errors, warnings, duration_ms, rule_version, created_at FROM admin_scan_logs WHERE prefix = '' ORDER BY created_at DESC LIMIT 1").first(),
+      env.READALONG.get("books.json")
     ]);
     const rows = daily.results || [];
     const readingSeconds = rows.reduce((sum, row) => sum + Number(row.reading_seconds || 0), 0);
     const listeningSeconds = rows.reduce((sum, row) => sum + Number(row.listening_seconds || 0), 0);
     const eventCount = rows.reduce((sum, row) => sum + Number(row.event_count || 0), 0);
-    const activeSessionDays = rows.reduce((sum, row) => sum + Number(row.session_count || 0), 0);
     const rawAvailable = startMs >= cutoff;
     const breakdownRows = breakdown.results || [];
     return json({
@@ -720,7 +721,7 @@ async function handle(request, env) {
       hasData: rows.length > 0 && eventCount > 0,
       summary: {
         readingSeconds, listeningSeconds, totalSeconds: readingSeconds + listeningSeconds,
-        eventCount, activeSessionDays,
+        eventCount,
         activeDevices: rawAvailable ? breakdownRows.reduce((sum, row) => sum + Number(row.devices || 0), 0) : null
       },
       daily: rows.map(row => ({
@@ -744,6 +745,30 @@ async function handle(request, env) {
         }, []),
         note: rawAvailable ? "Thiết bị/phiên/nền tảng lấy từ dữ liệu chi tiết còn lưu tối đa 90 ngày." : "Dữ liệu chi tiết đã quá thời hạn 90 ngày; chỉ còn số tổng hợp theo ngày."
       },
+      library: (() => {
+        let manifest = null;
+        try {
+          // Manifest is the published, reader-visible catalog; never count orphan PDFs as books.
+          return manifestObject ? (async () => {
+            const parsed = JSON.parse(await manifestObject.text());
+            if (!Array.isArray(parsed.books)) return { books: null, status: "invalid_manifest" };
+            manifest = parsed;
+            return {
+              books: manifest.books.length,
+              pdfs: manifest.books.filter(book => typeof book.pdf === "string" && book.pdf).length,
+              audioParts: manifest.books.reduce((sum, book) => sum + (Array.isArray(book.audios) ? book.audios.length : 0), 0),
+              syncedBooks: manifest.books.filter(book => typeof book.sync === "string" && book.sync).length,
+              status: "published_manifest"
+            };
+          })() : { books: 0, status: "manifest_missing" };
+        } catch { return { books: null, status: "invalid_manifest" }; }
+      })(),
+      latestScan: latestScan ? {
+        status: latestScan.status, scanned: Number(latestScan.scanned || 0),
+        errors: Number(latestScan.errors || 0), warnings: Number(latestScan.warnings || 0),
+        durationMs: Number(latestScan.duration_ms || 0), ruleVersion: latestScan.rule_version,
+        createdAt: new Date(Number(latestScan.created_at)).toISOString()
+      } : null,
       coverage: {
         firstDay: totals?.first_day || null, lastDay: totals?.last_day || null,
         daysWithData: Number(totals?.days_with_data || 0),
