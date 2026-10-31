@@ -1080,6 +1080,7 @@ async function handle(request, env) {
     const size = Number(body.size);
     const contentType = String(body.contentType || "application/octet-stream").slice(0, 120);
     if (!validKey(key) || !ALLOWED_EXTENSIONS.has(extensionOf(key))) return json({ error: "Unsupported file name or format" }, 400);
+    if (key === "books.json") return json({ error: "books.json chỉ được cập nhật qua Xuất bản danh mục" }, 403);
     if (!Number.isSafeInteger(size) || size <= 0 || size > 5 * 1024 * 1024 * 1024 * 1024) return json({ error: "Invalid file size" }, 400);
     if (await env.READALONG.head(key)) return json({ error: "A file with this name already exists" }, 409);
     const upload = await env.READALONG.createMultipartUpload(key, { httpMetadata: { contentType } });
