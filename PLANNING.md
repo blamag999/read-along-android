@@ -286,3 +286,37 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 - [ ] Giữ thông tin lỗi kỹ thuật trong console/diagnostics; thông báo người dùng chỉ nêu việc không thực hiện được và bước khắc phục phù hợp.
 - [ ] Không thay đổi điều kiện hiển thị, luồng xử lý, Confirm/Prompt có dữ liệu động hoặc thông báo OTA đã được chuẩn hóa; bổ sung regression assertions trước khi sửa.
 - [ ] Chỉ build APK khi batch thay đổi runtime đã hoàn tất và full regression pass; nghiệm thu nội dung trên thiết bị thật.
+
+### Kết quả rà soát thông báo hiện tại — 2026-10-31 (chỉ đề xuất, chưa sửa app.js)
+
+Đã rà soát các alert/confirm/prompt/toast trong `app.js`. Giữ nguyên các nội dung đã chuẩn hóa ở phiên trước: đóng sách, thoát ứng dụng, tiếp tục phiên đọc, xóa mốc thời gian và toàn bộ thông báo OTA. Các nội dung dưới đây là ứng viên rút gọn; cần thêm regression test trước khi áp dụng:
+
+| Tình huống | Nội dung đề xuất |
+|---|---|
+| Tải catalog lỗi | Không tải được thư viện sách. Vui lòng thử lại. |
+| Mở sách lỗi | Không mở được sách. Vui lòng kiểm tra file PDF/audio. |
+| Đổi audio nhưng autoplay bị chặn | Đã chuyển phần audio. Nhấn Phát để tiếp tục. |
+| Định dạng audio không hỗ trợ | Định dạng audio không được hỗ trợ. Hãy chọn MP3, M4A hoặc định dạng tương thích. |
+| Bỏ qua file không hỗ trợ | Đã bỏ qua {n} file không hỗ trợ. |
+| Không nạp được audio | Không tải được audio. Vui lòng chọn lại file. |
+| Không tìm thấy PDF/audio trong thư mục | Không tìm thấy file PDF hoặc audio phù hợp trong thư mục. |
+| Không mở được PDF | Không mở được PDF. Vui lòng chọn file khác. |
+| File audio không hợp lệ | File audio không hợp lệ. Vui lòng chọn lại. |
+| Chưa có PDF khi ghim mốc | Hãy mở PDF trước khi ghim mốc. |
+| Chưa có mốc để lưu | Chưa có mốc thời gian để lưu. |
+| Chưa có audio khi nhấn Play | Chưa có audio. Hãy chọn file audio trước. |
+| Nhập số trang không hợp lệ | Nhập số trang từ 1 đến {totalPages}. |
+| Trang chưa có mốc | Trang này chưa có mốc thời gian. |
+| Chưa có audio khi đọc lại trang | Chưa có audio để đọc lại trang. |
+| Không thể đọc lại trang | Không thể phát lại trang này. Hãy thử nhấn Phát. |
+| Lỗi audio tải/phát | Không tải/phát được audio. Hãy kiểm tra file và thử lại. |
+| Giá trị mốc không hợp lệ | Thời gian không hợp lệ. Hãy nhập giây hoặc MM:SS. |
+| JSON nhập không hợp lệ | File mốc thời gian không hợp lệ. |
+| Chọn chế độ chờ lật trang | Đến mốc tiếp theo, audio sẽ dừng chờ bạn lật trang. |
+| Chọn chế độ tự lật trang | Tự động lật trang theo mốc thời gian. |
+| Chọn chế độ đọc liên tục | Đọc liên tục, không tự chuyển trang. |
+| Đến cuối trang/chờ lật | Đã đến cuối trang. Lật trang để tiếp tục. |
+
+Các thông báo thành công có thể rút ngắn thêm: `Đã mở PDF.`, `Đã tải audio.`, `Đã lưu mốc thời gian.`, `Đã nhập mốc thời gian.`, `Đã khôi phục vị trí đọc. Nhấn Phát để nghe.` Tránh hiển thị đồng thời nhiều toast cho một thao tác (ví dụ nạp nhiều audio vừa báo tải audio, vừa báo tự mở PDF, vừa báo tải xong); ưu tiên một thông báo cuối cùng có ý nghĩa nhất.
+
+Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, codec nội bộ hoặc chi tiết máy chủ vào alert/toast; ghi chi tiết vào console/diagnostics. Riêng lỗi tải catalog hiện đang nối `error.message` vào alert và cần được sửa theo nguyên tắc này. Prompt nhập mốc thời gian và phần audio cần giữ hướng dẫn + phạm vi hợp lệ; không rút gọn đến mức làm mất cú pháp nhập. Confirm và OTA đã chuẩn hóa ở batch trước không thuộc phạm vi sửa lại.
