@@ -4,7 +4,7 @@
 
 ## 1. Tầm nhìn và kiến trúc đã chốt
 
-Mục tiêu dài hạn là **APK Core ổn định + dịch vụ/dữ liệu độc lập**: giữ trải nghiệm đọc PDF/audio và tích hợp Android trong APK; tách catalog, media, marker, cấu hình, quản trị, diagnostics, analytics và nội dung thay đổi thường xuyên sang dữ liệu/dịch vụ riêng. Mục đích là giảm số lần phát hành APK, đồng thời giữ khả năng offline, bảo mật và dễ kiểm thử.
+Mục tiêu dài hạn là **APK Core ổn định + dịch vụ/dữ liệu độc lập**: giữ trải nghiệm đọc PDF/audio và tích hợp Android trong APK; tách catalog, media, marker, quản trị, diagnostics, analytics và nội dung thay đổi thường xuyên sang dữ liệu/dịch vụ riêng. Mục đích là giảm số lần phát hành APK, đồng thời giữ khả năng offline, bảo mật và dễ kiểm thử.
 
 Người dùng đã xác nhận các nguyên tắc A, B và E:
 
@@ -79,7 +79,7 @@ Người dùng đã xác nhận các nguyên tắc A, B và E:
 | R1 | Inventory API/data, schema và marker/API boundary review | Đã hoàn tất phần inventory/contract; marker runtime conflict policy chưa chốt |
 | R3 | Analytics ingest + D1 + event thời lượng đọc/nghe | Chưa bắt đầu |
 | R4 | Analytics dashboard ngày/tuần/tháng/năm | Chưa bắt đầu |
-| R5 | Help/announcements/theme và config ngoài APK | Chưa bắt đầu |
+| R5 | Help/announcements/theme content | Chưa bắt đầu |
 | R6 | Regression tổng thể, kiểm thử thiết bị và freeze APK Core | Chưa bắt đầu |
 
 ## 4. Bằng chứng CI và triển khai đã ghi nhận
@@ -514,3 +514,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - Đã cập nhật tài liệu kiến trúc Core APK theo hướng mở rộng catalog/metadata mà không thay đổi engine PDF/audio khi không cần thiết.
 - Các hạng mục catalog category và per-book progress vẫn là kế hoạch, chưa được nghiệm thu runtime.
 - HEAD đã được đối chiếu trước checkpoint: `284484f6266d0c9792bd82b36ab1e00ea179ee1b`.
+
+### 2026-10-31 — Tinh gọn cấu trúc Core APK và Pages
+
+- Rà soát beta HEAD xác nhận không còn module client/bootstrap cấu hình, schema tương ứng, validator, test fixture, static JSON hoặc endpoint smoke workflow trong source tree. Các đường dẫn cũ đều không còn tồn tại.
+- `index.html` không nạp client cấu hình; thứ tự script hiện hành giữ page-sync, playlist/catalog, app, remote-sync và diagnostics. `sw.js` cache shell v52 không khai báo asset cấu hình. `package.json` không còn test/syntax script cho phần đã loại bỏ.
+- Tài liệu README, PLANNING, ROADMAP, RECOVERY, Data Contract và kiến trúc Core đã được làm sạch; không còn checklist hoặc mô tả vận hành của hệ thống này. Core chỉ dựa trên các nguồn catalog/media/marker hiện có.
+- Cloudflare Pages `read-along-admin` được xác minh có `build_command: true`, `root_dir: admin`, `destination_dir: public`; không còn custom pre-publish validator. Production deployment [28123f6e](https://28123f6e.read-along-admin.pages.dev) success trên commit `8722c5673f01e9e7ec2ac9430217146d88b324c5`.
+- PR #40 được cập nhật theo README beta mới nhất; diff vẫn chỉ chứa `README.md`, PR còn mở để đồng bộ quy tắc dùng chung sang `main`. Không merge/promote stable trong batch này.
+- Chưa xác minh trực tiếp HTTP 404 của URL asset cũ do endpoint không truy cập được qua công cụ kiểm tra; không dùng deployment success để khẳng định response status. Không có thay đổi R2/D1, API nghiệp vụ, reader/audio engine, OTA installer hoặc APK build trong batch tài liệu này.
