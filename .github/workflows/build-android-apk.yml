@@ -398,6 +398,7 @@ jobs:
           if [[ "$RELEASE_CHANNEL" == "stable" ]]; then CHANNEL="official"; else CHANNEL="beta"; fi
           APK="read-along-v${VERSION}-android.apk"
           SHA256="$(sha256sum "$APK" | awk '{print $1}')"
+          export SHA256
           mkdir -p dist/ota
           python3 - <<'PY'
           import json, os
