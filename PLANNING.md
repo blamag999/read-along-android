@@ -56,6 +56,32 @@
 - [ ] Kiểm thử orientation, multi-part audio, pause/seek, app background/foreground, process death và OTA update.
 - [ ] Có CI regression cho pure sync/store logic và API contract; chỉ build APK một lần ở commit runtime cuối cùng [build-apk], sau khi full test pass.
 
+## P1 — OTA độc lập nhà cung cấp lưu trữ (Cloudflare làm bootstrap hiện tại)
+
+> Quyết định ngày 2026-10-31: ứng dụng chỉ gọi một OTA API ổn định; backend quyết định nơi lưu trữ APK. Đổi storage provider không được yêu cầu build APK lại.
+
+### Hiện trạng đã audit
+- [x] Cloudflare Pages project hiện hữu: `read-along-admin`, root `admin`, Functions đang hoạt động; production branch là `beta`.
+- [x] Pages Functions có một router dùng chung tại `admin/functions/api/readalong-admin/[[path]].js`; có thể mở rộng route OTA tại đây, không tạo Worker mới.
+- [x] Production bindings hiện có: D1 `DB` và R2 `READALONG` → `my-audio-book`. Chưa có binding/bucket OTA riêng.
+- [x] Pages project hiện chỉ có `read-along-admin.pages.dev`, chưa gắn custom domain.
+- [x] OTA hiện tại lấy GitHub Releases API trong `app.js`; native `ApkUpdaterPlugin.java` chỉ chấp nhận URL bắt đầu bằng `https://github.com/`. Workflow build ký APK và publish GitHub Release.
+- [x] Regression hiện tại `tests/ota-update.test.js` chỉ kiểm tra dọn cache shell; chưa có test contract manifest, chữ ký, checksum hoặc URL OTA provider-neutral.
+
+### Thiết kế mục tiêu
+- [ ] Ứng dụng chỉ gọi endpoint cố định trên Pages: `GET /api/readalong-admin/ota/latest?channel=beta|official`.
+- [ ] APK tải qua endpoint download cố định của cùng backend (proxy/stream từ storage), không nhận URL storage provider trực tiếp; nhờ vậy đổi R2 sang storage khác chỉ cần sửa backend.
+- [ ] Dùng bucket R2 riêng `read-along-releases`, binding mới `OTA_RELEASES` trên đúng Pages project `read-along-admin`. Không dùng/chạm bucket sách `my-audio-book`; không dùng tài nguyên dự án khác.
+- [ ] Manifest có schemaVersion, channel, version, versionCode, filename, size, SHA-256, release notes, mandatory flag và chữ ký số; public key được pin trong APK, private signing key chỉ lưu ở môi trường phát hành. SHA-256 kiểm tra file; chữ ký manifest xác thực metadata/nguồn phát hành.
+- [ ] Giữ nguyên semantics kênh Beta/Official và so sánh version hiện tại; không cho cài downgrade, không thay signing key APK.
+- [ ] Native updater chỉ tải HTTPS từ OTA endpoint cố định, giới hạn redirect/host theo chính sách; xác minh kích thước và SHA-256 trước khi mở Android installer. Android vẫn tự xác minh chữ ký APK.
+- [ ] GitHub Actions build và xác minh APK như hiện tại, sau đó upload APK + manifest đã ký lên R2 bằng credentials giới hạn riêng bucket; không đưa credentials vào APK hoặc source. Có thể tiếp tục tạo GitHub Release nội bộ trong giai đoạn chuyển đổi.
+- [ ] API latest và download fail-closed với manifest không hợp lệ, object thiếu hoặc checksum mismatch; cache manifest ngắn/no-store phù hợp; APK immutable theo version.
+- [ ] Kiểm thử API theo hai kênh, version mới/cũ, thiếu APK, sai checksum, sai chữ ký, redirect không hợp lệ, download gián đoạn và installer handoff.
+- [ ] Chuyển đổi theo thứ tự: triển khai backend + upload thử → build APK beta chuyển tiếp khi repo còn public → kiểm thử OTA trên thiết bị → xác nhận cập nhật từ endpoint Cloudflare → chỉ sau đó mới chuyển repo Private.
+- [ ] Nếu muốn sau này chuyển cả bootstrap/backend khỏi Cloudflare, cần custom domain do người dùng sở hữu và trỏ domain đó tới Pages hiện tại trước khi chuyển. Domain `pages.dev` chỉ ổn định khi giữ Cloudflare Pages làm bootstrap; đổi domain bootstrap sẽ cần một lần cập nhật APK hoặc redirect tương thích.
+- [ ] Không tạo bucket, binding, token, secret, domain hoặc deployment cho tới khi hoàn tất contract/code review và có bước triển khai được xác nhận.
+
 ## P1 — Hoàn thiện catalog category và stable book ID
 
 - [ ] Audit Admin scanner/publisher và catalog mapper; xác nhận stable book ID không phụ thuộc folder path, filename hoặc category.
