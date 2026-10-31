@@ -78,7 +78,7 @@ assert.ok(appSource.includes('getRenderedPdfBounds'), 'touch zones must be bound
 assert.ok(htmlSource.includes('readingCheckpointMenuGroup'), 'three recent checkpoints must be reachable from the reader menu');
 assert.ok(htmlSource.includes('id="btnOpenPlaylist"') && htmlSource.includes('id="btnOpenReadMenu"'), 'header must retain the library and menu actions');
 const headerSource = htmlSource.slice(htmlSource.indexOf('<header'), htmlSource.indexOf('</header>'));
-assert.ok(!headerSource.includes('view-controls-bar') && !headerSource.includes('btnFitHeight') && !headerSource.includes('btnTwoPages'), 'view and zoom controls must be inside the menu, not the top bar');
+assert.ok(!headerSource.includes('view-controls-bar') && headerSource.indexOf('id="btnFitHeight"') > headerSource.indexOf('id="readOptionsMenu"') && headerSource.indexOf('id="btnTwoPages"') > headerSource.indexOf('id="readOptionsMenu"'), 'view and zoom controls must be nested inside the menu, not beside the top-bar actions');
 assert.deepEqual([...headerSource.matchAll(/<button id="([^"]+)"/g)].map(match => match[1]).filter(id => ['btnOpenPlaylist', 'btnOpenReadMenu'].includes(id)).sort(), ['btnOpenPlaylist', 'btnOpenReadMenu'], 'top bar must expose exactly the library and menu buttons');
 assert.ok(htmlSource.includes('class="menu-view-controls"'), 'view and zoom controls must remain available inside the menu');
 assert.ok(!htmlSource.includes('id="btnCloseBook"') && !htmlSource.includes('id="btnToggleSettings"') && !htmlSource.includes('id="btnOpenSyncModal"'), 'header must not expose separate close-book, settings, or marker buttons');
