@@ -499,3 +499,10 @@ Quy tắc bảo trì:
 - Bổ sung thao tác chuyển WMA sang MP3 theo từng bộ sách trong trình duyệt bằng FFmpeg.wasm phiên bản cố định; chỉ tải engine khi người quản trị yêu cầu và cần Internet.
 - Chuyển đổi giữ nguyên WMA gốc, không ghi đè MP3 đã tồn tại, xác minh chữ ký MP3 trước khi tải lên và dừng batch khi gặp lỗi. Chưa xác minh đầy đủ mọi biến thể codec WMA; cần kiểm thử bằng tệp WMA thực tế trên trình duyệt đích. Giới hạn kích thước mỗi file là 256 MB.
 - Đưa tìm kiếm/sắp xếp lên trước bảng thư viện. Đồng bộ nguồn dữ liệu phân trang giữa render và các nút điều hướng; tìm kiếm, sắp xếp và đổi số mục/trang đều đặt lại trang về đầu.
+
+
+### Admin — hợp nhất quản lý thư viện (2026-10-31)
+
+- Gộp thao tác quản lý, kiểm tra lỗi và xuất bản danh mục vào một màn hình. Công cụ kiểm tra/xuất bản đặt trong khối thu gọn bên dưới danh sách, không còn tab phải chuyển qua lại; quét chỉ chạy theo yêu cầu.
+- Hiển thị tổng số mục quản lý cùng phân rã bộ sách, thư mục và nhóm tệp độc lập; tránh so sánh trực tiếp số mục quản lý với số sách trong manifest.
+- Căn hai nút tạo thư mục/tải tệp cùng chiều cao và baseline; bố cục hai cột trên màn hình nhỏ.
