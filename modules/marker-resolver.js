@@ -53,7 +53,7 @@
     })).filter(item => item.source && classify(item.data, opts));
     if (opts.explicitImport === true) {
       const imported = list.find(item => item.source === 'import');
-      if (!imported) return { status: 'empty', selected: null, markers: {}, conflict: false };
+      if (!imported) return { status: 'invalid-import', selected: null, markers: null, conflict: false };
       const parsed = classify(imported.data, opts);
       return { status: 'selected', selected: 'import', markers: parsed.markers, conflict: false, kind: parsed.kind };
     }
