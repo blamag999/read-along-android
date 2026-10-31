@@ -98,3 +98,13 @@ label{display:block;font-size:13px;font-weight:650;margin-bottom:8px}input:not([
 .diagnostics-content .diagnostics-heading{align-items:center}
 .diagnostics-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 @media(max-width:650px){.summary-row .library-actions{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px}.summary-row .library-actions>.button,.summary-row .library-actions>.file-button{width:100%;padding:0 10px}.diagnostics-summary{padding:14px}.diagnostics-content{padding:14px}.diagnostics-content .diagnostics-heading{align-items:flex-start;flex-direction:column}.diagnostics-actions{width:100%}.diagnostics-actions .button{flex:1}}
+
+.conversion-progress{display:grid;gap:6px;min-width:180px;margin-top:8px}
+.conversion-progress-text{font-size:11px;line-height:1.4;color:var(--muted);overflow-wrap:anywhere}
+.conversion-progress-track{height:6px;border-radius:8px;background:#26364c;overflow:hidden}
+.conversion-progress-track span{display:block;height:100%;width:0;background:var(--blue);transition:width .15s ease}
+.conversion-progress.is-error .conversion-progress-text{color:#ff9292}
+.conversion-progress.is-error .conversion-progress-track span{background:#d66b75}
+.conversion-progress.is-success .conversion-progress-text{color:#8ed6a6}
+.conversion-progress.is-success .conversion-progress-track span{background:#57b98a}
+.diagnostic-group-note{display:block;max-width:190px;font-size:11px;line-height:1.4}
