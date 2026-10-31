@@ -1225,21 +1225,10 @@ function initEvents() {
     saveReadingSession(true);
     showToast(state.pageTurnMode === 'next' ? 'Đã bật tự động lật trang theo mốc.' : 'Đã tắt tự động lật trang.');
   });
-  if (dom.btnAutoFlipToggle) {
-    dom.btnAutoFlipToggle.addEventListener('click', () => {
-      const enabled = state.pageTurnMode !== 'next';
-      state.pageTurnMode = enabled ? 'next' : 'off';
-          dom.btnAutoFlipToggle.classList.toggle('active', enabled);
-      dom.btnAutoFlipToggle.setAttribute('aria-pressed', String(enabled));
-      dom.btnAutoFlipToggle.title = enabled ? 'Tự động lật trang: bật' : 'Tự động lật trang: tắt';
-      updateReadMenuState();
-      showToast(enabled ? 'Đã bật tự động lật trang theo mốc.' : 'Đã tắt tự động lật trang.');
-    });
-  }
+
 
   initDragAndDrop();
 
-dom.selPageTurnMode.value = state.pageTurnMode;
   dom.btnPageJump.addEventListener('click', jumpToEnteredPage);
   dom.btnRestoreReadingCheckpoint?.addEventListener('click', restoreSelectedReadingCheckpoint);
   dom.pageJumpInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') jumpToEnteredPage(); });
