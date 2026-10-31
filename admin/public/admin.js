@@ -138,7 +138,6 @@ async function checkSession() {
     if (result.authenticated) {
       $("loginError").textContent = "";
       await loadFiles();
-      activateTab("library");
       startSessionHeartbeat();
     } else {
       $("loginError").textContent = result.reason === "cookie_missing"
@@ -495,7 +494,9 @@ function renderLibraryPage() {
     const row=document.createElement("tr"),cell=addCell(row,term?"Không tìm thấy sách/tệp/thư mục phù hợp.":(currentPrefix?"Thư mục trống.":"Thư viện chưa có tệp. Hãy tải PDF/audio lên."));
     cell.colSpan=5;cell.className="empty";$("fileRows").append(row);
   }
-  $("pageStatus").textContent=entries.length ? "Hiển thị "+(start+1)+"–"+Math.min(start+pageEntries.length,entries.length)+" / "+entries.length+" bộ/thư mục" : "0 bộ";
+  const independentFiles = ungrouped.length;
+  const breakdown = books.length + " bộ sách · " + folders.length + " thư mục · " + (independentFiles ? "1 nhóm tệp độc lập (" + independentFiles + " tệp)" : "0 nhóm tệp độc lập");
+  $("pageStatus").textContent = entries.length ? "Hiển thị " + (start+1) + "–" + Math.min(start+pageEntries.length,entries.length) + " / " + entries.length + " mục quản lý · " + breakdown : "0 mục quản lý · " + breakdown;
 }
 async function loadFiles() {
   const requestSeq=++fileLoadSequence,requestedPrefix=currentPrefix,startedAt=performance.now();
@@ -509,6 +510,10 @@ async function loadFiles() {
     if(requestSeq!==fileLoadSequence||requestedPrefix!==currentPrefix)return;
     if(!Array.isArray(result.folders)||!Array.isArray(result.files))throw new Error("API trả về danh sách thư viện không đúng cấu trúc.");
     allLibraryEntries=[...result.folders,...result.files];
+    if ($("diagnosticsPanel").dataset.scanned === "true") {
+      $("diagnosticsPanel").dataset.scanned = "false";
+      $("diagnosticsSummary").textContent = "Thư viện đã thay đổi. Hãy quét lại để cập nhật kết quả.";
+    }
     filePageIndex=0;
     renderLibraryPage();
     queueTelemetryEvent("library_load_success",{requestSeq,prefix:requestedPrefix,mode:"full_snapshot",folderCount:result.folders.length,fileCount:result.files.length,total:allLibraryEntries.length,durationMs:Math.round(performance.now()-startedAt)});
@@ -523,17 +528,6 @@ async function loadFiles() {
   }finally{if(requestSeq===fileLoadSequence)$("refreshBtn").disabled=false;}
 }
 
-function activateTab(name) {
-  const library = name === "library";
-  show("libraryPanel", library);
-  const diagnostics = name === "diagnostics";
-  show("diagnosticsPanel", diagnostics);
-  $("libraryTabBtn").classList.toggle("active", library);
-  $("diagnosticsTabBtn").classList.toggle("active", diagnostics);
-  if (diagnostics && $("diagnosticsPanel").dataset.scanned !== "true") runDiagnostics();
-}
-$("libraryTabBtn").addEventListener("click", () => activateTab("library"));
-$("diagnosticsTabBtn").addEventListener("click", () => activateTab("diagnostics"));
 $("pageSizeSelect").value=String(pageSize);
 $("pageSizeSelect").addEventListener("change",()=>{
   pageSize=Math.min(100,Math.max(25,Number($("pageSizeSelect").value)||25));
@@ -567,7 +561,7 @@ function diagnosticStat(label, value, kind) {
 async function runDiagnostics() {
   const buttons = [$("scanBtn")];
   buttons.forEach((button) => { if (button) button.disabled = true; });
-  show("diagnosticsPanel", true);
+  $("diagnosticsPanel").open = true;
   $("diagnosticsSummary").textContent = "Đang quét thư viện và kiểm tra chữ ký tệp…";
   $("diagnosticStats").replaceChildren();
   $("diagnosticRows").replaceChildren();
