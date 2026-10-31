@@ -7,10 +7,11 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover commit: `1ea6bb3124bafc9c5819d78146fa2cafb8206f40`
-- Last reviewed HEAD on beta: `71ba2a1d41cb62dc85723a65ba89bfeb55878155`
+- Last formal handover commit: `b5ff1d273e0a69ccdf0d37efd94cbe26942d5b09`
+- Last reviewed HEAD on beta: `b5ff1d273e0a69ccdf0d37efd94cbe26942d5b09`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
+- Latest recovery checkpoint: architecture handover [handover] commit `b5ff1d273e0a69ccdf0d37efd94cbe26942d5b09`
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
 
 ## Phát hiện sau mốc bàn giao trước
@@ -61,3 +62,13 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 ## Lịch sử mốc
 
 - 2026-10-31 — Khởi tạo RECOVERY. Handover cũ: `1ea6bb3124bafc9c5819d78146fa2cafb8206f40`; beta HEAD đã review: `fb521a9927fa4e81d414049208f30e296266c80e`.
+
+## Đối chiếu và bàn giao kiến trúc — 2026-10-31
+
+- So sánh `71ba2a1d41cb62dc85723a65ba89bfeb55878155...beta` trước khi bắt đầu cho kết quả `ahead 2`, `behind 0`, thay đổi tổng hợp chỉ gồm `RECOVERY.md` và `ROADMAP.md`; không có file runtime trong compare. Commit `6324daef8a506d0c725707df814df9ac0f10222f` đã được đọc trực tiếp; nó chỉ sửa ghi chú trạng thái PR #40 trong ROADMAP. Commit còn lại thuộc phạm vi RECOVERY theo compare; không có code/runtime delta.
+- Đã tạo tài liệu kiến trúc mục tiêu `docs/architecture/core-extensibility.md` (commit `149bb1b9248d569a60eb15fb405bae417313f9e1`).
+- Đã cập nhật PLANNING để ghi các audit/implementation task chưa hoàn thành (commit `e2a64eaa9f3d955d73b1829d65578d689f99311f`).
+- Đã cập nhật ROADMAP và tạo handover checkpoint (commit `284484f6266d0c9792bd82b36ab1e00ea179ee1b`, sau đó `[handover]` commit `b5ff1d273e0a69ccdf0d37efd94cbe26942d5b09`).
+- Recovery status `RECONCILED`: thay đổi từ mốc cũ đã được đối chiếu; batch hiện tại chỉ thay đổi tài liệu. `last_reviewed_head` và `last formal handover commit` được đặt tại checkpoint `b5ff1d273e0a69ccdf0d37efd94cbe26942d5b09`.
+- Mâu thuẫn tài liệu Remote Config chưa được coi là đã giải quyết về mặt code: README mô tả module client/bootstrap, trong khi Data Contract/PLANNING mô tả static config và runtime client chưa tích hợp. PLANNING giữ audit task để xác minh source và HTTP response trước khi quyết định có cần runtime client.
+- Không chạy test/CI, không deploy, không build APK, không thay đổi R2/D1/Cloudflare, không cập nhật main. PR #40 vẫn là README-only và chưa được merge tại thời điểm đối chiếu.
