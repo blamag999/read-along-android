@@ -71,7 +71,10 @@ assert.ok(analytics.required.includes('eventId') && analytics.required.includes(
 assert.equal(analytics.properties.readingSeconds.maximum, 120);
 assert.equal(analytics.properties.listeningSeconds.maximum, 120);
 assert.equal(analytics.properties.durationSeconds, undefined, 'Reading and listening time must be tracked separately');
-assert.equal(analytics.properties.bookId.pattern, '^[A-Za-z0-9_-]{1,160}
+assert.equal(analytics.properties.bookId.pattern, '^[A-Za-z0-9_-]{1,160}$', 'Only opaque catalog IDs may identify a book');
+assert.equal(analytics.additionalProperties, false, 'Analytics payload must reject unapproved personal/content fields');
+assert.equal(analytics.properties.type.enum.includes('heartbeat'), true);
+assert.equal(analytics.allOf.length, 5, 'Duration fields are required for heartbeat and state-ending events');
 
 const { validateRemoteConfig } = require('../admin/scripts/validate-remote-config');
 assert.deepEqual(validateRemoteConfig(remoteConfig), { valid: true, errors: [] }, 'Published static fixture must satisfy the strict Remote Config contract');
