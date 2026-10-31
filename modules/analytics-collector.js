@@ -6,6 +6,7 @@
   const CONSENT_KEY = 'read_along_analytics_consent_v1';
   const INSTALL_KEY = 'read_along_analytics_install_id_v1';
   const HEARTBEAT_MS = 60000;
+  // Poll only app state; do not patch reader/audio core or await telemetry from UI events.
   const POLL_MS = 5000;
   const MAX_INTERVAL_MS = 120000;
 
