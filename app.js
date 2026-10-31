@@ -289,11 +289,11 @@ function restoreSelectedReadingCheckpoint() {
   state.currentAudioIndex = Number.isInteger(restored.audioIndex) ? restored.audioIndex : 0;
   state.viewMode = 'fit-height';
   state.zoomScale = Number.isFinite(restored.zoomScale) ? Math.max(0.5, Math.min(3, restored.zoomScale)) : state.zoomScale;
-  state.pageTurnMode = ['next', 'markers', 'off'].includes(restored.pageTurnMode) ? restored.pageTurnMode : state.pageTurnMode;
+  state.pageTurnMode = restored.pageTurnMode === 'off' ? 'off' : 'next';
   
   state.sessionRestorePending = true;
   state.lastSessionSaveAt = 0;
-  dom.canvasWrapper.classList.toggle('two-page-mode', state.viewMode === 'two-pages');
+  dom.canvasWrapper.classList.remove('two-page-mode');
   updateReadMenuState();
   renderCurrentSpread();
   if (state.currentStoryAudios[state.currentAudioIndex]) {
@@ -321,10 +321,10 @@ function restoreReadingSessionForCurrentBook() {
   if (Number.isInteger(session.page) && session.page >= 1 && session.page <= state.totalPages) state.pageNum = session.page;
   if (['fit-height', 'fit-width', 'two-pages'].includes(session.viewMode)) {
     state.viewMode = session.viewMode;
-    dom.canvasWrapper.classList.toggle('two-page-mode', state.viewMode === 'two-pages');
+    dom.canvasWrapper.classList.remove('two-page-mode');
   }
   if (Number.isFinite(session.zoomScale)) state.zoomScale = Math.max(0.5, Math.min(3, session.zoomScale));
-  if (['next', 'markers', 'off'].includes(session.pageTurnMode)) state.pageTurnMode = session.pageTurnMode;
+  state.pageTurnMode = session.pageTurnMode === 'off' ? 'off' : 'next';
   
   updateReadMenuState();
   state.sessionRestorePending = true;
@@ -429,8 +429,6 @@ const dom = {
   menuCheckUpdates: document.getElementById('menuCheckUpdates'),
   chkBetaOta: document.getElementById('chkBetaOta'),
   menuAutoFlipState: document.getElementById('menuAutoFlipState'),
-  btnZoomOut: document.getElementById('btnZoomOut'),
-  btnZoomIn: document.getElementById('btnZoomIn'),
   lblZoomLevel: document.getElementById('lblZoomLevel'),
 
   btnOpenPlaylist: document.getElementById('btnOpenPlaylist'),
@@ -1985,7 +1983,7 @@ function jumpToEnteredPage() {
     return;
   }
   state.timestampSpread = false;
-  state.pageNum = state.viewMode === 'two-pages' ? (target % 2 === 0 ? Math.max(1, target - 1) : target) : target;
+  state.pageNum = target;
   state.isAudioDrivenChange = false;
   state.waitingForManualPageTurn = false;
   state.pendingManualPage = null;
