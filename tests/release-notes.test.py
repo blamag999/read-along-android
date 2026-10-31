@@ -1,8 +1,13 @@
 import unittest
-import sys
+import importlib.util
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from generate_release_notes import collect_entries, latest_channel_release, render_notes
+module_path = Path(__file__).resolve().parents[1] / "scripts" / "generate-release-notes.py"
+spec = importlib.util.spec_from_file_location("generate_release_notes", module_path)
+release_notes = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(release_notes)
+collect_entries = release_notes.collect_entries
+latest_channel_release = release_notes.latest_channel_release
+render_notes = release_notes.render_notes
 
 
 class ReleaseNotesTests(unittest.TestCase):
