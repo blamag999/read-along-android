@@ -8,10 +8,10 @@
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
 - Last formal handover commit: `1ea6bb3124bafc9c5819d78146fa2cafb8206f40`
-- Last reviewed HEAD on beta: `fb521a9927fa4e81d414049208f30e296266c80e`
+- Last reviewed HEAD on beta: `71ba2a1d41cb62dc85723a65ba89bfeb55878155`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
-- README shared policy: beta/main content synchronized; beta blob `0fac10f7d304663ff96726971b2eab046e564ee6` (main synchronization is pending PR because main requires changes through a pull request).
+- README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
 
 ## Phát hiện sau mốc bàn giao trước
 
