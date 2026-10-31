@@ -42,8 +42,10 @@ def main():
     if len(sys.argv) != 3:
         raise SystemExit("Usage: prune-ota-releases.py <beta|official> <current-apk-filename>")
     channel, filename = sys.argv[1:]
-    if channel not in CHANNELS or not APK_NAME.fullmatch(filename):
-        raise SystemExit("Invalid OTA channel or APK filename")
+    try:
+        prefix, keep_key = channel_target(channel, filename)
+    except ValueError as error:
+        raise SystemExit(str(error))
 
     endpoint = os.environ.get("R2_ENDPOINT", "")
     if not endpoint:
