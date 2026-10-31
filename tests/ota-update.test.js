@@ -44,6 +44,7 @@ assert.ok(native.includes('OTA_PATH = "/api/readalong-admin/ota/download"'), 'Na
 assert.ok(native.includes('setInstanceFollowRedirects(false)'), 'Native updater must reject redirects');
 assert.ok(native.includes('MessageDigest.getInstance("SHA-256")'), 'Native updater must hash the downloaded APK');
 assert.ok(native.includes('safeSha256.equals(actualSha256)'), 'Native updater must reject checksum mismatch');
+assert.ok(native.includes('MAX_APK_SIZE = 250 * 1024 * 1024'), 'Native updater must enforce the configured APK size ceiling');
 assert.ok(workflow.includes('VERSION_CODE: ${{ github.run_number }}'), 'Release build must embed versionCode');
 assert.ok(workflow.includes('app-version-code'), 'Release build must inject the app-version-code meta tag');
 
