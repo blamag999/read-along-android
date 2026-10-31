@@ -18,7 +18,7 @@ Tài liệu kỹ thuật chi tiết chỉ đọc khi công việc liên quan:
 
 ## Quy tắc README dùng chung trên mọi nhánh
 
-- `README.md` là hồ sơ quy tắc làm việc và bàn giao **dùng chung**, nội dung phải đồng nhất tuyệt đối trên `main`, `beta` và `testing`.
+- `README.md` là hồ sơ quy tắc làm việc và bàn giao **dùng chung**, nội dung phải đồng nhất tuyệt đối trên `main` và `beta`.
 - Khi README thay đổi trên một nhánh, phải đồng bộ cùng nội dung sang hai nhánh còn lại bằng commit chỉ sửa README; không merge/cherry-pick mã nguồn hoặc promote code chỉ để đồng bộ tài liệu.
 - Sau mỗi lần đồng bộ, đọc lại cả ba file và xác nhận nội dung giống hệt nhau (byte-for-byte), đồng thời ghi SHA commit từng nhánh vào ROADMAP.
 - Mỗi phiên mới phải kiểm tra README của cả ba nhánh trước khi làm việc; nếu phát hiện lệch, dùng bản quy tắc mới nhất đã được xác nhận trên beta làm nguồn chuẩn, trừ khi người dùng chỉ định khác.
@@ -31,26 +31,46 @@ Tài liệu kỹ thuật chi tiết chỉ đọc khi công việc liên quan:
 - Không tự suy đoán endpoint hoặc credential. Xác minh từ source code, workflow, config và tài liệu của repository này.
 - Không đưa token, mật khẩu, keystore, khóa ký, dữ liệu cá nhân hoặc URL riêng tư vào source, README, issue hay log.
 
-## 3. Quy ước ba nhánh — bắt buộc
+## 3. Quy ước hai nhánh dài hạn — bắt buộc
 
-Repository hiện có đúng ba nhánh làm việc được quy ước:
+Repository sử dụng đúng **hai nhánh dài hạn**:
 
 | Nhánh | Vai trò | Cách sử dụng |
 |---|---|---|
-| `main` | Stable / phát hành chính thức | Chỉ cập nhật khi người dùng yêu cầu phát hành stable hoặc xác nhận rõ promote từ `beta`. |
-| `beta` | Phát triển và tích hợp chính | Nhánh mặc định để sửa lỗi, phát triển, cập nhật tài liệu và chạy CI. |
-| `testing` | Kiểm chứng có kiểm soát | Chỉ sử dụng khi có nhu cầu kiểm thử tách biệt thực sự hoặc người dùng yêu cầu. Không bắt buộc cho mọi thay đổi. |
+| `beta` | Phát triển và tích hợp | Nhánh làm việc mặc định; sửa lỗi, phát triển, cập nhật tài liệu và kiểm thử theo batch. |
+| `main` | Stable / phát hành chính thức | Chỉ nhận thay đổi đã nghiệm thu từ `beta` qua Pull Request khi người dùng yêu cầu phát hành stable hoặc xác nhận promote. |
 
-### Không được làm
+### Quy tắc phát triển
 
-- Không tạo nhánh mới cho từng tính năng, lỗi, PR hoặc đợt sửa; không tạo `feature/*`, `fix/*`, `testing-*` hay nhánh tạm.
-- Không tạo nhánh thay thế khi `testing` cũ/stale; ưu tiên quy trình trực tiếp trên `beta`.
-- Không tự ý xóa bất kỳ nhánh nào, kể cả nhánh cũ không còn dùng.
-- Không force-push, rebase/viết lại lịch sử đã chia sẻ, reset làm mất commit hoặc thay đổi ref bằng force.
-- Không tự ý merge/promote `beta` lên `main`.
+- Mặc định commit trực tiếp lên `beta`; không tạo nhánh riêng cho từng tính năng/lỗi và không dùng nhánh `testing`.
+- Không push trực tiếp lên `main`; mọi thay đổi thông thường đi theo PR `beta` → `main`.
+- Chỉ promote đúng commit/tree đã được kiểm thử trên `beta`; không cherry-pick chọn lọc để phát hành nếu chưa đánh giá đầy đủ phụ thuộc.
+- Không force-push, rebase/viết lại lịch sử đã chia sẻ, reset làm mất commit hoặc tự ý xóa nhánh.
+- Hotfix khẩn cấp: chỉ khi cần sửa stable trước khi beta sẵn sàng, tạo nhánh tạm `hotfix/*` từ `main`, kiểm thử, PR vào `main`, sau đó back-merge `main` về `beta`; xóa nhánh tạm sau khi xác nhận đã hợp nhất. Không dùng hotfix làm luồng phát triển thường xuyên.
+- Nhánh feature riêng chỉ dùng khi có lý do phối hợp song song thực sự; phải ghi rõ mục đích và kế hoạch merge. Mặc định vẫn làm trực tiếp trên `beta`.
 - Không tự ý thay đổi GitHub Secrets, Cloudflare secrets, keystore, signing key hoặc quyền truy cập.
 
-Nếu thật sự cần ngoại lệ về nhánh, phải giải thích lý do kỹ thuật và xin xác nhận trước khi thực hiện. Các nhánh phụ từng xuất hiện trong lịch sử chỉ là dấu vết công việc cũ, không phải quy trình hiện hành.
+### Quy trình phát hành stable
+
+1. Hoàn tất một batch trên `beta`; chạy regression theo marker `[test]` hoặc kiểm thử bắt buộc tương ứng.
+2. Nếu có thay đổi APK runtime, chốt commit `[build-apk]`, đợi workflow build beta hoàn tất và kiểm tra signature/SHA-256/artifact.
+3. Kiểm thử APK beta trên thiết bị thật; ghi rõ phần đã xác nhận và phần pending.
+4. Khi người dùng xác nhận phát hành stable, tạo PR `beta` → `main`; CI của PR phải pass.
+5. Merge PR; chỉ build/publish stable từ `main` theo workflow hiện hành. Kiểm tra Release, APK, chữ ký và checksum trước khi thông báo.
+6. Sau hotfix trên `main`, đồng bộ lại `beta` trước batch tiếp theo.
+
+### Bảo vệ nhánh và quyền
+
+- `main` cần bật branch protection/ruleset: yêu cầu PR, yêu cầu status checks phù hợp, chặn force-push và xóa nhánh; không bắt buộc review approval nếu repository chỉ có một người duy trì.
+- `beta` cho phép push trực tiếp nhưng không force-push; kiểm thử theo batch như mục 7.
+- Nếu GitHub connector không có quyền quản trị để bật protection, không được tuyên bố đã bật. Ghi trạng thái pending và hướng dẫn chủ repo cấu hình trong GitHub Settings → Branches/Rulesets.
+- Không xóa nhánh hoặc thay đổi protection khi chưa kiểm tra quyền và trạng thái PR/workflow liên quan.
+
+### README dùng chung
+
+- README là quy tắc làm việc dùng chung, nội dung phải đồng nhất byte-for-byte trên `beta` và `main`.
+- Khi thay đổi README, cập nhật cùng nội dung lên cả hai nhánh bằng commit README-only; không merge/cherry-pick code chỉ để đồng bộ tài liệu.
+- ROADMAP/PLANNING không cần đồng nhất giữa hai nhánh vì phản ánh trạng thái code riêng; hồ sơ bàn giao mới nhất phải được cập nhật trên `beta`.
 
 ## 4. Quy trình bắt buộc trước và trong mỗi đợt
 
@@ -58,7 +78,7 @@ Nếu thật sự cần ngoại lệ về nhánh, phải giải thích lý do k�
 
 1. Xác nhận repository là `blamag999/read-along-android`.
 2. Đọc README, ROADMAP, PLANNING phiên bản mới nhất trên GitHub.
-3. Kiểm tra HEAD của cả `main`, `beta`, `testing`; xác định branch đang làm và commit cha.
+3. Kiểm tra HEAD của `beta` và `main`; xác định branch đang làm và commit cha.
 4. Kiểm tra workflow CI gần nhất, trạng thái deploy Pages/Worker liên quan, Releases và Issues liên quan. Không dùng kết quả CI cũ để kết luận commit mới đã pass.
 5. Đọc mã và contract hiện tại của đúng thành phần cần sửa; tìm tất cả caller trước khi thay đổi API hoặc luồng dữ liệu.
 6. Xác định phạm vi ảnh hưởng, test cần bổ sung và có cần build APK hay không.
@@ -139,7 +159,7 @@ Catalog và media trên R2, marker JSON, Admin, Diagnostics backend, Analytics b
 - `Check Read Along Admin` chỉ nhận push có thay đổi trong `admin/**`, app shell/caller, `modules/**`, `services/**`, schema, package manifests hoặc tests; PR vào `beta`/`main` vẫn tự động kiểm thử theo path filter riêng.
 - `Build and Release Read Along` chỉ nhận push lên `beta` có thay đổi liên quan đến runtime/asset/native Android/build manifest. Push chỉ thay đổi Admin/backend/docs không tạo build workflow run.
 - Workflow-level path filtering và job-level marker là hai lớp độc lập: path xác định có tạo workflow run hay không; `[test]`/`[build-apk]` xác định có thực thi job nặng hay không.
-- Push thông thường lên `beta`, `main`, `testing`: không chạy full regression suite.
+- Push thông thường lên `beta` hoặc `main`: không chạy full regression suite.
 - Khi hoàn tất một batch, đặt `[test]` trong commit cuối cùng của lần push để chạy `npm test`, Pages Functions syntax check và isolation checks.
 - Marker phải nằm trong **commit cuối cùng của push** vì workflow đọc `github.event.head_commit.message`. Nếu marker nằm ở commit trước trong cùng push, workflow sẽ không nhận diện.
 - Pull request vào `beta`/`main` vẫn tự động chạy đầy đủ regression checks; `workflow_dispatch` cũng cho phép chạy thủ công.
