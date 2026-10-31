@@ -344,3 +344,14 @@ Khi một công việc trong PLANNING hoàn tất:
 - Commit loại bỏ mutating smoke test: `20319939c6874df2a6ae3ccc9fb86962c96fcad8`; chờ CI regression cuối cho workflow non-mutating.
 - AN2 production HTTP acceptance hoàn tất. Không có APK/client collector/dashboard trong batch này.
 
+
+### 2026-10-31 — Hoàn tất AN2 và khảo sát AN3 collector
+
+- CI [#41167200825](https://github.com/blamag999/read-along-android/actions/runs/41167200825) **success** trên commit `20319939c6874df2a6ae3ccc9fb86962c96fcad8`: regression, syntax, isolation và production CORS/consent smoke test non-mutating.
+- AN2 đã có bằng chứng production HTTP write/replay/sequence collision ở [#41167147802](https://github.com/blamag999/read-along-android/actions/runs/41167147802); D1 aggregate đúng một lần và tất cả smoke rows đã được dọn. Production write smoke được bỏ khỏi CI thường trực để không làm bẩn analytics.
+- Khảo sát AN3: `app.js` global state có `state.pdfDoc`, `state.currentBookKey`, `state.currentStoryAudios`; PDF load thành công trong `loadPdfFromBlob` và `loadPdfFromUrl`; audio lifecycle có play/pause/ended/error listeners; app lưu reading session ở localStorage và flush khi pause/pagehide.
+- `modules/diagnostics.js` đã có event capture và diagnostics consent riêng, nhưng consent này chỉ áp dụng cho việc người dùng chủ động gửi báo cáo công khai; không được tái sử dụng cho analytics opt-in.
+- Script order hiện tại: page-sync → playlist-layout → catalog-playlist → app.js → remote-config → remote-sync → diagnostics. Có thể thêm collector độc lập sau app.js; tuy nhiên phải giữ collector tách biệt với diagnostics và không gửi bookKey/title/file name.
+- UI hiện có read menu với mục Diagnostics; đề xuất thêm mục Analytics/Thống kê ẩn danh và modal opt-in riêng. Consent mặc định off, lưu key riêng; opt-out dừng ngay và không queue event offline.
+- Không có thay đổi runtime trong batch khảo sát. Không build APK. AN3 implementation chưa bắt đầu.
+
