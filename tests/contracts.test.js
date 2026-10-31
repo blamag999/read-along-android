@@ -92,7 +92,7 @@ assert.ok(releaseWorkflow.includes('python3 scripts/generate-release-notes.py'),
 assert.ok(releaseWorkflow.includes('CHANGELOG: ${{ steps.release_info.outputs.changelog }}'), 'OTA manifest must receive the generated release notes');
 assert.ok(releaseNotesGenerator.includes('latest_channel_release(releases, channel)'), 'Release notes baseline must be selected by channel');
 assert.ok(releaseNotesGenerator.includes('"security": "Bảo mật"'), 'Release notes must include the security category');
-assert.ok(appSource.includes("showToast('Đã tải âm thanh. Nhấn Phát để nghe.');"), 'Audio success copy uses Vietnamese terminology');
+assert.ok(appSource.includes("showToast('Đã tải âm thanh.' + (skippedCount > 0 ? ' Đã bỏ qua ' + skippedCount + ' tệp không hỗ trợ.' : ' Nhấn Phát để nghe.'));"), 'Audio success and skipped-file summary use one concise notification');
 assert.ok(appSource.includes("showToast('Đã tự động chuyển sang phần âm thanh '"), 'Automatic part switching uses Vietnamese terminology');
 
 
