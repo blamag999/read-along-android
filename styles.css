@@ -1788,24 +1788,36 @@ button:focus-visible, select:focus-visible, input:focus-visible{
 }
 
 
-/* Read Along v1.2.1 beta UX updates */
-.app-ui-mode .update-channel-row { grid-template-columns: 28px minmax(0,1fr) 28px; cursor: pointer; }
-.app-ui-mode .update-channel-label { display: flex; flex-direction: column; gap: 2px; }
-.app-ui-mode .update-channel-label small { color: #94a3b8; font-size: .72rem; font-weight: 500; }
+/* Compact OTA controls inside the reader menu */
+.app-ui-mode .ota-settings-group {
+  display: grid; gap: 2px; padding: 4px;
+  border: 1px solid rgba(148,163,184,.22); border-radius: 9px;
+  background: rgba(15,23,42,.28);
+}
+.app-ui-mode .ota-settings-group .update-channel-row {
+  grid-template-columns: minmax(0,1fr) 24px; min-height: 36px;
+  padding: 5px 7px; cursor: pointer;
+}
 .app-ui-mode .update-channel-row input[type="checkbox"] {
-  width: 22px; height: 22px; margin: 0; justify-self: center;
+  width: 20px; height: 20px; margin: 0; justify-self: center;
   accent-color: #34d399; cursor: pointer;
 }
 .app-ui-mode .update-channel-row input[type="checkbox"]:focus-visible {
   outline: 3px solid #60a5fa; outline-offset: 3px;
 }
-.app-ui-mode .read-menu-version {
-  display: grid; grid-template-columns: 28px minmax(0,1fr) auto; align-items: center;
-  gap: 8px; min-height: 42px; padding: 7px 10px; color: #cbd5e1;
-  border-top: 1px solid rgba(148,163,184,.2); font-size: .82rem;
+.app-ui-mode .ota-settings-group .read-menu-version {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; min-height: 25px; padding: 3px 7px;
+  color: #94a3b8; font-size: .74rem;
+  border-top: 1px solid rgba(148,163,184,.14);
 }
 .app-ui-mode .read-menu-version strong {
-  color: #f8fafc; font-size: .82rem; font-variant-numeric: tabular-nums;
+  color: #cbd5e1; font-size: .74rem; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.app-ui-mode .ota-settings-group .update-check-row {
+  display: block; min-height: 34px; padding: 6px 7px;
+  text-align: center; font-size: .82rem;
 }
 .tutorial-basic-steps {
   margin: 12px 0 0; padding-left: 1.5rem; display: grid; gap: 12px;
