@@ -77,6 +77,8 @@ assert.ok(!appSource.includes("dom.viewerContainer.addEventListener('touchstart'
 assert.ok(appSource.includes('getRenderedPdfBounds'), 'touch zones must be bounded by rendered PDF canvases');
 assert.ok(htmlSource.includes('readingCheckpointMenuGroup'), 'three recent checkpoints must be reachable from the reader menu');
 assert.ok(htmlSource.includes('id="btnOpenPlaylist"') && htmlSource.includes('id="btnOpenReadMenu"'), 'header must retain the library and menu actions');
+const libraryButton = htmlSource.match(/<button id="btnOpenPlaylist"[^>]*>/)?.[0] || '';
+assert.ok(!/\\sdisabled(?:\\s|>)/.test(libraryButton) && /aria-disabled="false"/.test(libraryButton), 'Library action must be enabled on first launch so it can retry after an initial R2 catalog failure');
 assert.ok(htmlSource.includes('class="playlist-icon"') && htmlSource.includes('class="playlist-label"'), 'library button must expose a recognizable icon and readable label');
 assert.ok(styleSource.includes('.playlist-btn .playlist-label { display: inline !important; }'), 'portrait library action must keep its label visible');
 assert.ok(appSource.includes("dom.lblPlaylistCount.classList.remove('hidden')") && appSource.includes("setAttribute('aria-label', 'Thư viện sách, ' + count + ' cuốn')"), 'library badge and accessible label must always reflect the loaded book count');
