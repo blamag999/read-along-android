@@ -332,7 +332,7 @@ function appendLibraryFileRow(anchorRow, file, kind, label) {
 }
 
 function renderLibraryPage() {
-  show("moveRootAssetsToDisneyBtn", !currentPrefix);
+  show("moveRootAssetsBtn", !currentPrefix);
   const term=normalizeSearch($("searchFilesInput").value.trim());
   const sort=$("sortFilesSelect").value;
   const grouped = libraryAssetGroups(allLibraryEntries);
@@ -594,12 +594,86 @@ async function renameEntry(entry) {
     await loadFiles();
   } catch (error) { setStatus("Không thể đổi tên/di chuyển " + entry.key + ": " + error.message, true); }
 }
-async function moveRootAssetsToDisney() {
-  const button = $("moveRootAssetsToDisneyBtn");
+let moveDestinationResolve = null;
+let creatingMoveFolder = false;
+
+function chooseMoveDestination(folders) {
+  const select = $("moveExistingFolder");
+  select.replaceChildren();
+  folders.forEach(folder => {
+    const option = document.createElement("option");
+    option.value = folder.key;
+    option.textContent = folder.key.replace(/\/$/, "");
+    select.appendChild(option);
+  });
+  creatingMoveFolder = false;
+  show("moveExistingFolderLabel", true);
+  show("moveNewFolderLabel", false);
+  $("toggleCreateMoveFolderBtn").textContent = "＋ Tạo thư mục mới";
+  $("moveNewFolderName").value = "";
+  $("acceptMoveDestination").disabled = !folders.length;
+  $("moveExistingFolderLabel").classList.toggle("hidden", !folders.length);
+  $("moveExistingFolder").disabled = !folders.length;
+  show("moveDestinationDialog", true);
+  return new Promise(resolve => { moveDestinationResolve = resolve; });
+}
+function closeMoveDestination(value) {
+  show("moveDestinationDialog", false);
+  moveDestinationResolve?.(value);
+  moveDestinationResolve = null;
+}
+$("cancelMoveDestination").addEventListener("click", () => closeMoveDestination(null));
+$("toggleCreateMoveFolderBtn").addEventListener("click", () => {
+  creatingMoveFolder = !creatingMoveFolder;
+  show("moveExistingFolderLabel", !creatingMoveFolder);
+  show("moveNewFolderLabel", creatingMoveFolder);
+  $("toggleCreateMoveFolderBtn").textContent = creatingMoveFolder ? "← Chọn thư mục có sẵn" : "＋ Tạo thư mục mới";
+  $("acceptMoveDestination").disabled = !creatingMoveFolder && !$("moveExistingFolder").value;
+  if (creatingMoveFolder) $("moveNewFolderName").focus();
+});
+$("moveExistingFolder").addEventListener("change", () => {
+  $("acceptMoveDestination").disabled = !creatingMoveFolder && !$("moveExistingFolder").value;
+});
+$("moveNewFolderName").addEventListener("input", () => {
+  $("acceptMoveDestination").disabled = creatingMoveFolder && !$("moveNewFolderName").value.trim();
+});
+$("acceptMoveDestination").addEventListener("click", () => {
+  if (creatingMoveFolder) {
+    const name = $("moveNewFolderName").value.trim();
+    if (!name || name.length > 120 || /[\\/\0]/.test(name) || name === "." || name === "..") {
+      setStatus("Tên thư mục không hợp lệ. Không dùng dấu / hoặc \\.", true);
+      return;
+    }
+    closeMoveDestination({ type: "new", name });
+    return;
+  }
+  const key = $("moveExistingFolder").value;
+  if (!key) return;
+  closeMoveDestination({ type: "existing", key });
+});
+
+async function listAllMoveDestinationFolders() {
+  const pending = [""], seen = new Set(), folders = [];
+  while (pending.length) {
+    const prefix = pending.shift();
+    const result = await api("files/all?prefix=" + encodeURIComponent(prefix), { cache: "no-store" });
+    for (const folder of result.folders || []) {
+      if (!folder || typeof folder.key !== "string" || seen.has(folder.key)) continue;
+      seen.add(folder.key);
+      folders.push(folder);
+      pending.push(folder.key);
+      if (seen.size > 5000) throw new Error("Có hơn 5.000 thư mục; hãy thu hẹp cấu trúc trước khi di chuyển.");
+    }
+  }
+  return folders.sort((a, b) => a.key.localeCompare(b.key, "vi", { sensitivity: "base", numeric: true }));
+}
+
+async function moveRootAssets() {
+  const button = $("moveRootAssetsBtn");
   if (currentPrefix) return;
   button.disabled = true;
   try {
-    const inventory = await api("files/all?prefix=");
+    const inventory = await api("files/all?prefix=", { cache: "no-store" });
     const candidates = (inventory.files || []).filter(file =>
       file && file.type === "file" && file.key !== "books.json" &&
       !file.key.includes("/") && allowed.test(file.key)
@@ -608,21 +682,43 @@ async function moveRootAssetsToDisney() {
       setStatus("Không còn tệp sách nào ở thư mục gốc cần di chuyển.");
       return;
     }
-    const destination = await api("files/all?prefix=DISNEY");
-    const existing = new Set((destination.files || []).map(file => file.key));
-    const conflicts = candidates.filter(file => existing.has("DISNEY/" + file.name));
-    if (conflicts.length) {
-      throw new Error("Đã có " + conflicts.length + " tên tệp trùng trong DISNEY. Không di chuyển tệp nào; hãy xử lý xung đột trước.");
+
+    setStatus("Đang tải danh sách thư mục đích…");
+    const folders = await listAllMoveDestinationFolders();
+    const destination = await chooseMoveDestination(folders);
+    if (!destination) return;
+
+    const targetPrefix = destination.type === "new" ? destination.name + "/" : destination.key;
+    if (!targetPrefix || targetPrefix.startsWith("/") || targetPrefix.includes("../")) {
+      throw new Error("Đường dẫn thư mục đích không hợp lệ.");
     }
+    if (destination.type === "new" && folders.some(folder => folder.key === targetPrefix)) {
+      throw new Error("Thư mục đã tồn tại. Hãy chọn thư mục có sẵn.");
+    }
+
+    const existing = destination.type === "existing"
+      ? await api("files/all?prefix=" + encodeURIComponent(targetPrefix), { cache: "no-store" })
+      : { files: [] };
+    const existingNames = new Set((existing.files || []).map(file => file.name));
+    const conflicts = candidates.filter(file => existingNames.has(file.name));
+    if (conflicts.length) {
+      throw new Error("Thư mục đích có " + conflicts.length + " tên tệp bị trùng. Không di chuyển tệp nào; hãy xử lý xung đột trước.");
+    }
+
     const totalBytes = candidates.reduce((sum, file) => sum + Number(file.size || 0), 0);
+    const targetLabel = targetPrefix.replace(/\/$/, "");
     const approved = await confirmAction(
-      "Di chuyển thư viện gốc vào DISNEY?",
-      "Sẽ chuyển " + candidates.length + " tệp (" + formatSize(totalBytes) + ") vào DISNEY.\n\n" +
-      "books.json được giữ nguyên ở thư mục gốc. Thư mục ONE STORY A DAY LEVEL 2 FULL và nội dung các thư mục khác không bị thay đổi.\n\n" +
+      "Di chuyển tệp vào " + targetLabel + "?",
+      "Sẽ chuyển " + candidates.length + " tệp (" + formatSize(totalBytes) + ") vào " + targetLabel + ".\n\n" +
+      "books.json được giữ nguyên ở thư mục gốc. Các thư mục hiện có và nội dung bên trong không bị di chuyển.\n\n" +
       "Mỗi tệp được sao chép, kiểm tra dung lượng ở đích rồi mới xóa bản nguồn. Nếu một tệp lỗi, bản nguồn của tệp đó được giữ lại.",
       "Bắt đầu di chuyển"
     );
     if (!approved) return;
+
+    if (destination.type === "new") {
+      await postJson("folders", { prefix: "", name: destination.name });
+    }
 
     let nextIndex = 0, completed = 0;
     const failures = [];
@@ -630,25 +726,25 @@ async function moveRootAssetsToDisney() {
       while (nextIndex < candidates.length) {
         const file = candidates[nextIndex++];
         try {
-          await postJson("rename", { source: file.key, destination: "DISNEY/" + file.name });
+          await postJson("rename", { source: file.key, destination: targetPrefix + file.name });
           completed++;
         } catch (error) {
           failures.push({ key: file.key, error: error.message || String(error) });
         }
-        setStatus("Đang di chuyển vào DISNEY: " + completed + "/" + candidates.length +
+        setStatus("Đang chuyển vào " + targetLabel + ": " + completed + "/" + candidates.length +
           " thành công · " + failures.length + " lỗi");
       }
     };
     await Promise.all([worker(), worker()]);
     await loadFiles();
     if (failures.length) {
-      setStatus("Đã chuyển " + completed + "/" + candidates.length + " tệp. " +
+      setStatus("Đã chuyển " + completed + "/" + candidates.length + " tệp vào " + targetLabel + ". " +
         failures.length + " tệp lỗi vẫn được giữ ở nguồn; xử lý lỗi rồi chạy lại. " +
         failures.slice(0, 3).map(item => item.key + ": " + item.error).join(" · "), true);
       return;
     }
 
-    setStatus("Đã chuyển " + completed + " tệp vào DISNEY. Đang tạo bản xem trước books.json…");
+    setStatus("Đã chuyển " + completed + " tệp vào " + targetLabel + ". Đang tạo bản xem trước books.json…");
     const preview = await api("catalog/preview");
     const excluded = preview.excluded || [];
     const folderCounts = (preview.manifest?.books || []).reduce((counts, book) => {
@@ -661,7 +757,7 @@ async function moveRootAssetsToDisney() {
       .map(([folder, count]) => folder + ": " + count + " sách")
       .join("\n");
     if (excluded.length) {
-      setStatus("Đã di chuyển nhưng bản xem trước loại " + excluded.length +
+      setStatus("Đã chuyển nhưng bản xem trước loại " + excluded.length +
         " nhóm. Chưa xuất bản books.json; hãy kiểm tra phần xem trước trong Admin.", true);
       return;
     }
@@ -673,20 +769,20 @@ async function moveRootAssetsToDisney() {
       "Xuất bản books.json"
     );
     if (!publishApproved) {
-      setStatus("Đã di chuyển tệp vào DISNEY; books.json chưa được xuất bản. Có thể chạy lại chức năng tạo danh mục.");
+      setStatus("Đã chuyển tệp vào " + targetLabel + "; books.json chưa được xuất bản. Có thể chạy lại chức năng xuất bản danh mục.");
       return;
     }
     const result = await postJson("catalog/publish", preview.manifest);
-    setStatus("Hoàn tất: đã chuyển " + completed + " tệp và xuất bản books.json gồm " +
-      result.books + " sách, " + result.files + " tài nguyên đã xác minh.");
+    setStatus("Hoàn tất: đã chuyển " + completed + " tệp vào " + targetLabel +
+      " và xuất bản books.json gồm " + result.books + " sách, " + result.files + " tài nguyên đã xác minh.");
     await loadFiles();
   } catch (error) {
-    setStatus("Không thể hoàn tất di chuyển vào DISNEY: " + error.message, true);
+    setStatus("Không thể hoàn tất di chuyển tệp: " + error.message, true);
   } finally {
     button.disabled = false;
   }
 }
-$("moveRootAssetsToDisneyBtn").addEventListener("click", moveRootAssetsToDisney);
+$("moveRootAssetsBtn").addEventListener("click", moveRootAssets);
 
 async function deleteFile(entry) {
   if (!await confirmAction("Xác nhận xóa tệp?", "Bạn sắp xóa tệp:\n" + entry.key + "\n\nTệp sẽ bị xóa khỏi bucket my-audio-book. Thao tác này không thể hoàn tác.", "Xóa vĩnh viễn")) return;
