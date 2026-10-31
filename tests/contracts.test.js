@@ -116,5 +116,6 @@ console.log('Read Along data contract schema tests passed.');
 const htmlSource = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const styleSource = fs.readFileSync(path.join(__dirname, '..', 'styles.css'), 'utf8');
 assert.match(htmlSource, /<section class="ota-settings-group" aria-label="Cập nhật ứng dụng">[\s\S]*?id="chkBetaOta"[\s\S]*?id="installedAppVersion"[\s\S]*?id="menuCheckUpdates"[\s\S]*?<\/section>/, 'OTA channel, installed version and update check are grouped in one compact menu section');
-const otaMenuGroup = htmlSource.match(/<section class="ota-settings-group"[\\s\\S]*?<\\/section>/)?.[0] || '';\nassert.ok(!otaMenuGroup.includes('Đánh dấu để dùng Beta') && !otaMenuGroup.includes('menu-option-icon'), 'OTA controls omit redundant helper text and decorative icons');
+const otaMenuGroup = htmlSource.split('<section class="ota-settings-group"')[1]?.split('</section>')[0] || '';
+assert.ok(!otaMenuGroup.includes('Đánh dấu để dùng Beta') && !otaMenuGroup.includes('menu-option-icon'), 'OTA controls omit redundant helper text and decorative icons');
 assert.match(styleSource, /\.app-ui-mode \.ota-settings-group[\s\S]*?\.app-ui-mode \.ota-settings-group \.update-check-row/, 'OTA menu group has compact layout styles');
