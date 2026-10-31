@@ -703,10 +703,8 @@ async function handle(request, env) {
         .bind(startText, endText).all(),
       env.DB.prepare("SELECT MIN(day_utc) AS first_day, MAX(day_utc) AS last_day, COUNT(*) AS days_with_data FROM admin_reading_daily WHERE day_utc >= ? AND day_utc <= ?")
         .bind(startText, endText).first(),
-      startMs >= cutoff
-        ? env.DB.prepare("SELECT platform, app_version, COUNT(DISTINCT install_hash) AS devices, COUNT(DISTINCT session_id) AS sessions, SUM(reading_seconds) AS reading_seconds, SUM(listening_seconds) AS listening_seconds, COUNT(*) AS events FROM admin_reading_events WHERE received_at >= ? AND received_at < ? GROUP BY platform, app_version ORDER BY events DESC LIMIT 20")
-          .bind(Math.max(startMs, cutoff), endExclusive).all()
-        : Promise.resolve({ results: [] }),
+      env.DB.prepare("SELECT platform, COUNT(DISTINCT install_hash) AS devices, COUNT(DISTINCT session_id) AS sessions, SUM(reading_seconds) AS reading_seconds, SUM(listening_seconds) AS listening_seconds, COUNT(*) AS events FROM admin_reading_events WHERE received_at >= ? AND received_at < ? GROUP BY platform ORDER BY events DESC LIMIT 20")
+          .bind(Math.max(startMs, cutoff), endExclusive).all(),
       env.DB.prepare("SELECT status, scanned, errors, warnings, duration_ms, rule_version, created_at FROM admin_scan_logs WHERE prefix = '' ORDER BY created_at DESC LIMIT 1").first(),
       env.READALONG.get("books.json")
     ]);
@@ -714,7 +712,7 @@ async function handle(request, env) {
     const readingSeconds = rows.reduce((sum, row) => sum + Number(row.reading_seconds || 0), 0);
     const listeningSeconds = rows.reduce((sum, row) => sum + Number(row.listening_seconds || 0), 0);
     const eventCount = rows.reduce((sum, row) => sum + Number(row.event_count || 0), 0);
-    const rawAvailable = startMs >= cutoff;
+    const rawAvailable = endExclusive > cutoff;
     const breakdownRows = breakdown.results || [];
     let libraryStats = { books: null, pdfs: null, audioParts: null, syncedBooks: null, status: "invalid_manifest" };
     try {
@@ -756,7 +754,7 @@ async function handle(request, env) {
           item.events += Number(row.events || 0);
           return items;
         }, []),
-        note: rawAvailable ? "Thiết bị/phiên/nền tảng lấy từ dữ liệu chi tiết còn lưu tối đa 90 ngày." : "Dữ liệu chi tiết đã quá thời hạn 90 ngày; chỉ còn số tổng hợp theo ngày."
+        note: !rawAvailable ? "Dữ liệu chi tiết đã quá thời hạn 90 ngày; chỉ còn số tổng hợp theo ngày." : startMs < cutoff ? "Phân bổ nền tảng và thiết bị chỉ tính phần giao với 90 ngày gần nhất; thời lượng vẫn lấy tổng hợp toàn kỳ." : "Phân bổ nền tảng và thiết bị lấy từ dữ liệu chi tiết trong khoảng chọn (tối đa 90 ngày)."
       },
       library: libraryStats,
       latestScan: latestScan ? {
