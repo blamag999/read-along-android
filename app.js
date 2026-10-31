@@ -198,6 +198,7 @@ function handleAppBack() {
   }
   if (dom.readOptionsMenu && !dom.readOptionsMenu.classList.contains('hidden')) {
     dom.readOptionsMenu.classList.add('hidden');
+    dom.readOptionsMenu.setAttribute('aria-hidden', 'true');
     dom.btnOpenReadMenu?.setAttribute('aria-expanded', 'false');
     return;
   }
@@ -1225,11 +1226,13 @@ function initEvents() {
       const isOpen = !dom.readOptionsMenu.classList.contains('hidden');
       dom.readOptionsMenu.classList.toggle('hidden', isOpen);
       dom.btnOpenReadMenu.setAttribute('aria-expanded', String(!isOpen));
+      dom.readOptionsMenu.setAttribute('aria-hidden', String(isOpen));
       if (!isOpen) dom.readOptionsMenu.querySelector('button:not([disabled])')?.focus();
     });
     document.addEventListener('click', (event) => {
       if (!dom.readOptionsMenu.contains(event.target) && !dom.btnOpenReadMenu.contains(event.target)) {
         dom.readOptionsMenu.classList.add('hidden');
+        dom.readOptionsMenu.setAttribute('aria-hidden', 'true');
         dom.btnOpenReadMenu.setAttribute('aria-expanded', 'false');
       }
     });
@@ -1350,6 +1353,7 @@ dom.selPageTurnMode.value = state.pageTurnMode;
 
   dom.menuOpenSyncModal.addEventListener('click', () => {
     dom.readOptionsMenu.classList.add('hidden');
+    dom.readOptionsMenu.setAttribute('aria-hidden', 'true');
     dom.btnOpenReadMenu.setAttribute('aria-expanded', 'false');
     openSyncModal();
   });
