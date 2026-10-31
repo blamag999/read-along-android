@@ -1397,7 +1397,7 @@ async function handlePdfFileSelect(e) {
   dom.audioElement.pause();
   dom.audioElement.removeAttribute('src');
   dom.audioElement.load();
-  dom.audioFileName.textContent = '🎵 Chưa có audio';
+  dom.audioFileName.textContent = '🎵 Chưa có âm thanh';
   dom.audioFileName.classList.add('empty');
   updateAudioPartUI();
 
