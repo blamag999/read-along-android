@@ -355,3 +355,14 @@ Khi một công việc trong PLANNING hoàn tất:
 - UI hiện có read menu với mục Diagnostics; đề xuất thêm mục Analytics/Thống kê ẩn danh và modal opt-in riêng. Consent mặc định off, lưu key riêng; opt-out dừng ngay và không queue event offline.
 - Không có thay đổi runtime trong batch khảo sát. Không build APK. AN3 implementation chưa bắt đầu.
 
+
+### 2026-10-31 — AN3 collector skeleton and opt-in UI added (CI pending)
+
+- Thêm `modules/analytics-collector.js` độc lập: consent key riêng mặc định off, install/session/event IDs riêng, heartbeat 60 giây, monotonic clock, clamp interval 120 giây, foreground/PDF/audio state, no offline queue/retry, fixed endpoint và no bookId/title/file/URL.
+- Thêm mục `Thống kê sử dụng` trong read menu và modal opt-in riêng; diagnostics consent không được dùng lại. Opt-out dừng session, xóa install ID analytics và không gửi thêm event.
+- Nạp collector sau `app.js`; thêm module vào Service Worker shell cache và bump cache version v49 → v50.
+- Thêm `tests/analytics-collector.test.js` cho default-off, consent, reader start, heartbeat duration, audio pause, foreground pause, opt-out và privacy boundary; thêm vào `npm test` và `check:js`.
+- Commits: collector `1633bab2291119277cb6f346a7ca234ae0a3dd7f`, duration fix `dc80ede46ab3a1bb133c4bf7ba865cd1e27694e9`, UI `15551faccbdb9e870352de580b4c2933e529903b`, service worker `085d8fc58fc54b5936608a9f9c50530bf11c2b44`, package `1ca7f664b80ffbc8594f86933a30606f5d0ca7e3`, test `807fa30a7dd594343ef77b17959a3445929dab78`.
+- **Chưa nghiệm thu:** CI mới, review code/diff, WebView timing, consent UI thực tế, offline/network behavior và APK build/device test đều pending. Không build APK trong batch này.
+- Không thay đổi marker runtime, diagnostics reporting, native bridge hoặc main. README không đổi và vẫn phải đồng nhất ba nhánh.
+
