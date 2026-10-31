@@ -418,3 +418,9 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Preliminary CSS selector audit compared `styles.css` against `index.html`, `app.js`, `modules/page-sync.js`, `modules/playlist-layout.js`, `modules/catalog-playlist.js`, and `modules/analytics-collector.js`. It identified 81 class-name candidates without source references. This is not sufficient evidence to delete whole CSS rules: compound selectors, media blocks, and CSS-only state dependencies still require inspection.
 - README byte identity was rechecked: beta and main blob SHA are both `2c9e534869ee250de84c134a873879dad18f3a7f`.
 - Current review remains partial. Keep the prior `last_reviewed_head` and formal handover checkpoint unchanged until per-commit reconciliation and CI evidence are available. No APK build/device acceptance or main code change has occurred.
+
+### Regression assertion follow-up — 2026-10-31
+
+- Follow-up source inspection found an over-escaped whitespace regex in the new Library disabled-state test. Corrected it in test commit `[test]` `98cd19cda1c307046078f97093d7eb03f0ecd377`.
+- The current assertion now checks the actual `disabled` attribute using a whitespace matcher, alongside `aria-disabled="false"`. No runtime code changed in this correction.
+- CI remains unconfirmed because the combined-status query has not returned status entries. The test marker remains on the latest test commit.
