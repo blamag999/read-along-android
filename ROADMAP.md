@@ -655,3 +655,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - Các thao tác ẩn/hiện vùng chọn tệp và quản lý mốc thời gian được chuyển vào Menu; chức năng quản lý marker local vẫn được giữ.
 - Đã bổ sung regression assertions cho cấu trúc header và menu. Chưa có CI sau batch này và chưa nghiệm thu trên thiết bị.
 - Kho offline 1 GiB với LRU, lưu trọn bộ PDF/audio/JSON và bảo toàn qua OTA mới là kế hoạch; chưa triển khai. Cần audit native storage và OTA cleanup trước khi chọn cách lưu.
+
+
+### 2026-10-31 — Portrait library button visual correction (implementation; validation pending)
+
+- Cập nhật header trên beta: nút Thư viện có icon sách riêng, nhãn ngắn “Thư viện” và badge số lượng luôn hiển thị, kể cả giá trị 0; accessible label cũng phản ánh số lượng.
+- Điều chỉnh CSS cuối file để ghi đè các media rule cũ đang xung đột: giữ header một hàng, giữ nhãn thư viện ở màn hình dọc, co giãn tiêu đề app thay vì làm nút thư viện co còn icon đơn lẻ; nút Thư viện có độ tương phản, kích thước chạm và badge nổi bật hơn.
+- Số đếm hiện lấy từ state.playlist.length (danh sách sách đã được nạp vào thư viện/catalog trong phiên), không phải tổng bản ghi PDF/audio blob riêng trong IndexedDB. Không thay đổi schema hoặc dữ liệu IndexedDB.
+- Commit code: HTML 2c9e181255ba94dfff3e865e1f218875d981d205; CSS 6b24d50fe6e3dc110fe74a8185bf41ed50002523; app.js 87b81e5e3b8b4686e2022f5b94efb964174936f9; regression assertion 23cc765849189a1357b89ee73fe47783e59f6aa4.
+- Chưa có CI trên commit chốt, chưa build APK và chưa kiểm tra thiết bị thật. Không promote main.
