@@ -8,6 +8,7 @@ const marker = readJson('marker.schema.json');
 const config = readJson('remote-config.schema.json');
 const analytics = readJson('analytics-event.schema.json');
 const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'admin', 'public', 'books.json'), 'utf8'));
+const remoteConfig = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'admin', 'public', 'remote-config.json'), 'utf8'));
 
 for (const schema of [catalog, marker, config, analytics]) {
   assert.equal(schema.$schema, 'https://json-schema.org/draft/2020-12/schema');
@@ -51,6 +52,13 @@ assert.equal(marker.$defs.versionedEnvelope.additionalProperties, false, 'Versio
 assert.equal(marker.$defs.markerMap.minProperties, undefined, 'An empty marker map must represent clear-all');
 
 assert.equal(config.properties.schemaVersion.const, 1);
+assert.equal(remoteConfig.schemaVersion, 1);
+assert.equal(Number.isInteger(remoteConfig.configVersion), true);
+assert.ok(remoteConfig.configVersion >= 1);
+assert.ok(remoteConfig.issuedAt && !Number.isNaN(Date.parse(remoteConfig.issuedAt)));
+assert.deepEqual(Object.keys(remoteConfig.features), []);
+assert.deepEqual(Object.keys(remoteConfig.readerDefaults), []);
+assert.deepEqual(remoteConfig.announcements, []);
 assert.equal(config.properties.readerDefaults.additionalProperties, false);
 assert.equal(config.properties.features.additionalProperties, false);
 assert.equal(config.additionalProperties, false, 'Remote config must reject unrecognized executable/config fields');
