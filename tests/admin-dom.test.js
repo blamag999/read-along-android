@@ -60,7 +60,9 @@ assert.ok(script.includes('async function loadAuditEntries()'), 'Audit tab loade
 assert.ok(html.includes('id="overviewTrend"'), 'Overview must display a trend chart');
 assert.ok(html.includes('id="analyticsPlatforms"'), 'Statistics tab must retain platform breakdown');
 assert.ok(html.includes('id="diagnosticsPanel"'), 'Diagnostics and catalog publishing tools must remain available');
-assert.ok(html.includes('id="publishBooksBtn"'), 'Catalog publishing action must remain available');\nassert.ok(html.indexOf('id="publishBooksBtn"') < html.indexOf('id="diagnosticsPanel"'), 'Catalog publishing must remain outside the Diagnostics tab');\nassert.ok(html.includes('id="publicStatusBar"') && html.includes('id="publicReading"'), 'Public dashboard must keep its compact metrics and status bar');
+assert.ok(html.includes('id="publishBooksBtn"'), 'Catalog publishing action must remain available');
+assert.ok(html.indexOf('id="publishBooksBtn"') < html.indexOf('id="diagnosticsPanel"'), 'Catalog publishing must remain outside the Diagnostics tab');
+assert.ok(html.includes('id="publicStatusBar"') && html.includes('id="publicReading"'), 'Public dashboard must keep its compact metrics and status bar');
 assert.ok(script.includes('window.addEventListener("hashchange", handleRoute)'), 'Admin route handler must be connected');
 
 console.log('Admin dashboard, task status, theme, library operation and diagnostics tests passed.');
