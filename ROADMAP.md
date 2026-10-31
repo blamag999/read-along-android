@@ -788,3 +788,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Marker JSON companion từ R2 vẫn được đọc read-only để đồng bộ trang/audio. Nếu có đồng bộ tiến trình đọc/nghe online, đó là dữ liệu trạng thái riêng, không phải media offline.
 - Đây là quyết định hiện hành và thay thế mọi đề xuất kho offline 1 GiB/LRU ghi trước đó trong ROADMAP/PLANNING/RECOVERY. Các đoạn cũ được giữ như lịch sử, không phải công việc cần thực hiện.
 - Phạm vi cập nhật lần này chỉ là tài liệu; không sửa runtime, workflow, API, R2/Cloudflare, không chạy CI, không build APK và không thay đổi `main`.
+
+
+## Hotfix source audit — 2026-10-31
+
+- Starting beta HEAD: `350be680119c4b300d565d98e7ed8064254f3fe8`.
+- Source audit found a JavaScript syntax error in `onAudioTimeUpdate()`: `let alignedPage` and a second `const alignedPage` were declared in the same scope. This would fail the repository's `node --check app.js` validation and block the beta build.
+- Removed the unused `let alignedPage` declaration. Runtime logic is otherwise unchanged. Code commit: `d2a7733fb864fb26786cdc2aab057463ebcbdc5b`.
+- This is a source hotfix only; regression CI, APK build, OTA publication and device acceptance have not yet run. The broader Reader/Menu and R2-only cleanup remain in progress; do not mark Phase 1 accepted.
