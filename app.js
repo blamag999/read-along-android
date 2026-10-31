@@ -2785,7 +2785,7 @@ async function checkReadAlongUpdates() {
     catch { throw new Error('Máy chủ OTA trả về dữ liệu không hợp lệ.'); }
     if (!response.ok) {
       if (response.status === 404) {
-        showToast(channel === 'beta' ? 'Chưa có bản Beta để cập nhật.' : 'Chưa có bản Official để cập nhật.');
+        showToast('Hiện chưa có bản cập nhật Read Along trên kênh ' + channelLabel + '.');
         return;
       }
       throw new Error(manifest.error || 'Máy chủ OTA trả về HTTP ' + response.status);
@@ -2806,11 +2806,7 @@ async function checkReadAlongUpdates() {
     const currentVersionCode = Number(document.querySelector('meta[name="app-version-code"]')?.content || 0);
     if (compareReleaseVersions(manifest.version, currentVersion) <= 0 ||
         manifest.versionCode <= currentVersionCode) {
-      const message = 'Kênh ' + channelLabel + ' mới nhất là ' + manifest.version +
-        ' (versionCode ' + manifest.versionCode + '), ứng dụng hiện tại là ' +
-        currentVersion + ' (versionCode ' + currentVersionCode + ').';
-      showToast('Không có bản ' + channelLabel + ' mới hơn để cài.');
-      alert(message + '\nKhông cài bản có versionName hoặc versionCode thấp hơn; APK cũng phải cùng khóa ký.');
+      showToast('Bạn đang sử dụng phiên bản Read Along mới nhất.');
       return;
     }
 
@@ -2818,8 +2814,9 @@ async function checkReadAlongUpdates() {
     const downloadUrl = READ_ALONG_OTA_API + '/download?channel=' +
       encodeURIComponent(channel) + '&version=' + encodeURIComponent(manifest.version);
     const notes = String(manifest.notes || '').trim().slice(0, 400);
-    const message = (notes ? notes + '\n\n' : '') +
-      'Tải và cài đặt bản cập nhật? Android có thể yêu cầu xác nhận.';
+    const message = 'Có bản cập nhật Read Along ' + manifest.version + '.\n\n' +
+      (notes ? notes + '\n\n' : '') +
+      'Tải và cài đặt ngay?\nAndroid sẽ hiển thị bước xác nhận cài đặt.';
     if (!confirm(message)) return;
 
     const nativeUpdater = window.Capacitor?.Plugins?.ApkUpdater;
@@ -2829,9 +2826,8 @@ async function checkReadAlongUpdates() {
       if (cleanup.errors.length) {
         console.warn('Một phần cache/service worker chưa được dọn:', cleanup.errors);
         showToast('Không dọn được toàn bộ cache cũ; vẫn tiếp tục cập nhật.');
-      } else {
-        showToast('Đã dọn cache cũ. Đang tải bản cập nhật…');
       }
+      showToast('Đang tải bản cập nhật Read Along…\nVui lòng không đóng ứng dụng.');
       await nativeUpdater.downloadAndInstall({
         url: downloadUrl,
         filename: manifest.filename,
@@ -2843,8 +2839,7 @@ async function checkReadAlongUpdates() {
     }
   } catch (error) {
     console.error('Update check failed:', error);
-    alert('Không thể kiểm tra/cài đặt cập nhật kênh ' + channelLabel + ': ' +
-      (error.message || 'Lỗi mạng') + '\nHãy thử lại khi có kết nối Internet.');
+    alert('Không thể kiểm tra hoặc cài đặt cập nhật.\nVui lòng kiểm tra kết nối Internet và thử lại.');
   } finally {
     if (btn) {
       btn.disabled = false;
