@@ -75,7 +75,7 @@ assert.equal(analytics.allOf.length, 5, 'Duration fields are required for heartb
 assert.ok(appSource.includes("alert('Không tải được thư viện sách. Vui lòng thử lại.');"), 'Catalog errors must not expose technical details');
 assert.ok(appSource.includes("alert('Không mở được sách. Vui lòng kiểm tra tệp sách và âm thanh.');"), 'Book-load errors use concise recovery guidance');
 assert.ok(appSource.includes("showToast('Đã chuyển phần âm thanh. Nhấn Phát để tiếp tục.');"), 'Audio autoplay fallback uses user-facing terminology');
-assert.ok(appSource.includes("showToast('Định dạng âm thanh không được hỗ trợ. Hãy chọn MP3, M4A hoặc định dạng tương thích.');"), 'Unsupported media guidance names formats only where needed');
+assert.ok(appSource.includes("'Định dạng âm thanh không được hỗ trợ.'"), 'Unsupported media guidance stays concise and does not prescribe unsupported format details');
 assert.ok(appSource.includes("showToast('Không tải được âm thanh. Vui lòng chọn lại tệp.');"), 'Audio-load errors do not expose exception details');
 assert.ok(appSource.includes("alert('Không mở được sách. Vui lòng chọn tệp khác.');"), 'Book document errors use the approved terminology');
 assert.ok(appSource.includes("alert('Vui lòng mở sách trước!');"), 'Marker actions refer to the reading object as a book');
