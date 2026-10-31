@@ -71,8 +71,8 @@
 - [ ] Ưu tiên dùng hạ tầng API/Worker hiện có của Read Along nếu đáp ứng; không tạo Analytics Worker thứ hai chỉ để tách tên.
 - [x] Viết route ingest trong Pages Functions hiện có với consent=true, validation strict, 25 events/batch, 64 KiB, rate limit theo install hash, và idempotency theo eventId + (sessionId, sequence). Chờ CI, migration và deploy để nghiệm thu production.
 - [x] Viết migration D1 additive cho raw events, daily aggregates và unique daily sessions bằng trigger; raw retention 90 ngày, daily aggregates 24 tháng. Migration đã được áp dụng additive vào database `read-along-admin-db`; đã xác minh đủ 3 bảng và trigger. Chờ Pages deployment/endpoint smoke test.
-- [ ] Thêm test chống trùng, sequence sai, thời gian âm/quá lớn, payload lớn, schema cũ/mới và request không hợp lệ.
-- [ ] Không thay đổi ý nghĩa API usage/track hiện tại: nó chỉ phản ánh visit/installation, không phải reading duration.
+- [x] Thêm unit/contract/API-boundary tests cho duplicate eventId/sequence, duration âm/quá lớn, batch >25, payload cap, schema, consent và origin isolation; CI + deployed consent smoke pass. **Còn pending:** valid event insert/deduplication/daily-trigger end-to-end test.
+- [x] Không thay đổi ý nghĩa API usage/track hiện tại: nó chỉ phản ánh visit/installation, không phải reading duration.
 
 ### AN3 — Một lần cập nhật APK cho event collector
 
@@ -138,4 +138,4 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 > Analytics AN1: proposed schema and privacy/event semantics documented; no client collector, API route, D1 table or dashboard deployed yet. Full regression phát hiện assertion bị cắt dòng và phần test trùng ở cuối `tests/contracts.test.js`; đã sửa cả hai và cần chạy lại.
 
 
-> Analytics AN2 backend code staged: endpoint, strict validation helper, D1 migration and regression tests added. Migration is applied to the existing Read Along D1 database and verified. Latest endpoint hardening and regression-test changes are pending CI. First run exposed a test regex escaping error; fixed before rerun. Pages production deploy/endpoint smoke test are being added to the final CI gate. No client collector, dashboard or APK change.
+> Analytics AN2 backend code staged: endpoint, strict validation helper, D1 migration and regression tests added. Migration is applied to the existing Read Along D1 database and verified. CI [41166166847](https://github.com/blamag999/read-along-android/actions/runs/41166166847) passed including production CORS/consent smoke test. D1 migration is applied and verified. Still pending: valid event write/dedup/aggregate end-to-end test, client collector/consent UI, dashboard, and final Pages deployment-stage confirmation. No client collector, dashboard or APK change.
