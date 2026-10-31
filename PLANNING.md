@@ -87,13 +87,10 @@
 - [x] AN3.8 Build beta APK hoàn tất từ commit `85475373bab4813589cf0d3c0777fe8c27df1da7`; workflow [41167887202](https://github.com/blamag999/read-along-android/actions/runs/41167887202) success, full regression pass, signed APK build/verification pass, artifact và Release `v1.3.7` đã publish. APK: https://github.com/blamag999/read-along-android/releases/download/v1.3.7/read-along-v1.3.7-android.apk. SHA-256 APK: `a4f4f5e85f04af05a53925888685ed28b82ba02867571a4ffe84769bcaf06299`. Artifact archive SHA-256: `6f70ed03519fc7b0c739908d114ef7c6153e5d5dd17947cd49141b7a47e3576c`. Người dùng xác nhận hoàn tất kiểm tra APK v1.3.7, không phát hiện lỗi trong đợt kiểm tra. Kiểm tra đối chiếu số liệu đọc/nghe chuyển sang AN4 Dashboard; Android TV vẫn pending.
 
 
-## P2 — Nội dung và cấu hình UI độc lập
+## P2 — Nội dung vận hành độc lập trên backend
 
-- [ ] Xác định cấu trúc dữ liệu trợ giúp, thông báo và changelog dạng JSON/text có schema.
-- [ ] Chỉ hiển thị nội dung đã validate; giới hạn độ dài và không cho HTML/JS tùy ý.
-- [ ] Xác định các theme/reader defaults có thể whitelist và giới hạn min/max an toàn.
-- [ ] Giữ offline fallback; config lỗi không làm thay đổi layout hoặc hành vi đọc.
-- [ ] Chỉ thêm UI APK khi đã có contract và nội dung mẫu để kiểm thử; gom vào một lần build APK phù hợp.
+- [ ] Chỉ phát triển trợ giúp/thông báo/changelog trong Admin/backend khi có nhu cầu vận hành thực tế; không mặc định đưa các nội dung này vào APK.
+- [ ] Nếu sau này cần hiển thị nội dung từ server trong APK, phải có yêu cầu riêng, contract dữ liệu tối thiểu và đánh giá rõ tác động tới APK/build trước khi triển khai.
 
 ## P2 — Regression và nghiệm thu APK Core
 
@@ -110,7 +107,7 @@
 ## P3 — Đóng băng APK Core và hoàn tất chương trình
 
 - [ ] Đánh giá regression suite đã bao phủ reader/audio/marker/rotation/native/OTA.
-- [ ] Xác nhận các dịch vụ catalog, marker, Remote Config, Analytics, Diagnostics và nội dung quản trị có contract/cache/fallback phù hợp.
+- [ ] Xác nhận các dịch vụ catalog, marker, Analytics và Diagnostics có contract phù hợp; không còn phụ thuộc Remote Config.
 - [ ] Xác nhận Admin/backend có thể thay đổi độc lập mà không cần phát hành APK trong phạm vi đã thiết kế.
 - [ ] Đánh giá lần cuối các ranh giới bảo mật, privacy, offline và quyền Android.
 - [ ] Chỉ sau nghiệm thu mới đánh dấu APK Core frozen; lỗi bảo mật/nghiêm trọng/tương thích nền tảng vẫn được phép sửa theo quy trình README.
@@ -119,13 +116,12 @@
 
 ## Thứ tự thực hiện khuyến nghị
 
-1. P0.1 xác minh Remote Config URL production.
-2. P0.2 hoàn tất xác minh publish gate Cloudflare Pages và quy tắc tăng configVersion.
-3. P0.3 Data Client cùng test/fallback; chưa vội tích hợp APK.
-4. P1 marker conflict policy và migration an toàn.
-5. P1 Analytics AN1 → AN2 → AN3 → AN4.
-6. P2 nội dung/config UI.
-7. P2 regression nghiệm thu và P3 freeze APK Core.
+1. P0.1 rà soát và gỡ Remote Config khỏi app shell/backend publish gate theo phạm vi an toàn.
+2. P0.2 lập bản đồ data path PDF/audio/catalog/marker và chốt hợp đồng APK Core.
+3. P0.3 áp dụng phân loại công việc để Admin/backend tiếp tục độc lập, không build APK ngoài thay đổi runtime.
+4. P1 thiết kế marker migration an toàn.
+5. P2 hoàn thiện backend/Admin độc lập theo nhu cầu thực tế.
+6. P2 regression nghiệm thu APK Core và P3 freeze.
 
 Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên xử lý lỗi đó trước; cập nhật ROADMAP/PLANNING sau khi có bằng chứng.
 
