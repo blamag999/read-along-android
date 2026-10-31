@@ -64,12 +64,59 @@ GRIMM/
 ## 4. Tiến trình đọc/nghe
 
 - Lưu tiến trình riêng theo stable `book.id`, độc lập với category và asset path.
-- Progress tách biệt marker JSON và remote sync.
+- Progress tách biệt marker JSON và remote sync; bản lưu bền vững theo thiết bị đặt trên D1, local chỉ là cache/outbox.
 - Lưu tối thiểu page, audio part/index, audio time và timestamp cập nhật.
 - Migration từ session key hiện tại phải an toàn: chỉ đánh dấu hoàn tất sau khi dữ liệu mới ghi và đọc kiểm tra thành công; giữ dữ liệu cũ trong giai đoạn chuyển đổi.
 - Restore không tự phát audio; clamp page/audio time theo tài nguyên hiện có; fallback an toàn khi audio part hoặc PDF không còn tồn tại.
-- Giai đoạn đầu lưu local; không thêm API/D1/cloud sync nếu chưa có yêu cầu riêng.
+- Online progress theo device ID là yêu cầu đã được xác nhận; dùng D1 hiện hữu và Pages Functions API sau khi audit, không tạo dịch vụ/database mới.
 - Kiểm thử chuyển sách A → B → A, multi-part audio, pause/seek, app background/foreground, orientation và OTA APK update.
+
+## 4A. Online Reading Progress theo thiết bị
+
+### Mục tiêu và source of truth
+
+- Reading progress phải khôi phục được sau clear app data và uninstall/reinstall; localStorage/SharedPreferences không thể là nơi lưu duy nhất.
+- Dữ liệu bền vững nằm trên D1 hiện hữu của Pages project `read-along-admin`; local chỉ là cache và outbox phục vụ offline.
+- Mỗi thiết bị có một stable device ID; mỗi sách có một record độc lập theo khóa `(device_id, book_id)`. Tiến trình của hai thiết bị không tự động chia sẻ hoặc ghi đè cho nhau.
+- Không nhập progress vào analytics, marker hoặc catalog. Không lưu nội dung PDF/audio trên D1.
+
+### Device identity
+
+- Trên Android, dùng `Settings.Secure.ANDROID_ID` làm đầu vào ổn định (Android 8+), sau đó tạo app-scoped identifier bằng SHA-256 với package namespace. Không gửi raw ANDROID_ID lên server.
+- Đây không phải hardware ID bất biến tuyệt đối: factory reset, đổi Android user/profile hoặc đổi app signing key có thể làm giá trị thay đổi. Phải kiểm thử trên Android TV và điện thoại thật.
+- Không dùng UUID chỉ lưu trong app data làm nguồn identity chính vì uninstall/clear data có thể xóa.
+- Nếu ANDROID_ID không đọc được, không tạo ID ngẫu nhiên mới ở mỗi lần chạy; dùng fallback có trạng thái rõ ràng và không tự ghi đè dữ liệu cloud.
+- Device ID chỉ là định danh, không phải credential. Nếu cần chống giả mạo mạnh, cần pairing/account hoặc cơ chế attestation riêng. Không coi ID hash là authentication.
+
+### Data contract đề xuất
+
+D1 table riêng, unique key `(device_id, book_id)`, lưu các trường tối thiểu:
+
+- `page`, `audio_index`, `audio_time`
+- `view_mode`, `zoom_scale`, `page_turn_mode`, `auto_seek_audio` nếu các giá trị này thực sự cần restore
+- `revision`, `updated_at` do server quản lý, cùng metadata cần thiết cho migration/debug
+
+Pages Functions API hiện có là nơi tích hợp endpoint GET/PUT; tái sử dụng D1 binding và router hiện hành sau khi audit. Không tạo Worker/database mới nếu hạ tầng này đáp ứng. API phải validate device ID/book ID/payload, giới hạn kích thước và tần suất, hỗ trợ idempotent upsert, không cho arbitrary SQL.
+
+### Sync behavior
+
+1. App native cung cấp device ID cho progress module.
+2. Khi mở app, tải cloud progress cho thiết bị và merge với local outbox; chỉ restore record có book ID khớp catalog.
+3. Mỗi thay đổi tiến trình được ghi local ngay; upload debounce/throttle theo page change, pause, book switch, app background và audio time checkpoint.
+4. Khi offline, giữ outbox; retry có giới hạn khi có mạng. Lỗi sync không được chặn reader/audio.
+5. Chỉ xóa outbox sau khi server xác nhận revision đã lưu. Conflict phải có policy rõ ràng, không dùng client clock đơn thuần để silent overwrite.
+6. Không tự autoplay sau restore; clamp page/audio time theo PDF/audio hiện có.
+7. Migration từ `read_along_reading_session_v1` chỉ hoàn tất sau cloud write/read-back thành công; giữ dữ liệu local cũ cho đến khi xác minh.
+
+### Acceptance
+
+- Cùng thiết bị: reboot, clear cache, clear app data, uninstall/reinstall và OTA update vẫn resolve đúng device ID và restore progress từ D1.
+- Thiết bị khác: ID khác, progress độc lập ngay cả khi cùng book ID.
+- Offline read → online sync không mất dữ liệu; server/D1 lỗi không làm reader/audio crash.
+- Đổi folder/title nhưng giữ book ID không làm mất progress.
+- Test API idempotency, revision conflict, payload validation, rate limit và D1 migration; test native identity trên thiết bị Android thật/Android TV.
+
+> Trạng thái: thiết kế mục tiêu, chưa triển khai API/D1 table/native identity/sync engine và chưa nghiệm thu trên thiết bị.
 
 ## 5. Quy tắc build
 
