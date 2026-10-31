@@ -492,3 +492,10 @@ Quy tắc bảo trì:
   - Canonical URL https://read-along-admin.pages.dev
 - **Still pending:** use authenticated Admin OTP → Diagnostics → **Tạo / cập nhật books.json** to publish the corrected 82-book seed to R2. The change above does not alter the already-published R2 manifest. After publishing, verify the public manifest has 82 entries and no Brave URLs, then retry the app catalog on Android.
 - No APK build was triggered because this change only updates the catalog data seed/Admin web deployment; the Android app code did not change. No stable/main promotion.
+
+
+### Admin — chuyển đổi audio và điều hướng thư viện (2026-10-31)
+
+- Bổ sung thao tác chuyển WMA sang MP3 theo từng bộ sách trong trình duyệt bằng FFmpeg.wasm phiên bản cố định; chỉ tải engine khi người quản trị yêu cầu và cần Internet.
+- Chuyển đổi giữ nguyên WMA gốc, không ghi đè MP3 đã tồn tại, xác minh chữ ký MP3 trước khi tải lên và dừng batch khi gặp lỗi. Chưa xác minh đầy đủ mọi biến thể codec WMA; cần kiểm thử bằng tệp WMA thực tế trên trình duyệt đích. Giới hạn kích thước mỗi file là 256 MB.
+- Đưa tìm kiếm/sắp xếp lên trước bảng thư viện. Đồng bộ nguồn dữ liệu phân trang giữa render và các nút điều hướng; tìm kiếm, sắp xếp và đổi số mục/trang đều đặt lại trang về đầu.
