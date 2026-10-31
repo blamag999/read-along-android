@@ -182,6 +182,7 @@ $("loginForm").addEventListener("submit", async (event) => {
     show("logoutBtn", true);
     show("homeBtn", true);
     show("homePanel", false);
+    switchTab("library");
     await loadFiles();
     startSessionHeartbeat();
   } catch (error) {
