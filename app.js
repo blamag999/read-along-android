@@ -2390,7 +2390,6 @@ window.deleteSync = function(page) {
   delete state.pageTimestamps[page];
   saveSyncToStorage();
   autoSaveSyncToLocalDirectory();
-  scheduleGitHubSync();
   updatePageTimestampBadge();
   updateSyncCountBadge();
   renderSyncTable();
@@ -2433,7 +2432,6 @@ window.setManualSync = function(page) {
     }
     saveSyncToStorage();
     autoSaveSyncToLocalDirectory();
-    scheduleGitHubSync();
     updatePageTimestampBadge();
     updateSyncCountBadge();
     renderSyncTable();
@@ -2447,7 +2445,6 @@ function clearAllSync() {
     state.pageTimestamps = {};
     saveSyncToStorage();
     autoSaveSyncToLocalDirectory();
-    scheduleGitHubSync();
     updatePageTimestampBadge();
     updateSyncCountBadge();
     renderSyncTable();
@@ -2476,7 +2473,6 @@ function importSyncData(e) {
         state.pageTimestamps = imported;
         saveSyncToStorage();
         autoSaveSyncToLocalDirectory();
-        scheduleGitHubSync();
         updatePageTimestampBadge();
         updateSyncCountBadge();
         renderSyncTable();
