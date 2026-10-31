@@ -113,7 +113,7 @@ The existing `usage/track` route remains visit/install counting and `telemetry/e
 - Installation ID is SHA-256 hashed before persistence. Event and session IDs are opaque random IDs; no free-form metadata.
 - Ingest validates the strict v1 contract, caps each duration at 120 seconds, limits each hashed install to 150 events/hour and uses `INSERT OR IGNORE` with unique eventId and (sessionId, sequence) for idempotency.
 - D1 migration `admin/migrations/0002_reading_analytics.sql` adds raw events, daily totals, unique daily session IDs and an insert trigger. Raw events are pruned after 90 days; daily aggregates/session IDs after 24 months.
-- This backend code is not active until the migration is applied to the existing `read-along-admin-db` bound as `DB` to Pages project `read-along-admin`, then a production deploy and endpoint smoke test pass. Do not point it at another project's database.
+- The additive migration has been applied to the existing `read-along-admin-db` bound as `DB` to Pages project `read-along-admin`; all three tables and the daily trigger were verified via D1. Pages deployment and endpoint smoke test are still pending. Do not point it at another project's database.
 - No client collector or analytics dashboard is included in this backend batch.
 
 ## 5. Migration rules
