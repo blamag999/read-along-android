@@ -324,3 +324,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - **Still pending:** test conflicting eventId with the same (sessionId, sequence) through HTTP; verify daily aggregate remains single-counted; avoid leaving production smoke rows after future CI runs.
 - No APK/client collector/dashboard changes. No APK build or main promotion.
 
+
+### 2026-10-31 — Bổ sung HTTP test cho sequence collision
+
+- Mở rộng production smoke test để gửi event thứ hai có `eventId` khác nhưng giữ nguyên `sessionId + sequence` của event đầu.
+- Acceptance kỳ vọng: HTTP 200, `accepted=0`, `duplicates=1`; không được tạo event thứ hai hoặc kích hoạt aggregate lần nữa.
+- Commit: `404f5c3899649f9f1f617c2cd3863c23ecb755f7`.
+- Đây là kiểm thử một lần trên production; sau khi có bằng chứng và dọn sạch D1, sẽ bỏ phần production write khỏi CI thường trực để tránh tích lũy dữ liệu thử nghiệm.
+- Chờ CI/Pages deploy/smoke test; không thay đổi APK/runtime.
+
