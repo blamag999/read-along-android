@@ -63,6 +63,7 @@ Nếu thật sự cần ngoại lệ về nhánh, phải giải thích lý do k�
 4. Không thay đổi hành vi reader/audio/native khi công việc chỉ liên quan Admin, catalog, analytics hoặc tài liệu.
 5. Bổ sung regression test cho lỗi và contract liên quan. Đọc lại diff để phát hiện thay đổi ngoài phạm vi.
 6. Commit trên đúng nhánh; theo dõi CI và xử lý lỗi trên cùng nhánh, không tạo nhánh mới để né CI.
+7. Không chạy full regression trên mọi commit trung gian. Chốt một batch hoàn chỉnh bằng marker `[test]` ở commit cuối cùng của lần push; thay đổi nhạy cảm/critical phải test ngay, không đợi batch.
 
 ### Sau mỗi đợt
 
@@ -122,10 +123,22 @@ Catalog và media trên R2, marker JSON, Admin, Diagnostics backend, Analytics b
 
 ## 7. Kiểm thử tối thiểu và điều kiện hoàn tất
 
+### Chính sách CI theo mốc
+
+- Push thông thường lên `beta`, `main`, `testing`: không chạy full regression suite.
+- Khi hoàn tất một batch, đặt `[test]` trong commit cuối cùng của lần push để chạy `npm test`, Pages Functions syntax check và isolation checks.
+- Marker phải nằm trong **commit cuối cùng của push** vì workflow đọc `github.event.head_commit.message`. Nếu marker nằm ở commit trước trong cùng push, workflow sẽ không nhận diện.
+- Pull request vào `beta`/`main` vẫn tự động chạy đầy đủ regression checks; `workflow_dispatch` cũng cho phép chạy thủ công.
+- Commit `[build-apk]` tự chạy lại toàn bộ kiểm thử trên đúng commit sẽ đóng gói APK. Chỉ khi test pass mới tiếp tục build, verify chữ ký và SHA-256, upload artifact và tạo Release.
+- `[build-apk]` không đồng thời kích hoạt workflow push `[test]`, tránh chạy trùng hai bộ full test cho cùng commit.
+- Lỗi bảo mật, mất dữ liệu, reader/audio, WebView lifecycle hoặc native bridge: chạy kiểm thử ngay khi sửa xong, không chờ batch.
+- Remote Config endpoint smoke test vẫn chạy riêng theo path filter hoặc manual dispatch.
+- Không cấu hình full regression workflow làm required status check cho mọi push nếu branch protection không phân biệt marker; PR workflow vẫn tự động kiểm tra.
+
 - [ ] Xác nhận đúng repository, branch và HEAD.
 - [ ] Đọc caller/contract của thành phần bị ảnh hưởng.
 - [ ] Có regression test cho lỗi hoặc contract liên quan.
-- [ ] Chạy `npm test` và các kiểm tra cú pháp/lint phù hợp; ghi rõ nếu không chạy được.
+- [ ] Chạy `npm test` tại mốc `[test]` hoặc `[build-apk]`; ghi rõ nếu không chạy được.
 - [ ] Kiểm tra diff, không có file/token/dữ liệu ngoài phạm vi.
 - [ ] Xác minh CI trên commit cần nghiệm thu.
 - [ ] Với Pages/Worker: xác minh deployment và endpoint thực tế; deploy success không đồng nghĩa URL/body đã đúng.
