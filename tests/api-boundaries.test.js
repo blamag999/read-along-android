@@ -47,6 +47,8 @@ assert.match(adminApi, /validateAnalyticsBatch\(body\)/,
 assert.match(adminApi, /sha256\(validation\.installId\)/,
   'analytics must hash the random installation ID before storage');
 assert.match(adminApi, /INSERT OR IGNORE INTO admin_reading_events/,
+assert.match(adminApi, /SELECT changes\\(\\) AS inserted/, 'accepted count must exclude D1 trigger side effects');
+assert.match(adminApi, /results\[index \* 2 \+ 1\]\\?\.results/, 'accepted count must use direct insert result for each event');
   'analytics ingest must be idempotent for retried event IDs and session sequences');
 assert.match(adminApi, /received_at < \?/,
   'raw analytics events must enforce the 90-day retention window');
