@@ -979,3 +979,15 @@ Khi một công việc trong PLANNING hoàn tất:
 - The public object body could not be retrieved through the available connector; do not claim its book count, folder fields or URL validation until Admin preview or app smoke testing confirms them.
 - The R2 object inventory reflects that the media move has occurred; the exact operator/time of that action is not asserted here.
 
+
+
+### 2026-11-01 — Protect the published catalog manifest and confirm current APK folder filtering
+
+- Admin Library now omits the root `books.json` from ordinary file rows. Individual per-book sync JSON files remain visible and manageable.
+- Pages Functions now rejects manual multipart upload, rename/move from or to the root `books.json`, and direct DELETE of that object with HTTP 403. The dedicated catalog preview/publish route remains the supported writer.
+- Added regression coverage in `tests/admin-dom.test.js` and `tests/catalog.test.js`; Admin documentation and UI copy explain the protected-manifest workflow.
+- Source commits: Admin UI hide `e0b28d2983cbe8687482dfcdc2a1dc2dc6704334`; API upload guard `12f3a5e27bf1cf038f7b71ed6b62513bce7b7cd7`; API rename guard `3b1fc07531eb45997315ace7fe01d16697636db6`; API delete guard `43cf94643cdd1c39a3f6af7b3753ce04787bcac5`; tests and documentation follow on beta.
+- Current APK source already reads `folder` metadata (or infers it from the R2 asset path) and exposes a **Thư mục** dropdown with per-folder book counts. It filters the current list by selected folder. It does **not** show a folder badge on every story row and does not open to a folder-first screen. Those two UI changes require an APK update and are explicitly deferred.
+- No pagination changes, reader/runtime/native changes, manifest data edits, R2 object moves/deletes, APK build, or main promotion in this batch.
+- Live `books.json` body and folder values remain to be verified through Admin preview before any publish. No manifest has been republished by this batch.
+- CI and production Pages deployment evidence will be appended after verification.
