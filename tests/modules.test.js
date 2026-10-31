@@ -78,4 +78,11 @@ assert.ok(appSource.includes('getRenderedPdfBounds'), 'touch zones must be bound
 assert.ok(htmlSource.includes('readingCheckpointMenuGroup'), 'three recent checkpoints must be reachable from the reader menu');
 assert.ok(styleSource.includes('white-space: pre-line'), 'toast messages must preserve line breaks');
 assert.ok(styleSource.includes('.app-ui-mode .header-right { flex: 0 0 auto; flex-wrap: nowrap;'), 'reader header actions must stay on one row');
+
+assert.ok(!htmlSource.includes('menuReloadMarkers') && !htmlSource.includes('btnReloadMarkers'), 'online marker refresh controls must be removed from the reader UI');
+assert.ok(!htmlSource.includes('diagnosticsModal') && !htmlSource.includes('menuDiagnostics'), 'diagnostics UI must be removed from the personal app');
+assert.ok(!htmlSource.includes('menuAnalytics') && !htmlSource.includes('analyticsModal'), 'analytics must not require a settings/consent dialog');
+assert.ok(htmlSource.includes('Mốc đọc gần đây'), 'checkpoint label must use the concise Vietnamese name');
+assert.ok(styleSource.includes('Compact touch header') && styleSource.includes('@media (max-width: 600px)'), 'portrait header must use compact responsive controls');
+assert.ok(appSource.includes('saveSyncToDirectoryOrDownload'), 'local marker JSON export must remain available');
 console.log('Module behavior and touch-reader UI contract tests passed.');
