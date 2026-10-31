@@ -72,7 +72,7 @@ assert.equal(analytics.properties.durationSeconds.maximum, 120);
 assert.equal(analytics.additionalProperties, false, 'Analytics payload must reject unapproved personal/content fields');
 assert.equal(analytics.properties.type.enum.includes('heartbeat'), true);
 
-const { validateRemoteConfig } = require('../scripts/validate-remote-config');
+const { validateRemoteConfig } = require('../admin/scripts/validate-remote-config');
 assert.deepEqual(validateRemoteConfig(remoteConfig), { valid: true, errors: [] }, 'Published static fixture must satisfy the strict Remote Config contract');
 for (const [invalid, expected] of [
   [{ ...remoteConfig, schemaVersion: 2 }, 'schemaVersion'],
