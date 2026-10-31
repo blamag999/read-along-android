@@ -366,3 +366,10 @@ Khi một công việc trong PLANNING hoàn tất:
 - **Chưa nghiệm thu:** CI mới, review code/diff, WebView timing, consent UI thực tế, offline/network behavior và APK build/device test đều pending. Không build APK trong batch này.
 - Không thay đổi marker runtime, diagnostics reporting, native bridge hoặc main. README không đổi và vẫn phải đồng nhất ba nhánh.
 
+
+### 2026-10-31 — Mở rộng AN3 lifecycle regression tests
+
+- Mở rộng `tests/analytics-collector.test.js` để kiểm tra audio ended → audio_stop, visibility hidden/visible → reader_pause/resume, pagehide/pageshow → pause/resume và PDF đóng → reader_stop.
+- Commit: `d57969b7da63f9c33cf9a21a5cb205cb2dfba06a`.
+- Chờ CI [test]; chưa nghiệm thu runtime hoặc APK. README không đổi.
+
