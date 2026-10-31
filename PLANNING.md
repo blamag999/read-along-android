@@ -153,12 +153,14 @@ Thống kê theo ngày/tuần/tháng/năm, theo sách và theo nền tảng; tha
 ### Phase 1 — Kiểm kê ranh giới và hợp đồng dữ liệu (không build APK)
 - [x] Lập inventory endpoint, URL, nguồn dữ liệu và caller trong app/Admin ở `docs/architecture/data-contracts.md`.
 - [x] Xác định nguồn hiện tại cho catalog, media, marker, usage, telemetry, diagnostics và OTA; phân biệt rõ phần đang chạy với phần đề xuất.
-- [ ] Chốt precedence/conflict resolution của marker và nguồn dữ liệu chính thức cuối cùng.
+- [x] Kiểm kê precedence hiện tại và ghi nhận điểm không an toàn: GitHub luôn ghi đè R2 trong nhánh có R2; chưa có revision/timestamp để so sánh. Chi tiết tại `docs/architecture/marker-and-api-review.md`.
+- [ ] Thiết kế/duyệt marker envelope có version/revision và conflict policy tương thích ngược trước khi đổi runtime.
 - [x] Định nghĩa JSON Schema version 1 cho catalog, marker, remote config và analytics event tại `schemas/`.
 - [x] Thêm `tests/contracts.test.js` vào `npm test` để khóa các ranh giới schema quan trọng và ngăn remote config/analytics nhận field không được duyệt.
 - [x] CI run `41158627378` thành công trên commit `24b4058ec05abb1e27ddff65f1ec0978a7fe5558`; workflow chạy `npm test`, JS syntax, Pages Functions syntax và isolation checks.
 - [x] Regression test đọc manifest seed `admin/public/books.json`, kiểm tra mọi entry hiện tại có PDF/audio và HTTPS trên đúng R2 hostname.
-- [ ] Rà soát chồng chéo API và chỉ hợp nhất khi chứng minh không phá tương thích.
+- [x] Rà soát usage/track, usage/stats, telemetry/events, Diagnostics Worker submit, catalog preview/publish và diagnostics scan; không tìm thấy route nào nên gộp vì khác mục đích, quyền và vòng đời dữ liệu. Chi tiết tại `docs/architecture/marker-and-api-review.md`.
+- [x] Quyết định giữ endpoint tách biệt; tránh thêm Worker/API trùng lặp. Chỉ gom transport client sau khi có contract chung.
 - [x] Không thay đổi thuật toán reader/audio trong đợt kiểm kê.
 
 ### Phase 2 — Nền tảng Remote Config/Data Client
@@ -227,8 +229,9 @@ Cần build APK cho:
 - CI contract regression: [run 41158627378 — success](https://github.com/blamag999/read-along-android/actions/runs/41158627378), tested commit `24b4058ec05abb1e27ddff65f1ec0978a7fe5558`.
 - CI gần nhất được kiểm tra: Admin workflow run `41157267352` success cho commit `8ae1b0df0d8646108302e3230d7c56a00bbb7ec5`; các run kế tiếp thuộc cùng đợt push có run bị cancel. Run này không kiểm thử commit planning mới nhất; cần CI chạy lại cho HEAD hiện tại sau thay đổi tiếp theo.
 - Đã tạo `docs/architecture/data-contracts.md`, liệt kê endpoint/caller/trust boundary và các khoảng trống hiện tại.
+- Đã tạo `docs/architecture/marker-and-api-review.md`: ghi chính xác thứ tự nạp marker, phát hiện comment 'GitHub newer' không đúng vì không có so sánh freshness; rà soát API và kết luận không gộp các endpoint khác chức năng.
 - Đã thêm JSON Schema v1 cho catalog, marker, Remote Config và Analytics event; thêm structural regression tests vào `npm test`.
 - CI `41158627378` đã pass trên commit test `24b4058ec05abb1e27ddff65f1ec0978a7fe5558`; test bao gồm contract schema và manifest seed hiện tại.
 - Schema mới chỉ là contract định hướng; chưa tích hợp runtime validator hoặc endpoint Remote Config/Analytics thời lượng.
-- Phase 1: inventory, JSON Schema v1, manifest compatibility regression và CI validation đã hoàn tất. Marker precedence và API overlap review còn pending.
+- Phase 1: inventory, JSON Schema v1, manifest compatibility regression, CI validation và API overlap review đã hoàn tất. Marker source precedence hiện tại đã được kiểm kê; conflict policy/marker version envelope còn pending do cần quyết định tương thích ngược trước khi đổi runtime.
 - Tiến độ: Phase 0 hoàn tất; Phase 1 đang thực hiện.
