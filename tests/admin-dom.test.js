@@ -69,3 +69,5 @@ assert.ok((script.match(/switchTab\("library"\)/g) || []).length >= 2, 'Session 
 console.log('Admin dashboard, task status, theme, library operation and diagnostics tests passed.');
 
 // Regression rerun after correcting auth-tab test formatting.
+
+// Full regression after analytics rendering syntax correction.
