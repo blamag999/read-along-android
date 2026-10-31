@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://read-along-admin.pages.dev/schemas/marker.schema.json",
+  "title": "Read Along page/audio markers",
+  "type": "object",
+  "description": "Keys are 1-based PDF page numbers. Legacy numeric values remain supported.",
+  "propertyNames": { "pattern": "^[1-9][0-9]*$" },
+  "additionalProperties": {
+    "oneOf": [
+      { "type": "number", "minimum": 0 },
+      {
+        "type": "object",
+        "required": ["time"],
+        "additionalProperties": false,
+        "properties": {
+          "time": { "type": "number", "minimum": 0 },
+          "part": { "type": "integer", "minimum": 0 }
+        }
+      }
+    ]
+  }
+}
