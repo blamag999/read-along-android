@@ -678,10 +678,7 @@ async function handle(request, env) {
     return json({ ok: true }, 200, { "set-cookie": cookie("", 0) });
   }
 
-  const auth = await requireAuth(request, env);
-  if (auth.response) return auth.response;
-
-
+  // Public read-only dashboard: returns aggregate usage and library health only; all mutations remain behind OTP.
   if (route === "analytics/dashboard" && method === "GET") {
     const parseDay = value => {
       if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
@@ -772,6 +769,12 @@ async function handle(request, env) {
       generatedAt: new Date().toISOString()
     });
   }
+
+  const auth = await requireAuth(request, env);
+  if (auth.response) return auth.response;
+
+
+
 
   if (route === "catalog/preview" && method === "GET") {
     // Build from the current R2 inventory; never use the checked-in seed manifest.
