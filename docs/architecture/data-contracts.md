@@ -114,7 +114,7 @@ The existing `usage/track` route remains visit/install counting and `telemetry/e
 - Ingest validates the strict v1 contract, caps each duration at 120 seconds, limits each hashed install to 150 events/hour and uses `INSERT OR IGNORE` with unique eventId and (sessionId, sequence) for idempotency.
 - D1 migration `admin/migrations/0002_reading_analytics.sql` adds raw events, daily totals, unique daily session IDs and an insert trigger. Raw events are pruned after 90 days; daily aggregates/session IDs after 24 months.
 - The additive migration has been applied to the existing `read-along-admin-db` bound as `DB` to Pages project `read-along-admin`; all three tables and the daily trigger were verified via D1. Pages deployment and endpoint smoke test are still pending. Do not point it at another project's database.
-- No client collector or analytics dashboard is included in this backend batch. CI [41166166847](https://github.com/blamag999/read-along-android/actions/runs/41166166847) passed, including a production OPTIONS/CORS and explicit-consent rejection smoke test. A valid write/deduplication/aggregate end-to-end test remains pending.
+- No client collector or analytics dashboard is included in this backend batch. CI [41166166847](https://github.com/blamag999/read-along-android/actions/runs/41166166847) passed, including a production OPTIONS/CORS and explicit-consent rejection smoke test. A valid HTTP write/deduplication end-to-end test remains pending. The D1 insert trigger was independently tested with a temporary synthetic event (reading 12s, listening 3s, one event/session) and all test rows were removed.
 
 ## 5. Migration rules
 
