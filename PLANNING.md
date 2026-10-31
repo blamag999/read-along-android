@@ -507,3 +507,12 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - [x] Update source contract assertions to reject marker manager UI and client import/export.
 - [ ] Run full regression after local-file removal and menu cleanup; no test pass is claimed yet.
 - Remaining caller audit: ensure only R2 companion and legacy localStorage read paths assign `state.pageTimestamps`; inspect CSS and native file access before deleting local-file flows.
+
+
+### Progress note — R2-only media loading
+- [x] Remove local file/folder picker UI and event handlers.
+- [x] Remove PDF/audio Blob loaders, local folder scanning, drag-and-drop and IndexedDB media-library API usage.
+- [x] Keep existing IndexedDB database untouched; no clear/delete/migration.
+- [x] Keep R2 PDF/audio URL loading, remote catalog, session/checkpoint and marker read-only paths.
+- [ ] Run full regression and fix any missing DOM or source contract issues.
+- [ ] Audit and remove dead CSS only after selector usage review.
