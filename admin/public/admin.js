@@ -358,43 +358,47 @@ async function getAudioConverter() {
 function r2PublicUrl(key) {
   return R2_PUBLIC_BASE + key.split("/").map(encodeURIComponent).join("/");
 }
-async function convertWmaGroup(group, button) {
+async function convertWmaGroup(group, button, reportProgress = () => {}) {
   const sources = group.audio.filter(file => /\.wma$/i.test(file.name));
   if (!sources.length) return;
   const destinations = sources.map(file => file.key.replace(/\.wma$/i, ".mp3"));
   const existing = new Set(allLibraryEntries.filter(entry => entry.type === "file").map(entry => entry.key));
   const conflict = destinations.find(key => existing.has(key));
   if (conflict) {
+    reportProgress("Bị chặn: MP3 đích đã tồn tại.", 0, "error");
     setStatus("Không thể chuyển đổi: file đích đã tồn tại (" + conflict + "). Không ghi đè file MP3.", true);
     return;
   }
   if (sources.some(file => Number(file.size) > 256 * 1024 * 1024)) {
+    reportProgress("Bị chặn: WMA vượt giới hạn 256 MB.", 0, "error");
     setStatus("Bộ sách có WMA lớn hơn 256 MB. Để tránh thiếu bộ nhớ trình duyệt, hãy chuyển file này bằng công cụ ngoài rồi tải MP3 lên.", true);
     return;
   }
   if (!await confirmAction("Chuyển đổi audio WMA?", "Sẽ chuyển " + sources.length + " file WMA trong bộ “" + group.title + "” sang MP3 ngay trên trình duyệt. File WMA gốc được giữ nguyên; file MP3 trùng tên sẽ không bị ghi đè. Cần kết nối mạng để tải bộ chuyển đổi lần đầu.", "Chuyển đổi và tải MP3 lên")) return;
   button.disabled = true;
   const oldLabel = button.textContent;
-  button.textContent = "Đang chuyển đổi…";
-  show("progress", true);
-  $("progress").querySelector("span").style.width = "0%";
   let ffmpeg = null, completed = 0;
+  const setProgress = (stage, percent, detail = "") => {
+    const totalPercent = Math.max(0, Math.min(100, Math.round(((completed + percent / 100) / sources.length) * 100)));
+    reportProgress(stage + " · " + (completed + 1) + "/" + sources.length + (detail ? " · " + detail : ""), totalPercent, "running");
+  };
   try {
+    reportProgress("Đang tải bộ chuyển đổi…", 0, "running");
     ffmpeg = await getAudioConverter();
     ffmpeg.on("progress", ({ progress }) => {
-      const percent = Math.max(0, Math.min(100, Math.round((completed + (Number(progress) || 0)) / sources.length * 100)));
-      $("progress").querySelector("span").style.width = percent + "%";
+      setProgress("Đang giải mã và mã hóa MP3", Math.max(0, Math.min(100, Math.round((Number(progress) || 0) * 100))));
     });
     for (let index = 0; index < sources.length; index++) {
       const source = sources[index];
       const inputName = "readalong-input-" + index + ".wma";
       const outputName = "readalong-output-" + index + ".mp3";
-      setStatus("Đang chuyển " + source.name + " (" + (index + 1) + "/" + sources.length + ")…");
+      reportProgress("Đang tải WMA: " + source.name, Math.round(index / sources.length * 100), "running");
       const response = await fetch(r2PublicUrl(source.key), { mode: "cors", credentials: "omit" });
       if (!response.ok) throw new Error("Không tải được WMA " + source.name + " (" + response.status + ").");
       const input = new Uint8Array(await response.arrayBuffer());
       if (!input.length || input.length > 256 * 1024 * 1024) throw new Error("Kích thước WMA không hợp lệ hoặc vượt giới hạn bộ nhớ.");
       await ffmpeg.writeFile(inputName, input);
+      reportProgress("Đang chuyển đổi: " + source.name, Math.round(index / sources.length * 100), "running");
       const exitCode = await ffmpeg.exec(["-y", "-i", inputName, "-map", "0:a:0", "-vn", "-c:a", "libmp3lame", "-q:a", "3", outputName]);
       if (exitCode !== 0) throw new Error("FFmpeg không giải mã được " + source.name + ". Có thể codec WMA không được hỗ trợ bởi bản engine này.");
       const output = await ffmpeg.readFile(outputName);
@@ -403,20 +407,26 @@ async function convertWmaGroup(group, button) {
       const hasMpegFrame = output.length >= 2 && output[0] === 0xff && (output[1] & 0xe0) === 0xe0;
       if (!hasId3 && !hasMpegFrame) throw new Error("Đầu ra không có chữ ký MP3 hợp lệ: " + source.name);
       const outputFile = new File([output], source.name.replace(/\.wma$/i, ".mp3"), { type: "audio/mpeg" });
-      await uploadOne(outputFile, index, sources.length);
+      reportProgress("Đang tải MP3 lên R2: " + outputFile.name, Math.round(index / sources.length * 100), "running");
+      await uploadOne(outputFile, index, sources.length, destinations[index], percent => {
+        setProgress("Đang tải MP3 lên R2", percent, outputFile.name);
+      });
       completed++;
       await ffmpeg.deleteFile(inputName).catch(() => {});
       await ffmpeg.deleteFile(outputName).catch(() => {});
+      reportProgress("Đã xử lý " + source.name, Math.round(completed / sources.length * 100), "running");
     }
     queueTelemetryEvent("library_wma_conversion_success", { fileCount: completed });
+    reportProgress("Hoàn tất " + completed + "/" + sources.length + " file MP3. WMA gốc vẫn được giữ.", 100, "success");
     setStatus("Đã chuyển và tải lên " + completed + "/" + sources.length + " file MP3. File WMA gốc vẫn được giữ nguyên.");
     await loadFiles();
+    await runDiagnostics();
   } catch (error) {
     queueTelemetryEvent("library_wma_conversion_error", { completed, error: String(error.message || error).slice(0, 300) });
+    reportProgress("Dừng sau " + completed + "/" + sources.length + ": " + error.message, 0, "error");
     setStatus("Chuyển đổi dừng sau " + completed + "/" + sources.length + " file: " + error.message + ". Các file WMA gốc không bị thay đổi.", true);
-    if (completed) await loadFiles();
+    if (completed) { await loadFiles(); await runDiagnostics(); }
   } finally {
-    show("progress", false);
     if (ffmpeg) {
       ffmpeg.terminate();
       ffmpegInstance = null;
@@ -479,8 +489,6 @@ function renderLibraryPage() {
     addCell(row,formatDate(group.all.reduce((latest,file)=>!latest||new Date(file.uploaded)>new Date(latest)?file.uploaded:latest,null)));
     const actions=document.createElement("div"); actions.className="row-actions";
     const status=document.createElement("span"); status.className="library-status "+statusKind; status.textContent=statusLabel; actions.append(status);
-    const wmaCount=group.audio.filter(file=>/\.wma$/i.test(file.name)).length;
-    if(wmaCount) actions.append(actionButton("Chuyển " + wmaCount + " WMA → MP3",event=>convertWmaGroup(group,event.currentTarget),"convert-audio"));
     const actionCell=document.createElement("td"); actionCell.append(actions); row.append(actionCell);
     $("fileRows").append(row);
     if(expandedLibraryGroups.has(group.key)){
@@ -588,6 +596,8 @@ async function runDiagnostics() {
       cell.className = "empty";
       $("diagnosticRows").append(row);
     }
+    const diagnosticBooks = libraryAssetGroups(allLibraryEntries).books;
+    const conversionActionsShown = new Set();
     for (const finding of result.findings) {
       const row = document.createElement("tr");
       const level = document.createElement("span");
@@ -599,6 +609,39 @@ async function runDiagnostics() {
       addCell(row, finding.message);
       addCell(row, finding.suggestion || "Kiểm tra tệp gốc.");
       const actionCell = document.createElement("td");
+      if (finding.code === "playback_compatibility" && /\.wma$/i.test(finding.key)) {
+        const group = diagnosticBooks.find(book => book.audio.some(file => file.key === finding.key));
+        if (group && !conversionActionsShown.has(group.key)) {
+          conversionActionsShown.add(group.key);
+          const wmaCount = group.audio.filter(file => /\.wma$/i.test(file.name)).length;
+          const convertButton = actionButton("Chuyển " + wmaCount + " WMA → MP3", () => {}, "convert-audio");
+          const progressBox = document.createElement("div");
+          progressBox.className = "conversion-progress hidden";
+          const progressText = document.createElement("span");
+          progressText.className = "conversion-progress-text";
+          progressText.textContent = "Chưa chạy";
+          const progressTrack = document.createElement("div");
+          progressTrack.className = "conversion-progress-track";
+          const progressFill = document.createElement("span");
+          progressTrack.append(progressFill);
+          progressBox.append(progressText, progressTrack);
+          convertButton.addEventListener("click", () => {
+            convertWmaGroup(group, convertButton, (message, percent, state) => {
+              progressBox.classList.remove("hidden");
+              progressBox.classList.toggle("is-error", state === "error");
+              progressBox.classList.toggle("is-success", state === "success");
+              progressText.textContent = message;
+              progressFill.style.width = percent + "%";
+            });
+          });
+          actionCell.append(convertButton, progressBox);
+        } else if (group) {
+          const note = document.createElement("span");
+          note.className = "muted diagnostic-group-note";
+          note.textContent = "Đã gộp trong thao tác chuyển đổi cùng bộ sách.";
+          actionCell.append(note);
+        }
+      }
       if (finding.candidateKey) {
         const match = document.createElement("div");
         match.className = "diagnostic-key";
@@ -725,9 +768,9 @@ $("fileInput").addEventListener("change", async (event) => {
   if (files.length) await uploadFiles(files);
 });
 
-async function uploadOne(file, index, total) {
+async function uploadOne(file, index, total, destinationKey = null, onProgress = null) {
   if (!allowed.test(file.name)) throw new Error("Định dạng không hỗ trợ: " + file.name);
-  const key = currentPrefix + file.name;
+  const key = destinationKey || currentPrefix + file.name;
   const started = await postJson("multipart/start", { key, size: file.size, contentType: file.type || "application/octet-stream" });
   const parts = [];
   const chunkSize = Math.max(CHUNK_SIZE, Math.ceil(file.size / 10000));
@@ -745,6 +788,7 @@ async function uploadOne(file, index, total) {
       parts.push({ partNumber, etag: result.etag });
       const percent = Math.round(((index + (partNumber / count)) / total) * 100);
       $("progress").querySelector("span").style.width = percent + "%";
+      if (onProgress) onProgress(percent);
     }
     await postJson("multipart/complete", { key, uploadId: started.uploadId, parts, size: file.size });
   } catch (error) {
