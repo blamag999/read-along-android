@@ -15,6 +15,9 @@ assert.match(readerHtml, /id="moveDestinationDialog"/, 'Admin must provide a des
 assert.match(readerHtml, /id="moveExistingFolder"/, 'Admin must allow selecting an existing R2 folder');
 assert.match(readerHtml, /id="moveNewFolderName"/, 'Admin must allow creating a new destination folder');
 assert.match(adminScriptSource, /listAllMoveDestinationFolders/, 'Admin must enumerate existing R2 folders recursively');
+assert.match(adminScriptSource, /while \(pending\.length\)/, 'Admin folder enumeration must traverse nested R2 folders');
+assert.match(adminScriptSource, /files\/all\?prefix=/, 'Admin must use the existing authenticated R2 inventory endpoint');
+assert.match(adminScriptSource, /Destination folder|Thư mục đích/, 'migration confirmation must identify the selected destination');
 assert.match(adminScriptSource, /moveRootAssetsBtn/, 'Admin must expose the generic root-file migration action');
 assert.match(adminScriptSource, /destination\.type === "new"/, 'Admin must create a selected new destination folder');
 assert.doesNotMatch(adminScriptSource, /moveRootAssetsToDisney|DISNEY\//, 'bulk migration must not hardcode DISNEY as destination');
