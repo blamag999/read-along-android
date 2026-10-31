@@ -311,3 +311,14 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Scope is approved for planning, not implementation. No runtime source changes, tests, CI, APK build, OTA publication, deployment or device acceptance were performed for this handover.
 - `main` was not modified. README contents on beta and main are not byte-identical at this review; no README change was made in this handover. Existing README synchronization note references PR #40.
 - Next session: verify current branch heads and docs again; audit local-open and marker-write/sync callers before code removal; then implement only on beta under the approved checklist.
+
+
+## Quyết định thay thế kế hoạch kho offline — 2026-10-31
+
+- Người dùng đã xác nhận không triển khai kho lưu trữ PDF/audio 1 GB. Mọi đề xuất kho offline 1 GiB/LRU trong các checkpoint lịch sử bên trên đã bị hủy và không còn là backlog.
+- Chính sách hiện hành: PDF/audio đọc trực tiếp từ R2; không tải trước, không lưu media bền vững trên thiết bị, không hỗ trợ đọc/nghe offline, không Download Manager/LRU/FIFO/quota/tự xóa sách cũ.
+- Chỉ giữ cache shell/app assets kỹ thuật và cache tạm nếu cần cho WebView/Service Worker; không cache PDF/audio như thư viện offline.
+- Bảo toàn session/checkpoint và trạng thái đọc qua OTA. Marker JSON R2 tiếp tục read-only để đồng bộ trang/audio.
+- Online Reading Progress (nếu triển khai) là dữ liệu trạng thái đọc/nghe, tách biệt hoàn toàn với lưu trữ media offline.
+- Thay đổi hiện tại chỉ cập nhật tài liệu; không sửa runtime/API/workflow/R2/Cloudflare, không chạy CI/build APK và không thay đổi main.
+- Các mục lịch sử cũ được giữ để truy vết quyết định, nhưng khi lập kế hoạch hoặc khôi phục phải áp dụng quyết định mới này.
