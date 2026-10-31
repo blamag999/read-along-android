@@ -240,15 +240,15 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 
 ## Tinh gọn header và thư viện R2 online-only — quyết định 2026-10-31
 
-<escape>[x]</escape> Header chỉ có hai action: **Thư viện sách** và **Menu**; Android Back đóng sách và lưu phiên đọc, không có nút Đóng sách riêng.
+[x] Header chỉ có hai action: **Thư viện sách** và **Menu**; Android Back đóng sách và lưu phiên đọc, không có nút Đóng sách riêng.
 
-<escape>[x]</escape> Hủy hoàn toàn đề xuất kho lưu trữ sách/âm thanh 1 GB. Ứng dụng **không tải trước, không lưu bản PDF/audio bền vững trên thiết bị và không hỗ trợ đọc/nghe offline**. Nội dung được stream/đọc trực tiếp từ R2 khi mở sách.
+[x] Hủy hoàn toàn đề xuất kho lưu trữ sách/âm thanh 1 GB. Ứng dụng **không tải trước, không lưu bản PDF/audio bền vững trên thiết bị và không hỗ trợ đọc/nghe offline**. Nội dung được stream/đọc trực tiếp từ R2 khi mở sách.
 
-<escape>[x]</escape> Không triển khai LRU/FIFO, quota, Download Manager, offline library, tự xóa sách cũ hoặc cơ chế dọn media theo dung lượng. Không thêm media cache layer mới.
+[x] Không triển khai LRU/FIFO, quota, Download Manager, offline library, tự xóa sách cũ hoặc cơ chế dọn media theo dung lượng. Không thêm media cache layer mới.
 
-<escape>[x]</escape> Chỉ giữ cache shell/app assets cần cho WebView/Service Worker và cache tạm kỹ thuật nếu cần; tuyệt đối không biến chúng thành kho PDF/audio. Không thay đổi hoặc xóa dữ liệu session/checkpoint cần thiết.
+[x] Chỉ giữ cache shell/app assets cần cho WebView/Service Worker và cache tạm kỹ thuật nếu cần; tuyệt đối không biến chúng thành kho PDF/audio. Không thay đổi hoặc xóa dữ liệu session/checkpoint cần thiết.
 
-<escape>[x]</escape> OTA không được xóa session/checkpoint hoặc dữ liệu trạng thái đọc. Việc cập nhật APK không được thêm hoặc xóa kho media vì kho media offline không tồn tại.
+[x] OTA không được xóa session/checkpoint hoặc dữ liệu trạng thái đọc. Việc cập nhật APK không được thêm hoặc xóa kho media vì kho media offline không tồn tại.
 
 - Marker JSON companion từ R2 vẫn được đọc ở chế độ read-only để đồng bộ trang/audio; không có marker write/sync từ client.
 - Việc đồng bộ tiến trình đọc/nghe online (nếu triển khai) là dữ liệu trạng thái riêng, không phải lưu trữ PDF/audio offline. Không gộp hai phạm vi này.
