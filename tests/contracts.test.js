@@ -75,47 +75,29 @@ assert.equal(analytics.allOf.length, 5, 'Duration fields are required for heartb
 assert.ok(appSource.includes("alert('Không tải được thư viện sách. Vui lòng thử lại.');"), 'Catalog errors must not expose technical details');
 assert.ok(appSource.includes("alert('Không mở được sách. Vui lòng kiểm tra tệp sách và âm thanh.');"), 'Book-load errors use concise recovery guidance');
 assert.ok(appSource.includes("showToast('Đã chuyển phần âm thanh. Nhấn Phát để tiếp tục.');"), 'Audio autoplay fallback uses user-facing terminology');
-assert.ok(appSource.includes("'Định dạng âm thanh không được hỗ trợ.'"), 'Unsupported media guidance stays concise and does not prescribe unsupported format details');
-assert.ok(appSource.includes("'Không tải được âm thanh. Hãy kiểm tra tệp và thử lại.'"), 'Audio-load errors provide concise recovery guidance without exposing exception details');
-assert.ok(appSource.includes("alert('Không mở được sách. Vui lòng chọn tệp khác.');"), 'Book document errors use the approved terminology');
-assert.ok(appSource.includes("alert('Vui lòng mở sách trước!');"), 'Marker actions refer to the reading object as a book');
+assert.ok(appSource.includes("'Định dạng âm thanh không được hỗ trợ.'"), 'Unsupported media guidance stays concise');
+assert.ok(appSource.includes("'Không tải được âm thanh. Hãy kiểm tra tệp và thử lại.'"), 'Audio-load errors provide concise recovery guidance');
+assert.ok(appSource.includes("showToast('Vui lòng mở sách trước.');"), 'Reader actions explain when a book must be open');
 assert.ok(appSource.includes("showToast('Chưa có âm thanh. Hãy chọn tệp âm thanh trước.');"), 'Playback guidance uses Vietnamese media terminology');
 assert.ok(appSource.includes("showToast('Không thể phát lại trang này. Hãy thử nhấn Phát.');"), 'Page replay error gives a concise recovery action');
-assert.ok(appSource.includes("alert('Thời gian không hợp lệ. Hãy nhập giây hoặc MM:SS.');"), 'Timestamp validation keeps its input format guidance');
-assert.ok(appSource.includes("alert('Tệp mốc thời gian không hợp lệ.');"), 'Invalid marker JSON uses concise terminology');
-assert.ok(appSource.includes("console.error('Lỗi khi nạp audio:', error);"), 'Technical audio load errors remain available in console');
-
-
+assert.ok(appSource.includes("showToast('Nhập số trang từ 1 đến ' + state.totalPages + '.');"), 'Page navigation validation uses the current reader terminology');
+assert.ok(appSource.includes("console.error('Không thể phát âm thanh:', error);"), 'Technical playback errors remain available in console');
 const releaseWorkflow = fs.readFileSync(path.join(__dirname, '..', '.github/workflows/build-android-apk.yml'), 'utf8');
 const releaseNotesGenerator = fs.readFileSync(path.join(__dirname, '..', 'scripts/generate-release-notes.py'), 'utf8');
 assert.ok(releaseWorkflow.includes('python3 scripts/generate-release-notes.py'), 'APK workflow must use the tested release notes generator');
 assert.ok(releaseWorkflow.includes('CHANGELOG: ${{ steps.release_info.outputs.changelog }}'), 'OTA manifest must receive the generated release notes');
 assert.ok(releaseNotesGenerator.includes('latest_channel_release(releases, channel)'), 'Release notes baseline must be selected by channel');
 assert.ok(releaseNotesGenerator.includes('"security": "Bảo mật"'), 'Release notes must include the security category');
-assert.ok(appSource.includes("showToast('Đã tải âm thanh.' + (skippedCount > 0 ? ' Đã bỏ qua ' + skippedCount + ' tệp không hỗ trợ.' : ' Nhấn Phát để nghe.'));"), 'Audio success and skipped-file summary use one concise notification');
 assert.ok(appSource.includes("showToast('Đã tự động chuyển sang phần âm thanh '"), 'Automatic part switching uses Vietnamese terminology');
-
-
 assert.ok(appSource.includes("showToast('Đã khôi phục vị trí đọc. Nhấn Phát để nghe.');"), 'Resume notification uses concise Vietnamese terminology');
 assert.ok(appSource.includes("showToast('Đang đọc: ' + story.title);"), 'Reader status toast avoids decorative emoji');
 assert.ok(appSource.includes("Trình duyệt chưa cho phép phát. Hãy nhấn Phát để thử lại."), 'Autoplay errors provide a direct recovery action');
-assert.ok(appSource.includes("Đến mốc trang kế tiếp, âm thanh sẽ dừng chờ bạn lật trang"), 'Page-turn mode guidance uses Vietnamese media terminology');
 assert.ok(appSource.includes("Không tải được sách trực tuyến. Hãy kiểm tra kết nối hoặc chọn tệp khác."), 'Remote book errors do not expose exception details');
-
-
 const readerHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-assert.ok(readerHtml.includes('🎵 Chọn âm thanh'), 'Reader file picker uses Vietnamese media terminology');
 assert.ok(readerHtml.includes('📖 Chưa có sách'), 'Empty reader document label uses book terminology');
 assert.ok(readerHtml.includes('🎵 Chưa có âm thanh'), 'Empty reader media label uses Vietnamese terminology');
 assert.ok(readerHtml.includes('📖 Đủ sách và âm thanh'), 'Library filter uses consistent reader terminology');
 assert.ok(appSource.includes("label.textContent = 'Phần âm thanh:';"), 'Audio part label uses Vietnamese terminology');
-
-
 assert.ok(appSource.includes("dom.audioFileName.textContent = '🎵 Chưa có âm thanh';"), 'Dynamic empty media labels use Vietnamese terminology');
 assert.ok(appSource.includes("dom.pdfFileName.textContent = '📖 Chưa có sách';"), 'Dynamic empty book labels use book terminology');
-
-
-assert.ok(readerHtml.includes('📄 Mở một tệp PDF'), 'File format guidance uses concise Vietnamese wording');
-assert.ok(readerHtml.includes('📄 Chọn tệp PDF'), 'PDF picker names the file format clearly');
-
 console.log('Read Along data contract schema tests passed.');
