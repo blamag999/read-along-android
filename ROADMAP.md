@@ -564,3 +564,13 @@ Khi một công việc trong PLANNING hoàn tất:
 - Dữ liệu legacy một-mốc được migrate sang cấu trúc mới khi đọc; không xóa dữ liệu cũ.
 - Regression assertions được bổ sung vào `tests/ota-update.test.js`. CI và build APK beta được kích hoạt tại commit chốt của batch; nghiệm thu thiết bị vẫn pending.
 - Không thay đổi D1/API, native updater, signing key hoặc nhánh `main`.
+
+
+### 2026-10-31 — Sửa đồng bộ mốc audio 0 giây ở trang 2
+
+- Audit `modules/page-sync.js` xác nhận `findTargetPage()` loại bỏ mọi marker có `time === 0` trên trang lớn hơn 1. Quy tắc này khiến dữ liệu hợp lệ `{ "2": 0 }` không thể đồng bộ reader sang trang 2 khi audio bắt đầu.
+- Đã bỏ điều kiện loại trừ theo số trang; mốc 0 được xử lý như timestamp hợp lệ. Nếu nhiều trang cùng có timestamp 0, thuật toán hiện vẫn chọn trang có số nhỏ nhất do chỉ thay target khi timestamp mới lớn hơn target hiện tại.
+- Cập nhật `tests/modules.test.js`: kiểm tra riêng mốc trang 2 bằng 0, tie giữa trang 2 và 3, và tie 0 trên trang 1–3.
+- Commit runtime: `968b7142ea13a42e29a94878d240ea6104dd047a` (`modules/page-sync.js`); commit regression: `c8f6dd488a98ced98309f6fa16485d34816c7ceb` (`tests/modules.test.js`).
+- CI/build chưa chạy cho hai commit này vì commit không mang marker `[build-apk]`; APK chưa được tạo. Device acceptance còn pending.
+- Chưa thay đổi main, OTA backend, Cloudflare resources, dữ liệu R2/D1 hoặc signing key.
