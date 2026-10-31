@@ -146,7 +146,8 @@ const libraryGroups = libraryContext.libraryAssetGroups([
   { key: "Oliver_Company_P2.mp3", name: "Oliver_Company_P2.mp3", type: "file", size: 20, uploaded: "2026-01-01" },
   { key: "Oliver_Company_P1.wma", name: "Oliver_Company_P1.wma", type: "file", size: 30, uploaded: "2026-01-01" },
   { key: "Oliver_Company.json", name: "Oliver_Company.json", type: "file", size: 10, uploaded: "2026-01-01" },
-  { key: "orphan.bin", name: "orphan.bin", type: "file", size: 1, uploaded: "2026-01-01" }
+  { key: "orphan.bin", name: "orphan.bin", type: "file", size: 1, uploaded: "2026-01-01" },
+  { key: "books.json", name: "books.json", type: "file", size: 1000, uploaded: "2026-01-01" }
 ]);
 assert.equal(libraryGroups.books.length, 1, "PDF/audio/JSON with the same normalized stem must form one book");
 assert.equal(libraryGroups.books[0].pdf[0].name, "Oliver_Company.pdf");
