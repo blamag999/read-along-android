@@ -703,3 +703,9 @@ Khi một công việc trong PLANNING hoàn tất:
 - Đã rà soát chỉ đọc các thông báo trong `app.js`; ghi bảng nội dung đề xuất vào PLANNING. Các thông báo close/exit/resume/clear markers và OTA đã chuẩn hóa ở batch trước được giữ nguyên.
 - Phát hiện cần xử lý ở batch sau: một số alert/toast đang đưa `error.message` trực tiếp ra người dùng; một thao tác nạp audio có thể tạo nhiều toast nối tiếp; một số thông báo dài hoặc trộn hướng dẫn và trạng thái.
 - Chưa sửa runtime, chưa chạy test/CI, chưa build APK, chưa thay đổi OTA, không cập nhật main. Commit kế hoạch: `3644258c70ea0bbe6e052d030f546a0c356fe08c`; commit ghi kết quả audit: `3acea281aa64040e4e74b1c25557007dbd56a203`.
+
+## 2026-10-31 — Thống nhất thuật ngữ thông báo
+
+- Đã thống nhất cách gọi hướng tới người dùng: “PDF” được gọi là “sách” khi nói về tài liệu/hoạt động đọc; “audio” được gọi là “âm thanh” trong thông báo giao diện.
+- Tên định dạng cụ thể như PDF, MP3, M4A vẫn được giữ khi cần hướng dẫn chọn đúng loại tệp. Không đổi tên kỹ thuật trong code/API/log.
+- Quy ước đã ghi vào PLANNING và sẽ áp dụng cho batch chuẩn hóa thông báo tiếp theo. Chưa sửa runtime trong lượt này.
