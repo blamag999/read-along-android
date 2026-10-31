@@ -838,26 +838,6 @@ $("auditRows").closest("details").addEventListener("toggle", async (event) => {
   } catch (error) { $("auditRows").textContent = error.message; }
 });
 
-async function loadPublicStats() {
-  const status = $("homeStatus");
-  try {
-    const response = await fetch(API + "/usage/stats", { cache: "no-store" });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || "HTTP " + response.status);
-    $("statBooks").textContent = Number(data.books || 0).toLocaleString("vi-VN");
-    $("statPdfs").textContent = Number(data.pdfs || 0).toLocaleString("vi-VN");
-    $("statAudios").textContent = Number(data.audios || 0).toLocaleString("vi-VN");
-    $("statSync").textContent = Number(data.sync || 0).toLocaleString("vi-VN");
-    $("statVisits").textContent = Number(data.totalVisits || 0).toLocaleString("vi-VN");
-    $("statVisitsRecent").textContent = "Trong 30 ngày: " + Number(data.visits30d || 0).toLocaleString("vi-VN");
-    $("statDevices").textContent = Number(data.totalDevices || 0).toLocaleString("vi-VN");
-    $("statDevicesRecent").textContent = "Hoạt động 30 ngày: " + Number(data.devices30d || 0).toLocaleString("vi-VN");
-    status.textContent = "Cập nhật lúc " + formatDate(data.updatedAt) + ". Thiết bị được đếm theo mã cài đặt ẩn danh.";
-  } catch (error) {
-    status.textContent = "Chưa tải được thống kê: " + error.message;
-    queueTelemetryEvent("public_dashboard_stats_error", { message: String(error.message || error).slice(0, 300) });
-  }
-}
 function formatDuration(seconds) {
   const value = Math.max(0, Math.floor(Number(seconds) || 0));
   const hours = Math.floor(value / 3600), minutes = Math.floor((value % 3600) / 60);
