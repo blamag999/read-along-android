@@ -531,3 +531,14 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - Legacy session values `pageTurnMode: off` are normalized to `next` during both checkpoint and session restoration.
 - Regression assertions added in `[test]` commit `8dae0179bc64c98bd91ddc7e3b5635d70dc540a0`.
 - CI status is still unconfirmed; do not build APK until the test result is available.
+
+
+### CSS legacy cleanup — 2026-11-01
+
+- [x] Audit stylesheet selectors against reader HTML, app runtime and loaded modules.
+- [x] Remove styles for deleted local file/folder picker, drag/drop, obsolete view/zoom/two-page/speed controls, marker manager/history/table, obsolete diagnostics/checkpoint controls and unused tutorial layouts.
+- [x] Preserve current reader/menu/playlist/audio/touch/checkpoint/responsive styles and APK/native-specific styles not conclusively proven dead.
+- [x] Add regression assertions for removed selectors and IDs.
+- [ ] Run full npm test / obtain confirmed GitHub Actions result before APK build.
+- CSS reduced from 91,946 to 66,287 characters (~27.9%). Static checks confirm balanced CSS braces, no removed selectors/IDs in active CSS, and no removed class references in the audited runtime sources.
+- Commits: CSS 0382630, fe22a15; tests 9c20bd8, aa25129, f50d1c7.
