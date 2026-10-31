@@ -280,3 +280,14 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Full regression, Pages Functions syntax, isolation, channel validation, release notes/version generation, web preparation, native updater integration, Android version and launcher icon generation, signing configuration all passed.
 - Current step: `Build signed release APK` is in progress. Pending: signature and SHA-256 verification, OTA R2 upload, workflow artifacts, GitHub Release assets.
 - Main remains unchanged. Do not treat APK as downloadable/OTA-ready until workflow completes successfully and release assets are checked.
+
+
+## Recovery — beta v1.3.21 release complete (2026-10-31)
+
+- Build source commit: `5839851550c29a1fcb17d8815426db1783b0936d`.
+- GitHub Actions [41213680238](https://github.com/blamag999/read-along-android/actions/runs/41213680238) completed success.
+- Version/channel: `1.3.21` / beta; versionCode `199`; release tag `v1.3.21`.
+- APK asset: `read-along-v1.3.21-android.apk`, 3,436,157 bytes. Signature verification v1 and v2 passed. OTA object + beta manifest upload passed. SHA-256: `fbe5f4650d1b54c5e29ac4a81a0e895b59321287ef0e923bbd23ba143e667723`.
+- GitHub Release assets include APK, SHA-256 text file and Web Local ZIP. Artifact ID `13047033500`, expires 2026-11-30.
+- Important outstanding issue: actual Release Notes include English/technical commit titles (e.g. CI regex/script changes). Version/channel baseline and common Release/OTA changelog path worked, but content quality is not acceptable as final user-facing Vietnamese. Fix generator policy before stable promotion; likely use explicit Vietnamese `Release-Note:` body fields and ignore internal maintenance commits.
+- Device test has not been performed. User should install beta APK and verify app notifications/labels, reader/audio/marker/orientation and OTA behavior. Main remains unchanged.
