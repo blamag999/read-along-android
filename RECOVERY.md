@@ -445,3 +445,12 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Commits: CSS 03826306ddcb4c53d2f721c9363448e7832beb3c, fe22a15e917c3a5f350c7fa4b26ea899384d0dd8; regression tests 9c20bd867a1dc5995f97dc44ea23e708fd9a2c6d, aa251299b56779bff0675099ed4e4abc0e1cee87, f50d1c766ce084cde6d2a08e19cb513ed4a85774.
 - Latest test commit carries [test]: f50d1c766ce084cde6d2a08e19cb513ed4a85774. GitHub combined-status query returned no entries; the available workflow-run wrapper only reports PR-triggered runs, so push CI cannot be confirmed from the current connector. Do not claim regression pass.
 - No APK build, OTA publication, device test or main promotion has occurred. Next: obtain a confirmed full regression result; then inspect the complete beta diff and build one beta APK for acceptance.
+
+
+## Recovery update — regression confirmed (2026-11-01)
+
+- Opened validation PR #43 from `ci/validate-beta-css-cleanup` into `beta` to run the PR-only CI workflow without touching main.
+- Initial CI runs exposed stale assertions in `tests/contracts.test.js` that expected removed file-picker UI and outdated audio/error copy. Updated the tests to match current R2-only reader behavior and concise current user-facing messages; no runtime changes were made to satisfy these stale assertions.
+- Final PR CI run #543 (`Check Read Along Admin`, run ID `41223060317`) completed successfully. `npm test` passed, including release notes, analytics, module, marker, catalog, API boundaries, admin DOM/stats, OTA, native lifecycle and JS syntax. Pages Functions syntax and isolation checks also passed. Deployment-dependent analytics consent and OTA API smoke tests were skipped by workflow conditions.
+- PR #43 squash-merged into beta: `d10459e9788eb1d961e3dfba08a5ab95324233c6`. `main` remains untouched.
+- Regression is confirmed for this beta tree. Next action: one `[build-apk]` finalization commit changing an APK-relevant path, then monitor the beta build, artifact, GitHub Release and R2 OTA publication. Device acceptance still required.
