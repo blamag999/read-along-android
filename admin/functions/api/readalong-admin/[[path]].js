@@ -561,13 +561,18 @@ async function handle(request, env) {
       return json({ error: "Analytics rate limit exceeded" }, 429);
     }
 
-    const statements = body.events.map(event => env.DB.prepare(
-      "INSERT OR IGNORE INTO admin_reading_events (event_id, session_id, install_hash, sequence, event_type, occurred_at, received_at, platform, app_version, reading_seconds, listening_seconds, book_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    ).bind(
-      event.eventId, event.sessionId, installHash, event.sequence, event.type,
-      event.occurredAt, now, event.platform, event.appVersion,
-      event.readingSeconds || 0, event.listeningSeconds || 0, event.bookId || null
-    ));
+    const statements = [];
+    for (const event of body.events) {
+      statements.push(env.DB.prepare(
+        "INSERT OR IGNORE INTO admin_reading_events (event_id, session_id, install_hash, sequence, event_type, occurred_at, received_at, platform, app_version, reading_seconds, listening_seconds, book_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      ).bind(
+        event.eventId, event.sessionId, installHash, event.sequence, event.type,
+        event.occurredAt, now, event.platform, event.appVersion,
+        event.readingSeconds || 0, event.listeningSeconds || 0, event.bookId || null
+      ));
+      // SQLite changes() excludes rows written by triggers, unlike D1 meta.changes.
+      statements.push(env.DB.prepare("SELECT changes() AS inserted"));
+    }
     statements.push(env.DB.prepare(
       "DELETE FROM admin_reading_events WHERE received_at < ?"
     ).bind(now - 90 * 86400000));
@@ -578,7 +583,10 @@ async function handle(request, env) {
       "DELETE FROM admin_reading_daily WHERE day_utc < date('now', '-24 months')"
     ));
     const results = await env.DB.batch(statements);
-    const accepted = results.slice(0, body.events.length).reduce((sum, result) => sum + Number(result.meta?.changes || 0), 0);
+    let accepted = 0;
+    for (let index = 0; index < body.events.length; index++) {
+      accepted += Number(results[index * 2 + 1]?.results?.[0]?.inserted || 0);
+    }
     return json({ ok: true, accepted, duplicates: body.events.length - accepted });
   }
 
