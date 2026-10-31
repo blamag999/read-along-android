@@ -83,7 +83,8 @@ Keep current JSON marker shape compatible with `modules/page-sync.js`. Any schem
 
 - [x] Added an initial versioned static config document with empty feature/default maps and no announcements; it changes no app behavior.
 - [x] Added regression checks for the document's required version fields and empty allowlisted sections.
-- [ ] Verify the public URL after Pages deployment.
+- [x] Cloudflare Pages production deployment completed successfully for the commit containing the static config file.
+- [ ] Verify the actual HTTP response/body at `https://read-along-admin.pages.dev/remote-config.json`; deployment success alone does not prove the asset URL.
 - [ ] Add a protected Admin editing workflow only if generic file management is not sufficient; do not add another API by default.
 - [ ] Integrate an APK client only after backend/schema/cache/fallback tests and one grouped APK update.
 
