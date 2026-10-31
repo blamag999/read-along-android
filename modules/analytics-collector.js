@@ -159,7 +159,7 @@
     if (!sessionActive) return;
     checkpoint();
     const durations = takeDurations();
-    sendEvent('reader_stop', { readingSeconds: durations.readingSeconds });
+    sendEvent('reader_stop', durations);
     sessionActive = false;
     sessionId = '';
     sessionBookKey = '';
@@ -195,7 +195,7 @@
     const isReading = previousReadingActive;
     if (sessionActive && wasReading && !isReading) {
       const durations = takeDurations();
-      sendEvent('reader_pause', { readingSeconds: durations.readingSeconds });
+      sendEvent('reader_pause', durations);
     } else if (sessionActive && !wasReading && isReading) {
       sendEvent('reader_resume');
     }
@@ -212,7 +212,7 @@
     checkpoint();
     if (sessionActive) {
       const durations = takeDurations();
-      sendEvent('audio_pause', { listeningSeconds: durations.listeningSeconds });
+      sendEvent('audio_pause', durations);
     }
     refreshActivityFlags();
   }
@@ -221,7 +221,7 @@
     checkpoint();
     if (sessionActive) {
       const durations = takeDurations();
-      sendEvent('audio_stop', { listeningSeconds: durations.listeningSeconds });
+      sendEvent('audio_stop', durations);
     }
     refreshActivityFlags();
   }
