@@ -918,3 +918,42 @@ Khi một công việc trong PLANNING hoàn tất:
 
 - [x] GitHub Actions regression run #554 (`0243a8177c282758369f11e0503c7a89cd467d2b`) completed successfully: npm test, JS/Pages syntax, isolation and deployment smoke tests all passed.
 - [ ] Build APK beta and verify the compact Menu on a real Android device; no APK/device acceptance is claimed yet.
+
+
+## Handover — R2 folder migration and folder-aware catalog (2026-11-01)
+
+### Scope and inventory
+
+- Bucket: `my-audio-book`.
+- Inventory at survey time: 204 objects total; 180 root objects including the root `books.json`; 24 objects under `ONE STORY A DAY LEVEL 2 FULL/` (12 PDF + 12 MP3).
+- Current catalog seed/live snapshot: 82 books referencing 175 media objects; all 175 references resolve to existing R2 keys.
+- Four additional root objects are not in the current catalog but form two complete PDF/MP3 pairs: `Oliver_Company` and `Sleeping Beauty`.
+- Root migration scope: 179 media objects, approximately 1.65 GB. Keep root `books.json` in place and leave `ONE STORY A DAY LEVEL 2 FULL/` untouched.
+
+### Implementation
+
+- Added optional `folder` metadata to catalog mapping, preview and publish. Legacy entries without the field infer it from their PDF/audio URL path.
+- Added folder selector to the reader library; it filters the existing catalog list without changing PDF/audio loading, book IDs, reading sessions or marker resolution.
+- Added an Admin bulk-migration action for root-level assets. It excludes `books.json`, limits itself to root files, checks destination collisions, reuses the existing authenticated rename operation, verifies the copied object size before deleting the source, and processes two objects concurrently.
+- After a successful move, Admin generates a live R2 inventory preview and requires confirmation before publishing `books.json`. If preview excludes any groups, publication is stopped.
+- Updated catalog schema and regression tests for folder mapping/filtering and the Admin migration entry point.
+
+### Verification and remaining work
+
+- Beta source commit: `410e292477519143176fc7b5bf45b9b8099ccc0a`.
+- Regression and isolation: PASS — [GitHub Actions run 41226438099](https://github.com/blamag999/read-along-android/actions/runs/41226438099).
+- Cloudflare Pages deployment: `c3dbf307-e516-43f5-8421-5a1714edd902`; build stage passed, deploy stage was active at the last check. Confirm completion before using Admin.
+- **R2 data migration has not yet run.** No source objects were deleted or moved during this implementation batch.
+- **Live `books.json` has not yet been rebuilt/published.**
+- Expected catalog after successful preview: 84 books in `DISNEY` and 12 in `ONE STORY A DAY LEVEL 2 FULL` (96 total); this is a target to verify, not a result.
+- APK build and device acceptance remain pending. Do not promote to main as part of this batch.
+
+### Next operator steps
+
+1. Open https://read-along-admin.pages.dev and sign in.
+2. At the bucket root, run **Chuyển sách ngoài thư mục vào DISNEY**. Confirm the scope and wait for the completion result; if errors are reported, keep the failed source files and resolve them before retrying.
+3. Review the generated catalog preview. Require zero excluded groups and confirm the folder counts before approving publication.
+4. Verify live `books.json` and all referenced PDF/audio/JSON objects; compare folder paths against the R2 inventory.
+5. Run the beta app, test folder filtering and open books from both folders; verify marker JSON and audio synchronization.
+6. Run the final regression, build one beta APK, complete device acceptance, then update this handover with actual R2/catalog/APK evidence.
+
