@@ -223,3 +223,15 @@ Khi một công việc trong PLANNING hoàn tất:
 - Không build APK vì batch chỉ gồm resolver cô lập, test và tài liệu. Không promote `main`.
 - Còn pending: thiết kế atomic migration/write/recovery; runtime vẫn giữ hành vi legacy hiện tại cho đến khi migration được kiểm thử riêng.
 
+
+### 2026-10-31 — Analytics AN1 contract and privacy policy defined
+
+- Chuẩn hóa `schemas/analytics-event.schema.json` thành contract v1 cho session analytics: eventId, sessionId, installId, sequence, event type, occurredAt, platform/appVersion và hai số đo riêng `readingSeconds` / `listeningSeconds` (mỗi field tối đa 120 giây).
+- Chỉ chấp nhận bookId dạng opaque catalog ID; không cho phép title, filename, path, URL, document content hoặc free-form details.
+- Chốt semantics reader_start/heartbeat/pause/resume/stop và audio_play/pause/stop; reading chỉ tính khi reader foreground, listening chỉ tính khi audio đang phát và foreground. Hai số đo có thể chồng thời gian nhưng được tổng hợp riêng.
+- Chốt explicit opt-in (default off), opt-out dừng gửi, không queue/cộng offline time, request lỗi thì drop interval; server received_at là nguồn ngày tổng hợp, occurredAt chỉ là context.
+- Đề xuất endpoint `analytics/events` trong Pages Functions router hiện có, tách khỏi `usage/track` và `telemetry/events`; dedupe theo eventId và (sessionId, sequence); raw events 90 ngày, daily aggregates 24 tháng.
+- Cập nhật `docs/architecture/data-contracts.md`, `tests/contracts.test.js` và PLANNING. Không triển khai collector, API route, D1 table hoặc dashboard; không thay đổi APK/runtime.
+- CI regression + JS syntax + Pages Functions syntax + isolation checks **success** tại [41164377952](https://github.com/blamag999/read-along-android/actions/runs/41164377952) trên commit `6441085ee49bc2c0d4a32704d296316a2c7de9bb`. Hai lần chạy trước phát hiện lỗi cú pháp trong test assertion do chỉnh sửa nội dung; đã dọn test và run cuối thành công.
+- AN1 hoàn tất; AN2 backend ingest/D1 chưa bắt đầu.
+
