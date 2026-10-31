@@ -137,7 +137,7 @@
 - [ ] Regression UI điện thoại: status bar/notch/camera safe area, màn hình nhỏ/lớn, touch và keyboard.
 - [ ] **PENDING — Android TV:** chưa kiểm thử trên thiết bị thật; để ngoài phạm vi batch hiện tại, không chặn các công việc độc lập khác.
 - [ ] Regression OTA: có update/không update, mạng lỗi, APK lỗi, chữ ký không khớp, phiên bản cũ, quyền cài đặt, người dùng hủy và dữ liệu đọc sau update.
-- [ ] Xác minh offline và cache; không xóa dữ liệu đọc khi dọn shell cache.
+- [ ] Xác minh hành vi online-only: PDF/audio R2 không được lưu thành bản cache offline; dọn shell cache không làm mất session/checkpoint.
 - [ ] Chỉ build APK beta khi tất cả thay đổi APK đã được gom nhóm và CI pass.
 - [ ] Ghi model thiết bị, phiên bản Android/app, commit, APK SHA-256 và kết quả test vào ROADMAP.
 
@@ -372,69 +372,82 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - Vì vậy, chức năng channel/version/generation đã hoạt động và được xác minh, nhưng chất lượng nội dung tiếng Việt chưa đạt. Không đánh dấu Release Notes hoàn tất; cần thiết kế trường `Release-Note:` tường minh hoặc lọc commit nội bộ theo policy rồi xác minh ở beta kế tiếp.
 
 
-## P1 — Bỏ mở sách từ thiết bị và hoàn thiện menu reader — 2026-10-31
+## P1 — Bỏ mở sách từ thiết bị và tinh gọn reader/Menu — 2026-10-31
 
-> Đã duyệt phạm vi, đã audit source trên beta HEAD `bc2ede7069c50ae22a7464f6f2cf99416981bbfc`, chưa triển khai. Thực hiện trên beta; không cập nhật main.
+> Phạm vi đã được người dùng xác nhận; đã rà soát lại source beta hiện tại. Chưa triển khai runtime. Chỉ làm trên beta; không cập nhật main. Ứng dụng tiếp tục đọc PDF/audio trực tiếp từ R2, không triển khai cache offline.
 
-### Kết quả audit source hiện tại
+### Mục tiêu UX đã chốt
 
-- `DOMContentLoaded` gọi `initEvents()` rồi tự gọi `loadR2Catalog()`; catalog được đọc trực tiếp từ `books.json` trên R2. Nút Thư viện hiện chỉ mở playlist khi catalog đã tải và có dữ liệu; khi tải lỗi, nút bị disable và không có đường retry rõ ràng trong APK.
-- `loadStoryFromPlaylist()` mở PDF bằng URL R2 qua `loadPdfFromUrl()`, âm thanh qua `loadAudioFromUrl()`, marker JSON qua URL R2 trong `resetAndLoadSyncForBook()`. `modules/catalog-playlist.js::mapRemoteCatalog()` chỉ tạo asset URL từ catalog R2.
-- PDF/audio hiện không được cache offline từ R2 trong luồng trên. PDF.js đọc URL và audio element phát URL trực tiếp. Kho offline R2 1 GiB là hạng mục riêng trong PLANNING, chưa có implementation; không được tính là chức năng hiện hữu hoặc gộp vào cleanup này.
-- Đường mở tệp cục bộ đang có nhiều nhánh: `filePickerSection`, nút Bắt đầu, `node1Modal`, input thư mục/PDF/audio, `showDirectoryPicker`, drag-and-drop, `handlePdfFileSelect()`, `handleAudioFileSelect()`, `handleFolderPick()`, `handleFileList()` và `initDragAndDrop()`.
-- Các helper `loadPdfFromBlob()`, `loadAudioFromBlob()`, `saveBookToLibrary()`, `getBookFromLibrary()` và IndexedDB `PdfAudioSyncDB/book_library` hiện chỉ có caller từ luồng import PDF/audio cục bộ; R2 catalog hiện dùng URL. Cần kiểm tra lại caller sau khi sửa catalog contract trước khi xóa các helper này.
-- `modules/catalog-playlist.js::buildPlaylistFromFiles()` và nhóm test local file playlist chỉ phục vụ ghép PDF/audio/JSON từ thư mục cục bộ; không được nhầm với `mapRemoteCatalog()` và filter playlist R2.
-- State `dirHandle`, `folderJsonFiles`, nhánh đọc marker JSON từ thư mục và `autoSaveSyncToLocalDirectory()` phụ thuộc File System Access API. Có thể bỏ cùng luồng thư mục sau khi chuyển marker persistence sang localStorage hiện tại.
-- Marker JSON từ R2 và localStorage là hai nguồn cần giữ. Marker JSON import/export qua file là workflow riêng, không mở sách PDF/audio; giữ trong phạm vi này trừ khi người dùng yêu cầu bỏ riêng.
-- `syncModal` có bảng chỉnh marker, import JSON, export JSON và clear marker; đây là giao diện quản lý marker được mở từ mục “Mốc thời gian” trong Menu. Giữ mục này và dữ liệu marker. Không xóa `saveSyncToStorage()`, `pageTimestamps`, `modules/page-sync.js`, schema hoặc các caller marker runtime.
-- `syncBanner` chứa page jump, pin marker và lưu marker vào thư mục/tải xuống; hiện bị ẩn trong APK UI mode. Tách các chức năng đang bị ẩn khỏi marker modal; không giữ code ghi vào thư mục sau khi bỏ File System Access API. Chỉ giữ thao tác page jump/pin nếu có yêu cầu UX thực tế và được bố trí lại trong menu.
-- Quick-options có select ba chế độ đọc (`next/markers/off`) và checkbox auto-seek; CSS APK hiện ẩn toàn bộ quick-options. Menu hiện chỉ có toggle tự lật next/off, nên chưa expose đầy đủ các lựa chọn đang có. Cần chuyển select chế độ đọc và auto-seek vào Menu, giữ đủ ba mode; tránh xóa nhầm `state.pageTurnMode` hoặc `state.autoSeekAudio`.
-- Checkpoint đọc gần đây đã nằm trong Menu; giữ logic lưu/khôi phục, tối đa ba mốc và không autoplay. Đổi nhãn thành “Vị trí đọc gần đây” / “Xem tiếp”.
-- OTA channel, version label và check update đã nằm trong Menu; giữ nguyên.
-- Header đã có đúng hai action Thư viện sách và Menu; không thêm nút Đóng sách. Android Back đã gọi `requestCloseBook()` / `closeCurrentBook()` và lưu reading session.
-- Tests hiện đang khẳng định `menuToggleSettings` và `syncModal` còn tồn tại; cần cập nhật assertions theo thiết kế mới, không chỉ xóa DOM rồi để test cũ thất bại.
-- So sánh Git từ mốc functional HEAD `50b7c4961520a54e84c8400687e00bd7edad1076` tới beta HEAD `bc2ede7069c50ae22a7464f6f2cf99416981bbfc` chỉ có ba commit tài liệu (PLANNING/ROADMAP/RECOVERY), không có delta runtime trong khoảng này.
+- Header chỉ có hai action: **Thư viện sách** và **Menu**. Không có nút Đóng sách; Android Back đóng sách và lưu phiên đọc.
+- Menu chỉ gồm:
+  1. **Tự lật trang** — một công tắc bật/tắt. Khi tắt, người đọc tự chuyển trang; không còn các chế độ markers/off như ba lựa chọn riêng.
+  2. **Vị trí đọc gần đây** — giữ tối đa ba checkpoint; thao tác **Xem tiếp**, khôi phục không tự phát audio.
+  3. **Cập nhật OTA** — giữ chọn kênh và kiểm tra cập nhật.
+  4. **Phiên bản** — hiển thị phiên bản đang cài.
+- Không đưa các điều khiển đang bị ẩn trong APK vào Menu; các thành phần ẩn thuộc chức năng bị loại bỏ phải được xóa, không chỉ tiếp tục ẩn bằng CSS.
+- Không có Menu cài đặt ẩn/hiện, không có nhóm điều khiển fit/two-page/zoom.
+- **Lật trang tự tua audio** là hành vi reader mặc định luôn bật: khi người dùng chuyển trang thủ công, audio tự tua đến marker tương ứng. Không có nút bật/tắt; chỉ bỏ checkbox/giao diện cấu hình. Phải ép hành vi runtime luôn bật và không để giá trị false cũ trong session/localStorage vô hiệu hóa nó.
+- Cách hiển thị trang là logic tự động hiện có, không phải tùy chọn người dùng: bình thường hiển thị một trang; khi marker cần nhảy qua một trang không có marker, hiển thị đồng thời trang có marker và trang liền kề không có marker (trước hoặc sau tùy chiều điều hướng). Khi không còn tình huống đó, trở về một trang. Không thêm nút một trang/hai trang.
+- Bỏ toàn bộ công cụ quản lý marker: chỉnh/thêm/xóa marker, modal/bảng marker, nhập JSON, xuất JSON, xóa marker và mọi luồng đồng bộ/cập nhật marker online do client khởi tạo.
+- **Không bỏ dữ liệu marker đọc từ R2**: JSON marker đi kèm catalog vẫn là dữ liệu đầu vào read-only để đồng bộ PDF/audio và xác định trang/spread. Đây không phải chức năng quản lý hay đồng bộ marker online. Không tạo API marker mới.
+- Không cache PDF/audio R2; tiếp tục stream/đọc online như hiện tại.
 
-### A. Bỏ hoàn toàn mở sách cục bộ
+### Kết quả rà soát source liên quan
 
-- [ ] Gỡ UI chọn PDF/audio/thư mục: `filePickerSection`, nút Bắt đầu, `node1Modal`, các nút trigger và input PDF/audio/folder; giữ nút Thư viện làm entry point duy nhất.
-- [ ] Giữ tự tải catalog R2 khi khởi động; sửa nút Thư viện để mở playlist khi đã có dữ liệu, và retry `loadR2Catalog()` khi catalog chưa tải hoặc lần trước lỗi. Có trạng thái loading/error rõ ràng, không cần modal Bắt đầu.
-- [ ] Gỡ `handlePdfFileSelect()`, `handleAudioFileSelect()`, `handleFolderPick()`, `handleFileList()`, `initDragAndDrop()`, drag/drop overlay và các listener/file input chỉ phục vụ mở media cục bộ.
-- [ ] Bỏ `showDirectoryPicker`, `state.dirHandle`, `state.folderJsonFiles`, nhánh đọc JSON từ thư mục và `autoSaveSyncToLocalDirectory()`; marker R2 + localStorage vẫn hoạt động.
-- [ ] Sau khi kiểm tra caller cuối cùng, bỏ `loadPdfFromBlob()`, `loadAudioFromBlob()`, `saveBookToLibrary()`, `getBookFromLibrary()` và logic mở Blob chỉ phục vụ local media. Không thay đổi `loadPdfFromUrl()`, `loadAudioFromUrl()`, `loadAudioPart()` theo hướng làm hỏng URL R2.
-- [ ] Bỏ `PdfAudioSyncDB/book_library` khỏi đường chạy mới nếu không còn caller; **không xóa database hoặc Blob cũ của người dùng trong batch này**. Ghi nhận đây là dữ liệu legacy không còn được app sử dụng; quyết định dọn storage/migration phải là task riêng.
-- [ ] Bỏ `buildPlaylistFromFiles()` khỏi `modules/catalog-playlist.js` và test tương ứng nếu không còn caller; giữ `mapRemoteCatalog()`, validation URL R2, playlist filtering/pagination và stable book ID.
-- [ ] Không cho phép drop file PDF/audio vào cửa sổ; không chặn các thao tác touch/swipe trên canvas PDF.
+- app.js hiện có state.pageTurnMode với ba giá trị next/markers/off và state.autoSeekAudio; session restore đang đọc cả hai giá trị. Menu menuAutoFlip đang chuyển giữa next/off, trong khi quick-options có select ba mode và checkbox auto-seek.
+- app.js hiện dùng state.autoSeekAudio trong xử lý chuyển trang thủ công. Khi triển khai phải giữ logic seek này nhưng chuyển thành luôn bật; bỏ việc restore giá trị false và bỏ mọi listener/DOM cấu hình.
+- modules/page-sync.js có resolveTimestampSpread(), resolvePreviousMarkedSpread() và alignPage() phục vụ hiển thị một/hai trang theo marker. Giữ logic này, chỉ sửa nếu test chứng minh không đáp ứng đúng quy tắc trang có marker + trang kề không marker.
+- Reader hiện nạp marker JSON companion từ R2 và chuẩn hóa marker để đồng bộ audio/page. Giữ read path này; không giữ các UI/handler ghi hoặc quản lý marker.
+- index.html/tests hiện còn một số thành phần và assertion marker cục bộ như syncModal, import/export và clear. Phải rà soát DOM reference và cập nhật test cùng lúc khi loại bỏ.
+- Header hiện có Thư viện sách và Menu; Android Back đã đi qua requestCloseBook()/closeCurrentBook(). Giữ hành vi đó.
+- Catalog R2 hiện được nạp khi khởi động. Nút Thư viện cần có khả năng mở playlist khi catalog đã sẵn sàng và thử tải lại khi lần nạp trước thất bại; không để nút bị disable vĩnh viễn.
+- Các helper Blob/local library và File System Access API cần được kiểm tra caller lần cuối trước khi xóa; không xóa database hoặc Blob cũ của người dùng trong batch này.
 
-### B. Hoàn thiện Menu và footer
+### A. Loại bỏ hoàn toàn mở sách từ thiết bị
 
-- [ ] Header chỉ có hai action: **Thư viện sách** và **Menu**; Android Back đóng sách và lưu phiên đọc.
-- [ ] Bỏ `menuToggleSettings` và logic ẩn/hiện file picker/footer cũ.
-- [ ] Giữ Menu gồm: vừa trang/hai trang/zoom; chế độ đọc đủ ba lựa chọn next/markers/off; bật/tắt auto-seek; quản lý mốc thời gian; vị trí đọc gần đây; OTA.
-- [ ] Chuyển `selPageTurnMode` và `chkAutoSeekAudio` từ quick-options đang bị ẩn trên APK vào Menu; đồng bộ trực tiếp với `state.pageTurnMode` và `state.autoSeekAudio`. Gỡ fallback phụ thuộc DOM `btnAutoFlipToggle` nếu phần tử này không tồn tại; không làm mất ba chế độ đọc.
-- [ ] Giữ `menuOpenSyncModal` và `syncModal`: bảng chỉnh marker, import/export JSON marker và clear marker có xác nhận. Đây là thao tác dữ liệu marker, không phải mở sách cục bộ.
-- [ ] Gỡ thao tác ghi marker vào thư mục. Nếu giữ nút export marker, chỉ tải JSON xuống thiết bị; import chỉ nhận JSON marker, không nhận PDF/audio.
-- [ ] Rà soát `syncBanner`: bỏ page jump/pin/save footer cũ nếu không cần trong APK; không để JS tiếp tục dereference DOM đã xóa. Marker vẫn chỉnh được qua modal quản lý mốc.
-- [ ] Đổi checkpoint thành **“Vị trí đọc gần đây”** và nút **“Xem tiếp”**; khôi phục không tự autoplay.
-- [ ] Giữ nguyên OTA channel, version, update action; giữ audio scrubber, transport controls và audio-part selector trong footer.
+- [ ] Gỡ UI chọn PDF/audio/thư mục: filePickerSection, nút Bắt đầu, node1Modal, input PDF/audio/folder và các trigger chỉ phục vụ mở media cục bộ.
+- [ ] Giữ tự tải catalog R2 khi khởi động; nút Thư viện mở playlist khi catalog sẵn sàng và gọi retry loadR2Catalog() khi chưa tải được/lần trước lỗi. Hiển thị loading/error rõ ràng; không cần modal Bắt đầu.
+- [ ] Gỡ handlePdfFileSelect(), handleAudioFileSelect(), handleFolderPick(), handleFileList(), initDragAndDrop(), drop overlay và listener chỉ phục vụ mở media cục bộ.
+- [ ] Bỏ showDirectoryPicker, state.dirHandle, state.folderJsonFiles, nhánh đọc JSON từ thư mục và autoSaveSyncToLocalDirectory().
+- [ ] Kiểm tra caller cuối cùng rồi bỏ loadPdfFromBlob(), loadAudioFromBlob(), saveBookToLibrary(), getBookFromLibrary() và nhánh mở Blob chỉ phục vụ import media. Giữ nguyên loadPdfFromUrl(), loadAudioFromUrl(), loadAudioPart() và URL R2.
+- [ ] Bỏ PdfAudioSyncDB/book_library khỏi đường chạy mới nếu không còn caller. Không xóa database/Blob legacy đã có trên thiết bị; không thêm migration xóa dữ liệu trong batch này.
+- [ ] Bỏ buildPlaylistFromFiles() và test local-folder playlist nếu không còn caller; giữ mapRemoteCatalog(), URL validation/host allowlist R2, playlist filter và stable book ID.
+- [ ] Không cho drop PDF/audio vào cửa sổ; bảo toàn touch/swipe trên canvas PDF.
 
-### C. Kiểm thử và điều kiện hoàn tất
+### B. Tinh gọn Menu và reader controls
 
-- [ ] Thêm contract test xác nhận chỉ còn hai action header; không còn UI/handler mở PDF/audio/folder cục bộ hoặc drag/drop; nút Thư viện có retry catalog khi lỗi.
-- [ ] Test catalog R2: khởi động tải catalog, mở sách PDF URL, audio URL nhiều part và marker JSON URL; host allowlist vẫn chặn URL ngoài R2.
-- [ ] Test lỗi catalog/mạng: nút Thư viện không bị disable vĩnh viễn; người dùng có thể thử lại mà không cần khởi động lại app.
-- [ ] Test marker: nạp marker JSON R2, fallback localStorage, chỉnh marker, import/export JSON marker, clear marker; không có truy cập File System Access API.
-- [ ] Test reader: page/audio sync, marker 0 giây, multi-part, ba mode đọc, auto-seek, checkpoint, Android Back và orientation.
-- [ ] Test UI APK: header hai action không chồng lấn portrait 320–600 px/landscape; Menu chứa đầy đủ điều khiển; footer audio không bị ảnh hưởng.
-- [ ] Test legacy data: không xóa IndexedDB cũ hoặc localStorage session/marker khi nâng cấp APK.
-- [ ] Kho offline R2 1 GiB/LRU là task riêng chưa triển khai; chỉ thêm test offline R2 sau khi task cache có code. Không ghi nhận offline pass từ batch cleanup này.
-- [ ] Khi runtime hoàn tất, chạy full regression tại commit [test], sau đó build đúng một APK beta tại commit [build-apk], xác minh chữ ký/SHA-256/OTA và kiểm tra thiết bị thật.
-- [ ] Cập nhật ROADMAP/PLANNING/RECOVERY bằng kết quả và bằng chứng; không promote main nếu chưa có xác nhận riêng.
+- [ ] Giữ đúng hai action header: Thư viện sách và Menu; giữ Android Back đóng sách và lưu session.
+- [ ] Xóa menuToggleSettings, logic ẩn/hiện cài đặt cũ, filePickerSection và các quick-options không còn dùng. Không chuyển các control đang bị ẩn vào Menu.
+- [ ] Giữ một control duy nhất Tự lật trang bật/tắt. Thay state.pageTurnMode ba trạng thái bằng trạng thái boolean rõ nghĩa (hoặc adapter tương đương tối thiểu); khi tắt chỉ dừng auto page turn, thao tác lật thủ công vẫn hoạt động. Xóa mode markers (dừng chờ lật) và off (đọc liên tục) như các chế độ riêng.
+- [ ] Loại bỏ select selPageTurnMode, checkbox chkAutoSeekAudio và mọi listener/nhãn quick-options liên quan. Auto-seek phải luôn bật trong runtime; bỏ restore giá trị autoSeekAudio=false từ session cũ và bảo đảm thao tác lật trang thủ công luôn seek audio đến marker đúng.
+- [ ] Giữ logic hiển thị trang tự động trong modules/page-sync.js: một trang bình thường; spread hai trang chỉ khi marker target cách một trang không có marker; hỗ trợ đúng chiều tiến/lùi và audio part. Không thêm nút điều khiển layout.
+- [ ] Xóa syncModal, bảng marker, các nút/handler thêm-sửa-xóa-clear, import/export JSON marker, marker file picker và các thao tác ghi marker local/online từ UI APK.
+- [ ] Giữ duy nhất luồng đọc marker JSON companion từ R2 và logic normalize/lookup/align cần cho reader. Không xóa modules/page-sync.js, marker parsing cần thiết hoặc marker URL trong catalog.
+- [ ] Rà soát mọi caller marker write/sync (bao gồm localStorage mutation, GitHub/remote sync nếu còn, endpoint/API client và các test). Xóa client write/sync chỉ khi không còn caller khác; không xóa backend/API dùng bởi Admin hoặc dịch vụ khác nếu chưa audit ownership/caller trong repository.
+- [ ] Giữ checkpoint gần đây, đổi nhãn thành Vị trí đọc gần đây và nút Xem tiếp; tối đa ba mốc, restore không autoplay.
+- [ ] Giữ OTA channel, kiểm tra cập nhật, version label; giữ audio scrubber, transport controls và audio-part selector ở footer.
+- [ ] Gỡ CSS ẩn/hiện chỉ còn phục vụ các thành phần đã xóa; không để CSS APK che giấu chức năng thừa thay cho việc loại bỏ DOM/runtime.
+
+### C. Kiểm thử và nghiệm thu
+
+- [ ] Contract/UI test: header chỉ có Thư viện sách + Menu; Menu chỉ có Tự lật trang, Vị trí đọc gần đây, OTA và Phiên bản; không còn file picker, drag/drop, settings toggle, view controls, marker manager/import/export.
+- [ ] Test Library: catalog tải lúc khởi động; mở playlist khi thành công; retry được sau lỗi mạng/catalog; không disable vĩnh viễn.
+- [ ] Test R2 read path: mở PDF URL, phát audio URL nhiều phần, tải marker JSON companion; host allowlist vẫn chặn nguồn ngoài R2.
+- [ ] Test auto page turn: bật thì tự chuyển trang theo marker; tắt thì không tự chuyển nhưng thao tác thủ công vẫn hoạt động; không còn nhánh chờ người dùng theo mode markers hoặc đọc liên tục theo mode off.
+- [ ] Test auto-seek cố định bật: lật trang thủ công tua audio đến marker tương ứng; session cũ lưu autoSeekAudio=false không được tắt hành vi; chuyển audio part và marker 0 giây vẫn đúng.
+- [ ] Test page spread: trang có marker kèm trang liền kề không marker khi nhảy qua trang thiếu marker; xác minh cả tiến/lùi, biên trang đầu/cuối, marker liên tiếp, marker thiếu và marker thuộc audio part khác; trở lại một trang khi không còn điều kiện spread.
+- [ ] Test marker read-only: marker R2 được nạp và dùng cho page/audio sync; không có UI hoặc request client để tạo/sửa/xóa/import/export/đồng bộ marker.
+- [ ] Test checkpoint, Android Back, lưu/khôi phục session không autoplay, orientation, audio multi-part và footer controls.
+- [ ] Test legacy: không xóa IndexedDB cũ, localStorage session/checkpoint hoặc dữ liệu marker đã có; giá trị auto-seek cũ false không ảnh hưởng hành vi mặc định mới.
+- [ ] Test UI APK trên portrait 320–600 px và landscape; không chồng lấn header/Menu, giữ vùng safe area và audio footer.
+- [ ] Full regression tại commit [test]; sau đó chỉ build một APK beta tại commit [build-apk], xác minh signature/SHA-256/OTA và kiểm tra thiết bị thật.
+- [ ] Cập nhật ROADMAP/PLANNING/RECOVERY bằng bằng chứng thực tế; không promote main nếu chưa có xác nhận riêng.
 
 ### Ranh giới bắt buộc
 
-- Không xóa database IndexedDB cũ, localStorage session/checkpoint/marker hoặc marker JSON hiện có.
-- Không bỏ marker JSON import/export trong batch này; chỉ tách rõ với mở sách media cục bộ.
-- Không đổi catalog contract, stable book ID, host allowlist R2, OTA endpoint, signing key hoặc Android Back.
-- Không tuyên bố cache/offline R2 1 GiB đã có; tiếp tục theo task riêng trong PLANNING.
-- Bước này chỉ lập kế hoạch, chưa triển khai code.
+- Không xóa IndexedDB cũ, localStorage session/checkpoint hoặc dữ liệu marker cũ trong batch này.
+- Không xóa R2 marker JSON read path hoặc logic page/audio sync.
+- Không triển khai cache offline R2; PDF/audio tiếp tục đọc online trực tiếp.
+- Không đổi catalog contract, stable book ID, R2 host allowlist, OTA endpoint, signing key hoặc luồng Android Back.
+- Không xóa backend/API Admin marker chỉ vì APK không còn quản lý marker; phải audit caller và ownership riêng.
+- Đây là kế hoạch triển khai, chưa phải xác nhận runtime đã được sửa hoặc nghiệm thu.
