@@ -426,3 +426,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Collector tests hiện bao phủ default-off/no install ID before opt-in, opt-in/opt-out, random IDs, PDF open/switch/close, heartbeat timing, audio play/pause/ended, foreground/background, pagehide/pageshow, offline drop/no retry, sequence monotonicity và không gửi book title/file name.
 - Chưa build APK; rotation trên WebView/Android và đo tác động startup/playback cần nghiệm thu thực tế sau khi hoàn tất batch.
 
+
+### 2026-10-31 — Hoàn thiện minh bạch consent và rotation test
+
+- Sửa disclosure Analytics để liệt kê chính xác event type + timestamp bên cạnh IDs/version/platform/durations; nêu rõ raw retention 90 ngày và daily aggregate 24 tháng; nhắc không queue offline.
+- Thêm test orientationchange không tạo reader session trùng sau khi đổi PDF.
+- Commits: UI disclosure `7dfe09eddd4da96b06c4413454189a7e31e85bd0`; orientation test `9b9dce7b7ebd5bb0ba4ab71c48c2422237087077`.
+- Chờ CI cuối; không build APK cho đến khi automated tests và review pass.
+
