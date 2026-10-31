@@ -899,8 +899,20 @@ async function loadAnalyticsDashboard() {
     const summary = data.summary || {};
     $("analyticsReading").textContent = formatDuration(summary.readingSeconds);
     $("analyticsListening").textContent = formatDuration(summary.listeningSeconds);
-    $("analyticsSessions").textContent = Number(summary.activeSessionDays || 0).toLocaleString("vi-VN");
     $("analyticsDevices").textContent = summary.activeDevices === null ? "—" : Number(summary.activeDevices || 0).toLocaleString("vi-VN");
+    const library = data.library || {};
+    $("analyticsBooks").textContent = library.books == null ? "—" : Number(library.books).toLocaleString("vi-VN");
+    $("libraryBooks").textContent = library.books == null ? "—" : Number(library.books).toLocaleString("vi-VN");
+    $("libraryPdfs").textContent = library.pdfs == null ? "—" : Number(library.pdfs).toLocaleString("vi-VN");
+    $("libraryAudioParts").textContent = library.audioParts == null ? "—" : Number(library.audioParts).toLocaleString("vi-VN");
+    $("librarySyncedBooks").textContent = library.syncedBooks == null ? "—" : Number(library.syncedBooks).toLocaleString("vi-VN");
+    const scan = data.latestScan;
+    $("libraryErrors").textContent = scan ? Number(scan.errors || 0).toLocaleString("vi-VN") : "Chưa quét";
+    $("libraryWarnings").textContent = scan ? Number(scan.warnings || 0).toLocaleString("vi-VN") : "Chưa quét";
+    $("libraryScanned").textContent = scan ? Number(scan.scanned || 0).toLocaleString("vi-VN") : "—";
+    $("libraryScanAt").textContent = scan ? formatDate(scan.createdAt) : "Chưa quét";
+    $("libraryScanStatus").textContent = !scan ? "Chưa có kết quả quét thư viện." : scan.status === "success" ? "Kết quả lần quét gần nhất · " + scan.ruleVersion + " · " + Math.round(Number(scan.durationMs || 0) / 1000) + " giây." : "Lần quét gần nhất thất bại; xem Diagnostics để biết chi tiết.";
+    if (library.status !== "published_manifest") $("libraryScanStatus").textContent += " Không đọc được books.json đang xuất bản.";
     $("analyticsDevicesNote").textContent = data.breakdown?.available ? "Thiết bị duy nhất trong khoảng chọn" : "Ngoài cửa sổ lưu chi tiết 90 ngày";
     $("analyticsRetentionNote").textContent = data.breakdown?.note || "";
     $("analyticsUpdated").textContent = "Cập nhật " + formatDate(data.generatedAt) + " · UTC";
@@ -909,12 +921,12 @@ async function loadAnalyticsDashboard() {
     const body = $("analyticsPlatforms"); body.replaceChildren();
     const platforms = data.breakdown?.platforms || [];
     if (!platforms.length) {
-      const row = document.createElement("tr"), cell = document.createElement("td"); cell.colSpan = 6;
+      const row = document.createElement("tr"), cell = document.createElement("td"); cell.colSpan = 5;
       cell.className = "empty"; cell.textContent = data.breakdown?.available ? "Chưa có dữ liệu nền tảng." : "Dữ liệu nền tảng chỉ có trong 90 ngày gần nhất.";
       row.append(cell); body.append(row);
     } else for (const item of platforms) {
       const row = document.createElement("tr");
-      for (const value of [item.platform, Number(item.devices || 0).toLocaleString("vi-VN"), Number(item.sessions || 0).toLocaleString("vi-VN"), formatDuration(item.readingSeconds), formatDuration(item.listeningSeconds), Number(item.events || 0).toLocaleString("vi-VN")]) {
+      for (const value of [item.platform, Number(item.devices || 0).toLocaleString("vi-VN"), formatDuration(item.readingSeconds), formatDuration(item.listeningSeconds), Number(item.events || 0).toLocaleString("vi-VN")]) {
         const cell = document.createElement("td"); cell.textContent = value; row.append(cell);
       }
       body.append(row);
