@@ -8,10 +8,10 @@
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
 - Last formal handover commit: `650c56059d774ccb2d29131a05d8aed6dfd9dda3`
-- Last reviewed functional HEAD on beta: `d83b284d8d57863763560f812f41521f897c9a3e`
+- Last reviewed functional HEAD on beta: `b0a542e75692e5ab3711d43bda68b07e8b328019`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
-- Latest recovery checkpoint: touch reader corrections and beta v1.3.13 release commit `d83b284d8d57863763560f812f41521f897c9a3e`
+- Latest recovery checkpoint: touch UI/menu simplification implementation `b0a542e75692e5ab3711d43bda68b07e8b328019` (CI/device validation pending)
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
 
 ## Phát hiện sau mốc bàn giao trước
@@ -166,3 +166,14 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 
 
 - Documentation handover commit for beta v1.3.13: `650c56059d774ccb2d29131a05d8aed6dfd9dda3`. Runtime source was reviewed at functional commit `d83b284d8d57863763560f812f41521f897c9a3e`; subsequent changes are documentation-only.
+
+
+## Batch touch UI và tinh gọn menu — 2026-10-31
+
+- Functional source đã cập nhật trên beta tới commit `b0a542e75692e5ab3711d43bda68b07e8b328019`; thay đổi tiếp theo tại thời điểm ghi nhận là tài liệu bàn giao.
+- Header portrait được bổ sung responsive rules; nhãn chữ playlist/đóng sách ẩn ở màn hình hẹp để tránh chồng nút. Cần kiểm tra thực tế nhiều kích thước màn hình cảm ứng.
+- UI cập nhật marker GitHub, token và diagnostics đã được gỡ khỏi app; client remote-sync và diagnostics không còn được nạp từ index.html. Marker JSON từ catalog/R2 và nhập/xuất JSON cục bộ được giữ lại.
+- Analytics consent UI đã bỏ; collector ghi nhận mặc định bật. Giữ nguyên schema ingest và trường dữ liệu đã cho phép; không gửi book title, filename, URL, nội dung PDF hoặc audio.
+- Checkpoint label đổi thành “Mốc đọc gần đây”. Regression assertions đã thêm, nhưng chưa có bằng chứng full CI sau batch này.
+- Chưa build APK, chưa chạy smoke test marker R2, chưa nghiệm thu thiết bị; không cập nhật main, không thay đổi R2/D1/Cloudflare resource hoặc signing key.
+- Next: chạy full regression, sửa test nếu cần, build beta APK, kiểm tra portrait/playlist/menu và xác minh marker JSON tải từ R2; chỉ sau đó cập nhật trạng thái nghiệm thu.
