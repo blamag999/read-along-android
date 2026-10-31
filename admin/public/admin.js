@@ -197,7 +197,7 @@ $("logoutBtn").addEventListener("click", async () => {
   show("logoutBtn", false);
   show("homeBtn", false);
   location.hash = "";
-  loadPublicStats();
+  
 });
 
 $("homeBtn").addEventListener("click", () => { location.hash = ""; });
@@ -591,14 +591,14 @@ async function renameEntry(entry) {
   if (!destination || destination === entry.key) return;
   if (!allowed.test(destination)) { setStatus("Chỉ hỗ trợ PDF, JSON và các định dạng audio được phép.", true); return; }
   try {
-    setStatus("Đang di chuyển/đổi tên…");
+    setStatus("Đang đổi tên/di chuyển: " + entry.key + " → " + destination);
     await postJson("rename", { source: entry.key, destination });
-    setStatus("Đã đổi tên/di chuyển tệp.");
+    setStatus("Đã đổi tên/di chuyển thành công: " + destination);
     await loadFiles();
-  } catch (error) { setStatus(error.message, true); }
+  } catch (error) { setStatus("Không thể đổi tên/di chuyển " + entry.key + ": " + error.message, true); }
 }
 async function deleteFile(entry) {
-  if (!await confirmAction("Xóa tệp?", "Tệp sẽ bị xóa khỏi bucket my-audio-book. Thao tác này không thể hoàn tác.", "Xóa tệp")) return;
+  if (!await confirmAction("Xác nhận xóa tệp?", "Bạn sắp xóa tệp:\n" + entry.key + "\n\nTệp sẽ bị xóa khỏi bucket my-audio-book. Thao tác này không thể hoàn tác.", "Xóa vĩnh viễn")) return;
   try {
     await api("file?key=" + encodeURIComponent(entry.key), { method: "DELETE" });
     setStatus("Đã xóa tệp.");
@@ -606,7 +606,7 @@ async function deleteFile(entry) {
   } catch (error) { setStatus(error.message, true); }
 }
 async function deleteFolder(entry) {
-  if (!await confirmAction("Xóa toàn bộ thư mục?", "Tất cả tệp bên trong " + entry.key + " sẽ bị xóa. Thao tác không thể hoàn tác.", "Xóa thư mục")) return;
+  if (!await confirmAction("Xác nhận xóa thư mục?", "Bạn sắp xóa thư mục và toàn bộ nội dung:\n" + entry.key + "\n\nThao tác không thể hoàn tác.", "Xóa toàn bộ")) return;
   try {
     setStatus("Đang xóa thư mục và các tệp bên trong…");
     const result = await api("folder?prefix=" + encodeURIComponent(entry.key), { method: "DELETE" });
@@ -667,23 +667,30 @@ async function uploadOne(file, index, total, destinationKey = null, onProgress =
 }
 async function uploadFiles(files) {
   show("progress", true);
+  show("uploadProgressText", true);
   $("progress").querySelector("span").style.width = "0%";
+  const failures = [];
   let completed = 0;
   for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    setStatus("Đang tải lên " + file.name + " (" + (i + 1) + "/" + files.length + ")");
+    $("uploadProgressText").textContent = "Đang xử lý " + (i + 1) + "/" + files.length + ": " + file.name;
     try {
-      setStatus("Đang tải " + files[i].name + " (" + (i + 1) + "/" + files.length + ")…");
-      await uploadOne(files[i], i, files.length);
+      await uploadOne(file, i, files.length);
       completed++;
+      $("uploadProgressText").textContent = "Đã tải " + completed + "/" + files.length + " file · " + file.name;
     } catch (error) {
-      setStatus(files[i].name + ": " + error.message, true);
-      break;
+      failures.push({ name: file.name, message: error.message || String(error) });
+      $("uploadProgressText").textContent = "Lỗi " + failures.length + ": " + file.name + " · tiếp tục file kế tiếp";
     }
   }
   show("progress", false);
-  if (completed) {
-    setStatus("Đã tải thành công " + completed + "/" + files.length + " tệp.");
-    await loadFiles();
-  }
+  if (completed) await loadFiles();
+  const summary = "Hoàn tất upload: " + completed + "/" + files.length + " thành công" + (failures.length ? " · " + failures.length + " thất bại" : "");
+  setStatus(summary, failures.length > 0);
+  $("uploadProgressText").textContent = failures.length
+    ? failures.map(item => "Thất bại: " + item.name + " — " + item.message).join(" | ")
+    : summary;
 }
 
 $("auditRows").closest("details").addEventListener("toggle", async (event) => {
@@ -779,17 +786,10 @@ async function loadAnalyticsDashboard() {
   } catch (error) { status.textContent = "Không tải được Dashboard: " + error.message; }
   finally { button.disabled = false; }
 }
-function showManagerView() {
-  show("libraryPanel", true);
-  $("showLibraryBtn").classList.add("active");
-}
-$("showLibraryBtn").addEventListener("click", showManagerView);
 $("refreshAnalyticsBtn").addEventListener("click", loadAnalyticsDashboard);\n$("overviewRefreshBtn").addEventListener("click", loadAnalyticsDashboard);
 $("analyticsRange").addEventListener("change", loadAnalyticsDashboard);
 
 // Dashboard chỉ đọc là trang mặc định; khu vực quản lý thư viện vẫn yêu cầu OTP.
-$("homePanel").append($("analyticsPanel"));
-$("analyticsPanel").classList.remove("hidden");
 $("loginHomeBtn").addEventListener("click", () => { location.hash = ""; });
 
 const tabIds = { library: "libraryTab", overview: "overviewTab", diagnostics: "diagnosticsTab", analytics: "analyticsTab", audit: "auditTab" };
