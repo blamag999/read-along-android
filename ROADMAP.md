@@ -796,3 +796,14 @@ Khi một công việc trong PLANNING hoàn tất:
 - Source audit found a JavaScript syntax error in `onAudioTimeUpdate()`: `let alignedPage` and a second `const alignedPage` were declared in the same scope. This would fail the repository's `node --check app.js` validation and block the beta build.
 - Removed the unused `let alignedPage` declaration. Runtime logic is otherwise unchanged. Code commit: `d2a7733fb864fb26786cdc2aab057463ebcbdc5b`.
 - This is a source hotfix only; regression CI, APK build, OTA publication and device acceptance have not yet run. The broader Reader/Menu and R2-only cleanup remain in progress; do not mark Phase 1 accepted.
+
+
+## 2026-10-31 — Đợt triển khai tiếp theo: Library catalog retry (beta)
+
+- Starting point: beta HEAD `e9d85e2b6e19e6583864c7f0e4447b673e7298f4`.
+- `app.js`: nút Thư viện sách luôn khả dụng; khi danh sách chưa có, thao tác gọi lại `loadR2Catalog()` thay vì return và để nút disabled. `loadR2Catalog()` có cờ `state.catalogLoading` để ngăn request tải catalog trùng nhau; trạng thái loading của nút phụ trong modal vẫn được hoàn tất ở finally.
+- `tests/modules.test.js`: bổ sung assertion cho retry từ action Thư viện, không disable nút và deduplicate request.
+- Code commit: `4539b6f79ac8635b0a8133955cb78febf752ebcd`; test assertion commit: `cbf7515e6f3de252dbc4ff474608c023f75806b6`.
+- Chưa chạy test/CI; assertion mới chưa được xác nhận bằng `npm test`. Đây là thay đổi source, không phải nghiệm thu.
+- Audit tiếp tục xác nhận UI marker cũ còn menu/modal, ghim/xóa/sửa marker, import/export và ghi marker local; các phần này phụ thuộc vào cùng state `pageTimestamps` được dùng cho read-only R2 sync. Phải tách rõ read path khỏi write path trước khi xóa. Không xóa marker JSON R2, parser, IndexedDB/localStorage legacy hoặc session/checkpoint.
+- Phạm vi file picker/local media vẫn chưa được gỡ. Không có thay đổi API, R2, Cloudflare, OTA, signing key hoặc `main`.
