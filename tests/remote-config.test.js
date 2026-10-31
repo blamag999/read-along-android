@@ -66,6 +66,25 @@ function response(body, status = 200, type = 'application/json; charset=utf-8') 
   const rollbackResult = await rollback.api.createClient({ storage: rollback.storage, now: () => Date.parse('2026-10-31T01:00:00Z'), retries: 0 }).load();
   assert.equal(rollbackResult.source, 'cache', 'Older configVersion must not replace newer cached config');
 
+  const corruptCache = makeHarness({ fetch: async () => { throw new Error('offline'); } });
+  corruptCache.storage.setItem(corruptCache.api.cacheKey, '{broken');
+  const corruptResult = await corruptCache.api.createClient({ storage: corruptCache.storage, now: () => Date.parse('2026-10-31T01:00:00Z'), retries: 0 }).load();
+  assert.equal(corruptResult.source, 'default', 'Corrupt cache must fall back to defaults');
+
+  const missingField = makeHarness({ fetch: async () => response({ schemaVersion: 1, configVersion: 1, issuedAt: fixture.issuedAt, features: {}, readerDefaults: {} }) });
+  const missingResult = await missingField.api.createClient({ storage: missingField.storage, now: () => Date.parse('2026-10-31T01:00:00Z'), retries: 0 }).load();
+  assert.equal(missingResult.source, 'default', 'Missing required fields must be rejected');
+
+  let retryCalls = 0;
+  const retryHarness = makeHarness({ fetch: async () => { retryCalls++; if (retryCalls === 1) throw new Error('temporary'); return response(fixture); } });
+  const retried = await retryHarness.api.createClient({ storage: retryHarness.storage, now: () => Date.parse('2026-10-31T01:00:00Z'), retries: 1, retryDelayMs: 0 }).load();
+  assert.equal(retried.source, 'network');
+  assert.equal(retryCalls, 2, 'Only one retry is allowed');
+
+  const timeoutHarness = makeHarness({ fetch: () => new Promise(() => {}) });
+  const timedOut = await timeoutHarness.api.createClient({ storage: timeoutHarness.storage, now: () => Date.parse('2026-10-31T01:00:00Z'), retries: 0, timeoutMs: 250 }).load();
+  assert.equal(timedOut.source, 'default', 'A hung request must time out and fall back');
+
   const expiredCache = makeHarness({ fetch: async () => { throw new Error('offline'); } });
   expiredCache.storage.setItem(expiredCache.api.cacheKey, JSON.stringify({ config: { ...fixture, expiresAt: '2026-10-31T00:30:00Z' } }));
   const expiredResult = await expiredCache.api.createClient({ storage: expiredCache.storage, now: () => Date.parse('2026-10-31T01:00:00Z'), retries: 0 }).load();
