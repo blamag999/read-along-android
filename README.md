@@ -506,3 +506,10 @@ Quy tắc bảo trì:
 - Gộp thao tác quản lý, kiểm tra lỗi và xuất bản danh mục vào một màn hình. Công cụ kiểm tra/xuất bản đặt trong khối thu gọn bên dưới danh sách, không còn tab phải chuyển qua lại; quét chỉ chạy theo yêu cầu.
 - Hiển thị tổng số mục quản lý cùng phân rã bộ sách, thư mục và nhóm tệp độc lập; tránh so sánh trực tiếp số mục quản lý với số sách trong manifest.
 - Căn hai nút tạo thư mục/tải tệp cùng chiều cao và baseline; bố cục hai cột trên màn hình nhỏ.
+
+
+### Admin — một màn hình quản lý duy nhất (2026-10-31, cập nhật)
+
+- Khu vực quản trị không còn tab chuyển qua lại. Danh sách R2, công cụ quét lỗi và xuất bản danh mục nằm trong cùng section; phần công cụ nâng cao thu gọn mặc định và chỉ mở khi cần.
+- Nút tạo thư mục và tải tệp lên có cùng chiều cao 44 px, căn giữa; bố cục mobile chia hai cột bằng nhau.
+- Nhãn phân trang đổi thành số mục quản lý; phần mô tả tách số bộ sách, thư mục và nhóm tệp độc lập.
