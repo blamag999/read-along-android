@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#1e293b">
   <meta name="app-version" content="0.0.0">
   <meta name="app-version-code" content="0">
-  <title>Read Along - Công cụ đọc sách kèm audio cho người học tiếng Anh</title>
+  <title>Read Along - Công cụ đọc sách kèm âm thanh cho người học tiếng Anh</title>
   
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="manifest" href="manifest.json">
@@ -74,16 +74,16 @@
     <div class="file-picker-card">
       
       <!-- Nút bắt đầu mở hộp thoại lựa chọn cách nạp nội dung -->
-      <button id="btnNode1FolderOnline" class="action-btn btn-node-1" type="button" title="Bắt đầu: chọn thư mục hoặc PDF">📂 Bắt đầu</button>
-      <button id="btnChooseAudio" class="action-btn btn-choose-audio hidden" type="button" title="Chọn audio cho PDF đang mở">🎵 Chọn audio</button>
+      <button id="btnNode1FolderOnline" class="action-btn btn-node-1" type="button" title="Bắt đầu: chọn thư mục hoặc tệp PDF">📂 Bắt đầu</button>
+      <button id="btnChooseAudio" class="action-btn btn-choose-audio hidden" type="button" title="Chọn âm thanh cho sách đang mở">🎵 Chọn âm thanh</button>
       <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none;">
       <input type="file" id="pdfFileInput" accept="application/pdf" style="display:none;">
       <input type="file" id="audioFileInput" accept="audio/*,.mp3,.m4a,.m4b,.aac,.wav,.ogg,.oga,.opus,.flac" multiple style="display:none;">
 
       <!-- TRẠNG THÁI FILE ĐANG NẠP -->
       <div class="active-files-indicator">
-        <span id="pdfFileName" class="file-status-pill empty">📄 Chưa có PDF</span>
-        <span id="audioFileName" class="file-status-pill empty">🎵 Chưa có audio</span>
+        <span id="pdfFileName" class="file-status-pill empty">📖 Chưa có sách</span>
+        <span id="audioFileName" class="file-status-pill empty">🎵 Chưa có âm thanh</span>
         <span id="syncCountBadge" class="file-status-pill sync-pill empty">⏱️ 0 mốc</span>
       </div>
 
@@ -97,7 +97,7 @@
             <option value="off">Đọc liên tục</option>
           </select>
         </label>
-        <label class="toggle-label" title="Khi bạn bấm lật trang thì audio tự động nhảy đến đúng đoạn của trang đó">
+        <label class="toggle-label" title="Khi bạn lật trang, âm thanh tự động chuyển đến đúng đoạn tương ứng">
           <input type="checkbox" id="chkAutoSeekAudio" checked>
           <span>Lật trang tự tua</span>
         </label>
@@ -112,7 +112,7 @@
     <div id="dropOverlay" class="drop-overlay hidden">
       <div class="drop-box">
         <div class="drop-icon">📥</div>
-        <h3>Thả file PDF và audio vào đây!</h3>
+        <h3>Thả tệp PDF và âm thanh vào đây!</h3>
         <p>Ứng dụng sẽ tự động nhận diện và ghép đôi cho bạn</p>
       </div>
     </div>
@@ -133,7 +133,7 @@
         <p class="tutorial-intro">Bạn chỉ cần làm theo các bước dưới đây để mở truyện và nghe đọc. Không cần thiết lập mốc thời gian nếu truyện đã được đồng bộ sẵn.</p>
         <ol class="tutorial-basic-steps">
           <li><strong>Mở danh sách truyện:</strong> nhấn <strong>📚 Danh sách truyện</strong>, tìm tên truyện bằng ô tìm kiếm rồi chọn truyện muốn đọc.</li>
-          <li><strong>Nếu chưa có danh sách:</strong> nhấn <strong>Bắt đầu</strong>, chọn truyện trực tuyến hoặc chọn thư mục có PDF và audio. Nếu mở riêng một PDF, hãy nhấn <strong>Chọn audio</strong> để ghép âm thanh.</li>
+          <li><strong>Nếu chưa có danh sách:</strong> nhấn <strong>Bắt đầu</strong>, chọn truyện trực tuyến hoặc chọn thư mục có sách và âm thanh. Nếu mở riêng một tệp PDF, hãy nhấn <strong>Chọn âm thanh</strong> để ghép.</li>
           <li><strong>Nghe và theo dõi:</strong> nhấn nút <strong>▶ Phát</strong> ở thanh điều khiển phía dưới. Dùng nút tua lùi/tiến 5 giây hoặc nút trang trước/trang sau khi cần.</li>
           <li><strong>Điều chỉnh cách đọc:</strong> mở menu <strong>☰</strong> để bật/tắt tự lật trang hoặc hiển thị hai trang. Dùng điều khiển trên màn hình hoặc các phím điều hướng trên remote.</li>
           <li><strong>Cập nhật ứng dụng:</strong> trong menu, bỏ tích <strong>Kênh OTA Beta</strong> để nhận bản Official; tích vào để nhận bản Beta thử nghiệm. Chọn <strong>Kiểm tra cập nhật</strong> để kiểm tra bản mới.</li>
@@ -223,15 +223,15 @@
       <div class="modal-body">
         <div class="option-block">
           <h4>☁️ Mở truyện trực tuyến</h4>
-          <p class="option-desc">Tải danh sách truyện trực tuyến; PDF, audio và mốc đồng bộ được tải tự động.</p>
+          <p class="option-desc">Tải danh sách sách trực tuyến; sách, âm thanh và mốc đồng bộ được tải tự động.</p>
           <button id="btnLoadR2Catalog" class="btn-primary-large" type="button">☁️ Truyện trực tuyến</button>
           <div class="divider-text">HOẶC MỞ TỪ MÁY TÍNH</div>
           <h4>📁 Mở cả thư mục truyện</h4>
-          <p class="option-desc">Nạp danh sách các tập PDF/audio trong thư mục để bạn chọn tập muốn nghe. Tệp truyện vẫn nằm trên thiết bị.</p>
+          <p class="option-desc">Nạp danh sách sách và âm thanh trong thư mục để bạn chọn nội dung muốn nghe. Tệp vẫn nằm trên thiết bị.</p>
           <button id="btnTriggerFolderPicker" class="btn-primary-large">📂 Chọn thư mục</button>
           <div class="divider-text">HOẶC</div>
           <h4>📄 Mở một file PDF</h4>
-          <p class="option-desc">Sau khi chọn PDF, bấm “Chọn audio” để ghép âm thanh tương ứng.</p>
+          <p class="option-desc">Sau khi chọn tệp PDF, bấm “Chọn âm thanh” để ghép.</p>
           <button id="btnTriggerPdfPicker" class="btn-success-large">📄 Chọn PDF</button>
         </div>
       </div>
@@ -252,7 +252,7 @@
       <div class="playlist-search-bar">
         <input type="text" id="txtPlaylistSearch" class="search-input" placeholder="🔍 Tìm kiếm tập truyện...">
         <div class="playlist-filter-tabs">
-          <button class="filter-tab active" data-filter="paired">📖 Đủ PDF và audio</button>
+          <button class="filter-tab active" data-filter="paired">📖 Đủ sách và âm thanh</button>
           <button class="filter-tab" data-filter="all">Tất cả</button>
           <button class="filter-tab" data-filter="favorites">★ Yêu thích</button>
         </div>
@@ -284,7 +284,7 @@
         <button id="btnCloseSyncModal" class="close-btn" type="button" aria-label="Đóng">&times;</button>
       </div>
       <div class="modal-body">
-        <p class="modal-desc">Quản lý mốc thời gian lưu cùng sách. Có thể nhập JSON từ thiết bị hoặc xuất JSON để đặt cạnh PDF/audio trên R2.</p>
+        <p class="modal-desc">Quản lý mốc thời gian của sách. Có thể nhập JSON từ thiết bị hoặc xuất JSON để lưu cạnh tệp sách và âm thanh trên R2.</p>
         <div class="sync-actions-row">
           <button id="btnExportSync" class="btn-secondary" type="button" title="Xuất tệp mốc JSON">📥 Tải tệp mốc (.json)</button>
           <label for="importSyncInput" class="btn-secondary">📂 Nhập file mốc từ máy</label>
