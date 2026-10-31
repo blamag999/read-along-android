@@ -71,51 +71,26 @@ assert.equal(analytics.properties.durationSeconds.maximum, 120);
 assert.equal(analytics.additionalProperties, false, 'Analytics payload must reject unapproved personal/content fields');
 assert.equal(analytics.properties.type.enum.includes('heartbeat'), true);
 
-
-function validateRemoteConfig(value) {
-  const fail = message => { throw new Error(message); };
-  if (!value || typeof value !== 'object' || Array.isArray(value)) fail('Remote config must be an object');
-  const allowed = new Set(['schemaVersion', 'configVersion', 'issuedAt', 'expiresAt', 'features', 'readerDefaults', 'announcements']);
-  if (Object.keys(value).some(key => !allowed.has(key))) fail('Remote config contains an unknown top-level field');
-  if (value.schemaVersion !== 1) fail('Unsupported remote config schemaVersion');
-  if (!Number.isInteger(value.configVersion) || value.configVersion < 1) fail('Invalid configVersion');
-  for (const field of ['issuedAt', 'expiresAt']) {
-    if (value[field] !== undefined && (typeof value[field] !== 'string' || Number.isNaN(Date.parse(value[field])))) fail('Invalid ' + field);
-  }
-  const featureKeys = new Set(['showReadingStats', 'showAnnouncements', 'enableOnlineCatalog']);
-  if (!value.features || typeof value.features !== 'object' || Array.isArray(value.features) ||
-      Object.keys(value.features).some(key => !featureKeys.has(key)) ||
-      Object.values(value.features).some(flag => typeof flag !== 'boolean')) fail('Invalid or unapproved feature flag');
-  const defaultRules = {
-    pageTurnMode: item => ['next', 'markers', 'off'].includes(item),
-    viewMode: item => ['fit-height', 'fit-width', 'two-pages'].includes(item),
-    autoSeekAudio: item => typeof item === 'boolean'
-  };
-  if (!value.readerDefaults || typeof value.readerDefaults !== 'object' || Array.isArray(value.readerDefaults) ||
-      Object.keys(value.readerDefaults).some(key => !defaultRules[key] || !defaultRules[key](value.readerDefaults[key]))) fail('Invalid or unapproved reader default');
-  if (!Array.isArray(value.announcements) || value.announcements.length > 10) fail('Invalid announcements');
-  const ids = new Set();
-  for (const item of value.announcements) {
-    if (!item || typeof item !== 'object' || Array.isArray(item) ||
-        Object.keys(item).some(key => !['id', 'text', 'level'].includes(key)) ||
-        typeof item.id !== 'string' || !item.id || item.id.length > 80 ||
-        typeof item.text !== 'string' || item.text.length > 500 ||
-        (item.level !== undefined && !['info', 'warning'].includes(item.level)) || ids.has(item.id)) fail('Invalid announcement');
-    ids.add(item.id);
-  }
-  if (value.expiresAt && value.issuedAt && Date.parse(value.expiresAt) <= Date.parse(value.issuedAt)) fail('expiresAt must be later than issuedAt');
-  return true;
+const { validateRemoteConfig } = require('../scripts/validate-remote-config');
+assert.deepEqual(validateRemoteConfig(remoteConfig), { valid: true, errors: [] }, 'Published static fixture must satisfy the strict Remote Config contract');
+for (const [invalid, expected] of [
+  [{ ...remoteConfig, schemaVersion: 2 }, 'schemaVersion'],
+  [{ ...remoteConfig, configVersion: 0 }, 'configVersion'],
+  [{ ...remoteConfig, injectedScript: 'alert(1)' }, 'Unknown top-level field'],
+  [{ ...remoteConfig, features: { arbitraryFeature: true } }, 'Unknown feature flag'],
+  [{ ...remoteConfig, features: { showAnnouncements: 'yes' } }, 'must be boolean'],
+  [{ ...remoteConfig, readerDefaults: { viewMode: 'unbounded' } }, 'Invalid reader default'],
+  [{ ...remoteConfig, announcements: [{ id: 'x', text: 'ok', html: '<script>' }] }, 'Unknown announcement field'],
+  [{ ...remoteConfig, expiresAt: '2026-10-30T00:00:00Z' }, 'expiresAt must be later'],
+  [{ ...remoteConfig, issuedAt: '2026-02-30T00:00:00Z' }, 'issuedAt must be a valid ISO-8601'],
+  [{ ...remoteConfig, announcements: [{ id: 'same', text: 'one' }, { id: 'same', text: 'two' }] }, 'ids must be unique']
+]) {
+  const result = validateRemoteConfig(invalid);
+  assert.equal(result.valid, false, 'Invalid Remote Config must be rejected');
+  assert.ok(result.errors.some(message => message.includes(expected)), 'Expected validation error containing: ' + expected);
 }
+const expired = validateRemoteConfig({ ...remoteConfig, expiresAt: '2026-10-31T00:00:00Z' }, { now: Date.parse('2026-11-01T00:00:00Z') });
+assert.ok(expired.errors.includes('Remote config has expired'), 'Expired config must be rejected at runtime');
 
-assert.equal(validateRemoteConfig(remoteConfig), true, 'Published static fixture must satisfy the runtime-safe config contract');
-for (const invalid of [
-  { ...remoteConfig, schemaVersion: 2 },
-  { ...remoteConfig, configVersion: 0 },
-  { ...remoteConfig, injectedScript: 'alert(1)' },
-  { ...remoteConfig, features: { arbitraryFeature: true } },
-  { ...remoteConfig, readerDefaults: { viewMode: 'unbounded' } },
-  { ...remoteConfig, announcements: [{ id: 'x', text: 'ok', html: '<script>' }] },
-  { ...remoteConfig, expiresAt: '2026-10-30T00:00:00Z' }
-]) assert.throws(() => validateRemoteConfig(invalid), 'Invalid remote config must be rejected');
 
 console.log('Read Along data contract schema tests passed.');
