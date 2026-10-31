@@ -154,7 +154,8 @@ Thống kê theo ngày/tuần/tháng/năm, theo sách và theo nền tảng; tha
 - [x] Lập inventory endpoint, URL, nguồn dữ liệu và caller trong app/Admin ở `docs/architecture/data-contracts.md`.
 - [x] Xác định nguồn hiện tại cho catalog, media, marker, usage, telemetry, diagnostics và OTA; phân biệt rõ phần đang chạy với phần đề xuất.
 - [x] Kiểm kê precedence hiện tại và ghi nhận điểm không an toàn: GitHub luôn ghi đè R2 trong nhánh có R2; chưa có revision/timestamp để so sánh. Chi tiết tại `docs/architecture/marker-and-api-review.md`.
-- [ ] Thiết kế/duyệt marker envelope có version/revision và conflict policy tương thích ngược trước khi đổi runtime.
+- [x] Draft marker envelope schema v1 (`schemaVersion`, `revision`, `updatedAt`, `sourceId`, `markers`) vẫn chấp nhận legacy map và `{}` để tương thích dữ liệu xóa sạch.
+- [ ] Chốt policy revision-aware và migration runtime; không so sánh timestamp thiết bị như bằng chứng duy nhất.
 - [x] Định nghĩa JSON Schema version 1 cho catalog, marker, remote config và analytics event tại `schemas/`.
 - [x] Thêm `tests/contracts.test.js` vào `npm test` để khóa các ranh giới schema quan trọng và ngăn remote config/analytics nhận field không được duyệt.
 - [x] CI run `41158627378` thành công trên commit `24b4058ec05abb1e27ddff65f1ec0978a7fe5558`; workflow chạy `npm test`, JS syntax, Pages Functions syntax và isolation checks.
@@ -230,8 +231,9 @@ Cần build APK cho:
 - CI gần nhất được kiểm tra: Admin workflow run `41157267352` success cho commit `8ae1b0df0d8646108302e3230d7c56a00bbb7ec5`; các run kế tiếp thuộc cùng đợt push có run bị cancel. Run này không kiểm thử commit planning mới nhất; cần CI chạy lại cho HEAD hiện tại sau thay đổi tiếp theo.
 - Đã tạo `docs/architecture/data-contracts.md`, liệt kê endpoint/caller/trust boundary và các khoảng trống hiện tại.
 - Đã tạo `docs/architecture/marker-and-api-review.md`: ghi chính xác thứ tự nạp marker, phát hiện comment 'GitHub newer' không đúng vì không có so sánh freshness; rà soát API và kết luận không gộp các endpoint khác chức năng.
+- Draft schema marker envelope v1 trong `schemas/marker.schema.json`, vẫn đọc legacy map, numeric seconds, `{time, part}` và empty map; bổ sung structural assertions.
 - Đã thêm JSON Schema v1 cho catalog, marker, Remote Config và Analytics event; thêm structural regression tests vào `npm test`.
 - CI `41158627378` đã pass trên commit test `24b4058ec05abb1e27ddff65f1ec0978a7fe5558`; test bao gồm contract schema và manifest seed hiện tại.
 - Schema mới chỉ là contract định hướng; chưa tích hợp runtime validator hoặc endpoint Remote Config/Analytics thời lượng.
-- Phase 1: inventory, JSON Schema v1, manifest compatibility regression, CI validation và API overlap review đã hoàn tất. Marker source precedence hiện tại đã được kiểm kê; conflict policy/marker version envelope còn pending do cần quyết định tương thích ngược trước khi đổi runtime.
+- Phase 1: inventory, JSON Schema v1, manifest compatibility regression, CI validation và API overlap review đã hoàn tất. Marker precedence hiện tại đã được ghi nhận; schema envelope v1 tương thích legacy đã được draft. Còn pending runtime conflict policy/migration và CI cho schema update mới.
 - Tiến độ: Phase 0 hoàn tất; Phase 1 đang thực hiện.
