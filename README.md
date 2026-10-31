@@ -12,7 +12,7 @@ Tài liệu kỹ thuật chi tiết chỉ đọc khi công việc liên quan:
 - `docs/architecture/data-contracts.md`: endpoint, caller, nguồn dữ liệu và contract.
 - `docs/architecture/marker-and-api-review.md`: thứ tự nạp marker, xung đột nguồn và đánh giá API.
 - `schemas/`: JSON Schema được áp dụng cho catalog, marker, Remote Config và analytics event.
-- `scripts/validate-remote-config.js`: kiểm tra chặt cấu hình Remote Config trước khi CI cho phép tích hợp/deploy.
+- `admin/scripts/validate-remote-config.js`: kiểm tra chặt Remote Config; được chạy trong `npm test` và Cloudflare Pages build command trước khi publish.
 - `tests/`: kiểm thử hợp đồng và module.
 
 ## 2. Phạm vi dự án — không dùng tài nguyên dự án khác
@@ -133,6 +133,8 @@ Không tuyên bố hoàn tất nếu còn thiếu kiểm thử bắt buộc; ghi
 
 ## 8. Quy tắc dữ liệu và vận hành
 
+- Cloudflare Pages `read-along-admin` lấy source từ repository này, production branch `beta`, root `admin`, output `public`; build command `node scripts/validate-remote-config.js` phải pass trước khi publish.
+- Mỗi lần thay đổi Remote Config đã phát hành phải tăng `configVersion`; không tái sử dụng version cũ cho nội dung mới.
 - R2 bucket sách hiện dùng trong dự án: `my-audio-book`; catalog manifest là `books.json` ở root bucket. Chỉ sử dụng endpoint/hostname được cấu hình trong repository.
 - Admin catalog: scan inventory → preview → người quản trị xác nhận → kiểm tra HEAD từng object → publish. Không tự động xóa, đổi tên hoặc di chuyển file gốc.
 - Ghép sách theo tên đã chuẩn hóa và cùng thư mục; không fuzzy matching. Audio part `_P1`, `_P2`… phải giữ thứ tự số.
