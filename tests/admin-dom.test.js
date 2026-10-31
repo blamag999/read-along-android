@@ -10,3 +10,10 @@ assert.deepEqual(missing, [], 'Admin JavaScript references missing HTML element 
 assert.ok(script.includes('async function loadPublicStats()'), 'Dashboard stats loader must exist');
 assert.ok(script.includes('window.addEventListener("hashchange", handleRoute)'), 'Admin route handler must be connected');
 console.log('Admin DOM reference tests passed.');
+
+assert.ok(!html.includes('id="libraryTabBtn"') && !html.includes('id="diagnosticsTabBtn"'), 'library management must not require switching tabs');
+assert.ok(html.includes('<details id="diagnosticsPanel"'), 'diagnostics and publishing tools must be collapsible inside the library view');
+assert.ok(html.indexOf('<details id="diagnosticsPanel"') > html.indexOf('id="fileRows"'), 'diagnostics tools must live below the library table in the same view');
+assert.ok(script.includes('$("diagnosticsPanel").open = true;'), 'running diagnostics must expand the integrated tools panel');
+assert.ok(script.includes('mục quản lý') && script.includes('bộ sách') && script.includes('thư mục'), 'library count must distinguish management items, books and folders');
+assert.match(fs.readFileSync('admin/public/admin.css', 'utf8'), /library-actions[^]*height:44px/, 'folder and upload buttons must share the same height and alignment');
