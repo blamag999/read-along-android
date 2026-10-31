@@ -315,3 +315,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - Chờ CI mới; chưa coi accepted-count fix đã pass.
 - Không có thay đổi APK/runtime bổ sung; README vẫn đồng nhất ba nhánh.
 
+
+### 2026-10-31 — Production HTTP write/replay idempotency pass
+
+- CI [#41167053210](https://github.com/blamag999/read-along-android/actions/runs/41167053210) **completed success** on commit `cefe81173d63f785ebd29608d22e7712a439080d`: full `npm test`, Pages Functions syntax, isolation, production CORS/consent gate, valid event POST and exact replay all passed.
+- Production HTTP response for first write matched `accepted=1, duplicates=0`; exact replay matched `accepted=0, duplicates=1`. This confirms the route fix is active in Pages production; Pages deployment `9adc0c1b-7d95-469d-a89d-f3e84fb997f1` for route-fix commit `426ffbe4223d072459bf0996c03e0bc54322078c` is `success/deploy`.
+- D1 inspection found two smoke-test events (one from an interrupted earlier run and one from the successful run). Daily aggregate reflected 14 reading seconds, 22 listening seconds, 2 events, 2 sessions. Both synthetic events and their daily session rows were removed; aggregate counters were decremented and empty daily row deleted. Final verification: smoke_events=0, smoke_sessions=0, daily_row_count=0.
+- **Still pending:** test conflicting eventId with the same (sessionId, sequence) through HTTP; verify daily aggregate remains single-counted; avoid leaving production smoke rows after future CI runs.
+- No APK/client collector/dashboard changes. No APK build or main promotion.
+
