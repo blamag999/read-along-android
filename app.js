@@ -1190,6 +1190,8 @@ function initEvents() {
     dom.menuToggleSettings.querySelector('span:last-child').textContent = willHide
       ? 'Hiện chọn tệp và tùy chọn'
       : 'Ẩn chọn tệp và tùy chọn';
+    dom.readOptionsMenu.classList.add('hidden');
+    dom.btnOpenReadMenu.setAttribute('aria-expanded', 'false');
   });
   dom.btnChooseAudio.addEventListener('click', () => dom.audioFileInput.click());
   dom.btnCloseNode1Modal.addEventListener('click', () => dom.node1Modal.classList.add('hidden'));
