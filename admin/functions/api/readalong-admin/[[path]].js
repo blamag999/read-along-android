@@ -612,7 +612,6 @@ async function handle(request, env) {
 
 
   if (route === "catalog/preview" && method === "GET") {
-    assertOrigin(request);
     // Build from the current R2 inventory; never use the checked-in seed manifest.
     const scan = await scanLibrary(env.READALONG, "", env.DB);
     const keys = (await listAllKeys(env.READALONG, "")).filter(key => key !== "books.json" && !key.endsWith("/"));
