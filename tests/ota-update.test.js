@@ -28,10 +28,10 @@ assert.ok(versionValidator && versionValidator.includes('\\d{1,3}'), 'OTA manife
 assert.ok(router.includes('requestedVersion !== result.manifest.version'), 'Download route must reject stale or arbitrary version requests');
 assert.ok(!router.includes('manifest.downloadUrl'), 'Backend must not redirect clients to a storage-provider URL');
 
-assert.ok(workflow.includes('CLOUDFLARE_R2_UPLOAD_TOKEN'), 'Release workflow must use a dedicated, optional R2 upload token');
-assert.ok(workflow.includes('read-along-releases/releases/$CHANNEL/$APK'), 'Release workflow must upload APKs to the dedicated OTA bucket');
+assert.ok(workflow.includes('R2_ACCESS_KEY_ID') && workflow.includes('R2_SECRET_ACCESS_KEY'), 'Release workflow must use bucket-scoped R2 credentials');
+assert.ok(workflow.includes('--bucket read-along-releases --key "releases/$CHANNEL/$APK"'), 'Release workflow must upload APKs to the dedicated OTA bucket');
 assert.ok(workflow.includes('x-amz-meta-sha256:$SHA256'), 'Release workflow must store the APK checksum as R2 object metadata');
-assert.ok(workflow.includes('read-along-releases/channels/$CHANNEL/latest.json'), 'Release workflow must publish the manifest after the APK');
+assert.ok(workflow.includes('--key "channels/$CHANNEL/latest.json"'), 'Release workflow must publish the manifest after the APK');
 assert.ok(workflow.includes('"sha256": os.environ["SHA256"]'), 'Published manifest must contain the APK SHA-256');
 
 assert.ok(app.includes('READ_ALONG_OTA_API'), 'APK must use the fixed OTA API origin');
@@ -48,4 +48,4 @@ assert.ok(native.includes('MAX_APK_SIZE = 250 * 1024 * 1024'), 'Native updater m
 assert.ok(workflow.includes('VERSION_CODE: ${{ github.run_number }}'), 'Release build must embed versionCode');
 assert.ok(workflow.includes('app-version-code'), 'Release build must inject the app-version-code meta tag');
 
-assert.ok(!workflow.includes('secrets.CLOUDFLARE_ACCOUNT_ID'), 'Public account ID must not require a redundant secret');
+assert.ok(workflow.includes('r2.cloudflarestorage.com'), 'Release workflow must use the account R2 S3 endpoint');
