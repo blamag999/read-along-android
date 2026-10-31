@@ -151,6 +151,15 @@ Catalog và media trên R2, marker JSON, Admin, Diagnostics backend, Analytics b
 - Không làm reader crash hoặc mất khả năng offline khi API/config lỗi.
 - Giữ API riêng nếu khác mục đích, quyền hoặc vòng đời dữ liệu; chỉ dùng chung transport client khi có lợi ích thực tế.
 
+### Chính sách lưu trữ media — online-only
+
+- PDF và audio được đọc/stream trực tiếp từ R2; không tải trước, không lưu bản media bền vững trên thiết bị và không hỗ trợ đọc/nghe offline.
+- Không triển khai kho media 1 GB, LRU/FIFO, quota, Download Manager, media cache layer hoặc tự động xóa sách cũ.
+- Chỉ giữ cache shell/app assets và cache tạm kỹ thuật cần thiết cho WebView/Service Worker; tuyệt đối không dùng chúng làm kho PDF/audio offline.
+- Giữ session/checkpoint và trạng thái đọc qua OTA; OTA không được xóa dữ liệu trạng thái đọc.
+- Marker JSON companion từ R2 chỉ đọc để đồng bộ trang/audio. Đồng bộ tiến trình đọc/nghe online (nếu có) là dữ liệu trạng thái riêng, không phải lưu trữ media offline.
+- Quyết định này thay thế mọi ghi chú/đề xuất kho offline 1 GiB/LRU trong tài liệu lịch sử.
+
 ## 7. Kiểm thử tối thiểu và điều kiện hoàn tất
 
 ### Chính sách CI theo mốc
