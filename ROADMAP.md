@@ -595,3 +595,10 @@ Khi một công việc trong PLANNING hoàn tất:
 - Phân biệt rõ OTA APK installer hiện tại với remote JavaScript OTA. Không coi cơ chế tải/cài APK là bằng chứng đã có cập nhật web runtime từ xa.
 - Đối chiếu recovery: beta HEAD trước đợt tài liệu này là `6324daef8a506d0c725707df814df9ac0f10222f`. So sánh từ `71ba2a1d41cb62dc85723a65ba89bfeb55878155` cho thấy beta ahead 2 commit, chỉ chạm `RECOVERY.md` và `ROADMAP.md`; đã đọc lại các thay đổi, không phát hiện code/runtime delta trong compare.
 - Không chạy test/CI/deploy, không build APK, không thay đổi R2, D1, Cloudflare config, main hoặc PR #40 trong batch kiến trúc tài liệu này. Các mục audit/implementation vẫn pending trong PLANNING.
+
+
+### Mốc bàn giao kiến trúc — 2026-10-31
+
+- Batch tài liệu kiến trúc data/config-driven đã được ghi vào ROADMAP và PLANNING; chi tiết công việc chưa hoàn thành nằm trong PLANNING.
+- Mốc này không phải nghiệm thu runtime, không xác nhận config client/catalog category/progress store đã được triển khai.
+- HEAD đã được đối chiếu trước checkpoint: `284484f6266d0c9792bd82b36ab1e00ea179ee1b`.
