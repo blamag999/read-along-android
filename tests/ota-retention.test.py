@@ -45,9 +45,14 @@ class OtaRetentionTests(unittest.TestCase):
         )
 
     def test_rejects_unexpected_channel_or_filename(self):
-        self.assertNotIn("preview", pruner.CHANNELS)
-        self.assertIsNone(pruner.APK_NAME.fullmatch("read-along-v1.3.23-beta.apk"))
-        self.assertIsNotNone(pruner.APK_NAME.fullmatch("read-along-v1.3.23-android.apk"))
+        with self.assertRaisesRegex(ValueError, "Invalid OTA channel"):
+            pruner.channel_target("preview", "read-along-v1.3.23-android.apk")
+        with self.assertRaisesRegex(ValueError, "Invalid OTA channel"):
+            pruner.channel_target("beta", "read-along-v1.3.23-beta.apk")
+        self.assertEqual(
+            pruner.channel_target("beta", "read-along-v1.3.23-android.apk"),
+            ("releases/beta/", "releases/beta/read-along-v1.3.23-android.apk"),
+        )
 
 
 if __name__ == "__main__":
