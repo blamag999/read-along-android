@@ -270,21 +270,21 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 
 > Đề xuất đã ghi vào kế hoạch ngày 2026-10-31; chưa triển khai workflow. Phạm vi áp dụng trước trên beta, chỉ promote cùng bản stable khi người dùng xác nhận.
 
-- [ ] Chuẩn hóa commit subject với bốn nhóm dành cho người dùng: `[feature]`, `[improve]`, `[fix]`, `[security]`; các marker nội bộ như `[test]`, `[docs]`, `[build-apk]`, `[handover]` không xuất hiện trong ghi chú phát hành.
-- [ ] Điều chỉnh workflow `.github/workflows/build-android-apk.yml` để tổng hợp commit từ mốc phát hành trước **cùng kênh** (beta/official), tránh trộn lịch sử hai kênh; xác minh cách xử lý lần phát hành đầu tiên.
-- [ ] Sinh Release Notes tiếng Việt theo các nhóm Tính năng mới / Cải tiến / Sửa lỗi / Bảo mật; chỉ hiển thị nhóm có nội dung, loại bỏ trùng lặp và commit nội bộ, không tự thêm câu cải thiện chung nếu không có thay đổi tương ứng.
-- [ ] Dùng một nội dung changelog duy nhất cho GitHub Release và OTA manifest; thông báo trong app lấy cùng nội dung nhưng rút gọn khoảng 400 ký tự, giữ các thay đổi quan trọng trước.
-- [ ] Bổ sung regression test cho phân loại commit, lọc marker nội bộ, mốc release theo channel, nội dung rỗng và giới hạn độ dài OTA; không thay đổi versioning, signing hoặc cơ chế tải/cài OTA.
+- [x] Chuẩn hóa commit subject với bốn nhóm dành cho người dùng: `[feature]`, `[improve]`, `[fix]`, `[security]`; các marker nội bộ như `[test]`, `[docs]`, `[build-apk]`, `[handover]` không xuất hiện trong ghi chú phát hành.
+- [x] Điều chỉnh workflow `.github/workflows/build-android-apk.yml` để tổng hợp commit từ mốc phát hành trước **cùng kênh** (beta/official), tránh trộn lịch sử hai kênh; xác minh cách xử lý lần phát hành đầu tiên.
+- [x] Sinh Release Notes tiếng Việt theo các nhóm Tính năng mới / Cải tiến / Sửa lỗi / Bảo mật; chỉ hiển thị nhóm có nội dung, loại bỏ trùng lặp và commit nội bộ, không tự thêm câu cải thiện chung nếu không có thay đổi tương ứng.
+- [x] Dùng một nội dung changelog duy nhất cho GitHub Release và OTA manifest; thông báo trong app lấy cùng nội dung nhưng rút gọn khoảng 400 ký tự, giữ các thay đổi quan trọng trước.
+- [x] Bổ sung regression test cho phân loại commit, lọc marker nội bộ, mốc release theo channel và nội dung rỗng; kiểm tra giới hạn OTA 400 ký tự ở phía app hiện có; không thay đổi versioning, signing hoặc cơ chế tải/cài OTA.
 - [ ] Kiểm tra Release Notes thực tế của một bản beta sau khi workflow chạy thành công; chưa coi là hoàn tất chỉ dựa trên test tổng hợp.
 
 ## P2 — Rà soát và rút gọn thông báo nội bộ trong ứng dụng
 
 > Đợt rà soát chỉ đọc ngày 2026-10-31. Chưa sửa nội dung thông báo trong batch này; giữ nguyên các thông báo OTA vừa chuẩn hóa ở phiên trước.
 
-- [ ] Phân loại alert/confirm/prompt/toast theo nhóm: thao tác thành công, hướng dẫn thao tác, cảnh báo có thể tự xử lý, lỗi cần hành động và lỗi kỹ thuật.
-- [ ] Rút gọn câu thành tiếng Việt trực tiếp, thống nhất thuật ngữ PDF/audio/mốc thời gian/sách; bỏ emoji trang trí và chi tiết kỹ thuật không giúp người dùng xử lý.
-- [ ] Giữ thông tin lỗi kỹ thuật trong console/diagnostics; thông báo người dùng chỉ nêu việc không thực hiện được và bước khắc phục phù hợp.
-- [ ] Không thay đổi điều kiện hiển thị, luồng xử lý, Confirm/Prompt có dữ liệu động hoặc thông báo OTA đã được chuẩn hóa; bổ sung regression assertions trước khi sửa.
+- [x] Phân loại alert/confirm/prompt/toast theo nhóm: thao tác thành công, hướng dẫn thao tác, cảnh báo có thể tự xử lý, lỗi cần hành động và lỗi kỹ thuật.
+- [ ] Tiếp tục rút gọn các thông báo còn lại và thống nhất thuật ngữ; batch hiện tại mới xử lý nhóm lỗi tải, chọn tệp, marker và phát lại; bỏ emoji trang trí và chi tiết kỹ thuật không giúp người dùng xử lý.
+- [x] Giữ thông tin lỗi kỹ thuật trong console/diagnostics ở các nhánh lỗi catalog, mở sách và nạp âm thanh đã chỉnh; thông báo người dùng chỉ nêu việc không thực hiện được và bước khắc phục phù hợp.
+- [x] Không thay đổi điều kiện hiển thị/luồng xử lý của các nhánh đã chỉnh; giữ nguyên Confirm/Prompt dữ liệu động và OTA đã chuẩn hóa; bổ sung regression assertions trước khi sửa.
 - [ ] Chỉ build APK khi batch thay đổi runtime đã hoàn tất và full regression pass; nghiệm thu nội dung trên thiết bị thật.
 
 ### Kết quả rà soát thông báo hiện tại — 2026-10-31 (chỉ đề xuất, chưa sửa app.js)
@@ -329,3 +329,12 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - Vẫn giữ tên định dạng kỹ thuật khi cần chỉ rõ loại tệp: “tệp PDF”, “MP3”, “M4A”. Đây là tên định dạng, không phải cách gọi đối tượng trong giao diện.
 - Không đổi tên biến, API, metadata, log kỹ thuật hoặc tên định dạng trong mã nguồn chỉ vì quy ước ngôn ngữ này.
 - Mọi thông báo người dùng được rà soát hoặc bổ sung sau này phải tuân thủ quy ước trên.
+
+
+### Tiến độ triển khai — 2026-10-31 (beta, chưa nghiệm thu)
+
+- Release Notes: đã thêm `scripts/generate-release-notes.py`; workflow lấy mốc release gần nhất cùng channel dựa trên cờ prerelease, hỗ trợ lần phát hành đầu tiên, nhóm `[feature]`, `[improve]`, `[fix]`, `[security]`; alias lịch sử `[perf]` được gom vào Cải tiến. Các marker nội bộ không được render. Cùng output changelog được dùng cho GitHub Release và OTA manifest.
+- Version generation trước đó được chuyển vào script và giữ quy tắc tăng version hiện hành; cần xác minh bằng test/CI trước khi phát hành.
+- Đã thêm `tests/release-notes.test.py` và nối vào `npm test` để kiểm tra category, deduplication, nội dung rỗng và channel isolation.
+- App notification: đã rút gọn một nhóm lỗi catalog/sách/âm thanh, tệp không hỗ trợ, thao tác marker và phát lại; giữ chi tiết lỗi ở console trong các nhánh đã sửa. Một số thông báo cũ/emoji/thuật ngữ chưa được xử lý; batch thông báo chưa hoàn tất.
+- Chưa chạy npm test/CI, chưa xác minh release notes thực tế, chưa build APK và chưa kiểm tra thiết bị. Do app.js thay đổi, cần một APK beta sau khi hoàn tất toàn bộ notification batch và full regression.
