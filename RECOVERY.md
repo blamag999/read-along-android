@@ -463,3 +463,15 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Build finalization commit: `fd0d4909994ab3d065ad4bbb3fc4221e6db8f0fc`, message `[build-apk] finalize beta APK after regression pass`. It adds only an inert comment to styles.css, which is an APK-relevant path in `.github/workflows/build-android-apk.yml`; the marker and path filter conditions are satisfied.
 - The available connector exposes PR-triggered workflow runs only. `fetch_commit_workflow_runs` and combined status cannot confirm the push-triggered APK workflow; therefore build status/artifacts/release/R2 OTA remain unknown and must be verified before declaring success.
 - No main promotion or device acceptance yet. Next: verify the beta build job and signed APK/OTA outputs, then install and test on Android phone/TV as applicable.
+
+
+## Recovery / handover — Branch policy clarified (2026-11-01)
+
+- User explicitly requested that the repository workflow avoid creating multiple branches.
+- Operating model going forward: work directly on the existing `beta` branch; reserve `main` for stable releases only.
+- Do not create per-feature/per-batch branches, CI test branches, or dummy PRs solely to trigger checks. Do not create a new branch unless the user explicitly authorizes an exceptional need.
+- Group related changes into commits on `beta`; run regression at meaningful batch checkpoints; create one final APK build at the end of a batch after regression passes.
+- Do not create no-op/comment-only commits merely to satisfy workflow triggers. If trigger behavior is unsuitable, fix the existing workflow so normal beta finalization works reliably.
+- Promote `beta` to `main` only after beta APK device acceptance and explicit user approval. Never update `main` directly as part of routine development.
+- Historical context: PR #43 and its temporary branch were already merged into beta before this rule was clarified. Preserve history; do not create further branches to compensate.
+- This entry records process policy only. No source, workflow, APK, OTA, or main-branch changes were made by this handover update.
