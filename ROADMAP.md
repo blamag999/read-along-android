@@ -501,3 +501,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - CI [41169858843](https://github.com/blamag999/read-along-android/actions/runs/41169858843) success trên commit e03acee6141ddc064f162475fad0e2c67655c994: full npm regression, JS syntax, Pages Functions syntax, isolation và non-mutating production consent smoke đều pass.
 - Trong quá trình test đã sửa assertion catalog.test.js để kiểm tra đúng bảng file trong library (không nhầm bảng phân bổ analytics), bỏ hoàn toàn activeSessionDays khỏi API response vì người dùng không cần KPI này.
 - Cloudflare Pages deployment của commit e03acee đang ở trạng thái Building tại thời điểm ghi; chưa xác nhận production dashboard hoạt động. Chưa kiểm tra số liệu thật và chưa đóng AN4.
+
+
+### 2026-10-31 — AN4 dashboard navigation and public read-only access (beta)
+
+- Theo xác nhận của người dùng, Dashboard thống kê được đưa thành trang mặc định của Admin; nút “Quản lý nâng cao” là lối vào duy nhất khu vực OTP/quản lý thư viện.
+- Màn hình OTP có nút “Về Dashboard”; khu vực quản lý sau đăng nhập chỉ còn điều hướng quản lý thư viện, không lặp Dashboard.
+- Chuyển riêng `GET /analytics/dashboard` ra trước OTP guard. API chỉ trả dữ liệu tổng hợp theo ngày, thời lượng đọc/nghe, số thiết bị theo nền tảng, số liệu manifest và kết quả scan gần nhất; không trả install/session IDs, book IDs, tiêu đề sách hay dữ liệu tệp cá nhân. Không có mutation route nào được chuyển ra public.
+- Toàn bộ API upload/rename/delete/scan/publish/catalog/audit tiếp tục nằm sau `requireAuth` OTP. Các API ingest analytics/telemetry là các endpoint riêng theo contract sẵn có, không thay đổi trong batch này.
+- Regression mới kiểm tra dashboard landing/OTP back button và thứ tự public GET so với auth guard. Cần chạy full CI bằng commit `[test]`, xác minh deploy Pages và thử smoke public/admin access trước khi đánh dấu hoàn tất. Không cần build APK.
