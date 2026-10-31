@@ -87,9 +87,9 @@ assert.ok(appSource.includes("else loadR2Catalog();"), 'the Library action must 
 assert.ok(appSource.includes("dom.btnOpenPlaylist.disabled = false;"), 'the Library action must never remain disabled after an initial catalog load failure');
 assert.ok(appSource.includes('if (state.catalogLoading) return;'), 'concurrent catalog retries must be deduplicated');
 const headerSource = htmlSource.slice(htmlSource.indexOf('<header'), htmlSource.indexOf('</header>'));
-assert.ok(!headerSource.includes('view-controls-bar') && headerSource.indexOf('id="btnFitHeight"') > headerSource.indexOf('id="readOptionsMenu"') && headerSource.indexOf('id="btnTwoPages"') > headerSource.indexOf('id="readOptionsMenu"'), 'view and zoom controls must be nested inside the menu, not beside the top-bar actions');
+assert.ok(!headerSource.includes('view-controls-bar') && !headerSource.includes('menu-view-controls') && !['btnFitHeight','btnTwoPages','btnZoomIn','btnZoomOut'].some(id => htmlSource.includes('id="' + id + '"')), 'obsolete view, two-page and zoom controls must be removed from the minimal reader UI');
 assert.deepEqual([...headerSource.matchAll(/<button id="([^"]+)"/g)].map(match => match[1]).filter(id => ['btnOpenPlaylist', 'btnOpenReadMenu'].includes(id)).sort(), ['btnOpenPlaylist', 'btnOpenReadMenu'], 'top bar must expose exactly the library and menu buttons');
-assert.ok(htmlSource.includes('class="menu-view-controls"'), 'view and zoom controls must remain available inside the menu');
+
 assert.ok(!htmlSource.includes('id="btnCloseBook"') && !htmlSource.includes('id="btnToggleSettings"') && !htmlSource.includes('id="btnOpenSyncModal"'), 'header must not expose separate close-book, settings, or marker buttons');
 assert.ok(!htmlSource.includes('id="menuToggleSettings"') && !htmlSource.includes('id="menuOpenSyncModal"'), 'settings visibility and marker management must be removed from the menu');
 assert.ok(!appSource.includes('btnCloseBook') && !appSource.includes('btnToggleSettings') && !appSource.includes('btnOpenSyncModal'), 'removed header controls must not be referenced by reader initialization');
