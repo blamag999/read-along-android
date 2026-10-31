@@ -104,6 +104,18 @@ The existing `usage/track` route remains visit/install counting and `telemetry/e
 - Store only the hash of installId. Keep raw event records for 90 days; retain daily aggregates for 24 months. Retention enforcement is part of the backend implementation, not assumed from the schema.
 - This contract is proposed only. No collector, endpoint, D1 analytics tables or dashboard are implemented by this schema change.
 
+
+### AN2 implementation boundary (backend code staged; deployment pending)
+
+- Route: `POST /api/readalong-admin/analytics/events`, in the existing Pages Functions router. It is separate from visit tracking and diagnostic telemetry; no new Worker.
+- Request envelope: `{ consent: true, events: [...] }`; maximum 25 events and 64 KiB. Consent is required by the server, not inferred from diagnostic consent.
+- Only app local origins already allowed by this project are accepted when an Origin header is present: localhost and `capacitor://localhost`. No wildcard CORS.
+- Installation ID is SHA-256 hashed before persistence. Event and session IDs are opaque random IDs; no free-form metadata.
+- Ingest validates the strict v1 contract, caps each duration at 120 seconds, limits each hashed install to 150 events/hour and uses `INSERT OR IGNORE` with unique eventId and (sessionId, sequence) for idempotency.
+- D1 migration `admin/migrations/0002_reading_analytics.sql` adds raw events, daily totals, unique daily session IDs and an insert trigger. Raw events are pruned after 90 days; daily aggregates/session IDs after 24 months.
+- This backend code is not active until the migration is applied to the existing `read-along-admin-db` bound as `DB` to Pages project `read-along-admin`, then a production deploy and endpoint smoke test pass. Do not point it at another project's database.
+- No client collector or analytics dashboard is included in this backend batch.
+
 ## 5. Migration rules
 
 - Do not change existing public URLs or API behavior until all callers and backward compatibility are identified.
