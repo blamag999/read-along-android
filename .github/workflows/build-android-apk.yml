@@ -383,7 +383,7 @@ jobs:
           "$APKSIGNER" verify --verbose --print-certs "$APK"
           sha256sum "$APK" > "$APK.sha256"
 
-      - name: Publish OTA objects to Cloudflare R2 (optional during migration)
+      - name: Publish OTA objects to Cloudflare R2
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
@@ -397,8 +397,8 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -z "${AWS_ACCESS_KEY_ID:-}" || -z "${AWS_SECRET_ACCESS_KEY:-}" ]]; then
-            echo "::warning::Cloudflare R2 upload skipped. Configure R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY repository secrets to enable OTA publishing."
-            exit 0
+            echo "::error::OTA publishing requires R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY repository secrets scoped to the read-along-releases bucket."
+            exit 1
           fi
 
           if [[ "$RELEASE_CHANNEL" == "stable" ]]; then CHANNEL="official"; else CHANNEL="beta"; fi
