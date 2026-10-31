@@ -13,7 +13,7 @@
 - Không tạo API/Worker mới nếu hệ thống hiện có đáp ứng; không gộp endpoint khác trách nhiệm.
 - Không đánh dấu hoàn thành nếu thiếu bằng chứng CI, endpoint, deploy hoặc thiết bị tương ứng.
 
-## P0 — Tinh gọn ranh giới APK Core và backend
+## P2 — Tinh gọn ranh giới APK Core và backend
 
 > Quyết định kiến trúc ngày 2026-10-31: APK chỉ tập trung vào tải nội dung từ cloud và trải nghiệm đọc/nghe. Không xây dựng offline PDF/audio. PDF/audio vẫn phải lấy từ cloud; timestamp/marker (nếu có) dùng để đồng bộ vị trí đọc theo trang. Không duy trì Remote Config vì hiện không có kế hoạch điều khiển tính năng/reader từ xa. Admin, Dashboard, Analytics backend, catalog, scan và vận hành phải phát triển độc lập, không kéo theo build APK nếu không thay đổi mã runtime APK.
 
@@ -38,7 +38,7 @@
 - [ ] Analytics collector là adapter phía APK, không phải APK Core. Giữ backend/Dashboard độc lập; chỉ sửa collector/consent UI khi có yêu cầu đo lường cụ thể và gom thành một batch APK riêng, không để công việc Dashboard/backend kéo theo build.
 - [ ] Không đưa nội dung thông báo/theme/reader defaults từ server vào APK nếu chưa có use case cụ thể; không tạo hạng mục UI cấu hình từ xa mặc định.
 
-## P1 — Chốt marker conflict policy và migration an toàn
+## P2 — Chốt marker conflict policy và migration an toàn
 
 - [x] Đọc lại modules/remote-sync.js, modules/page-sync.js, các caller trong app.js và docs/architecture/marker-and-api-review.md; ghi nhận thứ tự nguồn thực tế và điểm ghi đè không có freshness check.
 - [x] Chốt policy: explicit import có chủ ý ưu tiên cao nhất; versioned candidates so sánh revision trong cùng book key; legacy fallback giữ nguyên thứ tự tương thích.
@@ -48,7 +48,7 @@
 - [x] Bổ sung pure resolver và regression tests cho revision, stale copy, conflict, import, clear-all, legacy numeric seconds, object {time,part}, marker lỗi và audio-part bounds. CI [41164224271](https://github.com/blamag999/read-along-android/actions/runs/41164224271) success sau khi sửa conflict-selection.
 - [ ] Chỉ thay đổi runtime sau khi policy/test hoàn chỉnh; nếu cần APK thì gom cùng một đợt Data Client hoặc một đợt APK riêng có phạm vi rõ ràng.
 
-## P1 — Analytics thời lượng đọc/nghe độc lập
+## P2 — Analytics thời lượng đọc/nghe độc lập
 
 ### AN1 — Contract và quyền riêng tư
 
@@ -100,7 +100,7 @@
 - [ ] Chỉ build APK beta khi tất cả thay đổi APK đã được gom nhóm và CI pass.
 - [ ] Ghi model thiết bị, phiên bản Android/app, commit, APK SHA-256 và kết quả test vào ROADMAP.
 
-## P3 — Đóng băng APK Core và hoàn tất chương trình
+## P2 — Đóng băng APK Core và hoàn tất chương trình
 
 - [ ] Đánh giá regression suite đã bao phủ reader/audio/marker/rotation/native/OTA.
 - [ ] Xác nhận các dịch vụ catalog, marker, Analytics và Diagnostics có contract phù hợp; không còn phụ thuộc Remote Config.
