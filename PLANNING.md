@@ -151,11 +151,12 @@ Thống kê theo ngày/tuần/tháng/năm, theo sách và theo nền tảng; tha
 - [x] Rà soát trạng thái beta, workflow và cấu trúc mã hiện tại.
 
 ### Phase 1 — Kiểm kê ranh giới và hợp đồng dữ liệu (không build APK)
-- [ ] Lập inventory mọi endpoint, URL, nguồn dữ liệu và caller trong app/Admin.
-- [ ] Xác định nguồn dữ liệu chính thức cho catalog, marker, config, analytics và diagnostics.
-- [ ] Viết contract/schema và test contract.
-- [ ] Kiểm tra các endpoint trùng/chồng chéo; chỉ hợp nhất khi chứng minh không phá tương thích.
-- [ ] Không đổi thuật toán reader/audio.
+- [x] Lập inventory endpoint, URL, nguồn dữ liệu và caller trong app/Admin ở `docs/architecture/data-contracts.md`.
+- [x] Xác định nguồn hiện tại cho catalog, media, marker, usage, telemetry, diagnostics và OTA; phân biệt rõ phần đang chạy với phần đề xuất.
+- [ ] Chốt precedence/conflict resolution của marker và nguồn dữ liệu chính thức cuối cùng.
+- [ ] Viết JSON Schema/contract tests cho catalog, marker, config và analytics.
+- [ ] Rà soát chồng chéo API và chỉ hợp nhất khi chứng minh không phá tương thích.
+- [x] Không thay đổi thuật toán reader/audio trong đợt kiểm kê.
 
 ### Phase 2 — Nền tảng Remote Config/Data Client
 - [ ] Chốt endpoint config trên hạ tầng Read Along hiện có, tránh thêm dịch vụ không cần thiết.
@@ -213,7 +214,7 @@ Cần build APK cho:
 
 ## 12. Nhật ký tiến độ
 
-### 2026-10-31 — Khởi tạo master planning
+### 2026-10-31 — Master planning và kiểm kê API/data contract
 - Người dùng xác nhận A–E.
 - Gộp kế hoạch Analytics trước đó và kiến trúc APK Core + remote services.
 - Đã kiểm tra mã hiện tại: `app.js` vẫn là entrypoint lớn; modules page-sync/catalog/playlist/remote-sync/diagnostics được tải từ `index.html`; Service Worker cache shell network-first.
@@ -221,4 +222,6 @@ Cần build APK cho:
 - Chưa thay đổi mã runtime hoặc build APK.
 - Beta HEAD tại thời điểm bắt đầu: `02d90abaa4f58295e6e53ee409ee0a2cb9275317`.
 - CI gần nhất được kiểm tra: Admin workflow run `41157267352` success cho commit `8ae1b0df0d8646108302e3230d7c56a00bbb7ec5`; các run kế tiếp thuộc cùng đợt push có run bị cancel. Run này không kiểm thử commit planning mới nhất; cần CI chạy lại cho HEAD hiện tại sau thay đổi tiếp theo.
-- Tiến độ: Phase 0 hoàn tất; Phase 1 chưa bắt đầu.
+- Đã tạo `docs/architecture/data-contracts.md`, liệt kê endpoint/caller/trust boundary và các khoảng trống hiện tại.
+- Phase 1: inventory nguồn dữ liệu/API đã hoàn tất bước đầu; schema contract, marker precedence và quyết định hợp nhất API còn pending.
+- Tiến độ: Phase 0 hoàn tất; Phase 1 đang thực hiện.
