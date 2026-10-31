@@ -236,3 +236,16 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 - [x] Thêm regression assertions cho các DOM ID bắt buộc của modal và việc không còn gọi online sync.
 - [x] Full regression + Pages syntax/isolation pass trong workflow [41202909931](https://github.com/blamag999/read-along-android/actions/runs/41202909931) trên commit `9c4bf18861122df8f5dc29ac080b17aa2dd456c1`.
 - [ ] Xác nhận APK ký số và OTA R2 publish hoàn tất; kiểm tra tải catalog và mở PDF/audio thực tế trên thiết bị.
+
+
+## Kho sách offline 1 GB và tinh gọn header — 2026-10-31
+
+- [ ] Audit luồng tải PDF/audio từ R2, cơ chế IndexedDB/native storage và quy trình OTA/cache cleanup trước khi chọn nơi lưu bền vững.
+- [ ] Thiết kế kho offline riêng trong vùng dữ liệu ứng dụng (không dùng cacheDir/Service Worker Cache); giới hạn tổng dung lượng 1 GiB, quản lý LRU theo lần truy cập gần nhất.
+- [ ] Lưu trọn bộ theo book ID: PDF, toàn bộ audio và JSON marker; tải vào vùng tạm rồi xác minh hoàn tất trước khi đưa vào thư viện offline.
+- [ ] Không xóa sách đang mở/phát; khi thiếu dung lượng, xóa trọn bộ sách ít dùng gần nhất cho đến khi đủ chỗ; xử lý sách đơn lẻ lớn hơn giới hạn và lỗi thiếu dung lượng rõ ràng.
+- [ ] Đảm bảo kho offline, marker và metadata tồn tại qua OTA update, không bị xóa cùng cache shell; chỉ dọn cache tạm/service worker cũ.
+- [ ] Bổ sung kiểm thử quota, LRU, tải dở, file thiếu, app restart, OTA update và mở sách offline; build một APK sau full regression.
+- [x] Tinh gọn header thành đúng hai action: Thư viện sách và Menu; chuyển ẩn/hiện khu vực chọn file và quản lý mốc thời gian vào Menu; bỏ nút Đóng sách riêng.
+- [ ] Chạy CI đầy đủ và kiểm tra trên điện thoại cảm ứng: hai nút header không chồng lấn; Menu còn đủ thao tác; Android Back vẫn đóng sách và lưu phiên đọc.
+- Không đánh dấu kho offline là implemented cho đến khi có code, test và xác minh đường dẫn lưu trữ native thực tế.
