@@ -12,7 +12,7 @@
 
 ## 1. Tình trạng hiện tại
 
-- **Kế hoạch kiến trúc tổng thể:** xem [PLANNING.md](./PLANNING.md) và [ROADMAP.md](./ROADMAP.md). Mục tiêu đã được xác nhận là APK Core ổn định, tách dữ liệu/dịch vụ quản trị, Remote Config có cache/fallback và không thực thi JavaScript tùy ý từ xa. Theo dõi tiến độ theo các mốc R0–R6 trong ROADMAP.
+- **Kế hoạch kiến trúc tổng thể:** xem [PLANNING.md](./PLANNING.md) và [ROADMAP.md](./ROADMAP.md). Mục tiêu đã được xác nhận là APK Core ổn định, tách dữ liệu/dịch vụ quản trị, Remote Config có cache/fallback và không thực thi JavaScript tùy ý từ xa. Inventory API/schema: [docs/architecture/data-contracts.md](./docs/architecture/data-contracts.md); JSON Schema v1 nằm trong `schemas/`.
 
 - Đã đưa nội dung từ `beta` lên `main` để chuẩn bị phát hành stable; PR [#14](https://github.com/blamag999/read-along-android/pull/14) đã được đóng/merge.
 - Đã khôi phục luồng OTA trong ứng dụng và các thành phần Android hỗ trợ cài APK: `native/android/ApkUpdaterPlugin.java`, `native/android/file_paths.xml` và cấu hình tương ứng trong `.github/workflows/build-android-apk.yml`.
