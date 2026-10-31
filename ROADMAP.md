@@ -211,3 +211,15 @@ Khi một công việc trong PLANNING hoàn tất:
 
 
 - Đóng batch CI bằng commit chốt có marker `[build-apk]` để xác minh end-to-end chính sách mới và tạo APK beta mới nhất; build sẽ bị chặn nếu full regression hoặc isolation checks thất bại. Đây là build xác minh workflow, không có thay đổi runtime APK.
+
+### 2026-10-31 — Marker conflict policy resolver isolated and regression-verified
+
+- Rà soát `modules/remote-sync.js`, `modules/page-sync.js`, các caller trong `app.js` và tài liệu marker/API review. Xác nhận dữ liệu GitHub legacy có thể ghi đè R2 mà không có phép so sánh freshness; thứ tự fallback legacy thay đổi theo trường hợp có/không có R2.
+- Chốt policy cho migration: explicit import được ưu tiên trong thao tác import; versioned candidates chỉ so revision trong cùng logical book; `updatedAt` chỉ tie-break khi cùng revision và cùng nội dung; conflict cùng revision khác nội dung không tự ghi đè và ưu tiên local recovery; empty versioned envelope là clear-all; không tự merge.
+- Thêm pure module `modules/marker-resolver.js` và `tests/marker-resolver.test.js`; thêm test vào `npm test`. Module hiện **chưa được nối vào reader runtime**.
+- Cập nhật `docs/architecture/marker-and-api-review.md` và `PLANNING.md`. Không thay đổi `app.js`, `modules/remote-sync.js`, dữ liệu marker, native bridge, APK runtime, signing key hoặc nhánh `main`.
+- CI lần đầu [41164173039](https://github.com/blamag999/read-along-android/actions/runs/41164173039) thất bại do test phát hiện resolver chưa ưu tiên localStorage recovery khi conflict có revision thấp hơn; đã sửa resolver và chạy lại.
+- Full regression + JS syntax + Pages Functions syntax + isolation checks **success** tại CI [41164224271](https://github.com/blamag999/read-along-android/actions/runs/41164224271) trên commit `1ef3b6a3b1a9dc07105d299b1f2e3b53eea7d183`.
+- Không build APK vì batch chỉ gồm resolver cô lập, test và tài liệu. Không promote `main`.
+- Còn pending: thiết kế atomic migration/write/recovery; runtime vẫn giữ hành vi legacy hiện tại cho đến khi migration được kiểm thử riêng.
+
