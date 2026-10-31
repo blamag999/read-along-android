@@ -765,7 +765,19 @@ async function loadAnalyticsDashboard() {
     $("analyticsRetentionNote").textContent = data.breakdown?.note || "";
     $("analyticsUpdated").textContent = "Cập nhật " + formatDate(data.generatedAt) + " · UTC";
     status.textContent = data.hasData ? "Đã tải dữ liệu tổng hợp." : "Chưa có sự kiện thống kê trong khoảng thời gian này. Có thể người dùng chưa bật đồng ý hoặc chưa phát sinh hoạt động.";
-    renderAnalyticsTrend(data.daily || [], days);\n    $("publicReading").textContent = formatDuration(summary.readingSeconds);\n    $("publicListening").textContent = formatDuration(summary.listeningSeconds);\n    $("publicBooks").textContent = library.books == null ? "—" : Number(library.books).toLocaleString("vi-VN");\n    $("publicErrors").textContent = scan ? Number(scan.errors || 0).toLocaleString("vi-VN") : "Chưa quét";\n    setStatus(data.hasData ? "Đã cập nhật số liệu công khai." : "Chưa có số liệu trong khoảng thời gian này.", false, "public");\n    $("overviewReading").textContent = formatDuration(summary.readingSeconds);\n    $("overviewListening").textContent = formatDuration(summary.listeningSeconds);\n    $("overviewBooks").textContent = library.books == null ? "—" : Number(library.books).toLocaleString("vi-VN");\n    $("overviewErrors").textContent = scan ? Number(scan.errors || 0).toLocaleString("vi-VN") : "Chưa quét";\n    $("overviewTrend").replaceChildren(...$("analyticsTrend").cloneNode(true).childNodes);\n    setStatus(data.hasData ? "Đã cập nhật dữ liệu tổng quan." : "Chưa có dữ liệu thống kê trong khoảng thời gian này.", false, "overview");\n    setStatus(data.hasData ? "Đã tải dữ liệu thống kê." : "Chưa có dữ liệu thống kê trong khoảng thời gian này.", false, "analytics");
+    renderAnalyticsTrend(data.daily || [], days);
+    $("publicReading").textContent = formatDuration(summary.readingSeconds);
+    $("publicListening").textContent = formatDuration(summary.listeningSeconds);
+    $("publicBooks").textContent = library.books == null ? "—" : Number(library.books).toLocaleString("vi-VN");
+    $("publicErrors").textContent = scan ? Number(scan.errors || 0).toLocaleString("vi-VN") : "Chưa quét";
+    setStatus(data.hasData ? "Đã cập nhật số liệu công khai." : "Chưa có số liệu trong khoảng thời gian này.", false, "public");
+    $("overviewReading").textContent = formatDuration(summary.readingSeconds);
+    $("overviewListening").textContent = formatDuration(summary.listeningSeconds);
+    $("overviewBooks").textContent = library.books == null ? "—" : Number(library.books).toLocaleString("vi-VN");
+    $("overviewErrors").textContent = scan ? Number(scan.errors || 0).toLocaleString("vi-VN") : "Chưa quét";
+    $("overviewTrend").replaceChildren(...$("analyticsTrend").cloneNode(true).childNodes);
+    setStatus(data.hasData ? "Đã cập nhật dữ liệu tổng quan." : "Chưa có dữ liệu thống kê trong khoảng thời gian này.", false, "overview");
+    setStatus(data.hasData ? "Đã tải dữ liệu thống kê." : "Chưa có dữ liệu thống kê trong khoảng thời gian này.", false, "analytics");
     const body = $("analyticsPlatforms"); body.replaceChildren();
     const platforms = data.breakdown?.platforms || [];
     if (!platforms.length) {
@@ -779,7 +791,8 @@ async function loadAnalyticsDashboard() {
       }
       body.append(row);
     }
-  } catch (error) { status.textContent = "Không tải được Dashboard: " + error.message; setStatus("Không tải được dữ liệu tổng quan: " + error.message, true, "overview");\n    setStatus("Không tải được số liệu Dashboard: " + error.message, true, "public"); setStatus("Không tải được thống kê: " + error.message, true, "analytics"); }
+  } catch (error) { status.textContent = "Không tải được Dashboard: " + error.message; setStatus("Không tải được dữ liệu tổng quan: " + error.message, true, "overview");
+    setStatus("Không tải được số liệu Dashboard: " + error.message, true, "public"); setStatus("Không tải được thống kê: " + error.message, true, "analytics"); }
   finally { button.disabled = false; }
 }
 $("refreshAnalyticsBtn").addEventListener("click", loadAnalyticsDashboard);
