@@ -90,20 +90,6 @@
 - [x] AN3.7 Automated regression hoàn tất: PDF switch/close, audio play/pause/ended, foreground/background, rotation, pagehide/pageshow, opt-out, privacy, offline drop/no retry, eventId/sequence và fetch pending không block reader lifecycle. CI [41167810567](https://github.com/blamag999/read-along-android/actions/runs/41167810567) success; rotation regression [41167772447](https://github.com/blamag999/read-along-android/actions/runs/41167772447) success. Người dùng xác nhận đã hoàn tất kiểm tra thực tế APK v1.3.7, không phát hiện lỗi trong đợt kiểm tra. Đối chiếu số liệu đọc/nghe chờ Dashboard AN4. Android TV vẫn pending.
 - [x] AN3.8 Build beta APK hoàn tất từ commit `85475373bab4813589cf0d3c0777fe8c27df1da7`; workflow [41167887202](https://github.com/blamag999/read-along-android/actions/runs/41167887202) success, full regression pass, signed APK build/verification pass, artifact và Release `v1.3.7` đã publish. APK: https://github.com/blamag999/read-along-android/releases/download/v1.3.7/read-along-v1.3.7-android.apk. SHA-256 APK: `a4f4f5e85f04af05a53925888685ed28b82ba02867571a4ffe84769bcaf06299`. Artifact archive SHA-256: `6f70ed03519fc7b0c739908d114ef7c6153e5d5dd17947cd49141b7a47e3576c`. Người dùng xác nhận hoàn tất kiểm tra APK v1.3.7, không phát hiện lỗi trong đợt kiểm tra. Kiểm tra đối chiếu số liệu đọc/nghe chuyển sang AN4 Dashboard; Android TV vẫn pending.
 
-### AN4 — Dashboard
-
-- [x] Chốt KPI chính: thời gian đọc, thời gian nghe, tổng thời gian sử dụng và thiết bị hoạt động; bỏ KPI phiên hoạt động/ngày theo yêu cầu người dùng.
-- [x] Thêm bộ lọc 7/30/90 ngày và 12/24 tháng; xu hướng đọc/nghe theo ngày/tuần/tháng; breakdown nền tảng.
-- [x] Thêm thống kê thư viện từ manifest đã xuất bản: số đầu sách, PDF, phần audio và sách có JSON đồng bộ.
-- [x] Thêm tình trạng lần quét thư viện gần nhất: số tệp đã kiểm tra, lỗi nghiêm trọng, cảnh báo, thời điểm và trạng thái quét.
-- [x] API Dashboard public chỉ đọc (GET) trước OTP guard; chỉ trả số liệu tổng hợp, không lộ install/session IDs, book IDs, tiêu đề sách hoặc dữ liệu tệp. Mọi API quản lý thư viện tiếp tục yêu cầu OTP; raw analytics chỉ truy vấn trong cửa sổ lưu 90 ngày, aggregate daily tối đa 24 tháng.
-- [x] Regression CI cho API, date validation, retention, DOM, trạng thái manifest/scan và Pages Functions syntax: [41169858843](https://github.com/blamag999/read-along-android/actions/runs/41169858843) success trên commit e03acee6141ddc064f162475fad0e2c67655c994.
-- [x] Full regression, JS syntax, Pages Functions syntax, isolation và production consent smoke pass: [41170506777](https://github.com/blamag999/read-along-android/actions/runs/41170506777), commit `07bd866af16de1dc33d989ac8f6da90349cd539c`.
-- [ ] Deploy Pages sau thay đổi Dashboard công khai; xác minh trang chủ mặc định, API GET chỉ đọc và OTP vẫn chặn mọi API quản trị/thay đổi dữ liệu.
-- [ ] Kiểm tra dashboard công khai trên hostname production và preview; đối chiếu thời lượng đọc/nghe sau khi người dùng bật opt-in.
-- [ ] Không thống kê theo từng sách đã đọc: collector không gửi bookId/tên sách theo privacy contract; không mở rộng thu thập chỉ để có chỉ số này.
-- [ ] Phân biệt rõ không có dữ liệu với giá trị 0; cảnh báo kết quả quét là lần quét gần nhất, không khẳng định thời gian thực.
-- [ ] Dashboard/report thay đổi độc lập không cần build APK.
 
 ## P2 — Nội dung và cấu hình UI độc lập
 
