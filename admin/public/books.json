@@ -56,15 +56,6 @@
       "sync": null
     },
     {
-      "id": "brave",
-      "title": "Brave",
-      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Brave_Read-Along.pdf",
-      "audios": [
-        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Brave_Read-Along.mp3"
-      ],
-      "sync": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Brave_Read-Along.json"
-    },
-    {
       "id": "brer_rabbit_and_the_tar_baby",
       "title": "Brer Rabbit and the Tar Baby",
       "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Brer%20Rabbit%20and%20the%20Tar%20Baby_Read%20Along.pdf",

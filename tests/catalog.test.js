@@ -11,6 +11,7 @@ assert.doesNotMatch(app, /private-comic-reader\.pages\.dev\/api\/readalong\/book
 assert.match(catalogSource, /typeof value === 'string'/, 'catalog module must accept URL strings from books.json');
 assert.match(catalogSource, /item\.sync \|\| item\.json/, 'catalog module must read the manifest sync URL');
 assert.ok(Array.isArray(manifest.books) && manifest.books.length > 0, 'books.json must contain a non-empty books array');
+assert.ok(!manifest.books.some(book => book.id === 'brave'), 'deleted Brave R2 assets must not remain in the publish seed');
 const r2Host = 'pub-763a3a5ae235415cbef15b64f7a20820.r2.dev';
 
 for (const [index, book] of manifest.books.entries()) {
