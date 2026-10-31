@@ -147,7 +147,7 @@ Thay `LAST_HANDOVER_SHA` bằng SHA chính xác trong RECOVERY.md. Kiểm tra th
 
 ## 5. Quy tắc build APK và OTA
 
-Read Along là ứng dụng Capacitor/WebView. HTML/CSS/JavaScript được đóng gói trong APK cần build APK mới khi thay đổi, trừ phần đã được thiết kế rõ ràng để lấy dữ liệu/cấu hình từ xa. Dịch vụ Admin và dữ liệu độc lập không tự động đòi hỏi build APK.
+Read Along là ứng dụng Capacitor/WebView. HTML/CSS/JavaScript được đóng gói trong APK cần build APK mới khi thay đổi. Việc cập nhật catalog và media qua các nguồn cloud hiện tại không tự động đòi hỏi build APK. Dịch vụ Admin và dữ liệu độc lập không tự động đòi hỏi build APK.
 
 ### Chính sách build một lần ở bước chốt
 
@@ -190,7 +190,7 @@ Catalog và media trên R2, marker JSON, Admin, Diagnostics backend, Analytics b
 - API có contract/schema version rõ ràng; HTTPS và hostname allowlist.
 - Timeout hữu hạn, retry có giới hạn; validate dữ liệu trước khi áp dụng.
 - Cache bản hợp lệ gần nhất và offline fallback.
-- Không làm reader crash hoặc mất khả năng offline khi API/config lỗi.
+- Không làm reader crash hoặc mất khả năng đọc khi catalog, marker hoặc dịch vụ phụ trợ gặp lỗi.
 - Giữ API riêng nếu khác mục đích, quyền hoặc vòng đời dữ liệu; chỉ dùng chung transport client khi có lợi ích thực tế.
 
 ## 7. Kiểm thử tối thiểu và điều kiện hoàn tất
