@@ -2418,7 +2418,7 @@ async function clearReadAlongWebCachesForUpdate() {
 }
 
 // Kiểm tra bản phát hành mới nhất theo kênh OTA được người dùng chọn.
-const READ_ALONG_RELEASES_API = 'https://api.github.com/repos/blamag999/read-along-android/releases?per_page=100';
+const READ_ALONG_OTA_API = 'https://read-along-admin.pages.dev/api/readalong-admin/ota';
 const READ_ALONG_UPDATE_CHANNEL_KEY = 'readAlongUpdateChannel';
 
 function getSelectedUpdateChannel() {
@@ -2470,59 +2470,55 @@ async function checkReadAlongUpdates() {
   }
 
   try {
-    const response = await fetch(READ_ALONG_RELEASES_API, {
-      headers: { Accept: 'application/vnd.github+json' },
+    const latestUrl = READ_ALONG_OTA_API + '/latest?channel=' + encodeURIComponent(channel);
+    const response = await fetch(latestUrl, {
+      headers: { Accept: 'application/json' },
       cache: 'no-store'
     });
-    if (!response.ok) throw new Error('Máy chủ cập nhật trả về HTTP ' + response.status);
-    const releases = await response.json();
-    if (!Array.isArray(releases)) throw new Error('Dữ liệu bản cập nhật không hợp lệ.');
-
-    // Không dựa vào thứ tự API: lấy phiên bản SemVer cao nhất trong đúng kênh.
-    const eligibleReleases = releases.filter(item =>
-      !item.draft &&
-      (channel === 'beta' ? item.prerelease === true : item.prerelease === false) &&
-      isValidReleaseVersion(item.tag_name) &&
-      (item.assets || []).some(asset =>
-        /-android\.apk$/i.test(asset.name) &&
-        isSafeHttpsUrl(asset.browser_download_url) &&
-        new URL(asset.browser_download_url).hostname === 'github.com'
-      ) &&
-      compareReleaseVersions(item.tag_name, '0.0.0') > 0
-    );
-    eligibleReleases.sort((a, b) => compareReleaseVersions(b.tag_name, a.tag_name));
-    const release = eligibleReleases[0] || null;
-
-    if (!release) {
-      const message = channel === 'beta'
-        ? 'Chưa có bản Beta kèm APK để cập nhật.'
-        : 'Chưa có bản Official ổn định kèm APK để cập nhật.';
-      showToast(message);
-      alert(message + '\nHãy kiểm tra danh sách bản phát hành và quy trình tạo APK.');
-      return;
+    let manifest;
+    try { manifest = await response.json(); }
+    catch { throw new Error('Máy chủ OTA trả về dữ liệu không hợp lệ.'); }
+    if (!response.ok) {
+      if (response.status === 404) {
+        showToast(channel === 'beta' ? 'Chưa có bản Beta để cập nhật.' : 'Chưa có bản Official để cập nhật.');
+        return;
+      }
+      throw new Error(manifest.error || 'Máy chủ OTA trả về HTTP ' + response.status);
     }
 
-    const asset = (release.assets || []).find(item =>
-      /-android\.apk$/i.test(item.name) &&
-      isSafeHttpsUrl(item.browser_download_url) &&
-      new URL(item.browser_download_url).hostname === 'github.com'
-    );
-    if (!asset) throw new Error('Bản phát hành không có tệp cài đặt Android hợp lệ.');
+    const expectedFilename = 'read-along-v' + String(manifest?.version || '') + '-android.apk';
+    if (!manifest || manifest.schemaVersion !== 1 || manifest.channel !== channel ||
+        !isValidReleaseVersion(manifest.version) ||
+        !Number.isSafeInteger(manifest.versionCode) || manifest.versionCode < 1 ||
+        manifest.filename !== expectedFilename ||
+        !Number.isSafeInteger(manifest.size) || manifest.size < 1024 || manifest.size > 250 * 1024 * 1024 ||
+        typeof manifest.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(manifest.sha256) ||
+        typeof manifest.notes !== 'string' || typeof manifest.mandatory !== 'boolean') {
+      throw new Error('Manifest OTA không hợp lệ hoặc không đầy đủ.');
+    }
+
     const currentVersion = document.querySelector('meta[name="app-version"]')?.content || '0.0.0';
-    if (compareReleaseVersions(release.tag_name, currentVersion) <= 0) {
-      const message = 'Kênh ' + channelLabel + ' mới nhất là ' + release.tag_name +
-        ', phiên bản ứng dụng hiện tại là ' + currentVersion + '.';
+    const currentVersionCode = Number(document.querySelector('meta[name="app-version-code"]')?.content || 0);
+    if (compareReleaseVersions(manifest.version, currentVersion) <= 0 ||
+        manifest.versionCode <= currentVersionCode) {
+      const message = 'Kênh ' + channelLabel + ' mới nhất là ' + manifest.version +
+        ' (versionCode ' + manifest.versionCode + '), ứng dụng hiện tại là ' +
+        currentVersion + ' (versionCode ' + currentVersionCode + ').';
       showToast('Không có bản ' + channelLabel + ' mới hơn để cài.');
-      alert(message + '\nNếu đang chuyển từ Beta về Official hoặc chọn một bản có phiên bản thấp hơn, Android có thể từ chối cài đè. Hãy dùng bản phát hành có versionCode cao hơn và cùng khóa ký.');
+      alert(message + '\nKhông cài bản có versionName hoặc versionCode thấp hơn; APK cũng phải cùng khóa ký.');
       return;
     }
 
-    const notes = String(release.body || '').replace(/[#*_\x60]/g, '').trim().slice(0, 600);
+    // Construct the fixed backend URL locally. Never trust a storage URL from the manifest.
+    const downloadUrl = READ_ALONG_OTA_API + '/download?channel=' +
+      encodeURIComponent(channel) + '&version=' + encodeURIComponent(manifest.version);
+    const notes = String(manifest.notes || '').trim().slice(0, 600);
     const message = 'Kênh OTA: ' + channelLabel +
-      '\nBản mới nhất: ' + release.tag_name +
-      '\nPhiên bản hiện tại: ' + currentVersion +
+      '\nBản mới nhất: ' + manifest.version +
+      '\nVersion code: ' + manifest.versionCode +
+      '\nPhiên bản hiện tại: ' + currentVersion + ' (' + currentVersionCode + ')' +
       (notes ? '\n\nThay đổi:\n' + notes : '') +
-      '\n\nTải và cài đặt bản cập nhật OTA ngay trong ứng dụng? Android có thể yêu cầu xác nhận cài đặt. APK phải được ký bằng cùng khóa với ứng dụng đang cài. APK phải được ký bằng cùng khóa với ứng dụng đang cài.';
+      '\n\nTải và cài đặt bản cập nhật OTA ngay trong ứng dụng? Android có thể yêu cầu xác nhận cài đặt. APK phải được ký bằng cùng khóa với ứng dụng đang cài.';
     if (!confirm(message)) return;
 
     const nativeUpdater = window.Capacitor?.Plugins?.ApkUpdater;
@@ -2536,15 +2532,17 @@ async function checkReadAlongUpdates() {
         showToast('Đã dọn cache cũ. Đang tải bản cập nhật…');
       }
       await nativeUpdater.downloadAndInstall({
-        url: asset.browser_download_url,
-        filename: asset.name
+        url: downloadUrl,
+        filename: manifest.filename,
+        expectedSize: manifest.size,
+        sha256: manifest.sha256
       });
     } else {
-      window.location.href = asset.browser_download_url;
+      window.location.href = downloadUrl;
     }
   } catch (error) {
     console.error('Update check failed:', error);
-    alert('Không thể kiểm tra cập nhật kênh ' + channelLabel + ': ' +
+    alert('Không thể kiểm tra/cài đặt cập nhật kênh ' + channelLabel + ': ' +
       (error.message || 'Lỗi mạng') + '\nHãy thử lại khi có kết nối Internet.');
   } finally {
     if (btn) {
