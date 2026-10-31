@@ -838,3 +838,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Workflow `Check Read Along Admin` có path filter `tests/**` và job push yêu cầu marker `[test]`; commit test đáp ứng điều kiện kích hoạt. Tại thời điểm ghi nhật ký, GitHub combined-status endpoint chưa trả status check cho commit này; **chưa xác nhận CI pass**.
 - Chưa build APK mới và chưa kiểm thử thiết bị. CSS dead styles chưa được xóa; cần audit selector/caller trước khi cleanup.
 - Trạng thái: source R2-only/marker read-only đã được triển khai; Library retry đã được sửa; regression và nghiệm thu runtime vẫn pending. Không thay đổi `main`.
+
+### 2026-10-31 — Cập nhật regression contract theo UI Reader/Menu thực tế
+
+- Audit `tests/modules.test.js` phát hiện hai assertion còn yêu cầu các control view/zoom phải nằm trong Menu, trong khi HTML hiện tại đã loại bỏ các control này theo phạm vi tinh gọn đã duyệt. Đây là test contract lỗi thời, không phải thiếu UI.
+- Đã thay hai assertion cũ bằng contract xác nhận `view-controls-bar`, `menu-view-controls`, fit-height, two-page và zoom controls không còn trong UI tối giản.
+- Test commit có marker `[test]`: `4a26e502bad452dd637dcfa6ed9f0c93706c350f`. Workflow path filter bao gồm `tests/**`; combined-status query tại thời điểm kiểm tra chưa trả status entries. CI vẫn pending/UNKNOWN, không kết luận pass hoặc fail.
+- Xác minh README beta và main có cùng blob SHA `2c9e534869ee250de84c134a873879dad18f3a7f` (byte-identical). Không thay đổi main.
+- CSS audit sơ bộ trên `index.html`, `app.js` và các module runtime tìm thấy 81 class selector không có tham chiếu trong source hiện tại. Đây mới là candidate list; chưa xóa CSS vì cần phân loại rule compound/media và tránh xóa nhầm selector được sinh động.
