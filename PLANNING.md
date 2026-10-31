@@ -13,13 +13,20 @@
 - Không đánh dấu hoàn thành nếu thiếu bằng chứng CI, endpoint, deploy hoặc thiết bị tương ứng.
 
 ## P0 — Tiếp tục hoàn tất Reader/Menu và chuyển hẳn sang R2
+### Trạng thái cập nhật tại beta HEAD `ca31fc283a54905831e3913e353820aecd96a9c4`
 
-- [ ] Audit toàn bộ caller/DOM/event listener trước khi xóa file picker, marker management, IndexedDB media Blob và luồng local library.
+- Đã triển khai R2-only media loading, marker UI read-only và Library retry; sửa trạng thái disabled ban đầu của nút Library tại commit `588b3808f3d57a36be447d92523d73d72b7d27c9`.
+- Regression assertion cho trạng thái Library ban đầu được thêm tại `f588259634e24d96f12f161af74da2dc4d77b4be` và commit `[test]` `ca31fc283a54905831e3913e353820aecd96a9c4`.
+- Full regression CI chưa có status được xác nhận tại thời điểm cập nhật. Không đánh dấu nghiệm thu, không build APK cho đến khi CI pass.
+- Việc còn lại của batch: xác nhận CI; audit selector/CSS dead styles; kiểm tra diff; chạy một APK beta cuối batch và nghiệm thu trên điện thoại. Android TV vẫn ngoài phạm vi batch này.
+
+
+- [x] Audit caller/DOM/event listener cho file picker, marker management, IndexedDB media Blob và local library; các entry point đã được gỡ, dữ liệu legacy không bị xóa.
 - [ ] Rút menu về các mục đã duyệt: Tự lật trang, Vị trí đọc gần đây, Cập nhật OTA, Phiên bản; loại bỏ menu ẩn/hiện settings và marker editor.
 - [ ] Giữ hành vi lật trang thủ công tự tua audio luôn bật; loại bỏ nhánh pageTurnMode legacy `markers` và session compatibility không còn cần thiết, có regression test.
-- [ ] Library button mở catalog R2; nếu catalog chưa tải hoặc lỗi thì retry; không để button disabled vĩnh viễn.
-- [ ] Giữ read-only marker JSON companion từ R2; xóa UI/import/export/editor marker và không thêm API ghi marker.
-- [ ] Bổ sung regression tests cho menu, auto flip, manual seek, session legacy, R2 catalog retry và không còn luồng mở file cục bộ.
+- [x] Library button mở catalog R2 và retry khi catalog chưa tải/lỗi; nút được bật ngay từ HTML khởi tạo, không phụ thuộc lần tải thành công đầu tiên.
+- [x] Giữ read-only marker JSON companion từ R2; đã xóa UI/import/export/editor marker, không thêm API ghi marker.
+- [ ] Bổ sung/hoàn thiện regression tests cho menu, auto flip, manual seek, session legacy, R2 catalog retry và không còn luồng mở file cục bộ; assertions đã cập nhật nhưng full CI chưa được xác nhận.
 - [ ] Chạy full regression bằng commit `[test]`; chỉ sau khi pass mới tạo một commit `[build-apk]`.
 
 ## P1 — Online Reading Progress theo ID thiết bị ổn định
@@ -420,14 +427,14 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 
 ### A. Loại bỏ hoàn toàn mở sách từ thiết bị
 
-- [ ] Gỡ UI chọn PDF/audio/thư mục: filePickerSection, nút Bắt đầu, node1Modal, input PDF/audio/folder và các trigger chỉ phục vụ mở media cục bộ.
+- [x] Gỡ UI chọn PDF/audio/thư mục: filePickerSection, nút Bắt đầu, node1Modal, input PDF/audio/folder và các trigger chỉ phục vụ mở media cục bộ.
 - [ ] Giữ tự tải catalog R2 khi khởi động; nút Thư viện mở playlist khi catalog sẵn sàng và gọi retry loadR2Catalog() khi chưa tải được/lần trước lỗi. Hiển thị loading/error rõ ràng; không cần modal Bắt đầu.
-- [ ] Gỡ handlePdfFileSelect(), handleAudioFileSelect(), handleFolderPick(), handleFileList(), initDragAndDrop(), drop overlay và listener chỉ phục vụ mở media cục bộ.
+- [x] Gỡ handlePdfFileSelect(), handleAudioFileSelect(), handleFolderPick(), handleFileList(), initDragAndDrop(), drop overlay và listener chỉ phục vụ mở media cục bộ.
 - [ ] Bỏ showDirectoryPicker, state.dirHandle, state.folderJsonFiles, nhánh đọc JSON từ thư mục và autoSaveSyncToLocalDirectory().
-- [ ] Kiểm tra caller cuối cùng rồi bỏ loadPdfFromBlob(), loadAudioFromBlob(), saveBookToLibrary(), getBookFromLibrary() và nhánh mở Blob chỉ phục vụ import media. Giữ nguyên loadPdfFromUrl(), loadAudioFromUrl(), loadAudioPart() và URL R2.
-- [ ] Bỏ PdfAudioSyncDB/book_library khỏi đường chạy mới nếu không còn caller. Không xóa database/Blob legacy đã có trên thiết bị; không thêm migration xóa dữ liệu trong batch này.
-- [ ] Bỏ buildPlaylistFromFiles() và test local-folder playlist nếu không còn caller; giữ mapRemoteCatalog(), URL validation/host allowlist R2, playlist filter và stable book ID.
-- [ ] Không cho drop PDF/audio vào cửa sổ; bảo toàn touch/swipe trên canvas PDF.
+- [x] Kiểm tra caller và bỏ loadPdfFromBlob(), loadAudioFromBlob(), saveBookToLibrary(), getBookFromLibrary() cùng nhánh mở Blob chỉ phục vụ import media. Giữ loadPdfFromUrl(), loadAudioFromUrl(), loadAudioPart() và URL R2.
+- [x] Bỏ PdfAudioSyncDB/book_library khỏi đường chạy mới; không xóa database/Blob legacy đã có trên thiết bị và không thêm migration xóa dữ liệu.
+- [x] Bỏ buildPlaylistFromFiles() và local-folder playlist; giữ mapRemoteCatalog(), URL validation/host allowlist R2, playlist filter và stable book ID.
+- [x] Không còn drop PDF/audio vào cửa sổ; bảo toàn touch/swipe trên canvas PDF.
 
 ### B. Tinh gọn Menu và reader controls
 
