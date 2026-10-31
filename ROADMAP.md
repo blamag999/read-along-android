@@ -531,3 +531,15 @@ Khi một công việc trong PLANNING hoàn tất:
 - Backend dự kiến: bảng progress riêng trong D1 hiện hữu, khóa `(device_id, book_id)`; endpoint qua Pages Functions/router hiện có sau audit. Không tạo Worker/database mới, không nhập chung analytics/marker/catalog.
 - Kế hoạch chi tiết, identity fallback, API contract, offline outbox, conflict handling, migration và acceptance cases được ghi trong PLANNING và `docs/architecture/core-extensibility.md`.
 - Trạng thái: quyết định/plan đã ghi nhận; chưa triển khai native identity, D1 schema/API, APK sync engine hoặc kiểm thử clear-data/uninstall trên thiết bị. Không có dữ liệu progress nào được migrate hoặc upload trong bước này.
+
+### 2026-10-31 — Audit và chốt kiến trúc OTA provider-neutral (chưa triển khai)
+
+- Người dùng đồng ý dùng hạ tầng Cloudflare hiện có và yêu cầu đổi nơi lưu trữ APK về sau chỉ cần thay đổi backend, không phải build APK.
+- Audit Cloudflare xác nhận Pages project `read-along-admin` đang chạy Pages Functions, root `admin`, production branch `beta`; router API dùng chung nằm trong `admin/functions/api/readalong-admin/[[path]].js`. Không cần tạo Worker mới cho OTA.
+- Production binding hiện tại của đúng Pages project gồm D1 `DB` và R2 `READALONG` trỏ tới `my-audio-book`. Chưa có bucket/binding riêng cho APK; không thay đổi hoặc ghi vào bucket sách. Pages project hiện chỉ có `read-along-admin.pages.dev`, chưa gắn custom domain.
+- Audit mã nguồn beta xác nhận `app.js` đọc GitHub Releases API và chỉ chấp nhận asset URL có hostname `github.com`; `native/android/ApkUpdaterPlugin.java` cũng hardcode prefix `https://github.com/`. Workflow `.github/workflows/build-android-apk.yml` ký APK, kiểm tra chữ ký/SHA-256 và tạo GitHub Release. `tests/ota-update.test.js` hiện chỉ kiểm tra cleanup cache, chưa kiểm tra manifest/chữ ký/checksum.
+- Kiến trúc mục tiêu: Pages Functions làm bootstrap/API ổn định; bucket R2 riêng `read-along-releases` + binding `OTA_RELEASES`; manifest có version/channel/versionCode/size/SHA-256/chữ ký số; download được proxy qua endpoint backend cố định để APK không phụ thuộc hostname storage provider. GitHub Actions upload APK + manifest ký số. Không dùng D1 cho OTA MVP.
+- Chuyển đổi an toàn: backend + upload test trước; build một APK beta chuyển tiếp khi repo còn public; nghiệm thu OTA trên thiết bị; chỉ sau đó mới chuyển repository sang Private. Giữ nguyên khóa ký APK.
+- Domain hiện tại là `read-along-admin.pages.dev`. Nếu chỉ đổi storage provider trong khi Pages Functions vẫn là bootstrap thì APK không cần build lại. Nếu muốn chuyển cả bootstrap khỏi Cloudflare, cần custom domain do người dùng sở hữu; domain `pages.dev` không thể mang sang nhà cung cấp khác.
+- Trạng thái: audit và plan đã ghi vào PLANNING; chưa tạo bucket/binding/domain/token/secret, chưa sửa router, workflow, APK runtime hoặc dữ liệu Cloudflare; chưa build APK và chưa chạy OTA acceptance. Không thay đổi main.
+
