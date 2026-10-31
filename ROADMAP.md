@@ -333,3 +333,14 @@ Khi một công việc trong PLANNING hoàn tất:
 - Đây là kiểm thử một lần trên production; sau khi có bằng chứng và dọn sạch D1, sẽ bỏ phần production write khỏi CI thường trực để tránh tích lũy dữ liệu thử nghiệm.
 - Chờ CI/Pages deploy/smoke test; không thay đổi APK/runtime.
 
+
+### 2026-10-31 — Analytics AN2 production HTTP acceptance completed
+
+- Production CI [#41167147802](https://github.com/blamag999/read-along-android/actions/runs/41167147802) **success** trên commit `404f5c3899649f9f1f617c2cd3863c23ecb755f7`: full regression, JS/Pages Functions syntax, isolation, CORS, explicit consent, valid write, exact replay và session-sequence collision.
+- HTTP acceptance: first event `accepted=1, duplicates=0`; exact replay `accepted=0, duplicates=1`; different eventId với cùng sessionId+sequence `accepted=0, duplicates=1`.
+- D1 kiểm chứng sau test: đúng 1 raw event, daily aggregate đúng 7 reading seconds + 11 listening seconds + 1 event + 1 unique session; replay và sequence collision không tăng aggregate.
+- Đã xóa raw event, daily session và đảo ngược đúng 7/11 giây + event count/session count; final query xác nhận `smoke_events=0, smoke_sessions=0, daily_rows=0`.
+- Để tránh làm bẩn production analytics ở những lần CI sau, bỏ phần POST ghi dữ liệu khỏi smoke test thường trực; CI giữ OPTIONS/CORS và consent rejection (non-mutating). Production write/replay/collision là nghiệm thu một lần đã có bằng chứng.
+- Commit loại bỏ mutating smoke test: `20319939c6874df2a6ae3ccc9fb86962c96fcad8`; chờ CI regression cuối cho workflow non-mutating.
+- AN2 production HTTP acceptance hoàn tất. Không có APK/client collector/dashboard trong batch này.
+
