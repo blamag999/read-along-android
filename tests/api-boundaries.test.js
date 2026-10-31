@@ -7,6 +7,7 @@ const diagnostics = read('modules/diagnostics.js');
 const adminApi = read('admin/functions/api/readalong-admin/[[path]].js');
 const diagnosticsWorker = read('services/diagnostics/worker.js');
 const adminClient = read('admin/public/admin.js');
+const analyticsMigration = read('admin/migrations/0002_reading_analytics.sql');
 const remoteSync = read('modules/remote-sync.js');
 
 const runtimeSources = [app, diagnostics, adminApi, diagnosticsWorker, adminClient, remoteSync].join('\n');
@@ -51,6 +52,10 @@ assert.match(adminApi, /received_at < \?/,
   'raw analytics events must enforce the 90-day retention window');
 assert.match(adminApi, /admin_reading_daily/,
   'daily aggregates must be maintained independently of raw event retention');
+assert.match(adminApi, /getReader\\(\\)/, 'analytics request bodies must be size-limited while streaming');
+assert.match(adminApi, /totalBytes > 65536/, 'analytics payload must enforce the 64 KiB cap');
+assert.match(analyticsMigration, /CREATE TRIGGER IF NOT EXISTS trg_admin_reading_events_daily/, 'D1 insert trigger must maintain daily aggregates');
+assert.match(analyticsMigration, /UNIQUE \\(session_id, sequence\\)/, 'D1 must deduplicate session sequence numbers');
 assert.match(adminApi, /const allowedOrigins = new Set\(\["https:\/\/localhost", "http:\/\/localhost", "capacitor:\/\/localhost"\]\)/,
   'Admin CORS must allow only the app local origins it needs');
 assert.doesNotMatch(adminApi, /pages\.dev|workers\.dev/,
