@@ -1,0 +1,72 @@
+name: Check Remote Config production endpoint
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [beta]
+    paths:
+      - 'admin/public/remote-config.json'
+      - 'schemas/remote-config.schema.json'
+      - '.github/workflows/check-remote-config-endpoint.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  endpoint-smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Check production HTTP response and Remote Config contract
+        shell: bash
+        run: |
+          node <<'NODE'
+          const endpoint = 'https://read-along-admin.pages.dev/remote-config.json';
+          const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+          async function run() {
+            let lastError;
+            for (let attempt = 1; attempt <= 24; attempt++) {
+              try {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), 5000);
+                let response;
+                try {
+                  response = await fetch(endpoint, {
+                    headers: { Accept: 'application/json' },
+                    cache: 'no-store',
+                    signal: controller.signal
+                  });
+                } finally { clearTimeout(timer); }
+                if (!response.ok) throw new Error('HTTP status ' + response.status);
+                const contentType = (response.headers.get('content-type') || '').toLowerCase();
+                if (!contentType.includes('application/json')) throw new Error('Unexpected Content-Type: ' + contentType);
+                const text = await response.text();
+                if (text.length > 32768) throw new Error('Response exceeds 32 KiB');
+                const config = JSON.parse(text);
+                const allowed = ['schemaVersion', 'configVersion', 'issuedAt', 'expiresAt', 'features', 'readerDefaults', 'announcements'];
+                if (!config || typeof config !== 'object' || Array.isArray(config) ||
+                    Object.keys(config).some(key => !allowed.includes(key)) ||
+                    config.schemaVersion !== 1 || !Number.isInteger(config.configVersion) || config.configVersion < 1 ||
+                    typeof config.issuedAt !== 'string' || !Number.isFinite(Date.parse(config.issuedAt)) ||
+                    !config.features || typeof config.features !== 'object' || Array.isArray(config.features) ||
+                    !config.readerDefaults || typeof config.readerDefaults !== 'object' || Array.isArray(config.readerDefaults) ||
+                    !Array.isArray(config.announcements) || config.announcements.length > 10) {
+                  throw new Error('Remote Config contract validation failed');
+                }
+                console.log('Endpoint:', endpoint);
+                console.log('HTTP status:', response.status);
+                console.log('Content-Type:', contentType);
+                console.log('schemaVersion:', config.schemaVersion);
+                console.log('configVersion:', config.configVersion);
+                console.log('Remote Config endpoint smoke test passed.');
+                return;
+              } catch (error) {
+                lastError = error;
+                console.log('Attempt ' + attempt + '/24:', error.message);
+                if (attempt < 24) await sleep(5000);
+              }
+            }
+            throw lastError || new Error('Endpoint check failed');
+          }
+          run().catch(error => { console.error(error); process.exitCode = 1; });
+          NODE
