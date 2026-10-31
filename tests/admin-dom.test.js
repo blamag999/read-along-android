@@ -65,4 +65,5 @@ assert.ok(html.indexOf('id="publishBooksBtn"') < html.indexOf('id="diagnosticsPa
 assert.ok(html.includes('id="publicStatusBar"') && html.includes('id="publicReading"'), 'Public dashboard must keep its compact metrics and status bar');
 assert.ok(script.includes('window.addEventListener("hashchange", handleRoute)'), 'Admin route handler must be connected');
 
-assert.ok((script.match(/switchTab\("library"\)/g) || []).length >= 2, 'Session restore and OTP login must both open Library');\nconsole.log('Admin dashboard, task status, theme, library operation and diagnostics tests passed.');
+assert.ok((script.match(/switchTab\("library"\)/g) || []).length >= 2, 'Session restore and OTP login must both open Library');
+console.log('Admin dashboard, task status, theme, library operation and diagnostics tests passed.');
