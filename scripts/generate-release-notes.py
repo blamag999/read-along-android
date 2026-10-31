@@ -58,6 +58,21 @@ def render_notes(groups):
 def main():
     channel = os.environ["CHANNEL"]
     releases = json.loads(os.environ.get("RELEASES", "[]"))
+    parsed = [(release, release_version(release.get("tagName"))) for release in releases]
+    stable = [version for release, version in parsed
+              if version is not None and not release.get("isPrerelease") and version[3] == 0]
+    stable_version = max(stable, default=(1, 1, 0, 0))
+    major, minor, patch, _ = stable_version
+    if channel == "stable":
+        version_name, prerelease = f"{major}.{minor + 1}.0", "false"
+    else:
+        beta_versions = [version for release, version in parsed
+                         if version is not None and release.get("isPrerelease") and version[0] == major]
+        ahead = [version[1] for version in beta_versions if version[1] > minor]
+        beta_minor = max(ahead) if ahead else minor
+        candidates = [version[2] for version in beta_versions if version[1] == beta_minor]
+        baseline = patch if beta_minor == minor else -1
+        version_name, prerelease = f"{major}.{beta_minor}.{max([baseline] + candidates) + 1}", "true"
     tag = latest_channel_release(releases, channel)
     verified_tag = tag and subprocess.run(
         ["git", "rev-parse", "-q", "--verify", tag + "^{commit}"],
@@ -68,7 +83,9 @@ def main():
     history = subprocess.run(command, check=True, capture_output=True, text=True).stdout
     notes = render_notes(collect_entries(history))
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-        output.write("changelog<<CHANGELOG_EOF\n" + notes + "\nCHANGELOG_EOF\n")
+        output.write(f"version={version_name}\\n")
+        output.write(f"prerelease={prerelease}\\n")
+        output.write("changelog<<CHANGELOG_EOF\\n" + notes + "\\nCHANGELOG_EOF\\n")
     print("Release channel:", channel)
     print("Previous channel tag:", tag or "(first release)")
     print("Release notes characters:", len(notes))
