@@ -127,3 +127,6 @@
 7. P2 regression nghiệm thu và P3 freeze APK Core.
 
 Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên xử lý lỗi đó trước; cập nhật ROADMAP/PLANNING sau khi có bằng chứng.
+
+
+> Batch marker-policy resolver: implemented as an isolated pure module with regression tests; not yet wired into reader runtime. No marker files, APK runtime, signing configuration, or main branch behavior changed in this batch.
