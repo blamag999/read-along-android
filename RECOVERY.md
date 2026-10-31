@@ -11,7 +11,7 @@
 - Last reviewed functional HEAD on beta: `9c4bf18861122df8f5dc29ac080b17aa2dd456c1`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
-- Latest recovery checkpoint: touch UI/menu simplification implementation `b0a542e75692e5ab3711d43bda68b07e8b328019` (CI/device validation pending)
+- Latest recovery checkpoint: library button portrait layout implementation; commits 2c9e181, 6b24d50, 87b81e5, 23cc765 (CI/APK/device validation pending)
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
 
 ## Phát hiện sau mốc bàn giao trước
@@ -195,3 +195,9 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Điều khiển hiển thị, mục Mốc thời gian và ẩn/hiện khu vực chọn file được chuyển vào readOptionsMenu; sync modal và local JSON import/export vẫn được giữ nguyên.
 - Regression contract mới ở tests/modules.test.js kiểm tra hai nút header, không còn ID/JS reference của các nút cũ, và các mục đã chuyển vẫn hiện diện trong menu. Cần CI và device acceptance.
 - Kho sách offline 1 GiB, LRU, cùng bảo toàn qua OTA chưa được code. Đây là task tiếp theo; không được tuyên bố đã triển khai. Trước khi sửa cần audit IndexedDB, luồng tải R2, native filesystem và OTA cleanup; không dùng cacheDir hoặc Service Worker Cache cho dữ liệu bền vững.
+
+
+## 2026-10-31 — Library header layout implementation
+- Đã đối chiếu thay đổi bốn commit gần nhất: HTML, CSS, app.js và regression test; không sửa native code, reader/audio lifecycle, marker hoặc IndexedDB schema.
+- Số badge hiển thị state.playlist.length, không được diễn giải thành số blob đã lưu offline trên IndexedDB.
+- CI/build/device validation chưa thực hiện tại mốc này. Không đặt last_handover_commit/last_reviewed_head vượt quá commit đã kiểm tra.
