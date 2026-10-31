@@ -174,3 +174,11 @@ The pure catalog and playlist data transformations are implemented in `modules/c
 - Browser memory is finite. Files larger than 256 MB are rejected by this UI. A real WMA sample should be tested in the target browser before relying on conversion for the full library; some WMA variants/codecs may not be present in the FFmpeg.wasm build.
 - This feature does not change the Android app or APK. The catalog preview excludes WMA and includes supported MP3 files after a later explicit publish.
 - Library search and sort controls are placed above the table. Pagination controls now share the exact filtered entry model used by rendering, including search, sort, and page-size changes.
+
+
+## Tinh gọn trang quản lý thư viện
+
+- Admin chỉ còn một màn hình quản lý, không còn tab riêng **Kiểm tra thư viện**. Bảng sách/tệp luôn hiển thị; phần **Kiểm tra & xuất bản danh mục** được đặt ngay bên dưới trong một khối thu gọn, mở ra khi cần quét lỗi hoặc cập nhật books.json.
+- Quét thư viện chỉ chạy khi quản trị viên chủ động bấm **Quét thư viện**. Sau khi tài nguyên thay đổi, kết quả quét cũ được đánh dấu cần quét lại.
+- Dòng phân trang dùng thuật ngữ **mục quản lý** và tách số bộ sách, thư mục, nhóm tệp độc lập để không nhầm số mục R2 với số đầu sách đã xuất bản.
+- Hai nút **Thư mục** và **Tải tệp lên** có cùng chiều cao, căn giữa theo trục dọc; trên màn hình hẹp dùng hai cột cân xứng.
