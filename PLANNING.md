@@ -294,22 +294,22 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 | Tình huống | Nội dung đề xuất |
 |---|---|
 | Tải catalog lỗi | Không tải được thư viện sách. Vui lòng thử lại. |
-| Mở sách lỗi | Không mở được sách. Vui lòng kiểm tra file PDF/audio. |
+| Mở sách lỗi | Không mở được sách. Vui lòng kiểm tra tệp sách và âm thanh. |
 | Đổi audio nhưng autoplay bị chặn | Đã chuyển phần audio. Nhấn Phát để tiếp tục. |
-| Định dạng audio không hỗ trợ | Định dạng audio không được hỗ trợ. Hãy chọn MP3, M4A hoặc định dạng tương thích. |
+| Định dạng âm thanh không hỗ trợ | Định dạng âm thanh không được hỗ trợ. Hãy chọn MP3, M4A hoặc định dạng tương thích. |
 | Bỏ qua file không hỗ trợ | Đã bỏ qua {n} file không hỗ trợ. |
-| Không nạp được audio | Không tải được audio. Vui lòng chọn lại file. |
+| Không nạp được audio | Không tải được âm thanh. Vui lòng chọn lại file. |
 | Không tìm thấy PDF/audio trong thư mục | Không tìm thấy file PDF hoặc audio phù hợp trong thư mục. |
 | Không mở được PDF | Không mở được PDF. Vui lòng chọn file khác. |
 | File audio không hợp lệ | File audio không hợp lệ. Vui lòng chọn lại. |
 | Chưa có PDF khi ghim mốc | Hãy mở PDF trước khi ghim mốc. |
 | Chưa có mốc để lưu | Chưa có mốc thời gian để lưu. |
-| Chưa có audio khi nhấn Play | Chưa có audio. Hãy chọn file audio trước. |
+| Chưa có audio khi nhấn Play | Chưa có âm thanh. Hãy chọn file audio trước. |
 | Nhập số trang không hợp lệ | Nhập số trang từ 1 đến {totalPages}. |
 | Trang chưa có mốc | Trang này chưa có mốc thời gian. |
-| Chưa có audio khi đọc lại trang | Chưa có audio để đọc lại trang. |
+| Chưa có audio khi đọc lại trang | Chưa có âm thanh để đọc lại trang. |
 | Không thể đọc lại trang | Không thể phát lại trang này. Hãy thử nhấn Phát. |
-| Lỗi audio tải/phát | Không tải/phát được audio. Hãy kiểm tra file và thử lại. |
+| Lỗi audio tải/phát | Không tải/phát được âm thanh. Hãy kiểm tra file và thử lại. |
 | Giá trị mốc không hợp lệ | Thời gian không hợp lệ. Hãy nhập giây hoặc MM:SS. |
 | JSON nhập không hợp lệ | File mốc thời gian không hợp lệ. |
 | Chọn chế độ chờ lật trang | Đến mốc tiếp theo, audio sẽ dừng chờ bạn lật trang. |
@@ -317,6 +317,15 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 | Chọn chế độ đọc liên tục | Đọc liên tục, không tự chuyển trang. |
 | Đến cuối trang/chờ lật | Đã đến cuối trang. Lật trang để tiếp tục. |
 
-Các thông báo thành công có thể rút ngắn thêm: `Đã mở PDF.`, `Đã tải audio.`, `Đã lưu mốc thời gian.`, `Đã nhập mốc thời gian.`, `Đã khôi phục vị trí đọc. Nhấn Phát để nghe.` Tránh hiển thị đồng thời nhiều toast cho một thao tác (ví dụ nạp nhiều audio vừa báo tải audio, vừa báo tự mở PDF, vừa báo tải xong); ưu tiên một thông báo cuối cùng có ý nghĩa nhất.
+Các thông báo thành công có thể rút ngắn thêm: `Đã mở sách.`, `Đã tải âm thanh.`, `Đã lưu mốc thời gian.`, `Đã nhập mốc thời gian.`, `Đã khôi phục vị trí đọc. Nhấn Phát để nghe.` Tránh hiển thị đồng thời nhiều toast cho một thao tác (ví dụ nạp nhiều audio vừa báo tải audio, vừa báo tự mở PDF, vừa báo tải xong); ưu tiên một thông báo cuối cùng có ý nghĩa nhất.
 
 Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, codec nội bộ hoặc chi tiết máy chủ vào alert/toast; ghi chi tiết vào console/diagnostics. Riêng lỗi tải catalog hiện đang nối `error.message` vào alert và cần được sửa theo nguyên tắc này. Prompt nhập mốc thời gian và phần audio cần giữ hướng dẫn + phạm vi hợp lệ; không rút gọn đến mức làm mất cú pháp nhập. Confirm và OTA đã chuẩn hóa ở batch trước không thuộc phạm vi sửa lại.
+
+
+### Quy ước thuật ngữ giao diện — thống nhất ngày 2026-10-31
+
+- Trong nội dung hướng tới người dùng, dùng **“sách”** thay cho “PDF” khi nói về tài liệu đang đọc hoặc thao tác đọc sách.
+- Dùng **“âm thanh”** thay cho “audio” khi nói về tệp, phát, tải, chuyển phần hoặc lỗi âm thanh.
+- Vẫn giữ tên định dạng kỹ thuật khi cần chỉ rõ loại tệp: “tệp PDF”, “MP3”, “M4A”. Đây là tên định dạng, không phải cách gọi đối tượng trong giao diện.
+- Không đổi tên biến, API, metadata, log kỹ thuật hoặc tên định dạng trong mã nguồn chỉ vì quy ước ngôn ngữ này.
+- Mọi thông báo người dùng được rà soát hoặc bổ sung sau này phải tuân thủ quy ước trên.
