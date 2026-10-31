@@ -56,9 +56,13 @@ assert.deepEqual(JSON.parse(JSON.stringify(sync.resolveTimestampSpread({
 assert.equal(sync.resolveTimestampSpread({
   pageTimestamps: { 5: { time: 5, part: 1 } }, page: 5, totalPages: 6, currentPart: 0, audioCount: 2
 }).spread, false, 'markers from another audio part do not create a spread');
-assert.equal(sync.resolveTimestampSpread({
+assert.deepEqual(JSON.parse(JSON.stringify(sync.resolveTimestampSpread({
   pageTimestamps: { 6: 10 }, page: 6, totalPages: 6, currentPart: 0, audioCount: 1
-}).spread, false, 'the final page cannot create a spread beyond the PDF');
+}))), { startPage: 5, endPage: 6, spread: true, reason: 'adjacent-page-marker-missing' },
+'an even final page pairs with its preceding unmarked page');
+assert.equal(sync.resolveTimestampSpread({
+  pageTimestamps: { 7: 10 }, page: 7, totalPages: 7, currentPart: 0, audioCount: 1
+}).spread, false, 'an odd final page cannot create a spread beyond the PDF');
 assert.equal(layout.calculatePageSize(240, 48, 30), 5, 'short screens should show fewer rows');
 assert.equal(layout.calculatePageSize(520, 48, 30), 10, 'taller screens should show more rows');
 assert.equal(layout.calculatePageSize(240, 78, 30), 3, 'multi-audio rows should use a conservative estimate');
