@@ -7,8 +7,8 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover code/documentation checkpoint: `4949bae9693d6bf17ccb57af81c80680d74772cf` (the following `[handover]` commit records this checkpoint).
-- Last reviewed functional HEAD on beta: `4949bae9693d6bf17ccb57af81c80680d74772cf`
+- Last formal handover code/documentation checkpoint: `2e5725c4ebaf1948d7a0698d9cd838369375d057` (the following `[handover]` commit records this checkpoint).
+- Last reviewed functional HEAD on beta: `2e5725c4ebaf1948d7a0698d9cd838369375d057`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
 - Latest recovery checkpoint: four approved Confirm dialog strings updated in app.js; test commit d219ce0a109a7202c3a10a51b68ceada5b4dd792, runtime commit 4949bae9693d6bf17ccb57af81c80680d74772cf. Full regression passed; APK build/OTA publication pending at checkpoint.
@@ -221,3 +221,13 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Regression assertions were added to `tests/contracts.test.js`; full regression suite and pre-build checks passed in workflow [41211507635](https://github.com/blamag999/read-along-android/actions/runs/41211507635).
 - At this checkpoint, APK signing/build verification, R2 OTA publication, workflow artifact upload and GitHub Release creation were still in progress. Do not describe APK as ready until run conclusion and release assets are verified.
 - No main/stable promotion and no device acceptance. After successful build, install beta APK and verify all four Confirm dialogs plus unchanged OTA prompt on a real Android device.
+
+
+## Recovery checkpoint — standardized OTA notifications (2026-10-31)
+
+- Previous Confirm dialog batch remains in place. This batch changes only user-facing OTA messages in `app.js`; the OTA request, manifest validation, version comparison, fixed download endpoint, cache cleanup, native updater and checksum/signature verification flow remain unchanged.
+- User-facing states: new release prompt includes versionName, curated manifest notes and Android confirmation explanation; latest-version toast; no-release-on-selected-channel toast; concise network/update error; download progress toast. Removed the versionCode/signing technical alert from the no-update path.
+- Regression assertions updated in `tests/contracts.test.js` and `tests/ota-update.test.js`.
+- Test commits: `b8841b9fdd3568ea8fc7e3021fffcec03ee91700`, `a36f69ecc67e16a0e8ffb9aa6c513e21f5d2446a`, `ed13753de05d7f28b797c3164f96e6c1be3dfd83`. Runtime commits: `68054fd8a7f60df8c39729ed7cc7296d063fb30a`, `2e5725c4ebaf1948d7a0698d9cd838369375d057`.
+- Build workflow [41211770726](https://github.com/blamag999/read-along-android/actions/runs/41211770726) was queued for final runtime commit at the time of this checkpoint. Wait for full regression, signed APK build, signature verification, R2 OTA publication and GitHub Release creation before reporting APK readiness.
+- `main` remains unchanged; no device acceptance has been claimed.
