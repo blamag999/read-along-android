@@ -247,20 +247,20 @@ function libraryAssetGroups(entries) {
   const groups = new Map(), ungrouped = [];
   const audioExtensions = new Set([".mp3", ".m4a", ".m4b", ".aac", ".wav", ".ogg", ".oga", ".opus", ".flac", ".wma"]);
   const extension = name => {
-    const match = String(name || "").match(/\\.[^.]+$/);
+    const match = String(name || "").match(/\.[^.]+$/);
     return match ? match[0].toLowerCase() : "";
   };
   const normalize = value => String(value || "").normalize("NFKC")
-    .replace(/\\.[^/.]+$/, "").replace(/[_-]+/g, " ")
-    .replace(/[’']/g, "").replace(/\\bread\\s+along\\b/gi, " ")
-    .replace(/\\bbook\\b/gi, " ").replace(/[^\\p{L}\\p{N}]+/gu, " ")
-    .replace(/\\s+/g, " ").trim().toLocaleLowerCase("vi");
+    .replace(/\.[^/.]+$/, "").replace(/[_-]+/g, " ")
+    .replace(/[’']/g, "").replace(/\bread\s+along\b/gi, " ")
+    .replace(/\bbook\b/gi, " ").replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ").trim().toLocaleLowerCase("vi");
   for (const file of files) {
     const ext = extension(file.name);
     const isPdf = ext === ".pdf", isJson = ext === ".json", isAudio = audioExtensions.has(ext);
     if (!isPdf && !isJson && !isAudio) { ungrouped.push(file); continue; }
-    const stem = file.name.replace(/\\.[^.]+$/, "");
-    const partMatch = !isPdf && !isJson ? stem.match(/(?:_P(\\d+)|[_ -](?:side|part|pt|disc)[ _.-]*(\\d+))$/i) : null;
+    const stem = file.name.replace(/\.[^.]+$/, "");
+    const partMatch = !isPdf && !isJson ? stem.match(/(?:_P(\d+)|[_ -](?:side|part|pt|disc)[ _.-]*(\d+))$/i) : null;
     const base = partMatch ? stem.slice(0, partMatch.index) : stem;
     const normalized = normalize(isJson ? base.replace(/[_-]sync$/i, "") : base);
     if (!normalized) { ungrouped.push(file); continue; }
@@ -284,7 +284,7 @@ function libraryAssetGroups(entries) {
     });
     const representative = group.pdf[0] || group.audio[0] || group.json[0];
     const titleFile = group.pdf[0] || representative;
-    let title = titleFile.name.replace(/\\.[^.]+$/, "").replace(/[_-]+/g, " ").replace(/\\bread\\s+along\\b/ig, "").replace(/\\s+/g, " ").trim();
+    let title = titleFile.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").replace(/\bread\s+along\b/ig, "").replace(/\s+/g, " ").trim();
     const status = group.pdf.length > 1 || group.json.length > 1 ? "error"
       : !group.pdf.length || !group.audio.length ? "warning"
       : group.audio.some(file => extension(file.name) === ".wma") ? "compatibility" : "good";
