@@ -17,7 +17,7 @@ let telemetryFlushScheduled = false;
 const $ = (id) => document.getElementById(id);
 const show = (id, visible) => $(id).classList.toggle("hidden", !visible);
 let activeTab = "library";
-const tabStatusIds = { library: "status", overview: "overviewStatus", diagnostics: "diagnosticsStatus", analytics: "analyticsTabStatus", audit: "auditStatus" };
+const tabStatusIds = { library: "status", overview: "overviewStatus", diagnostics: "diagnosticsStatus", analytics: "analyticsTabStatus", audit: "auditStatus", public: "publicStatus" };
 const setStatus = (message, error = false, tab = "library") => {
   const target = $(tabStatusIds[tab] || "status");
   if (!target) return;
@@ -505,7 +505,7 @@ async function runDiagnostics() {
       addCell(row, finding.message);
       addCell(row, finding.suggestion || "Kiểm tra tệp gốc.");
       const actionCell = document.createElement("td");
-      if (finding.code === "playback_compatibility" || finding.code === "unsupported_extension") {
+      if (finding.code === "playback_compatibility" || finding.code === "unsupported_format") {
         const warning = document.createElement("span");
         warning.className = "compatibility-warning";
         warning.textContent = "Cần thay file bằng định dạng được ứng dụng hỗ trợ. Admin không chuyển đổi audio.";
@@ -521,7 +521,7 @@ async function runDiagnostics() {
         actionCell.append(actionButton("Duyệt gợi ý đổi tên", async () => {
           const destination = prompt("Xác nhận tên mới cho tệp này (độ tin cậy " + (Number(finding.similarity) || 100) + "%):", finding.suggestedRename);
           if (!destination || destination === finding.key) return;
-          if (!allowed.test(destination)) { setStatus("Tên tệp hoặc định dạng không hợp lệ.", true); return; }
+          if (!allowed.test(destination)) { setStatus("Tên tệp hoặc định dạng không hợp lệ.", true, "diagnostics"); return; }
           try {
             await postJson("rename", { source: finding.key, destination });
             setStatus("Đã đổi tên theo gợi ý. Hãy quét lại thư viện để xác nhận ghép cặp.");
@@ -769,7 +769,7 @@ async function loadAnalyticsDashboard() {
     $("analyticsRetentionNote").textContent = data.breakdown?.note || "";
     $("analyticsUpdated").textContent = "Cập nhật " + formatDate(data.generatedAt) + " · UTC";
     status.textContent = data.hasData ? "Đã tải dữ liệu tổng hợp." : "Chưa có sự kiện thống kê trong khoảng thời gian này. Có thể người dùng chưa bật đồng ý hoặc chưa phát sinh hoạt động.";
-    renderAnalyticsTrend(data.daily || [], days);\n    $("overviewReading").textContent = formatDuration(summary.readingSeconds);\n    $("overviewListening").textContent = formatDuration(summary.listeningSeconds);\n    $("overviewBooks").textContent = library.books == null ? "—" : Number(library.books).toLocaleString("vi-VN");\n    $("overviewErrors").textContent = scan ? Number(scan.errors || 0).toLocaleString("vi-VN") : "Chưa quét";\n    $("overviewTrend").replaceChildren(...$("analyticsTrend").cloneNode(true).childNodes);\n    setStatus(data.hasData ? "Đã cập nhật dữ liệu tổng quan." : "Chưa có dữ liệu thống kê trong khoảng thời gian này.", false, "overview");\n    setStatus(data.hasData ? "Đã tải dữ liệu thống kê." : "Chưa có dữ liệu thống kê trong khoảng thời gian này.", false, "analytics");
+    renderAnalyticsTrend(data.daily || [], days);\n    $("publicReading").textContent = formatDuration(summary.readingSeconds);\n    $("publicListening").textContent = formatDuration(summary.listeningSeconds);\n    $("publicBooks").textContent = library.books == null ? "—" : Number(library.books).toLocaleString("vi-VN");\n    $("publicErrors").textContent = scan ? Number(scan.errors || 0).toLocaleString("vi-VN") : "Chưa quét";\n    setStatus(data.hasData ? "Đã cập nhật số liệu công khai." : "Chưa có số liệu trong khoảng thời gian này.", false, "public");\n    $("overviewReading").textContent = formatDuration(summary.readingSeconds);\n    $("overviewListening").textContent = formatDuration(summary.listeningSeconds);\n    $("overviewBooks").textContent = library.books == null ? "—" : Number(library.books).toLocaleString("vi-VN");\n    $("overviewErrors").textContent = scan ? Number(scan.errors || 0).toLocaleString("vi-VN") : "Chưa quét";\n    $("overviewTrend").replaceChildren(...$("analyticsTrend").cloneNode(true).childNodes);\n    setStatus(data.hasData ? "Đã cập nhật dữ liệu tổng quan." : "Chưa có dữ liệu thống kê trong khoảng thời gian này.", false, "overview");\n    setStatus(data.hasData ? "Đã tải dữ liệu thống kê." : "Chưa có dữ liệu thống kê trong khoảng thời gian này.", false, "analytics");
     const body = $("analyticsPlatforms"); body.replaceChildren();
     const platforms = data.breakdown?.platforms || [];
     if (!platforms.length) {
@@ -783,7 +783,7 @@ async function loadAnalyticsDashboard() {
       }
       body.append(row);
     }
-  } catch (error) { status.textContent = "Không tải được Dashboard: " + error.message; setStatus("Không tải được dữ liệu tổng quan: " + error.message, true, "overview"); setStatus("Không tải được thống kê: " + error.message, true, "analytics"); }
+  } catch (error) { status.textContent = "Không tải được Dashboard: " + error.message; setStatus("Không tải được dữ liệu tổng quan: " + error.message, true, "overview");\n    setStatus("Không tải được số liệu Dashboard: " + error.message, true, "public"); setStatus("Không tải được thống kê: " + error.message, true, "analytics"); }
   finally { button.disabled = false; }
 }
 $("refreshAnalyticsBtn").addEventListener("click", loadAnalyticsDashboard);\n$("overviewRefreshBtn").addEventListener("click", loadAnalyticsDashboard);
