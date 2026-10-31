@@ -445,7 +445,7 @@ async function readOtaManifest(bucket, channel) {
   try { manifest = JSON.parse(await object.text()); }
   catch { return { error: "OTA manifest is invalid JSON", status: 502 }; }
 
-  if (!manifest || manifest.schemaVersion !== 1 ||
+  if (!manifest || manifest.schemaVersion !== 1 || manifest.channel !== channel ||
       !validOtaVersion(manifest.version) ||
       !Number.isSafeInteger(manifest.versionCode) || manifest.versionCode < 1 ||
       manifest.filename !== "read-along-v" + manifest.version + "-android.apk" ||
@@ -459,7 +459,7 @@ async function readOtaManifest(bucket, channel) {
 
   const apkKey = "releases/" + channel + "/" + manifest.filename;
   const apk = await bucket.head(apkKey);
-  if (!apk || Number(apk.size) !== manifest.size) {
+  if (!apk || Number(apk.size) !== manifest.size || apk.customMetadata?.sha256 !== manifest.sha256) {
     return { error: "OTA APK is missing or has an unexpected size", status: 502 };
   }
   return { manifest, apkKey, apk };
