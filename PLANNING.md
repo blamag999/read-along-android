@@ -30,7 +30,9 @@
 - [ ] Sau khi live manifest được xác minh, kiểm tra trên APK hiện tại bộ lọc “Thư mục” với từng folder và mở thử PDF/audio/JSON. APK hiện tại đã có dropdown lọc folder kèm số lượng; chưa có nhãn folder riêng trên từng hàng truyện.
 - Không build APK cho batch Admin/manifest này. Màn hình folder-first và nhãn folder trên từng truyện là hạng mục APK riêng, chỉ triển khai khi người dùng yêu cầu một đợt nâng cấp app.
 - [x] Xác minh live `books.json` trên R2: 96 truyện, DISNEY 84, ONE STORY A DAY LEVEL 2 FULL 12; 96 PDF, 99 audio, 8 sync JSON; 0 đường dẫn tài nguyên thiếu. Không cần publish lại manifest.
-- [x] Thêm retention OTA cho R2: chỉ giữ APK mới nhất trong từng prefix beta/official, chạy sau khi upload APK và cập nhật `latest.json`; giữ nguyên hai manifest channel. Kiểm thử unit/CI và dọn APK cũ đang chờ xác nhận hoàn tất.
+- [x] Thêm retention OTA cho R2: chỉ giữ APK mới nhất trong từng prefix beta/official, chạy sau khi upload APK và cập nhật `latest.json`; giữ nguyên hai manifest channel.
+- [x] Dọn 14 APK beta cũ trong R2 sau khi đối chiếu manifest/checksum; giữ beta v1.3.23, official v1.4.0 và cả hai manifest. Đã giải phóng 48,089,673 bytes (~45.86 MiB).
+- [ ] Chờ GitHub Actions chạy full `npm test` trên commit `[test]` mới; xác minh workflow/deploy.
 - [ ] Ghi nhật ký bàn giao cuối mốc sau khi xác minh dữ liệu R2, catalog live, CI, Pages deploy và APK/device test.
 
 
