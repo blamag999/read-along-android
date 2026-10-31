@@ -2890,14 +2890,14 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
 .app-ui-mode .app-title { overflow: hidden; text-overflow: ellipsis; }
 .app-ui-mode .header-right { flex: 0 0 auto; flex-wrap: nowrap; white-space: nowrap; gap: 5px; }
 .app-ui-mode #btnOpenPlaylist { flex: 0 0 auto; padding-inline: 9px; }
-.app-ui-mode .read-menu-button { flex: 0 0 auto; min-width: 72px; }
+.app-ui-mode .read-menu-button { flex: 0 0 auto; width: auto; height: 36px; min-width: 72px; padding: 0 10px; font-size: .9rem; }
 @media (max-width: 560px) {
   .app-ui-mode .app-header { gap: 4px; padding-inline: 5px; }
   .app-ui-mode .app-title { font-size: .78rem; }
   .app-ui-mode .header-right { gap: 4px; }
   .app-ui-mode #btnOpenPlaylist { width: 36px; min-width: 36px; height: 36px; min-height: 36px; padding: 0; font-size: 1rem; }
   .app-ui-mode #btnOpenPlaylist span:not(.badge-count) { display: none !important; }
-  .app-ui-mode .read-menu-button { min-width: 64px; }
+  .app-ui-mode .read-menu-button { min-width: 64px; width: auto; padding-inline: 8px; }
 }
 
 /* Reading checkpoints are directly reachable from the reader menu. */
