@@ -80,7 +80,7 @@ function validateRemoteConfig(value) {
   if (value.schemaVersion !== 1) fail('Unsupported remote config schemaVersion');
   if (!Number.isInteger(value.configVersion) || value.configVersion < 1) fail('Invalid configVersion');
   for (const field of ['issuedAt', 'expiresAt']) {
-    if (value[field] !== undefined && (typeof value[field] !== 'string' || Number.isNaN(Date.parse(value[field])) || !/^\\d{4}-\\d{2}-\\d{2}T/.test(value[field]))) fail('Invalid ' + field);
+    if (value[field] !== undefined && (typeof value[field] !== 'string' || Number.isNaN(Date.parse(value[field])))) fail('Invalid ' + field);
   }
   const featureKeys = new Set(['showReadingStats', 'showAnnouncements', 'enableOnlineCatalog']);
   if (!value.features || typeof value.features !== 'object' || Array.isArray(value.features) ||
