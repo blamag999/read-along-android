@@ -29,7 +29,9 @@ on:
       - "sw.js"
       - "modules/**"
       - "services/**"
+      - "schemas/**"
       - "package.json"
+      - "package-lock.json"
       - "tests/**"
       - ".github/workflows/check-readalong-admin.yml"
 
