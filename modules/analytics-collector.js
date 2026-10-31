@@ -28,7 +28,6 @@
   let lastHeartbeatAt = lastAt;
   let previousReadingActive = false;
   let previousListeningActive = false;
-  let requestInFlight = false;
 
   function randomId(prefix) {
     let value = '';
@@ -111,7 +110,7 @@
   }
 
   function sendEvent(type, durations = {}) {
-    if (!consent || !sessionId || requestInFlight) return false;
+    if (!consent || !sessionId) return false;
     const version = document.querySelector('meta[name="app-version"]')?.content || 'unknown';
     const rawPlatform = window.Capacitor?.getPlatform?.() || 'web';
     const event = {
@@ -126,19 +125,20 @@
       appVersion: /^[0-9A-Za-z.+-]{1,40}$/.test(version) ? version : 'unknown',
       ...durations
     };
-    requestInFlight = true;
-    fetch(ENDPOINT, {
-      method: 'POST',
-      mode: 'cors',
-      cache: 'no-store',
-      keepalive: true,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ consent: true, events: [event] })
-    }).catch(() => {
-      // No offline queue and no retry: failed intervals are intentionally dropped.
-    }).finally(() => {
-      requestInFlight = false;
-    });
+    try {
+      fetch(ENDPOINT, {
+        method: 'POST',
+        mode: 'cors',
+        cache: 'no-store',
+        keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consent: true, events: [event] })
+      }).catch(() => {
+        // No offline queue and no retry: failed intervals are intentionally dropped.
+      });
+    } catch (_) {
+      // Synchronous fetch failures are dropped as well; never block reader/audio.
+    }
     return true;
   }
 
