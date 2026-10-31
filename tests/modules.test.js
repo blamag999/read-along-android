@@ -80,6 +80,9 @@ assert.ok(htmlSource.includes('id="btnOpenPlaylist"') && htmlSource.includes('id
 assert.ok(htmlSource.includes('class="playlist-icon"') && htmlSource.includes('class="playlist-label"'), 'library button must expose a recognizable icon and readable label');
 assert.ok(styleSource.includes('.playlist-btn .playlist-label { display: inline !important; }'), 'portrait library action must keep its label visible');
 assert.ok(appSource.includes("dom.lblPlaylistCount.classList.remove('hidden')") && appSource.includes("setAttribute('aria-label', 'Thư viện sách, ' + count + ' cuốn')"), 'library badge and accessible label must always reflect the loaded book count');
+assert.ok(appSource.includes("else loadR2Catalog();"), 'the Library action must retry loading the R2 catalog when no books are loaded');
+assert.ok(appSource.includes("dom.btnOpenPlaylist.disabled = false;"), 'the Library action must never remain disabled after an initial catalog load failure');
+assert.ok(appSource.includes('if (state.catalogLoading) return;'), 'concurrent catalog retries must be deduplicated');
 const headerSource = htmlSource.slice(htmlSource.indexOf('<header'), htmlSource.indexOf('</header>'));
 assert.ok(!headerSource.includes('view-controls-bar') && headerSource.indexOf('id="btnFitHeight"') > headerSource.indexOf('id="readOptionsMenu"') && headerSource.indexOf('id="btnTwoPages"') > headerSource.indexOf('id="readOptionsMenu"'), 'view and zoom controls must be nested inside the menu, not beside the top-bar actions');
 assert.deepEqual([...headerSource.matchAll(/<button id="([^"]+)"/g)].map(match => match[1]).filter(id => ['btnOpenPlaylist', 'btnOpenReadMenu'].includes(id)).sort(), ['btnOpenPlaylist', 'btnOpenReadMenu'], 'top bar must expose exactly the library and menu buttons');
