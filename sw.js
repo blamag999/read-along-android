@@ -1,4 +1,4 @@
-const CACHE_NAME = 'read-along-shell-v48-network-first';
+const CACHE_NAME = 'read-along-shell-v52-network-first';
 const APP_SHELL = [
   './',
   './index.html',
@@ -6,8 +6,10 @@ const APP_SHELL = [
   './app.js',
   './modules/page-sync.js',
   './modules/playlist-layout.js',
+  './modules/catalog-playlist.js',
   './modules/remote-sync.js',
   './modules/diagnostics.js',
+  './modules/analytics-collector.js',
   './manifest.json',
   './icon.png',
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',

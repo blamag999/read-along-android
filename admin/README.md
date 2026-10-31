@@ -1,0 +1,182 @@
+# Read Along Admin
+
+Standalone web file manager for the Read Along R2 library. This app lives in the Read Along Android repository and is deployed as a dedicated Cloudflare Pages project with its own R2 binding, D1 database, TOTP secret, cookie, and session.
+
+### Hiển thị thư viện theo bộ sách
+
+- Danh sách chính nhóm theo thư mục và tên gốc chuẩn hóa chính xác: một bộ bắt đầu bằng PDF, bên dưới là các audio (sắp theo hậu tố phần P1, P2...) và JSON đồng bộ nếu có.
+- Mỗi bộ mặc định thu gọn; mở rộng để thao tác đổi tên/di chuyển hoặc xóa từng file. Số lượng, dung lượng và thời điểm cập nhật được tổng hợp ở hàng bộ sách.
+- Trạng thái nhóm thể hiện đủ file, thiếu PDF/audio, trùng PDF/JSON hoặc có audio WMA cần xử lý tương thích. Nhóm chỉ có audio/JSON vẫn được giữ để không thất lạc file.
+- File định dạng không thuộc PDF/audio/JSON hiển thị riêng trong mục “Chưa ghép được”; tìm kiếm khớp tên sách hoặc tên các file thành phần.
+- Ghép nhóm chỉ dựa trên tên chuẩn hóa và cùng thư mục, không dùng so khớp gần đúng. Phân trang tính theo bộ sách/thư mục thay vì số file thành phần.
+
+## Architecture and isolation
+
+- Git repository: `blamag999/read-along-android`
+- Cloudflare Pages project: `read-along-admin`
+- Pages root directory: `admin`
+- Build command: empty
+- Build output directory: `public`
+- Production branch: `beta`; `main` and `feature/*` are preview branches
+- R2 binding: `READALONG` -> `my-audio-book` only
+- D1 binding: `DB` -> dedicated `read-along-admin-db`
+- Secret: `READALONG_TOTP_SECRET` (Base32, at least 32 characters), used only by this Admin project.
+
+Do not add bindings, database connections, authentication secrets, or cookies belonging to any other application.
+
+## Provisioned Cloudflare resources
+
+- Pages project: `read-along-admin` (`read-along-admin.pages.dev`), project ID `373988ad-1b62-4750-80cb-5a39a37f6281`.
+- Dedicated D1 database: `read-along-admin-db`, ID `6a316068-ef8e-4eaf-af4b-536b4fd7b74c`; schema has been applied, including TOTP replay protection.
+- Pages Git source is this repository; root directory is `admin`, output directory is `public`, production branch is `beta`, and preview branches include `feature/*` and `main`.
+- The only Production R2 binding is `READALONG` -> `my-audio-book`. Preview has no R2 or D1 bindings.
+
+## Cloudflare setup
+
+Create/configure the Pages project from the same GitHub repository:
+
+1. Project name: `read-along-admin`.
+2. Framework preset: None.
+3. Root directory: `admin`.
+4. Build command: leave empty.
+5. Build output directory: `public`.
+6. Production branch: `beta`.
+7. Git path filter is currently `*` to keep automatic deployments reliable. Depending on Pages path-filter semantics, commits elsewhere in the repository may also trigger this separate Pages build. The Android APK workflow remains independent and is not triggered by this Pages deployment.
+8. Add bindings to **Production only**:
+   - R2 bucket binding named `READALONG`, bucket `my-audio-book`.
+   - D1 database binding named `DB`, database `read-along-admin-db`.
+   Preview deliberately has no D1 or R2 bindings, so preview builds cannot access production library data.
+9. Add `READALONG_TOTP_SECRET` as a secret in **Production only**. Generate a new random Base32 secret of at least 160 bits and add it to an authenticator app. Use a new random seed dedicated to Read Along Admin. Do not add the production secret to Preview.
+10. Apply `schema.sql` once to `read-along-admin-db` using the D1 Console or Wrangler.
+
+Example local D1 migration (after installing Wrangler and authenticating):
+
+```sh
+npx wrangler d1 execute read-along-admin-db --remote --file=admin/schema.sql
+```
+
+Production is the only environment with the `DB` and `READALONG` bindings. Preview must have neither binding and must not receive `READALONG_TOTP_SECRET`. Do not bind this Admin project to any database outside the Read Along Admin resources.
+
+## Authentication and security
+
+- TOTP: 6 digits, HMAC-SHA1, 30-second period, ±1 time-step tolerance.
+- Session: 32 cryptographically random bytes; only SHA-256 token hash is stored in D1.
+- Cookie: `HttpOnly; Secure; SameSite=Strict; Path=/`, 30-minute lifetime.
+- Login rate limit: 5 attempts per IP hash per 15 minutes.
+- Mutating requests require a same-origin `Origin` header.
+- Strict Content Security Policy and anti-framing headers are in `public/_headers`.
+- Audit events are stored in the dedicated D1 database.
+- All R2 operations use the fixed `READALONG` binding. The API does not accept a bucket name from the browser.
+
+## Current functions
+
+- OTP login, session check, logout.
+- Browse R2 folders and files.
+- Create folders.
+- Multipart uploads in 8 MiB chunks for large files.
+- Rename/move files using copy -> size verification -> source deletion.
+- Delete files and recursively delete folders (maximum 5,000 objects per operation).
+- View the latest 100 audit events.
+
+Supported library extensions: PDF, JSON, MP3, M4A/M4B, AAC, WAV, OGG/OGA, Opus, FLAC, WMA. WMA can be stored but may not play in Android WebView. The Admin only warns that a manual replacement is required; it does not transcode audio.
+
+## Operational notes
+
+- Changes to this Admin app must remain within the Read Along Android repository and its dedicated Cloudflare resources.
+- Do not add the Admin directory to the Android APK asset-copy/build pipeline.
+- Never commit OTP seeds, Cloudflare API tokens, passwords, or session tokens.
+- Before enabling production, verify login lockout, session expiry, upload completion, rename verification, and deletion behavior on a test folder.
+
+
+## Library Health Check
+
+The Admin UI includes a read-only **Kiểm tra thư viện** scan for the `READALONG` R2 bucket.
+
+- Scans the selected folder and its descendants; root scan is limited to 5,000 objects per run. For larger libraries, scan narrower subfolders.
+- Reports unsupported extensions, zero-byte objects, basic PDF/MP3/audio container signature issues, missing PDF/audio pairs (same base filename in the same folder), duplicate same-name assets, invalid JSON syntax, and WMA playback compatibility warnings.
+- PDF checks inspect the `%PDF-` header and look for `%%EOF` near the end. Audio checks inspect container/frame signatures only; they do not fully decode or certify every audio frame or duration.
+- The scan is read-only: it never deletes, renames, converts, or modifies library objects.
+- After correcting files, run the scan again to verify the result.
+
+## Library UI and matching rules
+
+- Admin has two tabs: Library for file browsing and Diagnostics for integrity checks. The public home page displays catalog and anonymous app usage metrics; advanced management is entered through the Manage button and OTP.
+- Library listing uses server-side R2 cursor pagination, defaults to 25 entries per page, and allows 25/50/100. The selected size is remembered for the current browser session. Changing folders resets the page.
+- R2 objects are the only catalog source; books.json is not used.
+- PDF, timestamp JSON and audio use the same normalized book stem.
+- A single audio can use the book stem. Multiple audio parts must be named _P1, _P2, _P3... with no gaps or duplicate part numbers.
+- Correctly numbered audio parts are valid and are not duplicate warnings.
+- Orphan per-book timestamp JSON, unmatched names, invalid file signatures, zero-byte files, malformed JSON and unsupported extensions are reported. The root `books.json` catalog manifest is excluded from the entire diagnostics scan and is not treated as a timestamp sidecar.
+- Near-name matches are suggestions only. Rename requires administrator approval; fuzzy matches are never auto-paired.
+
+## Incremental scan cache and automatic diagnostics
+
+- Diagnostics compares R2 listing metadata (key, size, upload timestamp and ETag) against the dedicated Admin D1 table `admin_scan_cache`.
+- Files whose metadata fingerprint and scan rule version are unchanged reuse their saved per-file inspection findings. New/changed files and files evaluated under a new rule version are inspected again.
+- Pairing/name diagnostics are recalculated from the current full inventory on every scan, so a newly added/renamed counterpart can change pairing results even when the other file's binary inspection is reused.
+- Temporary content-read failures are not cached; those files are retried on the next scan.
+- The first scan after installing this feature, and the first scan after a rule-version change, re-inspects all eligible files. R2 inventory listing and global pairing analysis still run each time.
+- Cache entries for objects no longer present in the scanned prefix are removed. Rename naturally creates a new cache key and delete is reconciled on the next scan.
+- Scan history is stored in `admin_scan_logs` in the dedicated Admin D1. It records scan ID, status, scanned/changed/skipped counts, error/warning counts, duration, rule version and Cloudflare Ray ID. It does not store OTPs, cookies, tokens or file contents.
+- The manual Debug UI has been removed. Browser exceptions, unhandled promise rejections, API failures, server exceptions, scan history and library request diagnostics continue to be recorded automatically in the dedicated Admin D1.
+- After adding the new tables to an existing production D1 database, apply the updated `admin/schema.sql` once (it uses `CREATE TABLE IF NOT EXISTS`). Never apply it to a database outside the Read Along Admin resources.
+
+
+### Library pagination diagnostics (2026-10-30)
+
+- Library pagination disables navigation controls while a page request is active and ignores stale responses after folder/page state changes.
+- It validates response shape, requires a cursor when R2 reports more results, and detects repeated cursor state. Errors appear in the Library table and status line.
+- Browser telemetry records page navigation clicks, load start/success/failure, folder changes, stale responses, missing/repeated cursor state, API status/duration/Ray ID, JavaScript errors and unhandled promise rejections.
+- Browser events are sent in small batches to the same-origin `telemetry/events` endpoint and persisted in `admin_client_events` in the dedicated Admin D1.
+- Every Library listing request is recorded in `admin_library_requests`: prefix, page size, cursor-present flag, folder/file counts, R2 truncation state, HTTP status, duration, Ray ID and error. Raw cursor values are never stored.
+- No Debug tab or manual JSON export is exposed to end users. Diagnostic events continue to be sent automatically to the telemetry endpoint and stored in Admin D1.
+- Apply the appended `admin/schema.sql` additions to **read-along-admin-db only** before deploying. Never apply them to any other D1 database.
+
+
+### Admin session persistence and refresh diagnostics (2026-10-30)
+
+- The Admin session remains a server-side D1 session identified by a random HttpOnly, Secure cookie. The session lifetime remains 30 minutes; refreshing the page must not invalidate it.
+- Session cookies are host-only (no Domain attribute), scoped to `Path=/`, and include both `Max-Age` and `Expires`. `SameSite=Lax` supports normal same-site navigation while retaining CSRF protections alongside the existing Origin check for state-changing requests.
+- `GET session` returns safe diagnostics only: whether a cookie was present, whether the server-side session is valid, expiry time/remaining seconds, and a reason code. It never returns the cookie or token hash.
+- The browser records `auth_session_check`, `auth_session_check_error`, login/logout, and API 401 events in the Admin Debug event log. Network/5xx failures are described as inability to verify the session, not automatically as an expired login.
+- Use the canonical Production hostname `https://read-along-admin.pages.dev`; do not mix it with deployment-specific `*.pages.dev` URLs because cookies are host-scoped.
+
+
+## books.json
+
+The Admin publishes the manifest stored in `admin/public/books.json` to the root of the `my-audio-book` R2 bucket. Use **Tạo / cập nhật books.json** in the Diagnostics tab. The endpoint validates the schema, allowed R2 public hostname, file extensions, and existence of every referenced PDF/audio/sync object before overwriting the manifest. The Android app reads this manifest directly from the public Read Along R2 endpoint; PDF, audio, and sync URLs are consumed directly from the manifest. Update the seed JSON in Git before publishing future catalog changes.
+
+
+## Public dashboard and app usage metrics
+
+- The canonical home page is public and does not call the session endpoint. It reads aggregate catalog and usage metrics from GET /api/readalong-admin/usage/stats.
+- The Quản lý nâng cao action switches to #manage, where the existing OTP login and authenticated management UI are shown. Refreshing #manage rechecks the HttpOnly session; the home page remains accessible without OTP.
+- The Android/Web app reports one launch per browser session using a random installation ID in local storage and a random launch ID in session storage. Returning to the foreground after at least five minutes creates a new counted session. Both IDs are SHA-256 hashed on the server; raw IDs are not stored.
+- The dashboard's installation and launch metrics are filtered to platform=android, so browser-only use is not counted as an installed Android device. It shows total Android launches (lifetime counter), Android launches in the last 30 days, unique Android installations ever recorded, and Android installations active in the last 30 days. Detailed visit rows are retained for 90 days; the lifetime total remains aggregated. Catalog counts are derived from the R2 books.json manifest.
+- Installation count is an estimate of installations that have launched at least once after telemetry is added. Clearing app data/reinstalling can create a new ID; existing APKs do not report telemetry until updated.
+- The anonymous usage endpoint accepts only random identifiers, platform and app version. Never send account IDs, device serials, advertising IDs, email, phone, OTP, cookies or tokens.
+- Server exceptions are stored in admin_server_errors; browser and API telemetry is stored in admin_client_events. Both are bounded. Query the dedicated Read Along Admin D1 database only.
+- Apply the new tables in schema.sql to read-along-admin-db only before production deployment.
+
+
+## Catalog/playlist boundary in the Android/web app
+
+The pure catalog and playlist data transformations are implemented in `modules/catalog-playlist.js` in the same repository. The module is browser/Node compatible and owns only naming normalization, manifest-to-model mapping, local file grouping, sorting, and filtering. It must not perform DOM operations, storage access, network requests, or PDF/audio playback. `app.js` retains UI rendering and app-state orchestration. Admin continues to own R2 object management. The live catalog is generated from the authenticated R2 inventory preview; `admin/public/books.json` is a legacy seed only and must not be used as the publish input. Preview groups exact normalized names in the same folder, excludes incomplete/duplicate groups and files with severe scan findings, preserves numeric `_P1`, `_P2` audio ordering, and requires an explicit administrator confirmation. Publishing rechecks every object before replacing the root `books.json`; scan/preview never delete or rename source objects.
+
+
+## Tinh gọn trang quản lý thư viện
+
+- Admin chỉ còn một màn hình quản lý, không còn tab riêng **Kiểm tra thư viện**. Bảng sách/tệp luôn hiển thị; phần **Kiểm tra & xuất bản danh mục** được đặt ngay bên dưới trong một khối thu gọn, mở ra khi cần quét lỗi hoặc cập nhật books.json.
+- Quét thư viện chỉ chạy khi quản trị viên chủ động bấm **Quét thư viện**. Sau khi tài nguyên thay đổi, kết quả quét cũ được đánh dấu cần quét lại.
+- Dòng phân trang dùng thuật ngữ **mục quản lý** và tách số bộ sách, thư mục, nhóm tệp độc lập để không nhầm số mục R2 với số đầu sách đã xuất bản.
+- Hai nút **Thư mục** và **Tải tệp lên** có cùng chiều cao, căn giữa theo trục dọc; trên màn hình hẹp dùng hai cột cân xứng.
+
+## Dashboard refresh (2026-10-31)
+
+- Admin management is organized into compact horizontal tabs: **Thư viện → Tổng quan → Kiểm tra → Thống kê → Nhật ký**. The default tab after login is Library.
+- Light and Dark themes are supported. First visit follows the operating-system preference; a manual selection is persisted in local storage.
+- Every tab has its own visible task status bar. A task's progress/result remains attached to the tab where it started; switching tabs does not move its status into another section.
+- Library upload shows aggregate progress and per-file outcomes, continues with remaining files after an individual failure, and reports the final success/failure counts. Rename and delete report the affected object and result. File and folder deletion require explicit in-app confirmation.
+- Diagnostics is read-only apart from explicitly approved rename actions. Fuzzy book-name rename suggestions are surfaced only at similarity >=95%; deterministic audio-part naming suggestions remain available. Lower-confidence matches are not offered as automatic rename actions.
+- Unsupported formats and WMA playback compatibility are warnings to replace the source manually with a supported file. The Admin has no audio transcoding/conversion feature and never modifies source media during a scan.
+- Scan cache rule version is bumped when validation behavior changes so previous findings are re-evaluated.

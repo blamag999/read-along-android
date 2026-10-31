@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes, viewport-fit=cover">
   <meta name="theme-color" content="#1e293b">
   <meta name="app-version" content="0.0.0">
-  <title>Read Along - Công cụ đọc sách kèm audio cho người học tiếng Anh</title>
+  <meta name="app-version-code" content="0">
+  <title>Read Along - Công cụ đọc sách kèm âm thanh cho người học tiếng Anh</title>
   
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="manifest" href="manifest.json">
@@ -24,94 +25,41 @@
       <h1 class="app-title">📖 Read Along</h1>
     </div>
 
-    <!-- Thu gọn các chế độ xem vào menu để dành không gian cho trang sách. -->
-    <div class="view-controls-bar" aria-label="Điều khiển hiển thị">
-      <button id="btnFitHeight" class="view-btn active" type="button" title="Vừa trang">↔</button>
-      <button id="btnTwoPages" class="view-btn" type="button" title="Bật/tắt hiển thị 2 trang" aria-pressed="false">▣</button>
-      <div class="zoom-group">
-        <button id="btnZoomOut" class="view-btn-mini" title="Thu nhỏ">➖</button>
-        <span id="lblZoomLevel" class="zoom-label">100%</span>
-        <button id="btnZoomIn" class="view-btn-mini" title="Phóng to">➕</button>
-      </div>
-    </div>
 
     <div class="header-right">
       <!-- NÚT MỞ DANH SÁCH TẬP TRUYỆN (PLAYLIST) -->
-      <button id="btnOpenPlaylist" class="icon-btn playlist-btn" title="Chọn thư mục hoặc mở danh sách truyện trực tuyến" disabled aria-disabled="true">
-        📚 <span>Danh sách truyện</span>
-        <span id="lblPlaylistCount" class="badge-count hidden">0</span>
+      <button id="btnOpenPlaylist" class="icon-btn playlist-btn" type="button" title="Mở thư viện sách" aria-disabled="false" aria-label="Thư viện sách, 0 cuốn">
+        <span class="playlist-icon" aria-hidden="true">📚</span>
+        <span class="playlist-label">Thư viện</span>
+        <span id="lblPlaylistCount" class="badge-count">0</span>
       </button>
 
-      <button id="btnOpenReadMenu" class="icon-btn read-menu-button" type="button" aria-label="Mở menu đọc sách" aria-controls="readOptionsMenu" aria-expanded="false" title="Tùy chọn đọc">☰</button>
-      <div id="readOptionsMenu" class="read-options-menu hidden" role="group" aria-label="Tùy chọn đọc sách">
-        <button id="menuTwoPages" class="read-menu-option" type="button" aria-pressed="false"><span class="menu-option-icon" aria-hidden="true">📖</span><span>Hiện 2 trang</span><span class="menu-option-state" id="menuTwoPagesState">Tắt</span></button>
-        <button id="menuAutoFlip" class="read-menu-option" type="button" aria-pressed="true"><span class="menu-option-icon" aria-hidden="true">🔄</span><span>Tự lật trang</span><span class="menu-option-state" id="menuAutoFlipState">Bật</span></button>
-        <button id="menuReloadMarkers" class="read-menu-option" type="button"><span class="menu-option-icon" aria-hidden="true">⏱️</span><span>Cập nhật mốc thời gian</span></button>
-        <label class="read-menu-option update-channel-row" for="chkBetaOta">
-          <span class="menu-option-icon">⇅</span>
-          <span class="update-channel-label">Kênh OTA <small>Đánh dấu để dùng Beta</small></span>
-          <input id="chkBetaOta" type="checkbox" aria-label="Dùng kênh OTA Beta; bỏ tích để dùng Official">
-        </label>
-        <div class="read-menu-version" aria-label="Phiên bản ứng dụng đang cài">
-          <span class="menu-option-icon">ⓘ</span><span>Phiên bản đang cài</span><strong id="installedAppVersion">Đang tải…</strong>
+      <button id="btnOpenReadMenu" class="icon-btn read-menu-button" type="button" aria-label="Mở menu" aria-controls="readOptionsMenu" aria-expanded="false" title="Menu">☰ <span>Menu</span></button>
+      <div id="readOptionsMenu" class="read-options-menu hidden" role="group" aria-label="Menu ứng dụng" aria-hidden="true">
+
+        <div id="readingCheckpointMenuGroup" class="read-menu-checkpoints hidden">
+          <div class="read-menu-checkpoint-title">↶ Vị trí đã xem</div>
+          <select id="readingCheckpointSelect" aria-label="Chọn một trong ba mốc đọc gần nhất" disabled></select>
+          <button id="btnRestoreReadingCheckpoint" type="button" disabled>Xem tiếp</button>
         </div>
-        <button id="menuDiagnostics" class="read-menu-option" type="button"><span class="menu-option-icon">🛡️</span><span>Chẩn đoán / Báo lỗi</span></button>
-        <button id="menuCheckUpdates" class="read-menu-option hidden" type="button"><span class="menu-option-icon" aria-hidden="true">⬆️</span><span>Kiểm tra cập nhật</span></button>
+        <section class="ota-settings-group" aria-label="Cập nhật ứng dụng">
+          <label class="read-menu-option update-channel-row" for="chkBetaOta">
+            <span>Kênh OTA</span>
+            <input id="chkBetaOta" type="checkbox" aria-label="Dùng kênh OTA Beta; bỏ tích để dùng Official">
+          </label>
+          <div class="read-menu-version" aria-label="Phiên bản ứng dụng đang cài">
+            <span>Phiên bản đang cài</span><strong id="installedAppVersion">Đang tải…</strong>
+          </div>
+          <button id="menuCheckUpdates" class="read-menu-option update-check-row hidden" type="button">Kiểm tra cập nhật</button>
+        </section>
       </div>
-      <button id="btnReloadMarkers" class="icon-btn apk-icon-button hidden" type="button" title="Tải mốc thời gian mới nhất" aria-label="Tải mốc thời gian mới nhất">⟳</button>
-      <button id="btnOpenSyncModal" class="icon-btn" title="Quản lý mốc đồng bộ thời gian">⚙️ <span class="hide-mobile">Mốc thời gian</span></button>
-      <button id="btnToggleSettings" class="icon-btn menu-toggle-btn" type="button" aria-controls="filePickerSection syncBanner" aria-expanded="true" title="Ẩn/hiện dòng chọn tệp và tùy chọn">☰ <span>Menu</span></button>
+
     </div>
   </header>
-
-  <!-- THANH CHỌN TỆP VÀ TÙY CHỌN (ẨN/HIỆN BẰNG MENU) -->
-  <section id="filePickerSection" class="file-picker-section">
-    <div class="file-picker-card">
-      
-      <!-- Nút bắt đầu mở hộp thoại lựa chọn cách nạp nội dung -->
-      <button id="btnNode1FolderOnline" class="action-btn btn-node-1" type="button" title="Bắt đầu: chọn thư mục hoặc PDF">📂 Bắt đầu</button>
-      <button id="btnChooseAudio" class="action-btn btn-choose-audio hidden" type="button" title="Chọn MP3 cho PDF đang mở">🎵 Chọn MP3</button>
-      <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none;">
-      <input type="file" id="pdfFileInput" accept="application/pdf" style="display:none;">
-      <input type="file" id="audioFileInput" accept="audio/*" multiple style="display:none;">
-
-      <!-- TRẠNG THÁI FILE ĐANG NẠP -->
-      <div class="active-files-indicator">
-        <span id="pdfFileName" class="file-status-pill empty">📄 Chưa có PDF</span>
-        <span id="audioFileName" class="file-status-pill empty">🎵 Chưa có MP3</span>
-        <span id="syncCountBadge" class="file-status-pill sync-pill empty">⏱️ 0 mốc</span>
-      </div>
-
-      <!-- TÙY CHỌN TỰ ĐỘNG -->
-      <div class="quick-options">
-        <label class="toggle-label page-turn-mode-label" title="Chọn chế độ đọc: dừng chờ lật trang, tự chuyển trang hoặc đọc liên tục">
-          <span>Chế độ đọc</span>
-          <select id="selPageTurnMode" aria-label="Chế độ đọc">
-            <option value="next">Tự động lật trang (theo mốc thời gian)</option>
-            <option value="markers">Tự lật trang (dừng chờ lật trang)</option>
-            <option value="off">Đọc liên tục</option>
-          </select>
-        </label>
-        <label class="toggle-label" title="Khi bạn bấm lật trang thì audio tự động nhảy đến đúng đoạn của trang đó">
-          <input type="checkbox" id="chkAutoSeekAudio" checked>
-          <span>Lật trang tự tua</span>
-        </label>
-      </div>
-
-    </div>
-  </section>
 
   <!-- MAIN READING CANVAS AREA -->
   <main class="viewer-container" id="viewerContainer">
     <div id="readerPageStatus" class="reader-page-status hidden" role="status" aria-live="polite">Trang 0 / 0</div>
-    <div id="dropOverlay" class="drop-overlay hidden">
-      <div class="drop-box">
-        <div class="drop-icon">📥</div>
-        <h3>Thả file PDF và MP3 vào đây!</h3>
-        <p>Ứng dụng sẽ tự động nhận diện và ghép đôi cho bạn</p>
-      </div>
-    </div>
-
     <div id="pdfLoadingIndicator" class="loading-spinner hidden">
       <div class="spinner"></div>
       <p id="lblLoadingText">Đang tải tài liệu...</p>
@@ -128,12 +76,10 @@
         <p class="tutorial-intro">Bạn chỉ cần làm theo các bước dưới đây để mở truyện và nghe đọc. Không cần thiết lập mốc thời gian nếu truyện đã được đồng bộ sẵn.</p>
         <ol class="tutorial-basic-steps">
           <li><strong>Mở danh sách truyện:</strong> nhấn <strong>📚 Danh sách truyện</strong>, tìm tên truyện bằng ô tìm kiếm rồi chọn truyện muốn đọc.</li>
-          <li><strong>Nếu chưa có danh sách:</strong> nhấn <strong>Bắt đầu</strong>, chọn truyện trực tuyến hoặc chọn thư mục có PDF và MP3. Nếu mở riêng một PDF, hãy nhấn <strong>Chọn MP3</strong> để ghép âm thanh.</li>
           <li><strong>Nghe và theo dõi:</strong> nhấn nút <strong>▶ Phát</strong> ở thanh điều khiển phía dưới. Dùng nút tua lùi/tiến 5 giây hoặc nút trang trước/trang sau khi cần.</li>
-          <li><strong>Điều chỉnh cách đọc:</strong> mở menu <strong>☰</strong> để bật/tắt tự lật trang hoặc hiển thị hai trang. Dùng điều khiển trên màn hình hoặc các phím điều hướng trên remote.</li>
+          <li><strong>Điều chỉnh cách đọc:</strong> mở menu <strong>☰</strong> để bật/tắt tự lật trang. Dùng điều khiển trên màn hình hoặc phím điều hướng trên remote.</li>
           <li><strong>Cập nhật ứng dụng:</strong> trong menu, bỏ tích <strong>Kênh OTA Beta</strong> để nhận bản Official; tích vào để nhận bản Beta thử nghiệm. Chọn <strong>Kiểm tra cập nhật</strong> để kiểm tra bản mới.</li>
         </ol>
-        <p class="tutorial-note"><strong>Mẹo:</strong> nếu trang sách chưa khớp với lời đọc, mở mục <strong>Mốc thời gian</strong> để kiểm tra hoặc cập nhật mốc đồng bộ. Chỉ thay đổi mốc khi thật sự cần thiết.</p>
       </section>
     </div>
 
@@ -144,6 +90,11 @@
       </div>
       <div class="canvas-page hidden" id="pageRightWrapper">
         <canvas id="pdfCanvasRight"></canvas>
+      </div>
+      <div class="touch-control-hints" aria-hidden="true">
+        <span class="touch-hint-left">‹</span>
+        <span class="touch-hint-center" id="touchCenterIcon">▶</span>
+        <span class="touch-hint-right">›</span>
       </div>
     </div>
   </main>
@@ -158,18 +109,9 @@
           <input id="pageJumpInput" type="number" min="1" step="1" inputmode="numeric" aria-label="Số trang cần mở" placeholder="Số">
           <button id="btnPageJump" type="button">Đi</button>
         </label>
-        <span id="lblPageTimestamp" class="page-time-badge">Mốc: Chưa gán</span>
-        <span id="lblSaveStatus" class="save-status-badge">💾 Sẵn sàng</span>
+
       </div>
       
-      <div class="sync-actions-mini">
-        <button id="btnPinCurrentTime" class="btn-pin" title="Gán giây hiện tại cho trang này">
-          📍 Ghim mốc giây này cho trang
-        </button>
-        <button id="btnSaveToFolder" class="btn-save-mini" title="Lưu tệp mốc vào thư mục hoặc tải về máy">
-          💾 Lưu mốc
-        </button>
-      </div>
     </div>
 
     <div class="audio-scrubber-row">
@@ -202,31 +144,6 @@
     <audio id="audioElement" preload="metadata"></audio>
   </footer>
 
-  <!-- MODAL NÚT 1: CHỌN THƯ MỤC CỤC BỘ -->
-  <div id="node1Modal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>🚀 Bắt đầu</h3>
-        <button id="btnCloseNode1Modal" class="close-btn">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="option-block">
-          <h4>☁️ Mở truyện trực tuyến</h4>
-          <p class="option-desc">Tải danh sách truyện trực tuyến; PDF, MP3 và mốc đồng bộ được tải tự động.</p>
-          <button id="btnLoadR2Catalog" class="btn-primary-large" type="button">☁️ Truyện trực tuyến</button>
-          <div class="divider-text">HOẶC MỞ TỪ MÁY TÍNH</div>
-          <h4>📁 Mở cả thư mục truyện</h4>
-          <p class="option-desc">Nạp danh sách các tập PDF/MP3 trong thư mục để bạn chọn tập muốn nghe. Tệp truyện vẫn nằm trên thiết bị.</p>
-          <button id="btnTriggerFolderPicker" class="btn-primary-large">📂 Chọn thư mục</button>
-          <div class="divider-text">HOẶC</div>
-          <h4>📄 Mở một file PDF</h4>
-          <p class="option-desc">Sau khi chọn PDF, bấm “Chọn MP3” để ghép âm thanh tương ứng.</p>
-          <button id="btnTriggerPdfPicker" class="btn-success-large">📄 Chọn PDF</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- MODAL / DRAWER: DANH SÁCH TẬP TRUYỆN CHỌN NHANH (PLAYLIST DRAWER) -->
   <div id="playlistModal" class="modal-overlay hidden">
     <div class="modal-content playlist-modal-content">
@@ -241,16 +158,11 @@
       <div class="playlist-search-bar">
         <input type="text" id="txtPlaylistSearch" class="search-input" placeholder="🔍 Tìm kiếm tập truyện...">
         <div class="playlist-filter-tabs">
-          <button class="filter-tab active" data-filter="paired">📖 Đủ PDF và MP3</button>
+          <button class="filter-tab active" data-filter="paired">📖 Đủ sách và âm thanh</button>
           <button class="filter-tab" data-filter="all">Tất cả</button>
           <button class="filter-tab" data-filter="favorites">★ Yêu thích</button>
         </div>
-        <div class="playlist-export-row" style="padding: 10px 0; display: grid; gap: 8px;">
-          <label for="r2PublicBaseInput"><strong>Địa chỉ gốc của kho tệp trực tuyến</strong></label>
-          <input id="r2PublicBaseInput" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://example.com" style="width:100%;box-sizing:border-box;padding:10px;border-radius:6px;">
-          <button id="btnExportR2Catalog" class="btn-secondary" type="button" title="Xuất danh mục JSON với địa chỉ công khai của các tệp">📤 Xuất danh mục truyện</button>
-          <p class="modal-desc" style="margin: 0;">Nhập URL cho mỗi lần xuất. Địa chỉ không được lưu. Tải books.json lên thư mục gốc của bucket, cùng cấp với PDF và MP3.</p>
-        </div>
+        <p class="modal-desc" style="margin: 8px 0;">Danh sách sách được đọc từ books.json trong kho trực tuyến. Admin quản lý manifest; ứng dụng không tự ghép tệp theo tên.</p>
       </div>
 
       <div class="modal-body playlist-body">
@@ -270,81 +182,6 @@
     </div>
   </div>
 
-  <!-- SYNC MANAGEMENT MODAL -->
-  <div id="syncModal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>⏱️ Quản lý mốc thời gian theo trang</h3>
-        <button id="btnCloseSyncModal" class="close-btn">&times;</button>
-      </div>
-
-      <div class="modal-body">
-        <p class="modal-desc">
-          Khi audio chạy đến số giây này, truyện sẽ tự động chuyển sang trang tương ứng:
-        </p>
-
-        <div class="sync-actions-row">
-          <button id="btnExportSync" class="btn-secondary" title="Xuất tệp mốc để lưu cùng thư mục truyện trên máy">📥 Tải tệp mốc (.json)</button>
-          <button id="btnSaveToGithubFolder" class="btn-primary" title="Đồng bộ các tệp mốc trong thư mục đã chọn">☁️ Đồng bộ mốc đọc</button>
-          <button id="btnLoadFromGithub" class="btn-secondary" title="Tải lại mốc thời gian mới nhất">⬇️ Tải mốc đọc</button>
-          <p class="modal-desc">Khi đã chọn thư mục, ứng dụng chỉ tải lên các tệp .json có nội dung thay đổi; tệp không đổi sẽ được bỏ qua. Mốc của PDF đang mở được tự động kiểm tra và đồng bộ tối đa mỗi 1 phút khi có thay đổi và đã cấu hình token. Tệp PDF và âm thanh vẫn nằm trên thiết bị của bạn.</p>
-          <div class="github-token-panel" style="border:1px solid #475569;border-radius:10px;padding:12px;margin:10px 0;display:grid;gap:8px;">
-            <strong>🔐 Mã truy cập đồng bộ</strong>
-            <p id="githubTokenStatus" class="modal-desc" style="margin:0;">Chưa có token trong phiên này.</p>
-            <label for="githubTokenInput">Nhập mã truy cập (quyền đọc và ghi tệp)</label>
-            <input id="githubTokenInput" type="password" autocomplete="new-password" placeholder="Mã truy cập" style="width:100%;box-sizing:border-box;padding:10px;border-radius:6px;">
-            <div class="sync-actions-row">
-              <button id="btnSaveGithubToken" type="button" class="btn-primary">🔑 Lưu / thay token</button>
-              <button id="btnClearGithubToken" type="button" class="btn-danger">🗑️ Xóa token đang lưu</button>
-            </div>
-            <p class="modal-desc" style="margin:0;">Mã chỉ lưu trong phiên trình duyệt hiện tại, không ghi vào mã nguồn. Xóa mã ở đây chỉ xóa mã khỏi phiên; muốn thu hồi quyền đã cấp, hãy thu hồi mã trên trang quản lý truy cập.</p>
-          </div>
-          <label for="importSyncInput" class="btn-secondary">
-            📂 Nhập file mốc từ máy
-          </label>
-          <input type="file" id="importSyncInput" accept=".json" style="display:none;">
-          <button id="btnClearSync" class="btn-danger">🗑️ Xóa hết mốc của truyện này</button>
-        </div>
-
-        <div class="sync-table-container">
-          <table class="sync-table">
-            <thead>
-              <tr>
-                <th>Trang</th>
-                <th>Thời điểm bắt đầu</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody id="syncTableBody">
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL CHẨN ĐOÁN: tạo Issue thủ công, không cần dịch vụ trung gian -->
-  <div id="diagnosticsModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="diagnosticsTitle">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="diagnosticsTitle">🛠️ Chẩn đoán và báo lỗi</h3>
-        <button id="btnCloseDiagnostics" class="close-btn" type="button" aria-label="Đóng">×</button>
-      </div>
-      <div class="modal-body">
-        <p class="modal-desc">Log ghi nhận sự kiện audio, PDF, xoay màn hình và vòng đời Activity/WebView. Không ghi nội dung sách, tên tệp, đường dẫn hay URL audio.</p>
-        <p id="diagnosticsStatus" class="modal-desc diagnostics-action-status" role="status">Nhật ký sẽ được gửi qua dịch vụ trung gian và tạo báo cáo công khai. Bạn không cần đăng nhập.</p>
-        <label class="diagnostics-consent">
-          <input id="chkDiagnosticsConsent" type="checkbox">
-          <span>Tôi đồng ý chia sẻ nhật ký chẩn đoán trong báo cáo công khai. Tôi sẽ kiểm tra nhật ký trước khi gửi.</span>
-        </label>
-        <div class="diagnostics-actions">
-          <button id="btnExportDiagnostics" class="btn-secondary" type="button">📥 Xuất log ra tệp</button>
-          <button id="btnSubmitDiagnostics" class="btn-primary" type="button">📤 Gửi nhật ký chẩn đoán</button>
-        </div>
-        <p class="modal-desc">Ứng dụng sẽ tự tạo báo cáo chứa nhật ký. Nếu gửi lỗi, ứng dụng sẽ tải tệp JSON để bạn có thể gửi thủ công. Báo cáo và nhật ký là công khai.</p>
-      </div>
-    </div>
-  </div>
 
   <!-- TOAST THÔNG BÁO -->
   <div id="toastMessage" class="toast-message hidden"></div>
@@ -355,10 +192,10 @@
   </script>
   <script src="modules/page-sync.js"></script>
   <script src="modules/playlist-layout.js"></script>
+  <script src="modules/catalog-playlist.js"></script>
   <script src="app.js"></script>
-  <script src="modules/remote-sync.js"></script>
-  <script src="modules/diagnostics.js"></script>
-  <script>
+  <script src="modules/analytics-collector.js"></script>
+    <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed: ', err));

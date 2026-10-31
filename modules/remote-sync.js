@@ -1,7 +1,9 @@
 /* Remote marker synchronization service. UI-facing messages stay provider-neutral. */
-// GitHub stores only marker JSON; PDF and audio remain local.
-const GITHUB_OWNER='blamag999',GITHUB_REPO='pdf-audio-sync',GITHUB_BRANCH='main',GITHUB_SYNC_DIR='sync_data';
-const GITHUB_TOKEN_SESSION_KEY='pdf_audio_sync_github_token';let githubSyncTimer=null;
+// Marker JSON is stored in this app's repository only; PDF and audio remain in R2/local storage.
+const GITHUB_OWNER='blamag999',GITHUB_REPO='read-along-android',GITHUB_BRANCH='main',GITHUB_SYNC_DIR='sync_data';
+const GITHUB_TOKEN_SESSION_KEY='read_along_android_sync_token_v1';
+try { sessionStorage.removeItem('pdf_audio_sync_github_token'); } catch (_) {}
+let githubSyncTimer=null;
 function getSyncStem(){
   const n = state.pdfFileName || state.currentBookKey || 'truyen';
   return n.replace(/\.[^/.]+$/, '').replace(/[\\/:*?"<>|]/g, '_').trim() || 'truyen';
@@ -33,7 +35,7 @@ function encodeBase64Utf8(v){const b=new TextEncoder().encode(v);let x='';for(le
 async function getGithubWriteToken(askForToken=false){
  let token=getGithubToken();
  if(!token&&askForToken){
-  token=prompt('Nhập mã truy cập có quyền đọc và ghi tệp đồng bộ. Mã chỉ được giữ trong phiên trình duyệt hiện tại.');
+  token=prompt('Nhập GitHub token có quyền Contents: Read and write trên blamag999/read-along-android. Token chỉ được giữ trong phiên trình duyệt hiện tại.');
   if(token){token=token.trim();if(token)sessionStorage.setItem(GITHUB_TOKEN_SESSION_KEY,token);}
  }
  if(!token&&askForToken)alert('Chưa có mã truy cập. Cần quyền đọc và ghi tệp đồng bộ.');
@@ -108,7 +110,7 @@ async function syncAllFolderJsonToGitHub({askForToken=false}={}){
 }
 async function syncCurrentBookToGitHub({askForToken=false}={}){
  if(!state.currentBookKey||!state.pdfFileName){if(askForToken)alert('Vui lòng mở PDF trước khi đồng bộ mốc.');return false;}
- let token=getGithubToken();if(!token&&askForToken){token=prompt('Nhập mã truy cập có quyền đọc và ghi tệp đồng bộ. Mã chỉ được giữ trong phiên trình duyệt hiện tại.');if(token){token=token.trim();sessionStorage.setItem(GITHUB_TOKEN_SESSION_KEY,token);}}
+ let token=getGithubToken();if(!token&&askForToken){token=prompt('Nhập GitHub token có quyền Contents: Read and write trên blamag999/read-along-android. Token chỉ được giữ trong phiên trình duyệt hiện tại.');if(token){token=token.trim();sessionStorage.setItem(GITHUB_TOKEN_SESSION_KEY,token);}}
  if(!token){if(askForToken)alert('Chưa có mã truy cập. Cần quyền đọc và ghi tệp đồng bộ.');return false;}
  const path=getCloudSyncPath(),url='https://api.github.com/repos/'+GITHUB_OWNER+'/'+GITHUB_REPO+'/contents/'+path.split('/').map(encodeURIComponent).join('/');
  const headers={'Accept':'application/vnd.github+json','Authorization':'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'};

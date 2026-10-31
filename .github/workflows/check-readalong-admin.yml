@@ -1,0 +1,149 @@
+name: Check Read Along Admin
+
+on:
+  push:
+    branches:
+      - beta
+      - main
+    paths:
+      - "admin/**"
+      - "app.js"
+      - "index.html"
+      - "sw.js"
+      - "modules/**"
+      - "services/**"
+      - "native/**"
+      - "android/**"
+      - ".github/workflows/build-android-apk.yml"
+      - "schemas/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tests/**"
+      - ".github/workflows/check-readalong-admin.yml"
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - beta
+      - main
+    paths:
+      - "admin/**"
+      - "app.js"
+      - "index.html"
+      - "sw.js"
+      - "modules/**"
+      - "services/**"
+      - "schemas/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tests/**"
+      - ".github/workflows/check-readalong-admin.yml"
+
+# Workflow-level paths prevent documentation-only and unrelated pushes from creating runs.
+# Full regression remains opt-in on matching pushes via [test] in the final commit message.
+# PRs targeting beta/main remain automatically validated for the paths below.
+concurrency:
+  group: readalong-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  regression-and-isolation:
+    if: ${{ github.event_name != 'push' || contains(github.event.head_commit.message, '[test]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      # npm test already includes all unit/regression suites and check:js.
+      # Do not repeat admin.js/catalog module syntax checks in separate steps.
+      - name: Run regression tests and JavaScript syntax checks
+        run: npm test
+      - name: Check Pages Functions module syntax
+        run: node --check --input-type=module < 'admin/functions/api/readalong-admin/[[path]].js'
+      - name: Verify isolation constraints
+        run: |
+          ! grep -R -nE '(^|[^A-Z_])COMICS([^A-Z_]|$)|(^|[^A-Z_])TOTP_SECRET([^A-Z_]|$)|comic_manager_session' admin/functions admin/public
+          grep -q 'READALONG' 'admin/functions/api/readalong-admin/[[path]].js'
+          grep -q 'admin_totp_state' 'admin/functions/api/readalong-admin/[[path]].js'
+      - name: Smoke test deployed analytics consent gate
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/beta' && contains(github.event.head_commit.message, '[test]') }}
+        run: |
+          node --input-type=module <<'NODE'
+          const endpoint = 'https://read-along-admin.pages.dev/api/readalong-admin/analytics/events';
+          const origin = 'capacitor://localhost';
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          let ready = false;
+          for (let attempt = 0; attempt < 18; attempt++) {
+            try {
+              const response = await fetch(endpoint, { method: 'OPTIONS', headers: { Origin: origin } });
+              if (response.status === 204 && response.headers.get('access-control-allow-origin') === origin) {
+                const rejected = await fetch(endpoint, {
+                  method: 'POST',
+                  headers: { Origin: origin, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ consent: false, events: [] })
+                });
+                const body = await rejected.json();
+                if (rejected.status !== 400 || body.error !== 'Analytics consent required') {
+                  throw new Error('Consent gate returned an unexpected response: ' + rejected.status + ' ' + JSON.stringify(body));
+                }
+                ready = true;
+                break;
+              }
+            } catch (error) {
+              if (attempt === 17) throw error;
+            }
+            await wait(10000);
+          }
+          if (!ready) throw new Error('Analytics endpoint did not become ready with the expected CORS/consent behavior');
+          console.log('Deployed analytics CORS and explicit-consent gate passed.');
+          NODE
+
+      - name: Smoke test deployed OTA API contract
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/beta' && contains(github.event.head_commit.message, '[test]') }}
+        run: |
+          node --input-type=module <<'NODE'
+          const endpoint = 'https://read-along-admin.pages.dev/api/readalong-admin/ota/latest';
+          const origin = 'capacitor://localhost';
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          let ready = false;
+          for (let attempt = 0; attempt < 18; attempt++) {
+            try {
+              const preflight = await fetch(endpoint + '?channel=beta', {
+                method: 'OPTIONS',
+                headers: { Origin: origin }
+              });
+              if (preflight.status !== 204 || preflight.headers.get('access-control-allow-origin') !== origin) {
+                throw new Error('OTA preflight failed: ' + preflight.status);
+              }
+
+              const invalid = await fetch(endpoint + '?channel=invalid');
+              const invalidBody = await invalid.json();
+              if (invalid.status !== 400 || invalidBody.error !== 'Invalid OTA channel') {
+                throw new Error('OTA channel validation failed: ' + invalid.status + ' ' + JSON.stringify(invalidBody));
+              }
+
+              const latest = await fetch(endpoint + '?channel=beta');
+              const latestBody = await latest.json();
+              if (!latest.ok || latestBody.schemaVersion !== 1 || latestBody.channel !== 'beta' ||
+                  !/^\d+\.\d+\.\d+$/.test(latestBody.version || '') ||
+                  !Number.isInteger(latestBody.versionCode) || latestBody.versionCode < 1 ||
+                  !Number.isInteger(latestBody.size) || latestBody.size < 1 ||
+                  !/^[a-f0-9]{64}$/i.test(latestBody.sha256 || '') ||
+                  !/^read-along-v.+-android\.apk$/.test(latestBody.filename || '') ||
+                  typeof latestBody.notes !== 'string' ||
+                  !latestBody.downloadUrl?.startsWith('https://read-along-admin.pages.dev/api/readalong-admin/ota/download?channel=beta&version=')) {
+                throw new Error('OTA manifest contract failed: ' + latest.status + ' ' + JSON.stringify(latestBody));
+              }
+              ready = true;
+              break;
+            } catch (error) {
+              if (attempt === 17) throw error;
+            }
+            await wait(10000);
+          }
+          if (!ready) throw new Error('OTA endpoint did not become ready');
+          console.log('Deployed OTA API routing, CORS and beta manifest contract passed.');
+          NODE

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://read-along-admin.pages.dev/schemas/catalog.schema.json",
+  "title": "Read Along catalog manifest",
+  "type": "object",
+  "required": ["books"],
+  "additionalProperties": true,
+  "properties": {
+    "books": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "pdf", "audios"],
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 160 },
+          "title": { "type": "string", "minLength": 1, "maxLength": 300 },
+          "pdf": { "$ref": "#/$defs/asset" },
+          "audios": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/asset" } },
+          "sync": { "oneOf": [{ "$ref": "#/$defs/asset" }, { "type": "null" }] }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "asset": {
+      "oneOf": [
+        { "type": "string", "format": "uri", "pattern": "^https://" },
+        {
+          "type": "object",
+          "required": ["url"],
+          "additionalProperties": true,
+          "properties": {
+            "url": { "type": "string", "format": "uri", "pattern": "^https://" },
+            "name": { "type": "string", "maxLength": 300 },
+            "key": { "type": "string", "maxLength": 1024 }
+          }
+        }
+      ]
+    }
+  }
+}

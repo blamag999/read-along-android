@@ -1,0 +1,745 @@
+{
+  "books": [
+    {
+      "id": "20_000_leagues_under_the_sea",
+      "title": "20 000 Leagues Under the Sea",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/20_000_Leagues_Under_the_Sea_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/20_000_Leagues_Under_the_Sea_Read_Along.mp3"
+      ],
+      "sync": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/20_000_Leagues_Under_the_Sea_Read_Along.json"
+    },
+    {
+      "id": "101_dalmations",
+      "title": "101 Dalmations",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/101_Dalmations_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/101_Dalmations_Read_Along.mp3"
+      ],
+      "sync": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/101_dalmations_read_along.json"
+    },
+    {
+      "id": "aladdin_and_his_lamp",
+      "title": "Aladdin and His Lamp",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Aladdin_and_His_Lamp_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Aladdin%20and%20His%20Lamp_Read%20Along.mp3"
+      ],
+      "sync": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Aladdin_and_His_Lamp_Read_Along.json"
+    },
+    {
+      "id": "alice_in_wonderland",
+      "title": "Alice in Wonderland",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Alice_in_Wonderland_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Alice%20in%20Wonderland.mp3"
+      ],
+      "sync": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Alice_in_Wonderland_Read_Along.json"
+    },
+    {
+      "id": "bambi",
+      "title": "Bambi",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Bambi-ReadAlong-Book.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Bambi-ReadAlong-Book_P1.mp3",
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Bambi-ReadAlong-Book_P2.mp3"
+      ],
+      "sync": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Bambi-ReadAlong-Book.json"
+    },
+    {
+      "id": "bedknobs_and_broomsticks",
+      "title": "Bedknobs and Broomsticks",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Bedknobs_and_Broomsticks_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Bedknobs_and_Broomsticks_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "brer_rabbit_and_the_tar_baby",
+      "title": "Brer Rabbit and the Tar Baby",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Brer%20Rabbit%20and%20the%20Tar%20Baby_Read%20Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Brer%20Rabbit%20and%20the%20Tar%20Baby_Read%20Along.mp3"
+      ],
+      "sync": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Brer%20Rabbit%20and%20the%20Tar%20Baby_Read%20Along.json"
+    },
+    {
+      "id": "chicken_little",
+      "title": "Chicken Little",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Chicken_Little_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Chicken%20Little_Read%20Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "cinderella",
+      "title": "Cinderella",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Cinderella.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Cinderella.mp3"
+      ],
+      "sync": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Cinderella.json"
+    },
+    {
+      "id": "counting_fun",
+      "title": "Counting Fun",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Counting%20Fun_Read%20Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Counting%20Fun_Read%20Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "david_and_goliath",
+      "title": "David and Goliath",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/David_and_Goliath_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/David_and_Goliath_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "dumbo",
+      "title": "Dumbo",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Dumbo_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Dumbo_Read%20Along.mp3"
+      ],
+      "sync": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Dumbo_Read_Along.json"
+    },
+    {
+      "id": "fluppy_dogs_lost_and_found_fluppy",
+      "title": "Fluppy Dogs Lost and Found Fluppy",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Fluppy_Dogs_-_Lost_and_Found_Fluppy_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Fluppy_Dogs_-_Lost_and_Found_Fluppy_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "fluppy_dogs_the_happiest_fluppy",
+      "title": "Fluppy Dogs The Happiest Fluppy",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Fluppy_Dogs_-_The_Happiest_Fluppy_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Fluppy_Dogs_-_The_Happiest_Fluppy_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "frosty_the_snowman",
+      "title": "Frosty the Snowman",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Frosty_the_Snowman_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Frosty_the_Snowman_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "george_and_the_happiest_millionaire",
+      "title": "George and the Happiest Millionaire",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/George_and_the_Happiest_Millionaire_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/George%20and%20the%20Happiest%20Millionaire.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "goldilocks_and_the_three_bears",
+      "title": "Goldilocks and the Three Bears",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Goldilocks_and_the_Three_Bears_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Goldilocks%20and%20the%20Three%20Bears.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "gummi_bears",
+      "title": "Gummi Bears",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Gummi_Bears_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Gummi%20Bears.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "hansel_and_gretel",
+      "title": "Hansel and Gretel",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Hansel_and_Gretel_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Hansel%20and%20Gretel_Read%20Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "how_the_camel_got_his_hump",
+      "title": "How the Camel Got His Hump",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/How_the_Camel_Got_His_Hump_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/How%20the%20Camel%20Got%20His%20Hump.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "jingle_bells",
+      "title": "Jingle Bells",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Jingle_Bells_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Jingle%20Bells.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "just_for_you",
+      "title": "Just for You",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Just_for_You_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Just_for_You_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "just_grandma_and_me",
+      "title": "Just Grandma and Me",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Just_Grandma_and_Me_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Just_Grandma_and_Me_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "just_me_and_my_dad",
+      "title": "Just Me and My Dad",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Just_Me_and_My_Dad.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Just_Me_and_My_Dad.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "lady_and_the_tramp",
+      "title": "Lady and the Tramp",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Lady_and_the_Tramp_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Lady%20and%20the%20Tramp_Read%20Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "little_boy_with_a_big_horn",
+      "title": "Little Boy with a Big Horn",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Little_Boy_with_a_Big_Horn_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Little_Boy_with_a_Big_Horn_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "little_hiawatha",
+      "title": "Little Hiawatha",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Little_Hiawatha.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Little_Hiawatha.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "little_red_riding_hood",
+      "title": "Little Red Riding Hood",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Little_Red_Riding_Hood_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Little_Red_Riding_Hood_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "manners_1985",
+      "title": "Manners 1985",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Manners_Read_Along_1985.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Manners_Read_Along_1985.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "mary_poppins_1967",
+      "title": "Mary Poppins 1967",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Mary_Poppins_1967.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Mary_Poppins-1967.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "mickey_and_the_beanstalk",
+      "title": "Mickey and the Beanstalk",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Mickey_and_the_Beanstalk.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Mickey_and_the_Beanstalk.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "mickey_mouse_brave_little_tailor",
+      "title": "Mickey Mouse Brave Little Tailor",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Mickey_Mouse_-_Brave_Little_Tailor.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Mickey_Mouse_-_Brave_Little_Tailor.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "monstersinc",
+      "title": "MonstersInc",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/MonstersInc-ReadAlong-Book.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/MonstersInc-ReadAlong-Book.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "more_jungle",
+      "title": "More Jungle",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/More_Jungle_Book.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/More%20Jungle%20Book.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "mother_goose_rhymes",
+      "title": "Mother Goose Rhymes",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Mother_Goose_Rhymes.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Mother%20Goose%20Rhymes.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "noah_s_ark",
+      "title": "Noah s Ark",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Noah_s_Ark_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Noah_s%20Ark_Read%20Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "people_at_work",
+      "title": "People at Work",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/People_at_Work_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/People_at_Work_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "peter_and_the_wolf",
+      "title": "Peter and The Wolf",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Peter_and_The_Wolf_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Peter_and_The_Wolf_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "peter_pan",
+      "title": "Peter Pan",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Peter_Pan_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Peter_Pan_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "pinocchio",
+      "title": "Pinocchio",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Pinocchio_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Pinocchio_Read%20Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "puss_in_boots",
+      "title": "Puss in Boots",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Puss_in_Boots_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Puss_in_Boots_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "rapunzel",
+      "title": "Rapunzel",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Rapunzel_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Rapunzel_Read%20Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "ratatouille",
+      "title": "Ratatouille",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Ratatouille.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Ratatouille.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "robin_hood",
+      "title": "Robin Hood",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Robin_Hood_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Robin_Hood_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "rudolph_the_red_nosed_rendeer",
+      "title": "Rudolph the Red Nosed Rendeer",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Rudolph_the_Red-Nosed_Rendeer_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Rudolph_the_Red-Nosed_Rendeer_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "rumpelstiltskin",
+      "title": "Rumpelstiltskin",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Rumpelstiltskin_Read%20Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Rumpelstiltskin_Read%20Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "safety_first",
+      "title": "Safety First",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Safety_First_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Safety_First_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "scuffy_the_tugboat",
+      "title": "Scuffy the Tugboat",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Scuffy_the_Tugboat_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Scuffy%20the%20Tugboat_Read%20Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "seven_little_postmen",
+      "title": "Seven Little Postmen",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Seven_Little_Postmen_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Seven%20Little%20Postmen.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "smokey_the_bear",
+      "title": "Smokey the Bear",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Smokey_the_Bear_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Smokey%20the%20Bear_Read%20Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "snow_white_and_the_seven_dwarfs",
+      "title": "Snow White and the Seven Dwarfs",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Snow_White_and_the_Seven_Dwarfs_read_along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Snow%20White%20and%20the%20Seven%20Dwarfs_Read%20Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "tawny_scrawny_lion",
+      "title": "Tawny Scrawny Lion",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Tawny_Scrawny_Lion_book.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Tawny%20Scrawny%20Lion.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_aristocrats",
+      "title": "The Aristocrats",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Aristocrats_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Aristocrats_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_bremen_town_musicians",
+      "title": "The Bremen Town Musicians",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Bremen_Town_Musicians_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Bremen_Town_Musicians_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_color_kittens",
+      "title": "The Color Kittens",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Color_Kittens_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Color_Kittens_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_emperor_s_new_clothes",
+      "title": "The Emperor s New Clothes",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The%20Emperor_s%20New%20Clothes_Read%20Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The%20Emperor_s%20New%20Clothes_Read%20Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_gingerbread_man",
+      "title": "The Gingerbread Man",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Gingerbread_Man_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Gingerbread_Man_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_grasshopper_and_the_ants",
+      "title": "The Grasshopper and the Ants",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Grasshopper_and_the_Ants_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Grasshopper_and_the_Ants_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_hobbit_tolkien",
+      "title": "The Hobbit Tolkien",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Hobbit_Tolkien_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Hobbit_Tolkien_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_jungle",
+      "title": "The Jungle",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Jungle_Book_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Jungle_Book_Read_Along_P1.mp3",
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Jungle_Book_Read_Along_P2.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_lion_king",
+      "title": "The Lion King",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Lion_King_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Lion_King_Read_Along_P1.mp3",
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Lion_King_Read_Along_P2.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_little_engine_that_could",
+      "title": "The Little Engine That Could",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Little_Engine_That_Could.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Little_Engine_That_Could.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_little_red_hen",
+      "title": "The Little Red Hen",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Little_Red_Hen_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Little_Red_Hen_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_lively_little_rabbit",
+      "title": "The Lively Little Rabbit",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Lively_Little_Rabbit_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Lively_Little_Rabbit_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_night_before_christmas",
+      "title": "The Night Before Christmas",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Night_Before_Christmas_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Night_Before_Christmas_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_poky_little_puppy",
+      "title": "The Poky Little Puppy",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Poky_Little_Puppy.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Poky_Little_Puppy.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_pussycat_tiger",
+      "title": "The Pussycat Tiger",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Pussycat_Tiger_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Pussycat_Tiger_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_rescuers",
+      "title": "The Rescuers",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Rescuers_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Rescuers_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_saggy_baggy_elephant",
+      "title": "The Saggy Baggy Elephant",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Saggy_Baggy_Elephant_book.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Saggy_Baggy_Elephant_book.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_seven_dwarfs_and_their_diamond_mine",
+      "title": "The Seven Dwarfs and their Diamond Mine",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Seven_Dwarfs_and_their_Diamond_Mine_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Seven_Dwarfs_and_their_Diamond_Mine_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_story_of_black_beauty",
+      "title": "The Story of Black Beauty",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Story_of_Black_Beauty_Read-Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Story_of_Black_Beauty_Read-Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_story_of_winnie_the_pooh_and_tigger",
+      "title": "The Story of Winnie the Pooh and Tigger",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The%20Story%20of%20Winnie%20the%20Pooh%20and%20Tigger.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The%20Story%20of%20Winnie%20the%20Pooh%20and%20Tigger.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_three_little_pigs",
+      "title": "The Three Little Pigs",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Three_Little_Pigs_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Three_Little_Pigs_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_ugly_duckling",
+      "title": "The Ugly Duckling",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Ugly_Duckling_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Ugly_Duckling_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_voyages_of_sinbad_the_sailor",
+      "title": "The Voyages of Sinbad the Sailor",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Voyages_of_Sinbad_the_Sailor_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Voyages_of_Sinbad_the_Sailor_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_whale_who_wanted_to_sing_at_the_met",
+      "title": "The Whale Who Wanted to Sing at the Met",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Whale_Who_Wanted_to_Sing_at_the_Met_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Whale_Who_Wanted_to_Sing_at_the_Met_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "the_wizard_of_oz",
+      "title": "The Wizard of Oz",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Wizard_of_Oz_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/The_Wizard_of_Oz_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "thumbelina",
+      "title": "Thumbelina",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Thumbelina_Read%20Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Thumbelina_Read%20Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "treasure_island",
+      "title": "Treasure Island",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Treasure_Island_Read_Along.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Treasure_Island_Read_Along.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "winnie_the_pooh_and_the_blustery_day",
+      "title": "Winnie the Pooh and the Blustery Day",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Winnie_the_Pooh_and_the_Blustery_Day.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Winnie_the_Pooh_and_the_Blustery_Day.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "winnie_the_pooh_and_the_honey_tree",
+      "title": "Winnie the Pooh and the Honey Tree",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Winnie-the-Pooh_and_the_Honey_Tree.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Winnie-the-Pooh_and_the_Honey_Tree.mp3"
+      ],
+      "sync": null
+    },
+    {
+      "id": "winnie_the_pooh_and_tigger_too",
+      "title": "Winnie the Pooh and Tigger Too",
+      "pdf": "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Winnie_the_Pooh_and_Tigger_Too_book.pdf",
+      "audios": [
+        "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/Winnie_the_Pooh_and_Tigger_Too_book.mp3"
+      ],
+      "sync": null
+    }
+  ]
+}
