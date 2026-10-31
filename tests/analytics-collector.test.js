@@ -47,6 +47,7 @@ class Target {
   const timers = [];
   const requests = [];
   let failNextRequest = false;
+  let holdRequests = false;
   const context = {
     window, document, state: { pdfDoc: null, currentBookKey: '' }, localStorage,
     performance: { now: () => now },
@@ -56,6 +57,7 @@ class Target {
     fetch: (url, options) => {
       requests.push({ url, options });
       if (failNextRequest) { failNextRequest = false; return Promise.reject(new Error('offline')); }
+      if (holdRequests) return new Promise(() => {});
       return Promise.resolve({ ok: true });
     },
     console
@@ -71,6 +73,7 @@ class Target {
   await tick();
   assert.equal(requests.length, 0, 'reader activity is not sent without consent');
 
+  holdRequests = true;
   checkbox.checked = true;
   checkbox.dispatch('change');
   await Promise.resolve();
