@@ -2170,7 +2170,6 @@ function onAudioTimeUpdate() {
   if (!target) return;
 
   const wasTwoPageLayout = isTwoPageLayout();
-  let alignedPage;
   const spread = window.ReadAlongPageSync.resolveTimestampSpread({
     pageTimestamps: markers, page: target.page, totalPages: state.totalPages,
     currentPart, audioCount
