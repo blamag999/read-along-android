@@ -85,7 +85,7 @@
 - [x] AN3.5 Gửi trực tiếp tới endpoint cố định; no offline queue/retry; lỗi request thì drop; không block startup/playback.
 - [x] AN3.6 Không gửi bookId, title, filename, path, URL hoặc document/audio content.
 - [x] AN3.7 Automated regression hoàn tất: PDF switch/close, audio play/pause/ended, foreground/background, rotation, pagehide/pageshow, opt-out, privacy, offline drop/no retry, eventId/sequence và fetch pending không block reader lifecycle. CI [41167810567](https://github.com/blamag999/read-along-android/actions/runs/41167810567) success; rotation regression [41167772447](https://github.com/blamag999/read-along-android/actions/runs/41167772447) success. Kiểm thử WebView/Android thật vẫn pending sau APK build.
-- [ ] AN3.8 Chốt một commit `[build-apk]` để build beta APK đúng một lần; xác minh version, signature, SHA-256, Release và artifact; người dùng kiểm tra consent UI, opt-in/off, thời lượng đọc/nghe, offline và không ảnh hưởng playback trên điện thoại. Android TV vẫn Pending.
+- [ ] AN3.8 Commit build đã chốt: `85475373bab4813589cf0d3c0777fe8c27df1da7` (`[build-apk]`). Chờ workflow hoàn tất; sau đó xác minh version, signature, SHA-256, Release và artifact; người dùng kiểm tra consent UI, opt-in/off, thời lượng đọc/nghe, offline và không ảnh hưởng playback trên điện thoại. Android TV vẫn Pending.
 
 ### AN4 — Dashboard
 
