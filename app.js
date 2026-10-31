@@ -69,6 +69,22 @@ function toggleFavoriteBook(bookId) {
   try { localStorage.setItem(FAVORITES_KEY, JSON.stringify(next)); } catch (_) {}
   renderPlaylistView();
 }
+function getReadingSessionStorageKey(bookKey) {
+  return READING_SESSION_KEY + ':' + encodeURIComponent(bookKey);
+}
+function getReadingSessionForBook(bookKey) {
+  if (!bookKey) return null;
+  const stored = readJsonStorage(getReadingSessionStorageKey(bookKey), null);
+  if (stored && stored.bookKey === bookKey) return stored;
+
+  // Migrate the previous single-session format without losing its saved position.
+  const legacy = readJsonStorage(READING_SESSION_KEY, null);
+  if (legacy && legacy.bookKey === bookKey) {
+    try { localStorage.setItem(getReadingSessionStorageKey(bookKey), JSON.stringify(legacy)); } catch (_) {}
+    return legacy;
+  }
+  return null;
+}
 function saveReadingSession(force = false) {
   if (!state.currentBookKey || !state.pdfDoc) return;
   const now = Date.now();
@@ -80,11 +96,11 @@ function saveReadingSession(force = false) {
     viewMode: state.viewMode, zoomScale: state.zoomScale, pageTurnMode: state.pageTurnMode,
     autoSeekAudio: state.autoSeekAudio, updatedAt: now
   };
-  try { localStorage.setItem(READING_SESSION_KEY, JSON.stringify(session)); } catch (_) {}
+  try { localStorage.setItem(getReadingSessionStorageKey(state.currentBookKey), JSON.stringify(session)); } catch (_) {}
 }
 function restoreReadingSessionForCurrentBook() {
-  const session = readJsonStorage(READING_SESSION_KEY, null);
-  if (!session || session.bookKey !== state.currentBookKey) return null;
+  const session = getReadingSessionForBook(state.currentBookKey);
+  if (!session) return null;
   if (Number.isInteger(session.page) && session.page >= 1 && session.page <= state.totalPages) state.pageNum = session.page;
   if (['fit-height', 'fit-width', 'two-pages'].includes(session.viewMode)) {
     state.viewMode = session.viewMode;
@@ -105,8 +121,8 @@ function restoreReadingSessionForCurrentBook() {
 }
 function applyPendingAudioSessionRestore() {
   if (!state.sessionRestorePending) return;
-  const session = readJsonStorage(READING_SESSION_KEY, null);
-  if (!session || session.bookKey !== state.currentBookKey) { state.sessionRestorePending = false; return; }
+  const session = getReadingSessionForBook(state.currentBookKey);
+  if (!session) { state.sessionRestorePending = false; return; }
   if (Number.isInteger(session.audioIndex) && state.currentStoryAudios[session.audioIndex] && session.audioIndex !== state.currentAudioIndex) {
     const nextIndex = session.audioIndex;
     state.sessionRestorePending = false;
@@ -714,6 +730,10 @@ async function loadStoryFromPlaylist(story, audioPartIndex) {
   if (!story) return;
 
   const uniqueKey = story.id || getBookUniqueKey(story.title);
+  // Persist and pause the outgoing book before changing any book/audio state.
+  saveReadingSession(true);
+  if (state.currentBookKey && state.currentBookKey !== uniqueKey) dom.audioElement.pause();
+  state.lastSessionSaveAt = 0;
   state.currentBookKey = uniqueKey;
   state.pdfFileName = (story.pdf && story.pdf.name) ? story.pdf.name : (story.title || uniqueKey) + '.pdf';
   state.currentStoryAudios = story.audios || [];
@@ -1155,6 +1175,9 @@ async function handlePdfFileSelect(e) {
   if (!file) return;
 
   const key = getBookUniqueKey(file.name);
+  saveReadingSession(true);
+  if (state.currentBookKey && state.currentBookKey !== key) dom.audioElement.pause();
+  state.lastSessionSaveAt = 0;
   state.currentBookKey = key;
   dom.btnChooseAudio.classList.remove('hidden');
   state.pdfSelectionInProgress = true;
