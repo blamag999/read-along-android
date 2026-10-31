@@ -97,3 +97,43 @@ jobs:
           if (!ready) throw new Error('Analytics endpoint did not become ready with the expected CORS/consent behavior');
           console.log('Deployed analytics CORS and explicit-consent gate passed.');
           NODE
+
+      - name: Smoke test deployed OTA API contract
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/beta' && contains(github.event.head_commit.message, '[test]') }}
+        run: |
+          node --input-type=module <<'NODE'
+          const endpoint = 'https://read-along-admin.pages.dev/api/readalong-admin/ota/latest';
+          const origin = 'capacitor://localhost';
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          let ready = false;
+          for (let attempt = 0; attempt < 18; attempt++) {
+            try {
+              const preflight = await fetch(endpoint + '?channel=beta', {
+                method: 'OPTIONS',
+                headers: { Origin: origin }
+              });
+              if (preflight.status !== 204 || preflight.headers.get('access-control-allow-origin') !== origin) {
+                throw new Error('OTA preflight failed: ' + preflight.status);
+              }
+
+              const invalid = await fetch(endpoint + '?channel=invalid');
+              const invalidBody = await invalid.json();
+              if (invalid.status !== 400 || invalidBody.error !== 'Invalid OTA channel') {
+                throw new Error('OTA channel validation failed: ' + invalid.status + ' ' + JSON.stringify(invalidBody));
+              }
+
+              const latest = await fetch(endpoint + '?channel=beta');
+              const latestBody = await latest.json();
+              if (latest.status !== 404 || latestBody.error !== 'OTA release not found') {
+                throw new Error('OTA storage/manifest response unexpected: ' + latest.status + ' ' + JSON.stringify(latestBody));
+              }
+              ready = true;
+              break;
+            } catch (error) {
+              if (attempt === 17) throw error;
+            }
+            await wait(10000);
+          }
+          if (!ready) throw new Error('OTA endpoint did not become ready');
+          console.log('Deployed OTA API routing, CORS and empty-channel response passed.');
+          NODE
