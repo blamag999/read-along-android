@@ -28,9 +28,10 @@
 
     <div class="header-right">
       <!-- NÚT MỞ DANH SÁCH TẬP TRUYỆN (PLAYLIST) -->
-      <button id="btnOpenPlaylist" class="icon-btn playlist-btn" title="Mở thư viện sách" disabled aria-disabled="true">
-        📚 <span>Thư viện sách</span>
-        <span id="lblPlaylistCount" class="badge-count hidden">0</span>
+      <button id="btnOpenPlaylist" class="icon-btn playlist-btn" type="button" title="Mở thư viện sách" disabled aria-disabled="true" aria-label="Thư viện sách, 0 cuốn">
+        <span class="playlist-icon" aria-hidden="true">📚</span>
+        <span class="playlist-label">Thư viện</span>
+        <span id="lblPlaylistCount" class="badge-count">0</span>
       </button>
 
       <button id="btnOpenReadMenu" class="icon-btn read-menu-button" type="button" aria-label="Mở menu" aria-controls="readOptionsMenu" aria-expanded="false" title="Menu">☰ <span>Menu</span></button>
