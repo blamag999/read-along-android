@@ -381,3 +381,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Commit: `75d6f0e39cc2f492c185ef60b1ba9927e85cde11`.
 - Chờ CI mới; chưa nghiệm thu collector runtime. README không đổi.
 
+
+### 2026-10-31 — Bảo toàn lifecycle events khi fetch khác đang chờ
+
+- CI [#41167501926](https://github.com/blamag999/read-along-android/actions/runs/41167501926) phát hiện `reader_pause` bị bỏ qua khi request `audio_stop` trước đó chưa settle do guard `requestInFlight`. Cách này vô tình tạo drop event không liên quan đến lỗi mạng/offline.
+- Bỏ guard serialize request: mỗi event gửi trực tiếp, độc lập; fetch lỗi vẫn drop, không queue/retry và không chặn reader/audio. Sequence vẫn tăng đơn điệu; server dedupe theo eventId và sessionId+sequence.
+- Commit: `d79b010a6906c33464852b8719defff0e37f94af`.
+- Chờ CI mới; chưa nghiệm thu collector. README không đổi.
+
