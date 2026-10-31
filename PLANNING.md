@@ -247,5 +247,12 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 - [ ] Đảm bảo kho offline, marker và metadata tồn tại qua OTA update, không bị xóa cùng cache shell; chỉ dọn cache tạm/service worker cũ.
 - [ ] Bổ sung kiểm thử quota, LRU, tải dở, file thiếu, app restart, OTA update và mở sách offline; build một APK sau full regression.
 - [x] Tinh gọn toàn bộ header thành hai action: Thư viện sách và Menu; chuyển điều khiển vừa trang/hai trang/zoom, ẩn-hiện khu vực chọn file và quản lý mốc thời gian vào Menu; bỏ nút Đóng sách riêng.
-- [ ] Chạy CI đầy đủ và kiểm tra trên điện thoại cảm ứng: hai nút header không chồng lấn; Menu còn đủ thao tác; Android Back vẫn đóng sách và lưu phiên đọc.
+- [ ] Chạy CI đầy đủ / build APK chốt và kiểm tra trên điện thoại cảm ứng: nút Thư viện có icon + nhãn + badge số lượng, hai nút header không chồng lấn ở portrait (kể cả chiều rộng 320 px); Menu còn đủ thao tác; Android Back vẫn đóng sách và lưu phiên đọc.
 - Không đánh dấu kho offline là implemented cho đến khi có code, test và xác minh đường dẫn lưu trữ native thực tế.
+
+
+### Header thư viện portrait — code đã cập nhật, chờ CI/device
+- [x] Tách icon, nhãn và badge số lượng thành các phần tử rõ ràng; badge luôn hiện số kể cả 0.
+- [x] Sửa CSS responsive ở cuối stylesheet để ưu tiên một hàng và giữ nhãn Thư viện trên màn hình dọc nhỏ.
+- [x] Thêm regression assertions cho cấu trúc nút, nhãn portrait và accessible count.
+- [ ] Chờ CI/build APK theo commit chốt; kiểm tra thực tế trên thiết bị dọc 320–600 px.
