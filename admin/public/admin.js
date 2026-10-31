@@ -318,6 +318,116 @@ function appendLibraryFileRow(anchorRow, file, kind, label) {
   anchorRow.after(row);
   return row;
 }
+
+const R2_PUBLIC_BASE = "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/";
+let ffmpegInstance = null;
+let ffmpegLoadPromise = null;
+async function fetchAsBlobUrl(url, mimeType) {
+  const response = await fetch(url, { mode: "cors", credentials: "omit" });
+  if (!response.ok) throw new Error("Không tải được thành phần chuyển đổi (" + response.status + ").");
+  return URL.createObjectURL(new Blob([await response.arrayBuffer()], { type: mimeType }));
+}
+async function getAudioConverter() {
+  if (ffmpegInstance) return ffmpegInstance;
+  if (!ffmpegLoadPromise) {
+    ffmpegLoadPromise = (async () => {
+      setStatus("Đang tải bộ chuyển đổi audio (chỉ tải khi cần)…");
+      const { FFmpeg } = await import("https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js");
+      const ffmpeg = new FFmpeg();
+      const workerURL = await fetchAsBlobUrl("https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/worker.js", "text/javascript");
+      const coreURL = await fetchAsBlobUrl("https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.js", "text/javascript");
+      const wasmURL = await fetchAsBlobUrl("https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.wasm", "application/wasm");
+      try {
+        await ffmpeg.load({ classWorkerURL: workerURL, coreURL, wasmURL });
+        ffmpegInstance = ffmpeg;
+        return ffmpeg;
+      } catch (error) {
+        ffmpeg.terminate();
+        throw error;
+      } finally {
+        URL.revokeObjectURL(workerURL);
+        URL.revokeObjectURL(coreURL);
+        URL.revokeObjectURL(wasmURL);
+      }
+    })().catch(error => {
+      ffmpegLoadPromise = null;
+      throw error;
+    });
+  }
+  return ffmpegLoadPromise;
+}
+function r2PublicUrl(key) {
+  return R2_PUBLIC_BASE + key.split("/").map(encodeURIComponent).join("/");
+}
+async function convertWmaGroup(group, button) {
+  const sources = group.audio.filter(file => /\.wma$/i.test(file.name));
+  if (!sources.length) return;
+  const destinations = sources.map(file => file.key.replace(/\.wma$/i, ".mp3"));
+  const existing = new Set(allLibraryEntries.filter(entry => entry.type === "file").map(entry => entry.key));
+  const conflict = destinations.find(key => existing.has(key));
+  if (conflict) {
+    setStatus("Không thể chuyển đổi: file đích đã tồn tại (" + conflict + "). Không ghi đè file MP3.", true);
+    return;
+  }
+  if (sources.some(file => Number(file.size) > 256 * 1024 * 1024)) {
+    setStatus("Bộ sách có WMA lớn hơn 256 MB. Để tránh thiếu bộ nhớ trình duyệt, hãy chuyển file này bằng công cụ ngoài rồi tải MP3 lên.", true);
+    return;
+  }
+  if (!await confirmAction("Chuyển đổi audio WMA?", "Sẽ chuyển " + sources.length + " file WMA trong bộ “" + group.title + "” sang MP3 ngay trên trình duyệt. File WMA gốc được giữ nguyên; file MP3 trùng tên sẽ không bị ghi đè. Cần kết nối mạng để tải bộ chuyển đổi lần đầu.", "Chuyển đổi và tải MP3 lên")) return;
+  button.disabled = true;
+  const oldLabel = button.textContent;
+  button.textContent = "Đang chuyển đổi…";
+  show("progress", true);
+  $("progress").querySelector("span").style.width = "0%";
+  let ffmpeg = null, completed = 0;
+  try {
+    ffmpeg = await getAudioConverter();
+    ffmpeg.on("progress", ({ progress }) => {
+      const percent = Math.max(0, Math.min(100, Math.round((completed + (Number(progress) || 0)) / sources.length * 100)));
+      $("progress").querySelector("span").style.width = percent + "%";
+    });
+    for (let index = 0; index < sources.length; index++) {
+      const source = sources[index];
+      const inputName = "readalong-input-" + index + ".wma";
+      const outputName = "readalong-output-" + index + ".mp3";
+      setStatus("Đang chuyển " + source.name + " (" + (index + 1) + "/" + sources.length + ")…");
+      const response = await fetch(r2PublicUrl(source.key), { mode: "cors", credentials: "omit" });
+      if (!response.ok) throw new Error("Không tải được WMA " + source.name + " (" + response.status + ").");
+      const input = new Uint8Array(await response.arrayBuffer());
+      if (!input.length || input.length > 256 * 1024 * 1024) throw new Error("Kích thước WMA không hợp lệ hoặc vượt giới hạn bộ nhớ.");
+      await ffmpeg.writeFile(inputName, input);
+      const exitCode = await ffmpeg.exec(["-y", "-i", inputName, "-map", "0:a:0", "-vn", "-c:a", "libmp3lame", "-q:a", "3", outputName]);
+      if (exitCode !== 0) throw new Error("FFmpeg không giải mã được " + source.name + ". Có thể codec WMA không được hỗ trợ bởi bản engine này.");
+      const output = await ffmpeg.readFile(outputName);
+      if (!(output instanceof Uint8Array) || output.length < 128) throw new Error("MP3 đầu ra rỗng hoặc quá nhỏ: " + source.name);
+      const hasId3 = output.length >= 3 && output[0] === 0x49 && output[1] === 0x44 && output[2] === 0x33;
+      const hasMpegFrame = output.length >= 2 && output[0] === 0xff && (output[1] & 0xe0) === 0xe0;
+      if (!hasId3 && !hasMpegFrame) throw new Error("Đầu ra không có chữ ký MP3 hợp lệ: " + source.name);
+      const outputFile = new File([output], source.name.replace(/\.wma$/i, ".mp3"), { type: "audio/mpeg" });
+      await uploadOne(outputFile, index, sources.length);
+      completed++;
+      await ffmpeg.deleteFile(inputName).catch(() => {});
+      await ffmpeg.deleteFile(outputName).catch(() => {});
+    }
+    queueTelemetryEvent("library_wma_conversion_success", { fileCount: completed });
+    setStatus("Đã chuyển và tải lên " + completed + "/" + sources.length + " file MP3. File WMA gốc vẫn được giữ nguyên.");
+    await loadFiles();
+  } catch (error) {
+    queueTelemetryEvent("library_wma_conversion_error", { completed, error: String(error.message || error).slice(0, 300) });
+    setStatus("Chuyển đổi dừng sau " + completed + "/" + sources.length + " file: " + error.message + ". Các file WMA gốc không bị thay đổi.", true);
+    if (completed) await loadFiles();
+  } finally {
+    show("progress", false);
+    if (ffmpeg) {
+      ffmpeg.terminate();
+      ffmpegInstance = null;
+      ffmpegLoadPromise = null;
+    }
+    button.disabled = false;
+    button.textContent = oldLabel;
+  }
+}
+
 function renderLibraryPage() {
   const term=normalizeSearch($("searchFilesInput").value.trim());
   const sort=$("sortFilesSelect").value;
@@ -328,6 +438,7 @@ function renderLibraryPage() {
   if (sort === "desc") books = books.reverse();
   const entries = [...folders.map(entry => ({ type:"folder", entry })), ...books.map(entry => ({ type:"book", entry }))];
   if (ungrouped.length) entries.push({ type:"unmatched", entry:ungrouped });
+  filteredLibraryEntries = entries;
   const totalPages=Math.max(1,Math.ceil(entries.length/pageSize));
   filePageIndex=Math.min(Math.max(0,filePageIndex),totalPages-1);
   const start=filePageIndex*pageSize, pageEntries=entries.slice(start,start+pageSize);
@@ -369,6 +480,8 @@ function renderLibraryPage() {
     addCell(row,formatDate(group.all.reduce((latest,file)=>!latest||new Date(file.uploaded)>new Date(latest)?file.uploaded:latest,null)));
     const actions=document.createElement("div"); actions.className="row-actions";
     const status=document.createElement("span"); status.className="library-status "+statusKind; status.textContent=statusLabel; actions.append(status);
+    const wmaCount=group.audio.filter(file=>/\.wma$/i.test(file.name)).length;
+    if(wmaCount) actions.append(actionButton("Chuyển " + wmaCount + " WMA → MP3",event=>convertWmaGroup(group,event.currentTarget),"convert-audio"));
     const actionCell=document.createElement("td"); actionCell.append(actions); row.append(actionCell);
     $("fileRows").append(row);
     if(expandedLibraryGroups.has(group.key)){
@@ -429,10 +542,10 @@ $("pageSizeSelect").addEventListener("change",()=>{
 });
 $("searchFilesInput").addEventListener("input",()=>{filePageIndex=0;renderLibraryPage();});
 $("sortFilesSelect").addEventListener("change",()=>{filePageIndex=0;renderLibraryPage();});
-$("firstPageBtn").addEventListener("click",()=>{filePageIndex=0;renderLibraryPage();});
-$("prevPageBtn").addEventListener("click",()=>{if(filePageIndex>0){filePageIndex--;renderLibraryPage();}});
-$("nextPageBtn").addEventListener("click",()=>{const total=Math.max(1,Math.ceil(filteredLibraryEntries.length/pageSize));if(filePageIndex<total-1){filePageIndex++;renderLibraryPage();}});
-$("lastPageBtn").addEventListener("click",()=>{filePageIndex=Math.max(0,Math.ceil(filteredLibraryEntries.length/pageSize)-1);renderLibraryPage();});
+$("nextPageBtn").addEventListener("click",()=>{const total=Math.max(1,Math.ceil(filteredLibraryEntries.length/pageSize));if(filePageIndex<total-1){filePageIndex++;renderLibraryPage();queueTelemetryEvent("library_page_navigation",{action:"next",page:filePageIndex+1,totalPages:total});}});
+$("lastPageBtn").addEventListener("click",()=>{filePageIndex=Math.max(0,Math.ceil(filteredLibraryEntries.length/pageSize)-1);renderLibraryPage();queueTelemetryEvent("library_page_navigation",{action:"last",page:filePageIndex+1});});
+$("firstPageBtn").addEventListener("click",()=>{filePageIndex=0;renderLibraryPage();queueTelemetryEvent("library_page_navigation",{action:"first",page:1});});
+$("prevPageBtn").addEventListener("click",()=>{if(filePageIndex>0){filePageIndex--;renderLibraryPage();queueTelemetryEvent("library_page_navigation",{action:"previous",page:filePageIndex+1});}});
 $("pageJumpInput").addEventListener("change",()=>{
   const total=Math.max(1,Math.ceil(filteredLibraryEntries.length/pageSize));
   const requested=Math.min(total,Math.max(1,Number($("pageJumpInput").value)||1));
