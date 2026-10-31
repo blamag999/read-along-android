@@ -475,3 +475,13 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Promote `beta` to `main` only after beta APK device acceptance and explicit user approval. Never update `main` directly as part of routine development.
 - Historical context: PR #43 and its temporary branch were already merged into beta before this rule was clarified. Preserve history; do not create further branches to compensate.
 - This entry records process policy only. No source, workflow, APK, OTA, or main-branch changes were made by this handover update.
+
+
+## Recovery update — remove PDF/audio filename labels (2026-11-01)
+
+- Removed the PDF and audio filename status row from `index.html`.
+- Removed its DOM references and UI writes from `app.js`; retained `state.pdfFileName` and `state.audioFileName` for reader identity/session behavior.
+- Removed obsolete `.file-status-pill` rules from `styles.css`.
+- Updated `tests/contracts.test.js` and `tests/modules.test.js` to enforce the new UI and the approved checkpoint labels.
+- Regression: `Check Read Along Admin` run #550, commit `921833ce96b1740e103f99828db55f481bdc859e`, completed successfully. `npm test`, JS syntax, Pages Functions syntax, isolation and deployment smoke checks passed.
+- No APK build or device acceptance in this batch. `main` remains unchanged.
