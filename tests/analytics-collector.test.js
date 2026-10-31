@@ -65,19 +65,13 @@ class Target {
   vm.runInNewContext(fs.readFileSync('modules/analytics-collector.js', 'utf8'), context);
   const tick = async (ms = 5000) => { now += ms; timers[0](); await Promise.resolve(); await Promise.resolve(); };
 
-  assert.equal(requests.length, 0, 'analytics is off by default');
-  assert.equal(values.has('read_along_analytics_install_id_v1'), false, 'install ID must not be created before opt-in');
-  assert.equal(typeof context.window.ReadAlongAnalytics.openSettings, 'function', 'analytics settings entry point must be available');
+  assert.equal(requests.length, 0, 'no event is sent until a book is open');
+  assert.equal(values.get('read_along_analytics_consent_v1'), 'true', 'personal usage analytics is enabled by default');
+  assert.ok(values.get('read_along_analytics_install_id_v1'), 'default-enabled analytics creates a random installation ID');
+  assert.equal(typeof context.window.ReadAlongAnalytics.setEnabled, 'function', 'analytics can still be disabled programmatically');
   context.state.pdfDoc = {};
   context.state.currentBookKey = 'private-book-title.pdf';
-  await tick();
-  assert.equal(requests.length, 0, 'reader activity is not sent without consent');
-
   holdRequests = true;
-  checkbox.checked = true;
-  checkbox.dispatch('change');
-  await Promise.resolve();
-  assert.equal(values.get('read_along_analytics_consent_v1'), 'true');
   await tick();
   let sent = requests.map(x => JSON.parse(x.options.body).events[0]);
   assert.equal(sent[0].type, 'reader_start');
@@ -172,21 +166,18 @@ class Target {
   assert.equal(pageHideEvent.readingSeconds, 9, 'only time since the failed heartbeat should remain pending');
   assert.equal(pageHideEvent.listeningSeconds, 4, 'pagehide must preserve foreground listening duration');
 
-  checkbox.checked = false;
-  checkbox.dispatch('change');
+  context.window.ReadAlongAnalytics.setEnabled(false);
   const countAfterOptOut = requests.length;
   await tick(60000);
   assert.equal(requests.length, countAfterOptOut, 'opt-out must stop collection immediately');
   assert.equal(values.get('read_along_analytics_consent_v1'), 'false');
   const installIdAfterOptOut = values.get('read_along_analytics_install_id_v1');
   assert.ok(installIdAfterOptOut, 'opt-out retains the random local install ID but stops all collection');
-  checkbox.checked = true;
-  checkbox.dispatch('change');
+  context.window.ReadAlongAnalytics.setEnabled(true);
   await Promise.resolve();
   const reconsentEvent = JSON.parse(requests.at(-1).options.body).events[0];
   assert.equal(reconsentEvent.installId, initialInstallId, 're-consent on the same app install must retain the same installation identity');
-  checkbox.checked = false;
-  checkbox.dispatch('change');
+  context.window.ReadAlongAnalytics.setEnabled(false);
 
   const allEvents = requests.map(item => JSON.parse(item.options.body).events[0]);
   assert.equal(new Set(allEvents.map(event => event.eventId)).size, allEvents.length, 'event IDs must be unique');
@@ -196,5 +187,5 @@ class Target {
   }
   assert.equal(JSON.stringify(allEvents).includes('another-private-book'), false, 'PDF names must not be transmitted');
 
-  console.log('Analytics collector consent, timing, foreground, privacy and opt-out tests passed.');
+  console.log('Analytics collector default-on, timing, foreground, privacy and opt-out tests passed.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
