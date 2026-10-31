@@ -828,3 +828,13 @@ Khi một công việc trong PLANNING hoàn tất:
 - Giữ session/checkpoint localStorage, favorites, marker companion R2 read-only, PDF/audio R2 URL và playlist. Không thay đổi cơ chế Back/session save.
 - Các commit: `9eb40d5` (app), `dbec01f` (HTML), `db86284` (tests), `ed97539` (bổ sung remote media status indicator).
 - Chưa chạy `npm test`/CI, chưa build APK và chưa nghiệm thu thiết bị. Chưa xóa CSS dead styles hoặc schema dữ liệu IndexedDB cũ; cleanup CSS chỉ sau khi audit selector usage. Không thay đổi API/Worker/R2/OTA/signing key/main.
+
+## 2026-10-31 — Reader/Menu R2-only batch: recovery review and Library retry correction
+
+- Đối chiếu aggregate Git diff từ formal handover `d13482e6ede435125600328ce05244231af8a14e` tới beta HEAD `ca31fc283a54905831e3913e353820aecd96a9c4`: beta ahead 50 commits, behind 0. Các file thay đổi trong compare: `app.js`, `index.html`, `tests/contracts.test.js`, `tests/modules.test.js`, `README.md`, `PLANNING.md`, `ROADMAP.md`, `RECOVERY.md`; không thấy thay đổi native Android, API/backend, R2/Cloudflare hay OTA trong delta tổng hợp.
+- Source hiện tại đã loại bỏ entry point mở PDF/audio/thư mục cục bộ, Blob media loaders, drag/drop và việc sử dụng IndexedDB media library; playlist mở PDF/audio bằng URL catalog R2. Marker manager/import/export đã được gỡ khỏi APK; marker companion R2 và logic page/audio sync vẫn được giữ. IndexedDB legacy và session/checkpoint localStorage không bị xóa.
+- Phát hiện lỗi còn sót: nút Library trong `index.html` khởi tạo với `disabled`, trong khi JavaScript chỉ bỏ disabled sau khi catalog tải thành công. Nếu lần tải đầu lỗi, người dùng không thể bấm để retry. Đã sửa markup để nút luôn khả dụng ngay lần mở app.
+- Code fix: `588b3808f3d57a36be447d92523d73d72b7d27c9`. Regression assertions: `f588259634e24d96f12f161af74da2dc4d77b4be` và commit chốt test `ca31fc283a54905831e3913e353820aecd96a9c4` (message có marker `[test]`).
+- Workflow `Check Read Along Admin` có path filter `tests/**` và job push yêu cầu marker `[test]`; commit test đáp ứng điều kiện kích hoạt. Tại thời điểm ghi nhật ký, GitHub combined-status endpoint chưa trả status check cho commit này; **chưa xác nhận CI pass**.
+- Chưa build APK mới và chưa kiểm thử thiết bị. CSS dead styles chưa được xóa; cần audit selector/caller trước khi cleanup.
+- Trạng thái: source R2-only/marker read-only đã được triển khai; Library retry đã được sửa; regression và nghiệm thu runtime vẫn pending. Không thay đổi `main`.
