@@ -138,3 +138,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - CI [41160461292](https://github.com/blamag999/read-along-android/actions/runs/41160461292) success trên commit `e3f448ad778b5db7cf1d945aef827c6b248dd26d`.
 - Không thay đổi APK/runtime reader, không build APK.
 - Public URL `https://read-along-admin.pages.dev/remote-config.json` chưa xác minh được HTTP response/body trong phiên này; static deployment chưa được xem là hoàn tất tích hợp.
+
+
+### 2026-10-31 — Remote Config v1 contract and CI preflight validation
+- Chuẩn hóa `schemas/remote-config.schema.json`: contract v1 bắt buộc `schemaVersion`, `configVersion`, `issuedAt`, `features`, `readerDefaults`, `announcements`; `expiresAt` là tùy chọn; giới hạn nội dung announcement.
+- Thêm `scripts/validate-remote-config.js` làm validator độc lập, có thể chạy trước khi deploy/publish. Validator kiểm tra whitelist top-level/feature/default, kiểu dữ liệu, ISO-8601 date-time có timezone và ngày lịch hợp lệ, expiry, announcement length/level/ID trùng.
+- Tích hợp preflight vào `npm test`; bổ sung negative tests và cấu hình workflow để chạy CI khi `schemas/**` hoặc `scripts/**` thay đổi.
+- Cấu hình mặc định được người dùng cung cấp được giữ nguyên: schemaVersion 1, configVersion 1, issuedAt 2026-10-31T00:00:00Z, feature/default rỗng, announcements rỗng. Không bật tính năng và không thay đổi hành vi APK.
+- Đây là contract + CI preflight, **chưa phải** xác minh Cloudflare Pages production endpoint hoặc bảo đảm mọi đường publish đều bị gate. Endpoint `https://read-along-admin.pages.dev/remote-config.json` chưa đọc được qua công cụ kiểm tra; cần xác minh sau deployment.
+- Chưa tích hợp Data Client vào APK, không build APK, không thay đổi main.
