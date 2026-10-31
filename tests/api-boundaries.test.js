@@ -27,8 +27,10 @@ assert.match(app, /pub-[a-f0-9]+\.r2\.dev\/books\.json/,
   'online catalog must load directly from the Read Along public R2 manifest');
 assert.doesNotMatch(app, /\/api\/readalong\/books/,
   'online catalog must not use a catalog proxy API');
-assert.match(app, /api\.github\.com\/repos\/blamag999\/read-along-android\/releases/,
-  'OTA must read releases from this repository only');
+assert.match(app, /read-along-admin\.pages\.dev\/api\/readalong-admin\/ota/,
+  'OTA must use the fixed Read Along Pages API, not a storage-provider or repository-specific release URL');
+assert.doesNotMatch(app, /api\.github\.com\/repos\/blamag999\/read-along-android\/releases/,
+  'APK runtime must not query GitHub Releases directly');
 
 assert.match(diagnostics, /read-along-admin\.pages\.dev\/api\/readalong-admin\/usage\/track/,
   'anonymous usage telemetry must use the Read Along Admin endpoint');
