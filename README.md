@@ -125,6 +125,10 @@ Catalog và media trên R2, marker JSON, Admin, Diagnostics backend, Analytics b
 
 ### Chính sách CI theo mốc
 
+- Workflow phải lọc `paths` ngay ở cấp trigger để commit tài liệu/README/ROADMAP/PLANNING hoặc thay đổi không liên quan không tạo workflow run.
+- `Check Read Along Admin` chỉ nhận push có thay đổi trong `admin/**`, app shell/caller, `modules/**`, `services/**`, schema, package manifests hoặc tests; PR vào `beta`/`main` vẫn tự động kiểm thử theo path filter riêng.
+- `Build and Release Read Along` chỉ nhận push lên `beta` có thay đổi liên quan đến runtime/asset/native Android/build manifest. Push chỉ thay đổi Admin/backend/docs không tạo build workflow run.
+- Workflow-level path filtering và job-level marker là hai lớp độc lập: path xác định có tạo workflow run hay không; `[test]`/`[build-apk]` xác định có thực thi job nặng hay không.
 - Push thông thường lên `beta`, `main`, `testing`: không chạy full regression suite.
 - Khi hoàn tất một batch, đặt `[test]` trong commit cuối cùng của lần push để chạy `npm test`, Pages Functions syntax check và isolation checks.
 - Marker phải nằm trong **commit cuối cùng của push** vì workflow đọc `github.event.head_commit.message`. Nếu marker nằm ở commit trước trong cùng push, workflow sẽ không nhận diện.
