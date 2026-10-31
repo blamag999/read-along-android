@@ -30,7 +30,7 @@ assert.ok(!router.includes('manifest.downloadUrl'), 'Backend must not redirect c
 
 assert.ok(workflow.includes('R2_ACCESS_KEY_ID') && workflow.includes('R2_SECRET_ACCESS_KEY'), 'Release workflow must use bucket-scoped R2 credentials');
 assert.ok(workflow.includes('--bucket read-along-releases --key "releases/$CHANNEL/$APK"'), 'Release workflow must upload APKs to the dedicated OTA bucket');
-assert.ok(workflow.includes('x-amz-meta-sha256:$SHA256'), 'Release workflow must store the APK checksum as R2 object metadata');
+assert.ok(workflow.includes('--metadata "sha256=$SHA256"'), 'Release workflow must store the APK checksum as R2 object metadata');
 assert.ok(workflow.includes('--key "channels/$CHANNEL/latest.json"'), 'Release workflow must publish the manifest after the APK');
 assert.ok(workflow.includes('"sha256": os.environ["SHA256"]'), 'Published manifest must contain the APK SHA-256');
 
