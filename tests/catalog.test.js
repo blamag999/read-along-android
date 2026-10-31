@@ -110,5 +110,5 @@ assert.match(adminApi, /route === "catalog\/preview"/, 'API must expose an authe
 assert.match(adminApi, /group\.pdf\.length !== 1/, 'preview must exclude missing or duplicate PDFs');
 assert.match(adminApi, /!group\.audios\.length/, 'preview must exclude books without audio');
 assert.match(adminApi, /badKeys/, 'preview must exclude files with scan errors');
-assert.match(adminApi, /_P\\\\\(\\\\d\+\\\\\)/, 'preview must recognize numbered audio parts');
+assert.ok(adminApi.includes("stem.match(/(?:_P(\\d+)"), "preview must recognize numbered audio parts");
 console.log('R2-generated catalog preview regression tests passed.');
