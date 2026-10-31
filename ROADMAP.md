@@ -171,5 +171,8 @@ Khi một công việc trong PLANNING hoàn tất:
 - Thêm `tests/remote-config.test.js`: network success/cache, offline cache, offline first-run defaults, malformed JSON, HTTP error, wrong content-type, missing/unknown fields, invalid schema/version/types/expiry, duplicate announcement IDs, response quá lớn, version rollback, corrupt/expired cache, timeout và retry giới hạn.
 - Bổ sung retry delay cố định 200 ms (tối đa 1 retry), timeout request 4 giây (có thể hạ trong test), không retry vô hạn.
 - Tích hợp test module vào `npm test` và syntax check.
-- Data Client hiện được giữ độc lập, **chưa nạp trong `index.html`/APK**, để tránh thay đổi startup/reader trước khi hoàn thiện test timeout/cache hỏng/retry và kiểm tra HTTP response headers. Không build APK.
+- CI [41161695921](https://github.com/blamag999/read-along-android/actions/runs/41161695921) success trên commit `dc63dd35fe51e8008b99ff97c93629f8113c1802`, chạy toàn bộ `npm test` và syntax check bao gồm Data Client; các commit hồ sơ sau đó chỉ sửa tài liệu.
+- Data Client hiện được giữ độc lập, **chưa nạp trong `index.html`/APK**. Không build APK.
 - P0.1 body được người dùng xác nhận; kiểm tra HTTP status/Content-Type vẫn pending. P0.3 đã hoàn tất module nền và một phần test, chưa tích hợp APK.
+
+- Hồ sơ bàn giao cập nhật sau batch Data Client; beta HEAD tại thời điểm cập nhật: `debd81d7a69c95f2e3acbae2b772106ce5e57cb0`.
