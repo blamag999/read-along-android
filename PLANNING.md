@@ -97,7 +97,7 @@
 - [x] Thêm thống kê thư viện từ manifest đã xuất bản: số đầu sách, PDF, phần audio và sách có JSON đồng bộ.
 - [x] Thêm tình trạng lần quét thư viện gần nhất: số tệp đã kiểm tra, lỗi nghiêm trọng, cảnh báo, thời điểm và trạng thái quét.
 - [x] API Dashboard yêu cầu phiên Admin; raw analytics chỉ truy vấn trong cửa sổ lưu 90 ngày, aggregate daily tối đa 24 tháng.
-- [ ] Hoàn tất regression CI cho API, date validation, retention, DOM và các trạng thái manifest/scan.
+- [x] Regression CI cho API, date validation, retention, DOM, trạng thái manifest/scan và Pages Functions syntax: [41169858843](https://github.com/blamag999/read-along-android/actions/runs/41169858843) success trên commit e03acee6141ddc064f162475fad0e2c67655c994.
 - [ ] Deploy Pages và kiểm tra Dashboard thực tế; đối chiếu thời lượng đọc/nghe sau khi người dùng bật opt-in.
 - [ ] Không thống kê theo từng sách đã đọc: collector không gửi bookId/tên sách theo privacy contract; không mở rộng thu thập chỉ để có chỉ số này.
 - [ ] Phân biệt rõ không có dữ liệu với giá trị 0; cảnh báo kết quả quét là lần quét gần nhất, không khẳng định thời gian thực.
