@@ -727,3 +727,14 @@ Khi một công việc trong PLANNING hoàn tất:
 - Run trước đó fail vì test import module tên file script có dấu gạch nối; lỗi đã được sửa bằng importlib và commit test mới.
 - Release Notes workflow mới chưa được thực thi qua APK build. Không khẳng định release notes/OTA output thực tế đã được xác minh.
 - Notification batch còn một số thông báo cũ chưa xử lý; APK build và nghiệm thu thiết bị chưa thực hiện.
+
+
+## 2026-10-31 — Hoàn tất batch Release Notes và chuẩn hóa thông báo/thuật ngữ UI (beta)
+
+- Tiếp tục audit các thông báo còn lại trong `app.js`: khôi phục phiên đọc, catalog, page-turn mode, lỗi phát âm thanh, nạp nhiều tệp, marker và thao tác đọc lại. Đã rút gọn câu, bỏ emoji trang trí và không hiển thị lỗi kỹ thuật trực tiếp cho người dùng.
+- Gộp thông báo nạp nhiều âm thanh thành một toast kết quả; bỏ toast trung gian và toast tự mở sách gây nhiễu. Lỗi chi tiết vẫn được ghi trong console/diagnostics.
+- Chuẩn hóa nhãn trong `index.html` và dynamic UI trong `app.js`: “sách” / “âm thanh”; giữ PDF/MP3/M4A ở vị trí nêu tên định dạng tệp.
+- Bổ sung regression assertions cho thông báo và nhãn tĩnh/động.
+- Sửa OTA smoke test: endpoint đã có manifest beta hợp lệ, nên test giờ xác nhận schemaVersion/channel/version/versionCode/size/SHA-256/filename/notes/downloadUrl thay vì kỳ vọng 404. Đã sửa escape regex để chạy đúng trong JavaScript heredoc.
+- Full workflow [41213578916](https://github.com/blamag999/read-along-android/actions/runs/41213578916) trên code/test HEAD `b1d3ac247e8e6fd463be813cc7169a6ce26407f4`: completed/success; npm test, Pages syntax, isolation, analytics smoke và OTA manifest smoke đều PASS.
+- Chưa build APK từ batch này. Bước kế tiếp: tạo một commit chốt `[build-apk]` có thay đổi runtime path, để workflow chạy regression lần cuối, build/sign APK, verify SHA-256 và publish beta Release/OTA. Không promote main.
