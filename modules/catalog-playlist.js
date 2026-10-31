@@ -26,6 +26,16 @@
       .trim();
   }
 
+  function folderFromAsset(value) {
+    const raw = typeof value === 'string' ? value : (value && value.url);
+    if (typeof raw !== 'string') return '';
+    const pathname = raw.split(/[?#]/)[0].replace(/^https?:\/\/[^/]+\/?/i, '');
+    const slash = pathname.lastIndexOf('/');
+    if (slash <= 0) return '';
+    try { return decodeURIComponent(pathname.slice(0, slash)); }
+    catch (_) { return pathname.slice(0, slash); }
+  }
+
   function mapRemoteCatalog(data, options) {
     if (!data || !Array.isArray(data.books)) {
       throw new Error('books.json không đúng cấu trúc { books: [...] }.');
@@ -63,6 +73,7 @@
       return {
         id: String(item.id || (pdf ? getBookUniqueKey(pdf.name) : getBookUniqueKey(audios[0].name))),
         title: String(item.title || (pdf ? normalizeStoryTitle(pdf.name) : normalizeStoryTitle(audios[0].name))),
+        folder: String(item.folder || folderFromAsset(item.pdf) || (audios[0] ? folderFromAsset(audios[0].url) : '')),
         pdf,
         audios,
         json,
@@ -137,6 +148,7 @@
   function filterPlaylist(stories, options) {
     const query = String(options && options.query || '').toLowerCase().trim();
     const filter = options && options.filter || 'all';
+    const folder = options && typeof options.folder === 'string' ? options.folder : '';
     const favorites = new Set(Array.isArray(options && options.favorites) ? options.favorites : []);
     return (Array.isArray(stories) ? stories : []).filter(story => {
       const title = String(story.title || '').toLowerCase();
@@ -145,6 +157,8 @@
       const matchQuery = !query || title.includes(query) || pdfName.includes(query) ||
         audios.some(audio => String(audio.name || '').toLowerCase().includes(query));
       if (!matchQuery) return false;
+      if (folder === '__root__' && String(story.folder || '')) return false;
+      if (folder && folder !== '__root__' && String(story.folder || '') !== folder) return false;
       if (filter === 'favorites') return favorites.has(story.id);
       if (filter === 'paired') return Boolean(story.pdf && audios.length > 0);
       if (filter === 'pdf') return Boolean(story.pdf);
