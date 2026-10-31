@@ -356,3 +356,10 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - Regression assertions bao phủ thông báo, nhãn UI tĩnh/động và contract workflow.
 - Full regression workflow [41213578916](https://github.com/blamag999/read-along-android/actions/runs/41213578916) trên commit `b1d3ac247e8e6fd463be813cc7169a6ce26407f4`: npm test PASS, Pages Functions syntax PASS, isolation PASS, analytics smoke PASS, OTA manifest smoke PASS.
 - Chờ build APK beta chốt đợt để xác minh version/changelog được phát sinh từ generator và kiểm tra signature/SHA-256/artifact/Release.
+
+
+### Final beta build — 2026-10-31
+
+- Đã tạo commit chốt `[build-apk]` `5839851550c29a1fcb17d8815426db1783b0936d`.
+- Workflow build [41213680238](https://github.com/blamag999/read-along-android/actions/runs/41213680238) đã PASS full regression, Pages syntax, isolation, release channel validation và bước generate version/changelog. Prepare web assets, embed version, Web Local ZIP, native updater, Android version, launcher icons và cấu hình ký đều PASS.
+- Bước `Build signed release APK` đang chạy; chưa có kết quả signature/SHA-256, R2 publication, artifact upload hoặc GitHub Release tại thời điểm ghi nhận.
