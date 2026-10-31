@@ -42,6 +42,7 @@
         📚 <span>Danh sách truyện</span>
         <span id="lblPlaylistCount" class="badge-count hidden">0</span>
       </button>
+      <button id="btnCloseBook" class="icon-btn close-book-btn hidden" type="button" title="Đóng sách đang đọc">✕ <span>Đóng sách</span></button>
 
       <button id="btnOpenReadMenu" class="icon-btn read-menu-button" type="button" aria-label="Mở menu đọc sách" aria-controls="readOptionsMenu" aria-expanded="false" title="Tùy chọn đọc">☰</button>
       <div id="readOptionsMenu" class="read-options-menu hidden" role="group" aria-label="Tùy chọn đọc sách">
@@ -146,6 +147,11 @@
       </div>
       <div class="canvas-page hidden" id="pageRightWrapper">
         <canvas id="pdfCanvasRight"></canvas>
+      </div>
+      <div class="touch-control-hints" aria-hidden="true">
+        <span class="touch-hint-left">‹</span>
+        <span class="touch-hint-center" id="touchCenterIcon">▶</span>
+        <span class="touch-hint-right">›</span>
       </div>
     </div>
   </main>

@@ -190,6 +190,7 @@ jobs:
           cp native/android/ApkUpdaterPlugin.java android/app/src/main/java/com/blamag999/readalong/ApkUpdaterPlugin.java
           cp native/android/file_paths.xml android/app/src/main/res/xml/file_paths.xml
           cp native/android/DiagnosticsPlugin.java android/app/src/main/java/com/blamag999/readalong/DiagnosticsPlugin.java
+          cp native/android/AppLifecyclePlugin.java android/app/src/main/java/com/blamag999/readalong/AppLifecyclePlugin.java
           python3 - <<'PY'
           from pathlib import Path
           main = Path('android/app/src/main/java/com/blamag999/readalong/MainActivity.java')
@@ -206,8 +207,15 @@ jobs:
           source = re.sub(r'(?m)^\s*@Override\s+protected void onPause\(\)\s*\{\s*DiagnosticsPlugin\.recordLifecycle\(this,\s*"Activity\.onPause"\);\s*super\.onPause\(\);\s*\}\s*$', '', source)
           source = re.sub(r'(?m)^\s*@Override\s+protected void onDestroy\(\)\s*\{\s*DiagnosticsPlugin\.recordLifecycle\(this,\s*"Activity\.onDestroy"\);\s*super\.onDestroy\(\);\s*\}\s*$', '', source)
           if 'ApkUpdaterPlugin.class' not in source:
-              injected = marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);\n        DiagnosticsPlugin.recordLifecycle(this, "Activity.onCreate");\n        super.onCreate(savedInstanceState);\n    }'
+              injected = marker + '\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(DiagnosticsPlugin.class);\n        registerPlugin(AppLifecyclePlugin.class);\n        DiagnosticsPlugin.recordLifecycle(this, "Activity.onCreate");\n        super.onCreate(savedInstanceState);\n    }'
               source = source.replace(marker, injected, 1)
+          elif 'AppLifecyclePlugin.class' not in source:
+              source = source.replace('registerPlugin(ApkUpdaterPlugin.class);', 'registerPlugin(ApkUpdaterPlugin.class);\n        registerPlugin(AppLifecyclePlugin.class);', 1)
+          if 'readalong-back-pressed' not in source:
+              lifecycle = '\n    @Override\n    public void onBackPressed() {\n        if (getBridge() != null) {\n            getBridge().triggerWindowJSEvent("readalong-back-pressed", "{}");\n        } else {\n            super.onBackPressed();\n        }\n    }\n\n    @Override\n    protected void onUserLeaveHint() {\n        super.onUserLeaveHint();\n        DiagnosticsPlugin.recordLifecycle(this, "Activity.userLeaveHint");\n        if (getBridge() != null) {\n            getBridge().triggerWindowJSEvent("readalong-user-leave", "{}");\n        }\n    }\n'
+              source = source.rstrip()
+              if not source.endswith('}'): raise SystemExit('Could not locate MainActivity closing brace')
+              source = source[:-1] + lifecycle + '}\n'
           if re.search(r'protected void on(?:Resume|Pause|Destroy)\s*\(', source):
               raise SystemExit('Obsolete Activity lifecycle override remained in MainActivity')
           main.write_text(source)

@@ -110,3 +110,12 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Device acceptance pending: cài APK beta mới nhất khi workflow hoàn tất; mở sách có marker trang 2 = 0, bắt đầu audio và xác nhận reader chuyển trang 2; kiểm tra cả một trang/hai trang và các mốc tiếp theo.
 - Không thay đổi `main`, signing key, OTA backend, Cloudflare resources, R2 objects hoặc D1 data trong phần sửa runtime này.
 - Next step: kiểm tra kết quả run 41186509296; nếu build và OTA publish pass thì hướng dẫn người dùng cài/test thiết bị và cập nhật trạng thái nghiệm thu. Nếu thất bại, dùng step/log cụ thể để sửa, không tuyên bố APK sẵn sàng.
+
+
+## Batch touch-first reader — 2026-10-31
+
+- Phạm vi thay đổi trên beta gồm app.js, modules/page-sync.js, index.html, styles.css, native/android/AppLifecyclePlugin.java, build workflow, tests/modules.test.js, tests/native-lifecycle.test.js và package.json.
+- Chính sách timestamp: mốc hợp lệ xác định trang; nếu trang liền kề trong cặp không có marker hợp lệ cho audio part hiện tại thì ghép đôi; nếu cả hai có marker thì hiển thị riêng. Sau marker cuối cùng không tự lật.
+- Phiên đọc local hiện tại và hai checkpoint trước đó được giữ lại; đóng sách lưu và giải phóng tài nguyên. Mở lại hỏi resume; từ chối resume bắt đầu từ đầu và vẫn có thể chọn checkpoint.
+- Native MainActivity được workflow tích hợp với readalong-back-pressed và readalong-user-leave; plugin AppLifecycle cung cấp lệnh thoát Activity. Home/background dừng HTML audio và lưu vị trí; không bật foreground service.
+- CI/build/device acceptance chưa được đánh dấu DONE cho tới khi workflow thành công và người dùng xác nhận trên điện thoại. Không thay đổi main, OTA backend, R2/D1 hoặc signing key.

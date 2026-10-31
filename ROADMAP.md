@@ -574,3 +574,14 @@ Khi một công việc trong PLANNING hoàn tất:
 - Commit runtime: `968b7142ea13a42e29a94878d240ea6104dd047a` (`modules/page-sync.js`); commit regression: `c8f6dd488a98ced98309f6fa16485d34816c7ceb` (`tests/modules.test.js`).
 - CI/build chưa chạy cho hai commit này vì commit không mang marker `[build-apk]`; APK chưa được tạo. Device acceptance còn pending.
 - Chưa thay đổi main, OTA backend, Cloudflare resources, dữ liệu R2/D1 hoặc signing key.
+
+
+### 2026-10-31 — Touch-first reader, timestamp spreads và foreground-only audio (beta)
+
+- Mở rộng pure page-sync helper để quyết định ghép trang theo cặp: trang có timestamp được ghép với trang lân cận không có timestamp; nếu cả hai trang trong cặp đều có timestamp thì chỉ hiển thị trang được đánh dấu. Mốc 0 giây vẫn hợp lệ; marker thuộc audio part khác không được coi là marker hợp lệ cho part hiện tại.
+- Runtime tự chuyển giữa trang đơn và cặp trang theo marker đang hoạt động. Sau marker cuối cùng không tự lật hoặc ước tính thời gian; người đọc tự chuyển tiếp. Tệp không có marker giữ chế độ trang đơn.
+- Bổ sung nút Đóng sách: lưu phiên, dừng audio, giải phóng PDF/canvas/audio source và quay lại danh sách sách. Khi mở lại sách có phiên đã lưu, hỏi có tiếp tục vị trí gần nhất hay bắt đầu từ đầu; ba checkpoint hiện có vẫn dùng được và khôi phục không tự phát.
+- Bổ sung chính sách Back: khi đang đọc hỏi đóng sách; khi không có sách hỏi thoát app. Native lifecycle bridge chuyển Android Back và onUserLeaveHint thành sự kiện JS; Home/background lưu vị trí và dừng audio, không tự phát lại. Thêm native AppLifecyclePlugin.exitApp() để đóng Activity sau khi người dùng xác nhận thoát.
+- Bổ sung ba vùng chạm mờ trên trang: 25% trái lật trang trước, 50% giữa play/pause, 25% phải lật trang sau; vuốt ngang vẫn lật trang và tránh kích hoạt tap lần hai.
+- Regression coverage mới trong tests/modules.test.js và tests/native-lifecycle.test.js. Phạm vi thiết kế/kiểm thử của batch này là điện thoại Android màn hình cảm ứng; không thực hiện tối ưu Android TV.
+- Tại thời điểm ghi mục này, code đã được chuẩn bị cho commit beta; CI/build APK và nghiệm thu thiết bị chưa được xác nhận. Xem PLANNING để biết các bước acceptance còn lại.

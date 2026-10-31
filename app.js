@@ -35,6 +35,8 @@ const state = {
 
   // CHẾ ĐỘ HIỂN THỊ
   viewMode: 'fit-height',
+  timestampSpread: false,
+  ignoreCanvasTapUntil: 0,
   zoomScale: 1.0,
 
   // MULTI-AUDIO STATE
@@ -101,6 +103,113 @@ function getReadingCheckpointLabel(session, index) {
     : '';
   return (index === 0 ? 'Mới nhất' : 'Trước đó') + ' · Trang ' + session.page + ' · ' + time + (stamp ? ' · ' + stamp : '');
 }
+
+async function closeCurrentBook() {
+  if (!state.pdfDoc && !state.currentBookKey) return;
+  saveReadingSession(true);
+  dom.audioElement.pause();
+  state.waitingForManualPageTurn = false;
+  state.pendingManualPage = null;
+  state.resumeAfterManualTurn = false;
+  state.sessionRestorePending = false;
+  state.timestampSpread = false;
+  state.pdfLoading = true;
+  try {
+    while (state.pageRendering) await new Promise(resolve => setTimeout(resolve, 16));
+    const previousDoc = state.pdfDoc;
+    state.pdfDoc = null;
+    if (previousDoc && typeof previousDoc.destroy === 'function') {
+      try { await previousDoc.destroy(); } catch (error) { console.warn('Không giải phóng được PDF:', error); }
+    }
+    [dom.pdfCanvasLeft, dom.pdfCanvasRight].forEach(canvas => {
+      if (canvas) { canvas.width = 0; canvas.height = 0; }
+    });
+  } finally {
+    state.pdfLoading = false;
+  }
+  const objectUrl = dom.audioElement.dataset.objectUrl;
+  if (objectUrl) { URL.revokeObjectURL(objectUrl); delete dom.audioElement.dataset.objectUrl; }
+  dom.audioElement.removeAttribute('src');
+  dom.audioElement.load();
+  state.currentBookKey = '';
+  state.pdfFileName = '';
+  state.audioFileName = '';
+  state.currentStoryAudios = [];
+  state.currentAudioIndex = 0;
+  state.pageTimestamps = {};
+  state.pageNum = 1;
+  state.totalPages = 0;
+  state.lastSessionSaveAt = 0;
+  state.lastAudioObservedTime = null;
+  dom.canvasWrapper.classList.add('hidden');
+  dom.canvasWrapper.classList.remove('two-page-mode');
+  dom.emptyState.classList.remove('hidden');
+  dom.readerPageStatus.classList.add('hidden');
+  dom.btnCloseBook?.classList.add('hidden');
+  dom.btnChooseAudio.classList.add('hidden');
+  dom.pdfFileName.textContent = '📄 Chưa có PDF';
+  dom.pdfFileName.classList.add('empty');
+  dom.audioFileName.textContent = '🎵 Chưa có audio';
+  dom.audioFileName.classList.add('empty');
+  dom.lblCurrentPage.textContent = '0';
+  dom.lblTotalPages.textContent = '0';
+  updateAudioPartUI();
+  updateReadingCheckpointsUI();
+  updatePageTimestampBadge();
+  updateSyncCountBadge();
+  showToast('Đã đóng sách và lưu vị trí đọc.');
+  if (state.playlist.length) openPlaylistModal();
+}
+
+function requestCloseBook() {
+  if (!state.pdfDoc) return;
+  const title = state.pdfFileName || 'sách hiện tại';
+  if (!window.confirm('Bạn có muốn đóng ' + title + ' không?\\nVị trí đọc và thời gian audio sẽ được lưu để lần sau tiếp tục.')) return;
+  closeCurrentBook();
+}
+
+function stopAudioForBackground() {
+  if (!state.pdfDoc && dom.audioElement.paused) return;
+  saveReadingSession(true);
+  if (!dom.audioElement.paused) dom.audioElement.pause();
+  state.waitingForManualPageTurn = false;
+  state.pendingManualPage = null;
+  state.resumeAfterManualTurn = false;
+  state.sessionRestorePending = false;
+  window.__raDiagRecord?.('audio.background.stop', {
+    page: state.pageNum,
+    time: Number.isFinite(dom.audioElement.currentTime) ? dom.audioElement.currentTime : 0,
+    reason: 'app-left-foreground'
+  });
+}
+
+function handleAppBack() {
+  const openOverlays = Array.from(document.querySelectorAll('.modal-overlay:not(.hidden)'));
+  if (openOverlays.length) {
+    openOverlays[openOverlays.length - 1].classList.add('hidden');
+    return;
+  }
+  if (dom.readOptionsMenu && !dom.readOptionsMenu.classList.contains('hidden')) {
+    dom.readOptionsMenu.classList.add('hidden');
+    dom.btnOpenReadMenu?.setAttribute('aria-expanded', 'false');
+    return;
+  }
+  if (state.pdfDoc) {
+    requestCloseBook();
+    return;
+  }
+  if (!window.confirm('Bạn có muốn thoát ứng dụng Read Along không?')) return;
+  const appLifecycle = window.Capacitor?.Plugins?.AppLifecycle;
+  if (appLifecycle?.exitApp) {
+    appLifecycle.exitApp().catch(error => {
+      console.error('Không thể thoát ứng dụng:', error);
+      showToast('Không thể đóng ứng dụng. Hãy thử nút Back của Android lần nữa.');
+    });
+  } else {
+    window.close();
+  }
+}
+
 function updateReadingCheckpointsUI() {
   if (!dom.readingCheckpointSelect || !dom.btnRestoreReadingCheckpoint) return;
   const record = getReadingSessionRecordForBook(state.currentBookKey);
@@ -167,6 +276,7 @@ function restoreSelectedReadingCheckpoint() {
     }));
   } catch (_) {}
 
+  state.timestampSpread = false;
   state.pageNum = Number.isInteger(restored.page) ? Math.max(1, Math.min(state.totalPages, restored.page)) : 1;
   state.currentAudioIndex = Number.isInteger(restored.audioIndex) ? restored.audioIndex : 0;
   state.viewMode = ['fit-height', 'fit-width', 'two-pages'].includes(restored.viewMode) ? restored.viewMode : state.viewMode;
@@ -195,6 +305,16 @@ function restoreSelectedReadingCheckpoint() {
 function restoreReadingSessionForCurrentBook() {
   const session = getReadingSessionForBook(state.currentBookKey);
   if (!session) return null;
+  const resumeLabel = 'Trang ' + (session.page || 1) + ' · ' + formatTime(session.audioTime || 0);
+  const shouldResume = window.confirm('Sách này có vị trí đọc đã lưu (' + resumeLabel + ').\\nBạn có muốn tiếp tục từ vị trí gần nhất không?\\nChọn “Không” để bắt đầu từ đầu; bạn vẫn có thể chọn một trong ba mốc đọc đã lưu sau khi mở sách.');
+  if (!shouldResume) {
+    state.sessionRestorePending = false;
+    state.timestampSpread = false;
+    updateReadingCheckpointsUI();
+    showToast('Đã mở sách từ đầu. Bạn vẫn có thể khôi phục một mốc đọc đã lưu.');
+    return null;
+  }
+  state.timestampSpread = false;
   if (Number.isInteger(session.page) && session.page >= 1 && session.page <= state.totalPages) state.pageNum = session.page;
   if (['fit-height', 'fit-width', 'two-pages'].includes(session.viewMode)) {
     state.viewMode = session.viewMode;
@@ -324,6 +444,7 @@ const dom = {
   lblZoomLevel: document.getElementById('lblZoomLevel'),
 
   btnOpenPlaylist: document.getElementById('btnOpenPlaylist'),
+  btnCloseBook: document.getElementById('btnCloseBook'),
   lblPlaylistCount: document.getElementById('lblPlaylistCount'),
   playlistModal: document.getElementById('playlistModal'),
   btnClosePlaylist: document.getElementById('btnClosePlaylist'),
@@ -361,6 +482,7 @@ const dom = {
   dropOverlay: document.getElementById('dropOverlay'),
   emptyState: document.getElementById('emptyState'),
   canvasWrapper: document.getElementById('canvasWrapper'),
+  touchCenterIcon: document.getElementById('touchCenterIcon'),
   pageLeftWrapper: document.getElementById('pageLeftWrapper'),
   pageRightWrapper: document.getElementById('pageRightWrapper'),
   pdfCanvasLeft: document.getElementById('pdfCanvasLeft'),
@@ -982,6 +1104,7 @@ window.selectAudioPart = function(index) {
 function initEvents() {
   initIndexedDB();
 
+  dom.btnCloseBook?.addEventListener('click', requestCloseBook);
   dom.btnOpenPlaylist.addEventListener('click', () => {
     if (state.playlist.length === 0) return;
     openPlaylistModal();
@@ -1210,7 +1333,10 @@ dom.selPageTurnMode.value = state.pageTurnMode;
     state.lastAudioObservedTime = actualTime;
   });
   dom.audioElement.addEventListener('pause', () => saveReadingSession(true));
-  window.addEventListener('pagehide', () => saveReadingSession(true));
+  window.addEventListener('pagehide', stopAudioForBackground);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stopAudioForBackground(); });
+  window.addEventListener('readalong-user-leave', stopAudioForBackground);
+  window.addEventListener('readalong-back-pressed', handleAppBack);
   dom.audioElement.addEventListener('timeupdate', onAudioTimeUpdate);
   dom.audioElement.addEventListener('loadedmetadata', onAudioMetadataLoaded);
   dom.audioElement.addEventListener('play', updatePlayButtonState);
@@ -1469,6 +1595,7 @@ async function loadPdfFromUrl(url, fileName, shouldResetSync = true) {
     dom.lblTotalPages.textContent = state.totalPages;
     dom.emptyState.classList.add('hidden');
     dom.canvasWrapper.classList.remove('hidden');
+    dom.btnCloseBook?.classList.remove('hidden');
   } catch (error) {
     state.pdfDoc = null;
     throw new Error('Không tải được PDF trực tuyến. Hãy kiểm tra địa chỉ tệp và quyền truy cập. ' + error.message);
@@ -1526,6 +1653,7 @@ async function loadPdfFromBlob(file, shouldResetSync = true) {
     dom.lblTotalPages.textContent = state.totalPages;
     dom.emptyState.classList.add('hidden');
     dom.canvasWrapper.classList.remove('hidden');
+    dom.btnCloseBook?.classList.remove('hidden');
   } catch (error) {
     state.pdfDoc = null;
     alert('Không thể mở file PDF: ' + error.message);
@@ -1574,6 +1702,10 @@ function loadAudioFromBlob(file) {
   return true;
 }
 
+function isTwoPageLayout() {
+  return state.viewMode === 'two-pages' || state.timestampSpread === true;
+}
+
 async function renderCurrentSpread(syncAudioToPage = false) {
   if (!state.pdfDoc || state.pdfLoading) return;
   if (state.pageRendering) {
@@ -1583,7 +1715,8 @@ async function renderCurrentSpread(syncAudioToPage = false) {
   }
   state.pageRendering = true;
 
-  const isTwoPages = state.viewMode === 'two-pages';
+  const isTwoPages = isTwoPageLayout();
+  dom.canvasWrapper.classList.toggle('two-page-mode', isTwoPages);
   const containerW = dom.viewerContainer.clientWidth - 32;
   const containerH = dom.viewerContainer.clientHeight - 32;
 
@@ -1617,10 +1750,10 @@ async function renderCurrentSpread(syncAudioToPage = false) {
     }
 
     let scale = 1.0;
-    if (state.viewMode === 'fit-width') {
+    if (!isTwoPages && state.viewMode === 'fit-width') {
       scale = (containerW / unscaledLeft.width) * state.zoomScale;
       dom.pageRightWrapper.classList.add('hidden');
-    } else if (state.viewMode === 'fit-height') {
+    } else if (!isTwoPages && state.viewMode === 'fit-height') {
       scale = (containerH / unscaledLeft.height) * state.zoomScale;
       dom.pageRightWrapper.classList.add('hidden');
     } else if (isTwoPages) {
@@ -1724,7 +1857,7 @@ function updateZoomLabel() {
 function changePage(delta) {
   if (!state.pdfDoc) return;
   const previousPage = state.pageNum;
-  const step = (state.viewMode === 'two-pages') ? 2 * delta : delta;
+  const step = isTwoPageLayout() ? 2 * delta : delta;
   const newPage = state.pageNum + step;
 
   if (newPage >= 1 && newPage <= state.totalPages) {
@@ -1873,6 +2006,7 @@ function updatePlayButtonState() {
   dom.btnPlayPause.title = isPlaying ? 'Tạm dừng' : 'Phát';
   dom.btnPlayPause.setAttribute('aria-pressed', String(isPlaying));
   dom.btnPlayPause.classList.toggle('is-playing', isPlaying);
+  if (dom.touchCenterIcon) dom.touchCenterIcon.textContent = isPlaying ? 'Ⅱ' : '▶';
 }
 
 async function togglePlayPause() {
@@ -1919,6 +2053,7 @@ function jumpToEnteredPage() {
     dom.pageJumpInput.focus();
     return;
   }
+  state.timestampSpread = false;
   state.pageNum = state.viewMode === 'two-pages' ? (target % 2 === 0 ? Math.max(1, target - 1) : target) : target;
   state.isAudioDrivenChange = false;
   state.waitingForManualPageTurn = false;
@@ -1987,13 +2122,13 @@ async function replayCurrentPage() {
 function initPdfClickNavigation() {
   dom.canvasWrapper.addEventListener('click', (event) => {
     if (!state.pdfDoc || event.button !== 0 || event.target.tagName !== 'CANVAS') return;
-    const canvas = event.target;
-    const rect = canvas.getBoundingClientRect();
+    if (Date.now() < state.ignoreCanvasTapUntil) return;
+    const rect = dom.canvasWrapper.getBoundingClientRect();
     if (!rect.width) return;
-    const direction = state.viewMode === 'two-pages'
-      ? (canvas.id === 'pdfCanvasLeft' ? -1 : 1)
-      : ((event.clientX - rect.left) < rect.width / 2 ? -1 : 1);
-    changePage(direction);
+    const position = (event.clientX - rect.left) / rect.width;
+    if (position < 0.25) changePage(-1);
+    else if (position > 0.75) changePage(1);
+    else togglePlayPause();
   });
 }
 
@@ -2075,8 +2210,20 @@ function onAudioTimeUpdate() {
   });
   if (!target) return;
 
-  const alignedPage = window.ReadAlongPageSync.alignPage(target.page, state.viewMode);
-  if (alignedPage === state.pageNum) return;
+  const wasTwoPageLayout = isTwoPageLayout();
+  let alignedPage;
+  if (state.viewMode === 'two-pages') {
+    state.timestampSpread = false;
+    alignedPage = window.ReadAlongPageSync.alignPage(target.page, 'two-pages');
+  } else {
+    const spread = window.ReadAlongPageSync.resolveTimestampSpread({
+      pageTimestamps: markers, page: target.page, totalPages: state.totalPages,
+      currentPart, audioCount
+    });
+    state.timestampSpread = spread.spread;
+    alignedPage = spread.startPage;
+  }
+  if (alignedPage === state.pageNum && wasTwoPageLayout === isTwoPageLayout()) return;
 
   // A stale timeupdate must never undo a manual page turn. Backward alignment is
   // permitted only after an actual backward media seek (including an intentional replay).
@@ -2320,21 +2467,19 @@ function initDragAndDrop() {
 
 function initTouchGestures() {
   let touchStartX = 0;
-  let touchEndX = 0;
-
-  dom.viewerContainer.addEventListener('touchstart', (e) => {
-    touchStartX = e.changedTouches[0].screenX;
+  let touchStartY = 0;
+  dom.viewerContainer.addEventListener('touchstart', (event) => {
+    const touch = event.changedTouches[0];
+    touchStartX = touch.screenX;
+    touchStartY = touch.screenY;
   }, { passive: true });
-
-  dom.viewerContainer.addEventListener('touchend', (e) => {
-    touchEndX = e.changedTouches[0].screenX;
-    const threshold = 60;
-    if (touchEndX < touchStartX - threshold) {
-      changePage(1);
-    }
-    if (touchEndX > touchStartX + threshold) {
-      changePage(-1);
-    }
+  dom.viewerContainer.addEventListener('touchend', (event) => {
+    const touch = event.changedTouches[0];
+    const deltaX = touch.screenX - touchStartX;
+    const deltaY = touch.screenY - touchStartY;
+    if (Math.abs(deltaX) < 60 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+    state.ignoreCanvasTapUntil = Date.now() + 450;
+    changePage(deltaX < 0 ? 1 : -1);
   }, { passive: true });
 }
 
@@ -2442,17 +2587,8 @@ function installTvRemoteControls() {
     if (fastForward) { event.preventDefault(); seekAudio(5); return; }
 
     if (key === 'Escape' || key === 'BrowserBack' || code === 4 || key === 'Backspace') {
-      const playlist = document.getElementById('playlistModal');
-      if (isReadMenuOpen()) {
-        event.preventDefault();
-        dom.readOptionsMenu.classList.add('hidden');
-        dom.btnOpenReadMenu?.setAttribute('aria-expanded', 'false');
-        dom.btnOpenReadMenu?.focus({ preventScroll: true });
-      } else if (playlist && !playlist.classList.contains('hidden')) {
-        event.preventDefault();
-        document.getElementById('btnClosePlaylist')?.click();
-        dom.btnOpenPlaylist?.focus({ preventScroll: true });
-      }
+      event.preventDefault();
+      handleAppBack();
       return;
     }
     if (isReadMenuOpen()) return;

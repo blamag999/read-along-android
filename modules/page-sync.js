@@ -40,6 +40,28 @@
     }
     return target;
   }
+  function resolveTimestampSpread(options) {
+    const opts = options || {};
+    const markers = opts.pageTimestamps || {};
+    const page = Math.max(1, Number(opts.page) || 1);
+    const totalPages = Math.max(0, Number(opts.totalPages) || 0);
+    const currentPart = Math.max(0, Number(opts.currentPart) || 0);
+    const audioCount = Math.max(0, Number(opts.audioCount) || 0);
+    const marker = normalizeMarker(markers[page]);
+    if (!marker || !markerMatchesPart(marker, currentPart, audioCount)) {
+      return { startPage: page, endPage: page, spread: false, reason: 'target-marker-missing' };
+    }
+    const neighborPage = page % 2 === 0 ? page - 1 : page + 1;
+    if (neighborPage < 1 || neighborPage > totalPages) {
+      return { startPage: page, endPage: page, spread: false, reason: 'no-adjacent-page' };
+    }
+    const neighbor = normalizeMarker(markers[neighborPage]);
+    if (neighbor && markerMatchesPart(neighbor, currentPart, audioCount)) {
+      return { startPage: page, endPage: page, spread: false, reason: 'both-pages-have-markers' };
+    }
+    const startPage = page % 2 === 0 ? page - 1 : page;
+    return { startPage, endPage: Math.min(totalPages, startPage + 1), spread: startPage + 1 <= totalPages, reason: 'adjacent-page-marker-missing' };
+  }
   function isConfirmedBackwardSeek(previousTime, targetTime, actualTime) {
     return Number.isFinite(previousTime) && Number.isFinite(targetTime) && Number.isFinite(actualTime) &&
       previousTime > targetTime + 0.25 && Math.abs(actualTime - targetTime) <= 1.25;
@@ -50,7 +72,7 @@
   function shouldAllowPageChange(currentPage, targetPage, allowBackwardSync) {
     return targetPage >= currentPage || allowBackwardSync === true;
   }
-  root.ReadAlongPageSync = Object.freeze({ normalizeMarker, markerMatchesPart, findTargetPage, isConfirmedBackwardSeek, alignPage, shouldAllowPageChange });
+  root.ReadAlongPageSync = Object.freeze({ normalizeMarker, markerMatchesPart, findTargetPage, resolveTimestampSpread, isConfirmedBackwardSeek, alignPage, shouldAllowPageChange });
 })(window);
 
 // Final batch checkpoint: zero-second page markers remain valid on every PDF page.

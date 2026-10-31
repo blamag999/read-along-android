@@ -2852,3 +2852,39 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
   .reading-checkpoint-control select { max-width:42vw; height:29px; font-size:.72rem; }
   .btn-restore-checkpoint { height:29px; padding:0 7px; font-size:.72rem; }
 }
+
+
+/* Touch-first reader controls: three low-contrast zones over the page canvas. */
+.canvas-wrapper { position: relative; }
+.touch-control-hints {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  grid-template-columns: 25% 50% 25%;
+  align-items: center;
+  pointer-events: none;
+  user-select: none;
+  opacity: .17;
+  transition: opacity .18s ease;
+}
+.touch-control-hints span {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  color: #fff;
+  font-size: clamp(2rem, 6vw, 4.2rem);
+  font-weight: 300;
+  text-shadow: 0 1px 5px rgba(0,0,0,.9);
+}
+.touch-hint-left { justify-content: flex-start; padding-left: clamp(8px, 2vw, 24px); }
+.touch-hint-center { justify-content: center; font-size: clamp(1.5rem, 4vw, 2.5rem) !important; }
+.touch-hint-right { justify-content: flex-end; padding-right: clamp(8px, 2vw, 24px); }
+@media (pointer: coarse) { .canvas-wrapper:active .touch-control-hints { opacity: .28; } }
+@media (pointer: fine) { .touch-control-hints { display: none; } }
+.close-book-btn { border-color: rgba(248,113,113,.45); }
+.close-book-btn:hover { background: rgba(127,29,29,.28); }
+@media (max-width: 700px) {
+  .close-book-btn span { display: none; }
+  .close-book-btn { min-width: 38px; padding-inline: 9px; }
+}

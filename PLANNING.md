@@ -172,3 +172,13 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 ## P1 — Đồng bộ mốc audio 0 giây với trang PDF
 - [ ] Kiểm thử APK beta: nếu chỉ có mốc `{ "2": 0 }`, khi audio bắt đầu ở giây 0 reader phải chuyển tới trang 2.
 - [ ] Xác nhận các mốc bằng nhau vẫn chọn trang có số nhỏ nhất; mốc của audio part khác vẫn bị bỏ qua; kiểm tra cả chế độ một trang và hai trang.
+
+
+## Nghiệm thu thiết bị cảm ứng — pending
+
+- Cài APK beta của batch touch-reader sau khi GitHub Actions build và R2 publish thành công.
+- Kiểm tra thực tế trên điện thoại Android: vuốt Back khi đang đọc hỏi đóng sách; Back tại màn hình chính hỏi thoát; Home/gesture Home dừng audio ngay và không tự phát lại khi quay về.
+- Kiểm tra đóng/mở sách: lưu trang + audio part + timestamp; hỏi tiếp tục vị trí gần nhất; chọn được checkpoint cũ trong tối đa ba mốc; không autoplay.
+- Kiểm tra ba vùng chạm trái/giữa/phải và vuốt ngang; vùng giữa play/pause; không xung đột thanh tua, menu hoặc nút điều khiển.
+- Kiểm tra timestamp thưa, timestamp liền kề, mốc 0 giây, tua audio, audio nhiều part và trang cuối.
+- Không mở rộng kiểm thử Android TV trong batch này.

@@ -37,6 +37,28 @@ assert.equal(sync.shouldAllowPageChange(4, 2, false), false, 'stale markers must
 assert.equal(sync.shouldAllowPageChange(4, 2, true), true, 'an explicit backward seek may move pages backwards');
 assert.equal(sync.shouldAllowPageChange(2, 4, false), true, 'forward synchronization remains enabled');
 assert.equal(sync.alignPage(8, 'two-pages'), 7, 'two-page mode aligns even pages to the spread start');
+assert.deepEqual(JSON.parse(JSON.stringify(sync.resolveTimestampSpread({
+  pageTimestamps: { 2: 0 }, page: 2, totalPages: 6, currentPart: 0, audioCount: 1
+}))), { startPage: 1, endPage: 2, spread: true, reason: 'adjacent-page-marker-missing' },
+'a page-2 marker with no page-1 marker displays pages 1 and 2 together');
+assert.deepEqual(JSON.parse(JSON.stringify(sync.resolveTimestampSpread({
+  pageTimestamps: { 3: 4, 5: 5 }, page: 3, totalPages: 6, currentPart: 0, audioCount: 1
+}))), { startPage: 3, endPage: 4, spread: true, reason: 'adjacent-page-marker-missing' },
+'a page-3 marker with an unmarked page 4 displays pages 3 and 4 together');
+assert.deepEqual(JSON.parse(JSON.stringify(sync.resolveTimestampSpread({
+  pageTimestamps: { 3: 4, 4: 4.8 }, page: 3, totalPages: 6, currentPart: 0, audioCount: 1
+}))), { startPage: 3, endPage: 3, spread: false, reason: 'both-pages-have-markers' },
+'consecutive pages with markers display separately');
+assert.deepEqual(JSON.parse(JSON.stringify(sync.resolveTimestampSpread({
+  pageTimestamps: { 4: 4 }, page: 4, totalPages: 6, currentPart: 0, audioCount: 1
+}))), { startPage: 3, endPage: 4, spread: true, reason: 'adjacent-page-marker-missing' },
+'an even marked page pairs with the preceding unmarked page');
+assert.equal(sync.resolveTimestampSpread({
+  pageTimestamps: { 5: { time: 5, part: 1 } }, page: 5, totalPages: 6, currentPart: 0, audioCount: 2
+}).spread, false, 'markers from another audio part do not create a spread');
+assert.equal(sync.resolveTimestampSpread({
+  pageTimestamps: { 6: 10 }, page: 6, totalPages: 6, currentPart: 0, audioCount: 1
+}).spread, false, 'the final page cannot create a spread beyond the PDF');
 assert.equal(layout.calculatePageSize(240, 48, 30), 5, 'short screens should show fewer rows');
 assert.equal(layout.calculatePageSize(520, 48, 30), 10, 'taller screens should show more rows');
 assert.equal(layout.calculatePageSize(240, 78, 30), 3, 'multi-audio rows should use a conservative estimate');
