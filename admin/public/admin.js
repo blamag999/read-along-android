@@ -299,7 +299,7 @@ function libraryStatus(group) {
   if (group.status === "compatibility") return ["Cần xử lý audio", "warning"];
   return ["Đủ file", "good"];
 }
-function appendLibraryFileRow(groupRow, file, kind, label) {
+function appendLibraryFileRow(anchorRow, file, kind, label) {
   const row = document.createElement("tr");
   row.className = "library-file-row";
   const nameCell = document.createElement("td");
@@ -314,7 +314,7 @@ function appendLibraryFileRow(groupRow, file, kind, label) {
   actions.append(actionButton("Đổi tên / Di chuyển", () => renameEntry(file)));
   actions.append(actionButton("Xóa", () => deleteFile(file), "delete"));
   const cell = document.createElement("td"); cell.append(actions); row.append(cell);
-  groupRow.after(row);
+  anchorRow.after(row);
   return row;
 }
 function renderLibraryPage() {
@@ -371,9 +371,10 @@ function renderLibraryPage() {
     const actionCell=document.createElement("td"); actionCell.append(actions); row.append(actionCell);
     $("fileRows").append(row);
     if(expandedLibraryGroups.has(group.key)){
-      for(const file of group.pdf) appendLibraryFileRow(row,file,"pdf","PDF chính");
-      for(const file of group.audio) appendLibraryFileRow(row,file,"audio","Audio"+(Number.isInteger(file.part)?" · Phần "+file.part:""));
-      for(const file of group.json) appendLibraryFileRow(row,file,"json","JSON đồng bộ");
+      let anchor=row;
+      for(const file of group.pdf) anchor=appendLibraryFileRow(anchor,file,"pdf","PDF chính");
+      for(const file of group.audio) anchor=appendLibraryFileRow(anchor,file,"audio","Audio"+(Number.isInteger(file.part)?" · Phần "+file.part:""));
+      for(const file of group.json) anchor=appendLibraryFileRow(anchor,file,"json","JSON đồng bộ");
     }
   }
   if(!pageEntries.length){
