@@ -584,3 +584,14 @@ Khi một công việc trong PLANNING hoàn tất:
 - Mốc handover trước: `1ea6bb3124bafc9c5819d78146fa2cafb8206f40`. Beta README recovery commit: `fb521a9927fa4e81d414049208f30e296266c80e`; RECOVERY file commit được ghi trong GitHub sau khi tạo.
 - README beta blob: `0fac10f7d304663ff96726971b2eab046e564ee6`. Mở PR README-only #40 để đồng bộ main; PR chưa merge. Không bypass branch rule và không push trực tiếp.
 - Không thay đổi APK runtime, không build APK, không promote code hoặc sửa main trực tiếp.
+
+
+### 2026-10-31 — Chốt định hướng Core APK data/config-driven
+
+- Người dùng xác nhận triển khai kiến trúc **Core APK ổn định + dữ liệu/cấu hình có version + renderer/capability được đóng gói sẵn** nhằm giảm build APK khi thay đổi nội dung, phân loại, metadata và giá trị cấu hình đã được APK hỗ trợ.
+- Tạo tài liệu [docs/architecture/core-extensibility.md](./docs/architecture/core-extensibility.md) tại commit `149bb1b9248d569a60eb15fb405bae417313f9e1`. Đây là kiến trúc mục tiêu, không phải xác nhận các module đã được triển khai.
+- Cập nhật PLANNING tại commit `e2a64eaa9f3d955d73b1829d65578d689f99311f`: ưu tiên audit config thực tế, catalog contract, stable book ID, capability whitelist, fallback và path filters trước khi sửa runtime.
+- Nguyên tắc được chốt: không tải/thực thi JavaScript tùy ý; không tạo Worker/API/D1 mới nếu static JSON hiện có đủ; không gộp progress vào marker; không đổi reader/audio/native chỉ để hỗ trợ catalog/config; chỉ build APK một lần sau batch runtime và regression.
+- Phân biệt rõ OTA APK installer hiện tại với remote JavaScript OTA. Không coi cơ chế tải/cài APK là bằng chứng đã có cập nhật web runtime từ xa.
+- Đối chiếu recovery: beta HEAD trước đợt tài liệu này là `6324daef8a506d0c725707df814df9ac0f10222f`. So sánh từ `71ba2a1d41cb62dc85723a65ba89bfeb55878155` cho thấy beta ahead 2 commit, chỉ chạm `RECOVERY.md` và `ROADMAP.md`; đã đọc lại các thay đổi, không phát hiện code/runtime delta trong compare.
+- Không chạy test/CI/deploy, không build APK, không thay đổi R2, D1, Cloudflare config, main hoặc PR #40 trong batch kiến trúc tài liệu này. Các mục audit/implementation vẫn pending trong PLANNING.
