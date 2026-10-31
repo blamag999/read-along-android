@@ -991,3 +991,14 @@ Khi một công việc trong PLANNING hoàn tất:
 - No pagination changes, reader/runtime/native changes, manifest data edits, R2 object moves/deletes, APK build, or main promotion in this batch.
 - Live `books.json` body and folder values remain to be verified through Admin preview before any publish. No manifest has been republished by this batch.
 - Full regression was requested by the `[test]` commit `eeba49a678063fda4ed302b4c424b0906986ee24`; the available GitHub connector did not expose the push-triggered run result, so CI is not marked PASS here. Cloudflare Pages production deployment `d4f6c813-40c9-49e5-ba75-5915cfe46e22` for that code commit completed successfully (queued, initialize, clone, build, deploy all success). A later documentation-only commit does not alter the deployed Admin code.
+
+
+### 2026-11-01 — Verify live catalog folders and enforce OTA R2 retention
+
+- Read the live my-audio-book/books.json object directly from R2. It contains 96 books: DISNEY 84 and ONE STORY A DAY LEVEL 2 FULL 12. Cross-checked all referenced assets against the full 204-object inventory: 96 PDFs, 99 audio objects, 8 sync JSON objects, zero missing references. No manifest republish was needed; R2 catalog data was not modified.
+- R2 read-along-releases had beta APK versions 1.3.9 and 1.3.10–1.3.23, official 1.4.0, plus the two channel latest manifests. The current manifests point to beta 1.3.23 and official 1.4.0.
+- Added scripts/prune-ota-releases.py: after publishing a new channel APK and its latest.json, it verifies the new object exists, lists only that channel's release prefix, deletes only older .apk objects, then verifies exactly one APK remains in that channel. It fails closed if the new APK is missing or verification fails. It does not touch channel manifests, the other channel, or GitHub Releases.
+- Added tests/ota-retention.test.py, wired it into npm test, and added OTA workflow contract assertions. Full regression is required before considering the policy verified.
+- Workflow implementation commits: 90de73ce808b94dd636c9163a78b009b78c8e997, f4ae772fc29768aab6844fb8b7ecdb8a31c1edfe, 522815b77babcc7e0cd9172a5f5b28e7ea7e3e22, 828599a46f24d1eba62b0a0976252423321ba487, 3e77c7e3a27b132fb58683cddf847173a635de19, cfec64e5b7e1ede2fc1f544fcdedccb8bb2206af.
+- Initial R2 cleanup and final regression/deployment verification are tracked separately; do not claim completion until confirmed.
+- No APK build, no main code promotion.
