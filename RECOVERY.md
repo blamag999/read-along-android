@@ -127,3 +127,12 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Close-book cleanup additionally invalidates pending audio-load callbacks and queued PDF render requests before the next book is opened.
 - Workflow run 41189021463: npm tests and pre-build checks passed; Android native integration passed. APK Gradle build was still running at the last check. No claim of APK availability until signing/checksum and R2 publish steps complete.
 - Device acceptance is still required on a touch-screen Android phone. Android TV is out of scope for this batch.
+
+
+## Beta APK v1.3.12 build result — 2026-10-31
+
+- Workflow run 41189021463: SUCCESS. Run URL: https://github.com/blamag999/read-along-android/actions/runs/41189021463
+- Functional code commit built: c988a4ab31d70f41a2bc672eac7541f7b4c1c67e. Current beta branch includes the following docs-only handoff commits.
+- Signed APK verified by workflow; APK size 3,437,002 bytes. GitHub beta release v1.3.12 published with APK, SHA-256 sidecar and Web Local ZIP: https://github.com/blamag999/read-along-android/releases/tag/v1.3.12
+- R2 OTA beta publication completed successfully. No stable promotion has been performed.
+- Only remaining gate is device acceptance on a touch-screen Android phone. Validate timestamp spreads, Back/Home audio stop, close/reopen/resume/checkpoints, and three touch zones. Do not test or modify Android TV in this batch.

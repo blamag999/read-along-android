@@ -593,3 +593,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - Full npm test suite, Pages Functions syntax and isolation checks passed in workflow run 41189021463.
 - Native updater/lifecycle integration and Android asset preparation passed.
 - At last status check, the signed APK Gradle build step was still in progress; APK checksum verification and R2 OTA publication are not yet confirmed. Do not treat this batch as install-ready until run 41189021463 completes successfully.
+
+
+### Beta APK v1.3.12 — build verified 2026-10-31
+
+- Workflow run 41189021463 completed successfully: full npm regression suite, Pages Functions syntax, isolation checks, native integration, signed APK build, APK verification, R2 OTA publication, artifact upload and GitHub Release all passed.
+- Beta release: https://github.com/blamag999/read-along-android/releases/tag/v1.3.12
+- APK: read-along-v1.3.12-android.apk (3,437,002 bytes). The release also includes its SHA-256 sidecar and Web Local ZIP.
+- R2 OTA publish step completed successfully for the beta channel. Do not promote to main/stable before device acceptance.
+- Remaining: install/test on a touch-screen Android phone and report any regression. Android TV remains out of scope.

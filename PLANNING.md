@@ -182,3 +182,10 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 - Kiểm tra ba vùng chạm trái/giữa/phải và vuốt ngang; vùng giữa play/pause; không xung đột thanh tua, menu hoặc nút điều khiển.
 - Kiểm tra timestamp thưa, timestamp liền kề, mốc 0 giây, tua audio, audio nhiều part và trang cuối.
 - Không mở rộng kiểm thử Android TV trong batch này.
+
+
+## APK beta v1.3.12 — ready for device acceptance
+
+- GitHub Actions run 41189021463 passed end-to-end, including signed APK verification and R2 beta OTA publication.
+- Install from the beta release v1.3.12 and perform the touch-screen acceptance cases listed above.
+- Keep beta separate from main until the user confirms device acceptance; no stable promotion has been made.
