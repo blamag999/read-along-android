@@ -15,9 +15,13 @@ assert.deepEqual(JSON.parse(JSON.stringify(sync.findTargetPage({
   currentPart: 0, audioCount: 1, duration: 100
 }))), { page: 1, time: 0, part: 0 }, 'ties at zero must prefer the first page');
 assert.deepEqual(JSON.parse(JSON.stringify(sync.findTargetPage({
+  pageTimestamps: { 2: 0 }, totalPages: 4, currentTime: 0,
+  currentPart: 0, audioCount: 1, duration: 100
+}))), { page: 2, time: 0, part: 0 }, 'a valid zero-second marker on page 2 must align the reader to page 2');
+assert.deepEqual(JSON.parse(JSON.stringify(sync.findTargetPage({
   pageTimestamps: { 2: 0, 3: 0, 4: 12 }, totalPages: 4, currentTime: 0,
   currentPart: 0, audioCount: 1, duration: 100
-}))), null, 'zero-second markers on later pages must not trigger an opening-page jump');
+}))), { page: 2, time: 0, part: 0 }, 'equal zero-second markers must select the earliest marked page');
 assert.equal(sync.findTargetPage({
   pageTimestamps: { 2: { time: 20, part: 1 } }, totalPages: 3, currentTime: 30,
   currentPart: 0, audioCount: 2, duration: 100
