@@ -58,32 +58,43 @@
 
 ## P1 — OTA độc lập nhà cung cấp lưu trữ (Cloudflare làm bootstrap hiện tại)
 
-> Quyết định ngày 2026-10-31: ứng dụng chỉ gọi một OTA API ổn định; backend quyết định nơi lưu trữ APK. Đổi storage provider không được yêu cầu build APK lại.
+> Quyết định ngày 2026-10-31: ứng dụng chỉ gọi một OTA API ổn định; backend quyết định nơi lưu trữ APK. Đổi storage provider không yêu cầu build APK lại.
 
-### Audit và hạ tầng
-- [x] Cloudflare Pages project hiện hữu: `read-along-admin`, root `admin`, Functions đang hoạt động; production branch là `beta`.
-- [x] Router Pages Functions hiện hữu tại `admin/functions/api/readalong-admin/[[path]].js`; mở rộng router này, không tạo Worker mới.
-- [x] Bucket R2 riêng `read-along-releases` đã tạo ở APAC; production binding `OTA_RELEASES` đã gắn vào Pages project `read-along-admin`.
+### Hạ tầng và backend
+- [x] Cloudflare Pages project `read-along-admin`, root `admin`, production branch `beta`; dùng Pages Functions router hiện hữu tại `admin/functions/api/readalong-admin/[[path]].js`, không tạo Worker mới.
+- [x] Tạo bucket R2 riêng `read-along-releases` tại APAC; production binding `OTA_RELEASES` đã gắn vào Pages project.
 - [x] Giữ nguyên binding R2 `READALONG` → `my-audio-book` và D1 `DB`; không di chuyển hay sửa dữ liệu sách.
-- [x] Pages project hiện chỉ có `read-along-admin.pages.dev`, chưa có custom domain.
-- [x] Đã audit OTA cũ: `app.js` đọc GitHub Releases API và giới hạn hostname `github.com`; `native/android/ApkUpdaterPlugin.java` cũng khóa URL GitHub.
-- [x] Đã thêm Pages API `GET /api/readalong-admin/ota/latest?channel=beta|official` và `GET /api/readalong-admin/ota/download?channel=...&version=...`. Backend chỉ đọc manifest từ binding `OTA_RELEASES`, tự suy ra object key, xác thực schema/channel/version/size/checksum metadata và stream APK; không trả URL storage cho client.
-- [ ] Chờ Pages deployment từ commit backend và production HTTP smoke test; hiện chưa xác nhận API đã live.
+- [x] Pages hiện có domain `read-along-admin.pages.dev`, chưa có custom domain.
+- [x] Đã thêm API `GET /api/readalong-admin/ota/latest?channel=beta|official` và `GET /api/readalong-admin/ota/download?channel=...&version=...`. Backend đọc manifest qua binding `OTA_RELEASES`, tự suy ra object key, kiểm tra schema/channel/version/size/checksum metadata và stream APK; không trả URL storage provider cho client.
+- [x] Pages deployment backend thành công; smoke test production xác nhận CORS preflight, channel validation và phản hồi 404 đúng khi channel chưa có manifest. CI [41183146147](https://github.com/blamag999/read-along-android/actions/runs/41183146147), [41183506939](https://github.com/blamag999/read-along-android/actions/runs/41183506939) success.
+- [ ] Chờ upload APK/manifest thật vào R2 để kiểm tra nhánh latest/download 200 và checksum end-to-end.
 
-### Contract và bảo mật
-- [x] Manifest schema v1 gồm `schemaVersion`, `channel`, `version`, `versionCode`, `filename`, `size`, `sha256`, `notes`, `mandatory`, `publishedAt`.
-- [x] Object layout: `releases/{beta|official}/read-along-vX.Y.Z-android.apk`; `channels/{beta|official}/latest.json`. Manifest được upload sau APK để không công bố release chưa đủ tệp.
-- [x] R2 object lưu custom metadata SHA-256; API so khớp metadata với manifest và size trước khi phục vụ.
-- [ ] APK client phải tự tính SHA-256 sau tải và trước khi mở installer; Android PackageInstaller tiếp tục xác minh chữ ký APK. Không thêm hệ thống chữ ký manifest thứ hai trong MVP để tránh tạo thêm khóa và quy trình rotation; khóa ký APK hiện tại là gốc tin cậy.
-- [ ] Giữ nguyên semantics Beta/Official và chặn downgrade theo cả versionName lẫn versionCode; tuyệt đối không thay signing key.
-- [ ] Native updater chỉ tải HTTPS từ Pages endpoint cố định, không follow redirect sang host ngoài policy; xác minh size/SHA-256 trước khi installer mở APK.
-- [ ] GitHub Actions upload APK + manifest lên R2 sau khi build/sign/verify bằng S3-compatible API; cấu hình hai GitHub Secrets `R2_ACCESS_KEY_ID` và `R2_SECRET_ACCESS_KEY` từ R2 API token chỉ cấp Object Read & Write cho bucket `read-along-releases`. Account ID là định danh công khai, đã khai báo trong workflow.
-- [ ] GitHub Release tiếp tục tồn tại làm kênh phân phối dự phòng trong giai đoạn chuyển đổi.
-- [ ] Regression API: hai channel, thiếu manifest/APK, schema sai, channel mismatch, version mismatch, size/checksum metadata mismatch, request method sai và CORS preflight.
-- [ ] Regression native: download gián đoạn, checksum mismatch, APK không cùng signer, versionCode thấp hơn, installer handoff và giữ cache/user data.
-- [ ] Chuyển đổi: cấu hình token → upload thử một release beta → xác nhận API latest/download → cập nhật APK beta chuyển tiếp → nghiệm thu OTA thực tế → sau đó mới cân nhắc chuyển repo sang Private.
-- [ ] Nếu chỉ đổi storage provider trong khi Pages Functions vẫn là bootstrap thì APK không cần build lại. Nếu chuyển cả bootstrap khỏi Cloudflare, cần custom domain do người dùng sở hữu; `pages.dev` không thể mang sang provider khác.
-- [ ] Không chuyển repository sang Private, không xóa GitHub Releases, không thay signing key cho tới khi người dùng xác nhận OTA R2 hoạt động trên thiết bị.
+### APK client và phát hành
+- [x] `app.js` chuyển từ GitHub Releases API sang Pages OTA API cố định; xác thực manifest, channel, SemVer, versionCode, filename, size và SHA-256; không sử dụng URL storage do manifest cung cấp.
+- [x] Workflow nhúng `app-version-code` vào APK để chặn downgrade theo versionCode bên cạnh versionName.
+- [x] Native `ApkUpdaterPlugin.java` chỉ chấp nhận HTTPS host/path cố định của Pages; không follow redirect; giới hạn kích thước, tính SHA-256 trên luồng tải và xóa APK nếu checksum/size sai trước khi mở installer.
+- [x] GitHub Actions build workflow có bước upload APK trước, manifest sau, qua S3-compatible R2 API; checksum được lưu trong R2 custom metadata. Giữ GitHub Release làm bản phân phối dự phòng.
+- [x] Workflow fail-closed nếu thiếu R2 credentials; không tạo release OTA thành công khi chưa upload manifest.
+- [x] Regression CI [41183506939](https://github.com/blamag999/read-along-android/actions/runs/41183506939) success: full npm regression, JS syntax, Pages Functions syntax, isolation và production OTA API smoke. Native code mới mới được static-checked; chưa build APK/compile Gradle hoặc nghiệm thu trên thiết bị.
+- [ ] Tạo R2 API token chỉ cấp **Object Read & Write** cho đúng bucket `read-along-releases`; không cấp toàn account và không dùng Cloudflare account-wide API token.
+- [ ] Lưu hai giá trị token vào GitHub repository secrets:
+  - `R2_ACCESS_KEY_ID`
+  - `R2_SECRET_ACCESS_KEY`
+- [ ] Sau khi tạo secrets, chạy một bản Beta để xác nhận workflow upload thành công; kiểm tra manifest latest và tải APK qua Pages API; kiểm tra checksum và cài OTA thực tế.
+- [ ] Chỉ sau khi OTA R2 đã nghiệm thu trên thiết bị mới cân nhắc chuyển repository sang Private. Không thay signing key và không xóa GitHub Releases trước khi xác nhận.
+
+### Cấu hình token cần người dùng thực hiện
+1. Cloudflare Dashboard → **R2 Object Storage** → **Manage R2 API Tokens** → **Create API token**.
+2. Chọn quyền **Object Read & Write**, giới hạn resource vào bucket duy nhất `read-along-releases`; không chọn toàn bộ bucket/account.
+3. Sao chép **Access Key ID** và **Secret Access Key** ngay sau khi tạo.
+4. GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**; tạo đúng hai secret `R2_ACCESS_KEY_ID` và `R2_SECRET_ACCESS_KEY`. Không gửi hai giá trị này trong chat.
+5. Workflow dùng account ID công khai đã khai báo sẵn, endpoint S3 `https://27391a829e8e4a38e9411d17ce76b5ba.r2.cloudflarestorage.com`, region `auto`; không cần thêm secret account ID.
+
+### Contract và giới hạn bảo mật
+- Manifest schema v1: `schemaVersion`, `channel`, `version`, `versionCode`, `filename`, `size`, `sha256`, `notes`, `mandatory`, `publishedAt`.
+- Object layout: `releases/{beta|official}/read-along-vX.Y.Z-android.apk`; `channels/{beta|official}/latest.json`. Manifest được upload sau APK để không công bố release thiếu tệp.
+- Không thêm chữ ký manifest riêng trong MVP: TLS bảo vệ API; checksum phát hiện sai lệch nội dung; Android PackageInstaller xác minh chữ ký APK bằng signing key hiện tại. Không thay khóa ký.
+- Nếu chỉ đổi storage provider trong khi Pages Functions vẫn là bootstrap thì APK không cần build lại. Nếu chuyển cả bootstrap khỏi Cloudflare, cần custom domain do người dùng sở hữu; `pages.dev` không thể mang sang provider khác.
 ## P1 — Hoàn thiện catalog category và stable book ID
 
 - [ ] Audit Admin scanner/publisher và catalog mapper; xác nhận stable book ID không phụ thuộc folder path, filename hoặc category.
