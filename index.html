@@ -49,6 +49,11 @@
         <button id="menuTwoPages" class="read-menu-option" type="button" aria-pressed="false"><span class="menu-option-icon" aria-hidden="true">📖</span><span>Hiện 2 trang</span><span class="menu-option-state" id="menuTwoPagesState">Tắt</span></button>
         <button id="menuAutoFlip" class="read-menu-option" type="button" aria-pressed="true"><span class="menu-option-icon" aria-hidden="true">🔄</span><span>Tự lật trang</span><span class="menu-option-state" id="menuAutoFlipState">Bật</span></button>
         <button id="menuReloadMarkers" class="read-menu-option" type="button"><span class="menu-option-icon" aria-hidden="true">⏱️</span><span>Cập nhật mốc thời gian</span></button>
+        <div id="readingCheckpointMenuGroup" class="read-menu-checkpoints hidden">
+          <div class="read-menu-checkpoint-title">↶ Mốc đã đọc gần đây</div>
+          <select id="readingCheckpointSelect" aria-label="Chọn một trong ba mốc đọc gần nhất" disabled></select>
+          <button id="btnRestoreReadingCheckpoint" type="button" disabled>Khôi phục vị trí</button>
+        </div>
         <label class="read-menu-option update-channel-row" for="chkBetaOta">
           <span class="menu-option-icon">⇅</span>
           <span class="update-channel-label">Kênh OTA <small>Đánh dấu để dùng Beta</small></span>
@@ -168,11 +173,7 @@
         </label>
         <span id="lblPageTimestamp" class="page-time-badge">Mốc: Chưa gán</span>
         <span id="lblSaveStatus" class="save-status-badge">💾 Sẵn sàng</span>
-        <label class="reading-checkpoint-control" for="readingCheckpointSelect" title="Ba mốc đọc gần nhất của sách này">
-          <span>↶ Mốc đọc</span>
-          <select id="readingCheckpointSelect" aria-label="Chọn một trong ba mốc đọc gần nhất" disabled class="hidden"></select>
-        </label>
-        <button id="btnRestoreReadingCheckpoint" class="btn-restore-checkpoint hidden" type="button" disabled>Khôi phục</button>
+
       </div>
       
       <div class="sync-actions-mini">

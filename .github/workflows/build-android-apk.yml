@@ -140,11 +140,34 @@ jobs:
           LAST_TAG="$(gh release list --limit 1 --json tagName --jq '.[0].tagName // ""')"
           if gh release view "v$VERSION" >/dev/null 2>&1; then echo "Release v$VERSION already exists"; exit 1; fi
           if [[ -n "$LAST_TAG" ]] && git rev-parse -q --verify "$LAST_TAG^{commit}" >/dev/null; then
-            CHANGELOG="$(git log --no-merges --pretty=format:'- %s (%h)' "$LAST_TAG..HEAD")"
+            COMMIT_NOTES="$(git log --no-merges --format='%s%n%b' "$LAST_TAG..HEAD")"
           else
-            CHANGELOG="$(git log --no-merges --pretty=format:'- %s (%h)' -20)"
+            COMMIT_NOTES="$(git log --no-merges --format='%s%n%b' -20)"
           fi
-          if [[ -z "$CHANGELOG" ]]; then CHANGELOG="- Build from commit $(git rev-parse --short HEAD)"; fi
+          export COMMIT_NOTES
+          CHANGELOG="$(python3 - <<'PY'
+          import os
+          groups = {"feature": [], "fix": [], "perf": []}
+          for line in os.environ.get("COMMIT_NOTES", "").splitlines():
+              line = line.strip()
+              if not line.startswith("[") or "]" not in line:
+                  continue
+              kind, text = line[1:].split("]", 1)
+              kind, text = kind.lower(), text.strip()
+              if kind in groups and text and text not in groups[kind]:
+                  groups[kind].append(text)
+          lines = []
+          if groups["feature"]:
+              lines.append("Tính năng mới:")
+              lines.extend("• " + item for item in groups["feature"][:4])
+          if groups["fix"]:
+              if lines: lines.append("")
+              lines.append("Cải thiện:")
+              lines.extend("• " + item for item in groups["fix"][:4])
+          lines.append("Cải thiện hiệu năng và độ ổn định.")
+          print(chr(10).join(lines))
+          PY
+          )"
           { echo "changelog<<CHANGELOG_EOF"; echo "$CHANGELOG"; echo "CHANGELOG_EOF"; } >> "$GITHUB_OUTPUT"
           echo "Release version: $VERSION"
           echo "Release channel: $CHANNEL"

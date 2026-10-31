@@ -136,3 +136,16 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Signed APK verified by workflow; APK size 3,437,002 bytes. GitHub beta release v1.3.12 published with APK, SHA-256 sidecar and Web Local ZIP: https://github.com/blamag999/read-along-android/releases/tag/v1.3.12
 - R2 OTA beta publication completed successfully. No stable promotion has been performed.
 - Only remaining gate is device acceptance on a touch-screen Android phone. Validate timestamp spreads, Back/Home audio stop, close/reopen/resume/checkpoints, and three touch zones. Do not test or modify Android TV in this batch.
+
+
+## Touch reader correction batch — 2026-10-31
+
+- Starting beta HEAD reviewed: 38a37f1c150a3ea0b5c7fb77f336f63472695c5a. Stable main is unchanged.
+- Scope is touch-screen Android phones. Android TV remains explicitly out of scope.
+- Existing three-checkpoint persistence was already implemented; the reader controls were not discoverable in the APK layout. The selector and restore action are moved into the reader menu without changing the per-book localStorage schema or autoplay policy.
+- Manual backward navigation now resolves the nearest valid timestamp marker at or before the requested prior page, derives the appropriate page spread, and supplies that marker to the render/audio seek path. Regression coverage includes page 5 → pages 3–4 when page 4 is unmarked.
+- Touch taps/swipes are scoped to rendered PDF canvases. The visual three-zone overlay follows the actual visible canvas bounds rather than the full viewer; bounds are recalculated after render and resize/orientation changes.
+- Header actions are compacted to keep Playlist, Close Book and Read Menu on one row. Toasts preserve line breaks; OTA confirmation copy is shortened. Release notes are generated from explicit user-facing [feature], [fix], and [perf] entries rather than raw commit subjects/hashes.
+- Runtime changes and regression coverage are being prepared on beta. CI, signed APK verification, R2 OTA publication and device acceptance are not yet confirmed for this batch. Do not promote to main or describe the batch as accepted until the relevant evidence exists.
+- Preserve existing OTA endpoints, R2/D1 resources, package signing key and beta/stable separation.
+

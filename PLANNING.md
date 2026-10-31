@@ -189,3 +189,16 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 - GitHub Actions run 41189021463 passed end-to-end, including signed APK verification and R2 beta OTA publication.
 - Install from the beta release v1.3.12 and perform the touch-screen acceptance cases listed above.
 - Keep beta separate from main until the user confirms device acceptance; no stable promotion has been made.
+
+
+## P0 — Touch reader usability and timestamp back-navigation (2026-10-31)
+
+- [ ] Fix manual previous-page navigation when the immediate previous page has no valid timestamp: resolve the nearest prior valid marker, display the corresponding spread (for example pages 3–4 when page 4 has no marker), and seek audio to that marker when auto-seek is enabled.
+- [ ] Prevent stale audio timeupdate events from immediately undoing a manual backward page turn; preserve normal forward marker synchronization and multi-part audio behavior.
+- [ ] Make toast/confirmation text readable with preserved line breaks; keep OTA update notes limited to new features, meaningful improvements/fixes, and one performance/stability line. Do not expose commit IDs, versionCode, or internal build details in the user prompt.
+- [ ] Keep the Playlist, Close Book, and Read Menu controls on one row on narrow touch screens; compact labels without clipping or overlap.
+- [ ] Expose the current reading position plus two prior checkpoints directly from the reader menu; selecting a checkpoint restores position without autoplay.
+- [ ] Constrain touch navigation and play/pause zones to the actual rendered PDF canvas bounds. Touches and swipes outside the PDF must not trigger reader actions. Recalculate bounds after render, zoom, resize, and orientation changes.
+- [ ] Add regression tests for page 5 → pages 3–4 when page 4 has no marker, exact previous-page markers, other-audio-part markers, touch-zone boundaries, visible checkpoint entry point, notification line breaks, and single-row header layout.
+- [ ] Build one beta APK only after the full regression suite passes. Keep main/stable unchanged until on-device acceptance.
+

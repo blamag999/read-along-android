@@ -602,3 +602,15 @@ Khi một công việc trong PLANNING hoàn tất:
 - APK: read-along-v1.3.12-android.apk (3,437,002 bytes). The release also includes its SHA-256 sidecar and Web Local ZIP.
 - R2 OTA publish step completed successfully for the beta channel. Do not promote to main/stable before device acceptance.
 - Remaining: install/test on a touch-screen Android phone and report any regression. Android TV remains out of scope.
+
+
+## Touch reader corrections — 2026-10-31
+
+- Scope: touch-screen Android phones; Android TV remains out of scope for this batch.
+- Work item 1 — notification layout/content: preserve newline formatting in toast messages; shorten OTA confirmation notes to user-visible changes and a concise install prompt. Release notes are generated only from explicit [feature], [fix], and [perf] commit-body entries; omit hashes, versionCode and internal build metadata.
+- Work item 2 — header layout: compact Playlist and Close Book actions so Playlist, Close Book and Read Menu remain on one row on narrow screens.
+- Work item 3 — checkpoints: move the existing per-book three-position selector/restore action into the reader menu so it is reachable while reading. The underlying local checkpoint storage remains unchanged; restore must not autoplay.
+- Work item 4 — backward timestamp navigation: when the requested previous page lacks a marker, resolve the nearest preceding valid marker for the current audio part, render its page spread, and seek to that marker. Preserve forward auto-sync and do not accept markers from another audio part.
+- Work item 5 — PDF touch bounds: compute the visible PDF canvas bounds and constrain both tap zones and horizontal swipe handling to that region. Recalculate after rendering and resize/orientation changes.
+- Verification status at planning time: implementation pending CI regression, signed APK build and device acceptance. Do not promote to main/stable until the user accepts the APK on a touch-screen phone.
+

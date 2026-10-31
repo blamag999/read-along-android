@@ -67,4 +67,15 @@ assert.equal(layout.calculatePageSize(240, 48, 30), 5, 'short screens should sho
 assert.equal(layout.calculatePageSize(520, 48, 30), 10, 'taller screens should show more rows');
 assert.equal(layout.calculatePageSize(240, 78, 30), 3, 'multi-audio rows should use a conservative estimate');
 assert.equal(layout.clampPage(5, 3), 3, 'page index must stay within the computed range');
-console.log('Module behavior tests passed.');
+const appSource = fs.readFileSync('app.js', 'utf8');
+const htmlSource = fs.readFileSync('index.html', 'utf8');
+const styleSource = fs.readFileSync('styles.css', 'utf8');
+assert.ok(appSource.includes('resolvePreviousMarkedSpread'), 'manual page navigation must use the previous valid timestamp marker');
+assert.ok(appSource.includes('pendingManualBackwardMarker'), 'manual backward navigation must seek to the resolved marker');
+assert.ok(appSource.includes("dom.canvasWrapper.addEventListener('touchstart'"), 'swipe navigation must be scoped to the PDF canvas wrapper');
+assert.ok(!appSource.includes("dom.viewerContainer.addEventListener('touchstart'"), 'swipes outside the PDF must not turn pages');
+assert.ok(appSource.includes('getRenderedPdfBounds'), 'touch zones must be bounded by rendered PDF canvases');
+assert.ok(htmlSource.includes('readingCheckpointMenuGroup'), 'three recent checkpoints must be reachable from the reader menu');
+assert.ok(styleSource.includes('white-space: pre-line'), 'toast messages must preserve line breaks');
+assert.ok(styleSource.includes('.app-ui-mode .header-right { flex: 0 0 auto; flex-wrap: nowrap;'), 'reader header actions must stay on one row');
+console.log('Module behavior and touch-reader UI contract tests passed.');

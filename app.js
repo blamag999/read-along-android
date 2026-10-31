@@ -37,6 +37,7 @@ const state = {
   viewMode: 'fit-height',
   timestampSpread: false,
   ignoreCanvasTapUntil: 0,
+  pendingManualBackwardMarker: null,
   zoomScale: 1.0,
 
   // MULTI-AUDIO STATE
@@ -145,6 +146,7 @@ async function closeCurrentBook() {
   state.pageNumPending = null;
   state.pageNumPendingSyncAudio = false;
   state.pendingBackwardSeek = null;
+  state.pendingManualBackwardMarker = null;
   state.allowBackwardAudioSync = false;
   state.isAudioDrivenChange = false;
   dom.canvasWrapper.classList.add('hidden');
@@ -170,7 +172,7 @@ async function closeCurrentBook() {
 function requestCloseBook() {
   if (!state.pdfDoc) return;
   const title = state.pdfFileName || 'sách hiện tại';
-  if (!window.confirm('Bạn có muốn đóng ' + title + ' không?\\nVị trí đọc và thời gian audio sẽ được lưu để lần sau tiếp tục.')) return;
+  if (!window.confirm('Bạn có muốn đóng ' + title + ' không?\nVị trí đọc và thời gian audio sẽ được lưu để lần sau tiếp tục.')) return;
   closeCurrentBook();
 }
 
@@ -232,6 +234,7 @@ function updateReadingCheckpointsUI() {
   dom.btnRestoreReadingCheckpoint.disabled = !available;
   dom.readingCheckpointSelect.classList.toggle('hidden', !available);
   dom.btnRestoreReadingCheckpoint.classList.toggle('hidden', !available);
+  dom.readingCheckpointMenuGroup?.classList.toggle('hidden', !available);
 }
 function saveReadingSession(force = false) {
   if (!state.currentBookKey || !state.pdfDoc) return;
@@ -312,7 +315,7 @@ function restoreReadingSessionForCurrentBook() {
   const session = getReadingSessionForBook(state.currentBookKey);
   if (!session) return null;
   const resumeLabel = 'Trang ' + (session.page || 1) + ' · ' + formatTime(session.audioTime || 0);
-  const shouldResume = window.confirm('Sách này có vị trí đọc đã lưu (' + resumeLabel + ').\\nBạn có muốn tiếp tục từ vị trí gần nhất không?\\nChọn “Không” để bắt đầu từ đầu; bạn vẫn có thể chọn một trong ba mốc đọc đã lưu sau khi mở sách.');
+  const shouldResume = window.confirm('Sách này có vị trí đọc đã lưu (' + resumeLabel + ').\nBạn có muốn tiếp tục từ vị trí gần nhất không?\nChọn “Không” để bắt đầu từ đầu; bạn vẫn có thể chọn một trong ba mốc đọc đã lưu sau khi mở sách.');
   if (!shouldResume) {
     state.sessionRestorePending = false;
     state.timestampSpread = false;
@@ -536,7 +539,9 @@ const dom = {
   btnClearSync: document.getElementById('btnClearSync'),
   toastMessage: document.getElementById('toastMessage'),
   readingCheckpointSelect: document.getElementById('readingCheckpointSelect'),
-  btnRestoreReadingCheckpoint: document.getElementById('btnRestoreReadingCheckpoint')
+  btnRestoreReadingCheckpoint: document.getElementById('btnRestoreReadingCheckpoint'),
+  readingCheckpointMenuGroup: document.getElementById('readingCheckpointMenuGroup'),
+  touchControlHints: document.querySelector('.touch-control-hints')
 };
 
 function formatTime(seconds) {
@@ -551,7 +556,7 @@ function formatTime(seconds) {
 }
 
 function showToast(msg) {
-  dom.toastMessage.textContent = msg;
+  dom.toastMessage.textContent = String(msg ?? '');
   dom.toastMessage.classList.remove('hidden');
   setTimeout(() => {
     dom.toastMessage.classList.add('hidden');
@@ -1798,6 +1803,7 @@ async function renderCurrentSpread(syncAudioToPage = false) {
     console.error('Lỗi khi render trang:', err);
   } finally {
     state.pageRendering = false;
+    requestAnimationFrame(updateTouchControlBounds);
     if (state.pageNumPending !== null) {
       const pendingPage = state.pageNumPending;
       const shouldSyncPendingAudio = Boolean(state.pageNumPendingSyncAudio);
@@ -1812,7 +1818,8 @@ async function renderCurrentSpread(syncAudioToPage = false) {
   // Render cũ hoàn tất muộn sau resize không được kéo audio về mốc trang cũ.
   if (renderSucceeded && syncAudioToPage && state.pageNum === leftPageNum &&
       state.autoSeekAudio && !state.isAudioDrivenChange) {
-    const rawTarget = state.pageTimestamps[leftPageNum];
+    const rawTarget = state.pendingManualBackwardMarker || state.pageTimestamps[leftPageNum];
+    state.pendingManualBackwardMarker = null;
     if (typeof rawTarget === 'number') {
       dom.audioElement.currentTime = rawTarget;
     } else if (rawTarget && typeof rawTarget === 'object' && typeof rawTarget.time === 'number') {
@@ -1864,14 +1871,40 @@ function changePage(delta) {
   if (!state.pdfDoc) return;
   const previousPage = state.pageNum;
   const step = isTwoPageLayout() ? 2 * delta : delta;
-  const newPage = state.pageNum + step;
+  const requestedPage = state.pageNum + step;
+  let newPage = requestedPage;
+  state.pendingManualBackwardMarker = null;
+
+  if (delta < 0 && requestedPage >= 1) {
+    const previous = window.ReadAlongPageSync.resolvePreviousMarkedSpread({
+      pageTimestamps: state.pageTimestamps,
+      targetPage: Math.min(state.totalPages, requestedPage + (step === -2 ? 1 : 0)),
+      totalPages: state.totalPages,
+      currentPart: state.currentAudioIndex || 0,
+      audioCount: state.currentStoryAudios?.length || 0,
+      duration: dom.audioElement.duration
+    });
+    if (previous) {
+      newPage = state.viewMode === 'two-pages'
+        ? window.ReadAlongPageSync.alignPage(previous.markerPage, 'two-pages')
+        : previous.startPage;
+      state.pendingManualBackwardMarker = previous.marker;
+      state.timestampSpread = state.viewMode === 'two-pages' ? false : previous.spread;
+    } else {
+      state.timestampSpread = false;
+    }
+  } else if (state.viewMode !== 'two-pages') {
+    state.timestampSpread = false;
+  }
 
   if (newPage >= 1 && newPage <= state.totalPages) {
     state.pageNum = newPage;
   } else if (delta > 0 && state.pageNum < state.totalPages) {
     state.pageNum = state.totalPages;
+    state.timestampSpread = false;
   } else if (delta < 0 && state.pageNum > 1) {
     state.pageNum = 1;
+    state.timestampSpread = false;
   } else {
     return;
   }
@@ -2125,13 +2158,45 @@ async function replayCurrentPage() {
   }
 }
 
+function getRenderedPdfBounds() {
+  const canvases = [dom.pdfCanvasLeft, dom.pdfCanvasRight].filter(canvas => {
+    if (!canvas || !canvas.width || !canvas.height) return false;
+    const page = canvas.closest('.canvas-page');
+    return page && !page.classList.contains('hidden');
+  });
+  const rects = canvases.map(canvas => canvas.getBoundingClientRect())
+    .filter(rect => rect.width > 0 && rect.height > 0);
+  if (!rects.length) return null;
+  const left = Math.min(...rects.map(rect => rect.left));
+  const top = Math.min(...rects.map(rect => rect.top));
+  const right = Math.max(...rects.map(rect => rect.right));
+  const bottom = Math.max(...rects.map(rect => rect.bottom));
+  return { left, top, right, bottom, width: right - left, height: bottom - top };
+}
+
+function updateTouchControlBounds() {
+  if (!dom.canvasWrapper || !dom.touchControlHints) return;
+  const bounds = getRenderedPdfBounds();
+  const wrapper = dom.canvasWrapper.getBoundingClientRect();
+  if (!bounds || !wrapper.width || !wrapper.height) {
+    dom.touchControlHints.style.visibility = 'hidden';
+    return;
+  }
+  dom.touchControlHints.style.visibility = 'visible';
+  dom.touchControlHints.style.left = (bounds.left - wrapper.left) + 'px';
+  dom.touchControlHints.style.top = (bounds.top - wrapper.top) + 'px';
+  dom.touchControlHints.style.width = bounds.width + 'px';
+  dom.touchControlHints.style.height = bounds.height + 'px';
+}
+
 function initPdfClickNavigation() {
   dom.canvasWrapper.addEventListener('click', (event) => {
     if (!state.pdfDoc || event.button !== 0 || event.target.tagName !== 'CANVAS') return;
     if (Date.now() < state.ignoreCanvasTapUntil) return;
-    const rect = dom.canvasWrapper.getBoundingClientRect();
-    if (!rect.width) return;
-    const position = (event.clientX - rect.left) / rect.width;
+    const bounds = getRenderedPdfBounds();
+    if (!bounds || !bounds.width || event.clientX < bounds.left || event.clientX > bounds.right ||
+        event.clientY < bounds.top || event.clientY > bounds.bottom) return;
+    const position = (event.clientX - bounds.left) / bounds.width;
     if (position < 0.25) changePage(-1);
     else if (position > 0.75) changePage(1);
     else togglePlayPause();
@@ -2474,12 +2539,17 @@ function initDragAndDrop() {
 function initTouchGestures() {
   let touchStartX = 0;
   let touchStartY = 0;
-  dom.viewerContainer.addEventListener('touchstart', (event) => {
+  let touchStartedOnPdf = false;
+  dom.canvasWrapper.addEventListener('touchstart', (event) => {
     const touch = event.changedTouches[0];
+    touchStartedOnPdf = event.target.tagName === 'CANVAS' && Boolean(getRenderedPdfBounds());
+    if (!touchStartedOnPdf) return;
     touchStartX = touch.screenX;
     touchStartY = touch.screenY;
   }, { passive: true });
-  dom.viewerContainer.addEventListener('touchend', (event) => {
+  dom.canvasWrapper.addEventListener('touchend', (event) => {
+    if (!touchStartedOnPdf) return;
+    touchStartedOnPdf = false;
     const touch = event.changedTouches[0];
     const deltaX = touch.screenX - touchStartX;
     const deltaY = touch.screenY - touchStartY;
@@ -2487,6 +2557,14 @@ function initTouchGestures() {
     state.ignoreCanvasTapUntil = Date.now() + 450;
     changePage(deltaX < 0 ? 1 : -1);
   }, { passive: true });
+  window.addEventListener('resize', updateTouchControlBounds);
+  if (typeof ResizeObserver === 'function') {
+    const observer = new ResizeObserver(updateTouchControlBounds);
+    [dom.canvasWrapper, dom.pdfCanvasLeft, dom.pdfCanvasRight].forEach(node => {
+      if (node) observer.observe(node);
+    });
+  }
+  requestAnimationFrame(updateTouchControlBounds);
 }
 
 function debounce(func, wait) {
@@ -2775,13 +2853,9 @@ async function checkReadAlongUpdates() {
     // Construct the fixed backend URL locally. Never trust a storage URL from the manifest.
     const downloadUrl = READ_ALONG_OTA_API + '/download?channel=' +
       encodeURIComponent(channel) + '&version=' + encodeURIComponent(manifest.version);
-    const notes = String(manifest.notes || '').trim().slice(0, 600);
-    const message = 'Kênh OTA: ' + channelLabel +
-      '\nBản mới nhất: ' + manifest.version +
-      '\nVersion code: ' + manifest.versionCode +
-      '\nPhiên bản hiện tại: ' + currentVersion + ' (' + currentVersionCode + ')' +
-      (notes ? '\n\nThay đổi:\n' + notes : '') +
-      '\n\nTải và cài đặt bản cập nhật OTA ngay trong ứng dụng? Android có thể yêu cầu xác nhận cài đặt. APK phải được ký bằng cùng khóa với ứng dụng đang cài.';
+    const notes = String(manifest.notes || '').trim().slice(0, 400);
+    const message = (notes ? notes + '\n\n' : '') +
+      'Tải và cài đặt bản cập nhật? Android có thể yêu cầu xác nhận.';
     if (!confirm(message)) return;
 
     const nativeUpdater = window.Capacitor?.Plugins?.ApkUpdater;
