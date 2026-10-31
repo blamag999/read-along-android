@@ -7,11 +7,11 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover commit: `650c56059d774ccb2d29131a05d8aed6dfd9dda3`
-- Last reviewed functional HEAD on beta: `9c4bf18861122df8f5dc29ac080b17aa2dd456c1`
+- Last formal handover commit: `161fafae7b604eb1862e160c28ed44f2d5b38f7f`
+- Last reviewed functional HEAD on beta: `4949bae9693d6bf17ccb57af81c80680d74772cf`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
-- Latest recovery checkpoint: library button portrait layout implementation; commits 2c9e181, 6b24d50, 87b81e5, 23cc765 (CI/APK/device validation pending)
+- Latest recovery checkpoint: four approved Confirm dialog strings updated in app.js; test commit d219ce0a109a7202c3a10a51b68ceada5b4dd792, runtime commit 4949bae9693d6bf17ccb57af81c80680d74772cf. Full regression passed; APK build/OTA publication pending at checkpoint.
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
 
 ## Phát hiện sau mốc bàn giao trước
@@ -211,3 +211,13 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Code commits in this batch: HTML `2c9e181255ba94dfff3e865e1f218875d981d205`; CSS `6b24d50fe6e3dc110fe74a8185bf41ed50002523` plus final focus-visible CSS in `61b383329ac4a6d5fcc1b3e54f3e5249390e50c2`; app badge logic `87b81e5e3b8b4686e2022f5b94efb964174936f9`; regression assertions `23cc765849189a1357b89ee73fe47783e59f6aa4`.
 - Badge count is `state.playlist.length`; it is not a count of offline IndexedDB blobs. No IndexedDB schema/storage behavior was changed in this batch.
 - Remaining acceptance: install/use the generated beta APK on a real touch device; verify portrait widths 320–600 px, visible icon/label/count, no header overlap, library action, menu controls and Android Back close/save behavior. Until user acceptance, do not promote `main`/stable.
+
+
+## Recovery checkpoint — approved Confirm copy update (2026-10-31)
+
+- Starting functional HEAD was beta `fafa31a3c2b89ec581dc33b0bd28e056ffbea5f5`; stable `main` remains unchanged.
+- Test commit: `d219ce0a109a7202c3a10a51b68ceada5b4dd792`. Runtime commit: `4949bae9693d6bf17ccb57af81c80680d74772cf`.
+- Exactly four Confirm strings were changed: close book, exit app, resume saved reading position, clear all sync timestamps. All confirmation return conditions and downstream actions remain unchanged. Non-selected dialogs, including OTA update confirmation, remain unchanged.
+- Regression assertions were added to `tests/contracts.test.js`; full regression suite and pre-build checks passed in workflow [41211507635](https://github.com/blamag999/read-along-android/actions/runs/41211507635).
+- At this checkpoint, APK signing/build verification, R2 OTA publication, workflow artifact upload and GitHub Release creation were still in progress. Do not describe APK as ready until run conclusion and release assets are verified.
+- No main/stable promotion and no device acceptance. After successful build, install beta APK and verify all four Confirm dialogs plus unchanged OTA prompt on a real Android device.
