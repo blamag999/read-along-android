@@ -887,3 +887,13 @@ Khi một công việc trong PLANNING hoàn tất:
 - Commit chỉ thêm CSS comment đánh dấu finalization, không thay đổi giao diện hoặc logic runtime. File `styles.css` nằm trong path filter của workflow Build and Release Read Along; commit message có marker `[build-apk]`, đáp ứng hai điều kiện trigger của build workflow.
 - Connector GitHub hiện chỉ truy xuất được workflow run gắn với PR; không có endpoint liệt kê push-triggered build runs, và combined status không có entries. Vì vậy chưa xác nhận được trạng thái build, APK artifact, GitHub Release hay R2 OTA. Không khẳng định build đã thành công.
 - Chưa thay đổi main. Sau khi có artifact, cần kiểm tra APK ký số, SHA-256, OTA manifest và thực hiện nghiệm thu trên thiết bị.
+
+
+## 2026-11-01 — Chuẩn hóa nguyên tắc branch và quy trình làm việc
+
+- Người dùng yêu cầu hạn chế branch: từ nay chỉ duy trì `beta` làm nhánh phát triển/tích hợp và `main` làm nhánh stable/phát hành.
+- Không tạo branch phụ cho từng tính năng/đợt, không tạo branch thử nghiệm CI và không mở PR giả lập chỉ để kích hoạt workflow. Thực hiện công việc thông thường trực tiếp trên `beta`.
+- `main` không sửa trực tiếp; chỉ cập nhật từ `beta` sau khi APK beta được kiểm thử và người dùng xác nhận nghiệm thu. Không tự ý promote stable.
+- Gom thay đổi thành các commit theo nhóm công việc; chạy regression ở các mốc quan trọng và chỉ build APK ở cuối đợt sau khi regression pass.
+- Không tạo commit giả hoặc thay đổi nội dung không cần thiết chỉ để kích hoạt build. Nếu trigger workflow chưa phù hợp, điều chỉnh workflow hiện có một lần để quy trình ổn định.
+- PR #43 đã được merge vào beta trước khi nguyên tắc này được chốt; giữ nguyên lịch sử, không tạo thêm branch để xử lý. Không thay đổi main trong cập nhật này.
