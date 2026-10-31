@@ -7,14 +7,20 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover commit: `6b821546ac5f4e420214782b0859aa38f26f556a`
-- Last reviewed HEAD on beta: `6b821546ac5f4e420214782b0859aa38f26f556a`
+- Last formal handover commit: `d34378926e02ee5226e7ffb589ddc99250e86e07`
+- Last reviewed HEAD on beta: `d34378926e02ee5226e7ffb589ddc99250e86e07`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
-- Latest recovery checkpoint: Provider-neutral OTA architecture audit/plan commit `6b821546ac5f4e420214782b0859aa38f26f556a`
+- Latest recovery checkpoint: OTA backend + fixed client endpoint implementation commit `d34378926e02ee5226e7ffb589ddc99250e86e07`
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
 
 ## Phát hiện sau mốc bàn giao trước
+
+- OTA provider-neutral đã được triển khai trên beta: R2 bucket `read-along-releases`, Pages binding `OTA_RELEASES`, latest/download API, app.js fixed API client, native SHA-256 verification và workflow upload qua bucket-scoped S3 credentials.
+- Production OTA API smoke pass trong CI [41183506939](https://github.com/blamag999/read-along-android/actions/runs/41183506939); full npm regression, JS syntax, Pages Functions syntax và isolation cũng pass.
+- OTA chưa hoàn tất nghiệm thu phát hành: chưa có R2 API token/GitHub secrets, chưa upload manifest/APK, chưa build APK chuyển tiếp và chưa cài OTA trên thiết bị. Workflow cố ý fail-closed nếu thiếu `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`.
+- Cloudflare Pages latest deployment sau commit docs có thể đang chạy; backend API code và binding đã được deploy ở các commit trước và production smoke đã pass. Không xem 404 cho channel chưa có manifest là lỗi; đó là trạng thái mong đợi trước lần upload đầu tiên.
+
 
 Các thay đổi đã được đối chiếu trong lịch sử Git và tài liệu hiện tại:
 
