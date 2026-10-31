@@ -923,6 +923,7 @@ async function handle(request, env) {
       const host = "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/";
       books.push({
         id, title,
+        folder: group.dir.replace(/\/$/, ""),
         pdf: host + encodeKey(group.pdf[0].key),
         audios: group.audios.map(item => host + encodeKey(item.key)),
         sync: group.sync.length ? host + encodeKey(group.sync[0].key) : null
@@ -958,8 +959,12 @@ async function handle(request, env) {
             typeof book.title !== "string" || !book.title.trim() || ids.has(book.id) ||
             !Array.isArray(book.audios) || !book.audios.length) throw new Error("Mỗi sách cần id/title duy nhất và ít nhất một audio");
         ids.add(book.id);
+        const folder = book.folder === undefined || book.folder === null ? "" : book.folder;
+        if (typeof folder !== "string" || folder.length > 1024 || (folder && !validKey(folder))) {
+          throw new Error("Thư mục của " + book.title + " không hợp lệ");
+        }
         normalized.push({
-          id: book.id.trim(), title: book.title.trim(),
+          id: book.id.trim(), title: book.title.trim(), folder: folder.trim(),
           pdf: resolveRef(book.pdf, [".pdf"], "PDF của " + book.title),
           audios: book.audios.map((value, index) => resolveRef(value, [".mp3",".m4a",".m4b",".aac",".wav",".ogg",".oga",".opus",".flac"], "Audio " + (index+1) + " của " + book.title)),
           sync: resolveRef(book.sync ?? null, [".json"], "Sync của " + book.title)
