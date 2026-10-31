@@ -469,3 +469,8 @@ Khi một công việc trong PLANNING hoàn tất:
 - README được chuẩn hóa cho hai nhánh và đồng bộ byte-for-byte trên `beta`/ `main` bằng commit README-only. Chi tiết commit SHA sẽ được bổ sung sau khi xác minh các lần ghi.
 - Trạng thái giới hạn: connector GitHub hiện không cung cấp thao tác xóa branch hoặc quản trị branch protection. Không tuyên bố `testing` đã xóa hoặc `main` đã được bảo vệ cho đến khi xác minh trực tiếp trên GitHub Settings. Không force-update hoặc ghi đè lịch sử.
 - Không thay đổi APK/runtime/backend/Cloudflare, không build APK và không promote code sang `main` trong đợt chuẩn hóa workflow này.
+
+
+- Kết quả xác minh sau cập nhật: README blob trên cả `beta` và `main` cùng SHA `7ba8a6a23ec02f151681394993d2f27098253713` (byte-for-byte giống nhau).
+- Commit cập nhật: beta README `43176eee6a394b4fc728e788ee714c5a44fc8bee`; main README-only `d683282ad319ba4b9a1bc5669a0e12667c20ac8a`; CI workflow `55499860003adbfa3c1c5ffa013a38d713c34cc6`; ROADMAP `8fe5d18af1c51dfd3016044f67e4f4f78de4ea45`; PLANNING `eaa3ff9a4ee930a80f22201113b8cd4e0255fee4`.
+- Lưu ý: sau các commit cập nhật tài liệu, HEAD beta đã tiến thêm; so sánh mới nhất cho thấy `testing` vẫn chỉ có đúng 1 commit riêng (README-only) và không có source code khác biệt cần giữ. Branch vẫn tồn tại do connector không cung cấp delete-ref action.
