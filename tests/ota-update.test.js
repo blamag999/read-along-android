@@ -22,7 +22,8 @@ assert.ok(router.includes('manifest.sha256'), 'OTA manifest must require a SHA-2
 assert.ok(router.includes('manifest.size'), 'OTA manifest must require and verify the APK size');
 assert.ok(router.includes('manifest.channel !== channel'), 'OTA manifest must match the requested channel');
 assert.ok(router.includes('apk.customMetadata?.sha256 !== manifest.sha256'), 'R2 object checksum metadata must match the manifest');
-assert.ok(router.includes('function validOtaVersion(value)') && router.includes('validOtaVersion(manifest.version)'), 'OTA manifest version must be validated before serving');
+const versionValidator = router.split("\n").find(line => line.includes('return typeof value === "string" && /^'));
+assert.ok(versionValidator && versionValidator.includes('\\d{1,3}'), 'OTA manifest version must use a strict numeric version pattern');
 assert.ok(router.includes('requestedVersion !== result.manifest.version'), 'Download route must reject stale or arbitrary version requests');
 assert.ok(!router.includes('manifest.downloadUrl'), 'Backend must not redirect clients to a storage-provider URL');
 
@@ -31,3 +32,4 @@ assert.ok(workflow.includes('read-along-releases/releases/$CHANNEL/$APK'), 'Rele
 assert.ok(workflow.includes('x-amz-meta-sha256:$SHA256'), 'Release workflow must store the APK checksum as R2 object metadata');
 assert.ok(workflow.includes('read-along-releases/channels/$CHANNEL/latest.json'), 'Release workflow must publish the manifest after the APK');
 assert.ok(workflow.includes('"sha256": os.environ["SHA256"]'), 'Published manifest must contain the APK SHA-256');
+assert.ok(!workflow.includes('secrets.CLOUDFLARE_ACCOUNT_ID'), 'Public account ID must not require a redundant secret');
