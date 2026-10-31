@@ -370,3 +370,43 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - Build [41213680238](https://github.com/blamag999/read-along-android/actions/runs/41213680238) thành công; generator chọn đúng mốc cùng channel `v1.3.20`, sinh version `1.3.21`, phát hành prerelease beta.
 - Changelog chung đã được đưa vào GitHub Release và OTA manifest. Tuy nhiên, nội dung thực tế còn đưa một số commit subject tiếng Anh/kỹ thuật vào nhóm Cải tiến/Sửa lỗi (ví dụ thay đổi regex, output script, workflow), không phù hợp với người dùng cuối.
 - Vì vậy, chức năng channel/version/generation đã hoạt động và được xác minh, nhưng chất lượng nội dung tiếng Việt chưa đạt. Không đánh dấu Release Notes hoàn tất; cần thiết kế trường `Release-Note:` tường minh hoặc lọc commit nội bộ theo policy rồi xác minh ở beta kế tiếp.
+
+
+## P1 — Bỏ mở sách từ thiết bị và hoàn thiện menu reader — 2026-10-31
+
+> Đã duyệt phạm vi, chưa triển khai. Thực hiện trên beta; không cập nhật main.
+
+### A. Bỏ hoàn toàn mở sách cục bộ
+- [ ] Audit mọi entry point chọn PDF/audio/thư mục, file input, drag-and-drop, File System Access API, modal và listener; lập danh sách caller trước khi xóa.
+- [ ] Gỡ khả năng nhập/mở PDF, audio hoặc thư mục tùy ý từ bộ nhớ thiết bị; không để lại nút hoặc đường dẫn UI tới luồng này.
+- [ ] Chỉ mở nội dung từ thư viện R2/catalog hiện có; giữ nguyên duyệt, tải và mở sách từ R2.
+- [ ] Giữ kho offline/cache 1 GiB theo kế hoạch riêng: chỉ cache nội dung đã tải từ R2, không phải import sách tùy ý.
+- [ ] Giữ IndexedDB/native storage, Blob/object URL và tiện ích File/Blob nếu luồng R2/cache còn sử dụng; chỉ xóa sau khi chứng minh không còn caller.
+- [ ] Giữ session/vị trí đọc, checkpoint, marker, đồng bộ trang/audio, multi-part audio và Android Back.
+- [ ] Không xóa cache hoặc dữ liệu đọc hiện có; không migration/xóa marker trong batch này.
+
+### B. Hoàn thiện menu và vùng điều khiển
+- [ ] Header chỉ có hai action: **Thư viện sách** và **Menu**; không thêm nút Đóng sách. Android Back tiếp tục đóng sách và lưu phiên đọc.
+- [ ] Bỏ menuToggleSettings và cơ chế ẩn/hiện khu vực chọn tệp/tùy chọn cũ.
+- [ ] Bỏ UI chọn file cục bộ, quick-options trùng lặp và sync banner/footer cũ; đưa điều khiển reader còn cần vào Menu.
+- [ ] Rà soát UI quản lý marker thủ công: bỏ pin/export/import/clear và bảng marker cũ nếu không còn workflow cần thiết; không xóa marker runtime, marker JSON R2, schema hoặc dữ liệu đã lưu.
+- [ ] Giữ điều khiển reader còn dùng: vừa trang/hai trang/zoom, tự lật/tự seek nếu đang hỗ trợ, mốc thời gian cần thiết và khôi phục vị trí gần đây.
+- [ ] Đổi nhãn thành **Vị trí đọc gần đây** và hành động **Xem tiếp**; khôi phục không tự autoplay.
+- [ ] Giữ nhóm OTA và logic kiểm tra cập nhật hiện tại.
+
+### C. Dọn mã và kiểm thử
+- [ ] Sau audit caller, xóa HTML/CSS/JS chỉ phục vụ local import/menu cũ; bảo đảm không còn listener truy cập DOM null.
+- [ ] Rà soát module không được nạp như remote-sync/diagnostics; không xóa backend/Worker hoặc dữ liệu marker trong batch UI này.
+- [ ] Thêm regression test: không còn entry point mở file cục bộ; header đúng hai action; Menu chỉ còn điều khiển hợp lệ; không còn listener tham chiếu phần tử đã xóa.
+- [ ] Test R2: tải catalog, mở sách, tải audio part và marker; lỗi catalog/network không làm app crash.
+- [ ] Test cache/offline: sách R2 đã tải vẫn mở offline; quota/LRU 1 GiB không xóa sách đang mở/phát; dữ liệu tồn tại qua restart/OTA.
+- [ ] Test reader: Android Back đóng sách/lưu session; mở lại khôi phục vị trí; Xem tiếp không autoplay; marker/page/audio sync, multi-part và orientation không hồi quy.
+- [ ] Test UI điện thoại: header không chồng lấn ở portrait 320–600 px và landscape; Menu dùng được bằng touch.
+- [ ] Khi runtime hoàn tất, chạy full regression ở commit [test], sau đó build đúng một APK beta ở commit [build-apk], xác minh chữ ký/SHA-256/OTA và kiểm tra thiết bị thật.
+- [ ] Cập nhật ROADMAP/PLANNING/RECOVERY theo kết quả; không promote main nếu chưa được xác nhận.
+
+### Ranh giới bắt buộc
+- Không bỏ đọc offline/cache nội dung R2 đã tải.
+- Không xóa session, checkpoint, marker; không đổi schema/precedence marker.
+- Không đổi nguồn R2, catalog contract, OTA endpoint, signing key hoặc cơ chế Android Back.
+- Bước này chỉ lập kế hoạch, chưa triển khai code.
