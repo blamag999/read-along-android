@@ -871,3 +871,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Thêm regression contract trong tests/modules.test.js để ngăn các selector/ID UI đã gỡ quay lại. Đã kiểm tra tĩnh: các selector bị loại không còn trong CSS sau khi bỏ comment; không selector đã loại nào còn được tham chiếu trong các source runtime đã rà; CSS braces cân bằng.
 - Commit CSS: 03826306ddcb4c53d2f721c9363448e7832beb3c, fe22a15e917c3a5f350c7fa4b26ea899384d0dd8. Test commits: 9c20bd867a1dc5995f97dc44ea23e708fd9a2c6d, aa251299b56779bff0675099ed4e4abc0e1cee87, f50d1c766ce084cde6d2a08e19cb513ed4a85774.
 - Chưa chạy được npm test trong môi trường connector; GitHub combined status hiện chưa trả status entries. CI/regression vẫn CHƯA xác nhận pass. Chưa build APK và chưa nghiệm thu thiết bị.
+
+
+## 2026-11-01 — Regression pass sau CSS cleanup
+
+- Tạo PR kiểm thử riêng #43 nhắm vào beta để kích hoạt workflow PR (không đụng main). Trong quá trình chạy, CI phát hiện nhiều assertion trong tests/contracts.test.js vẫn khớp thông báo/UI cũ; đã cập nhật assertion để phản ánh chính xác reader R2-only hiện tại, không thay đổi runtime để chiều theo test cũ.
+- PR #43 đã chạy thành công workflow `Check Read Along Admin` run #543: `npm test` (toàn bộ contracts/release-notes/analytics/modules/marker/catalog/API/admin/OTA/native lifecycle và check:js), Pages Functions syntax, isolation checks đều pass. Hai smoke test phụ thuộc deployment bị skip theo điều kiện workflow.
+- PR #43 được squash-merge vào beta: `d10459e9788eb1d961e3dfba08a5ab95324233c6`. Không merge vào main.
+- Đã xác nhận regression pass trên merge commit. Có thể tiến hành một lần build APK beta cuối đợt; APK/OTA/device acceptance vẫn đang chờ.
