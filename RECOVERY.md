@@ -7,8 +7,8 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover code/documentation checkpoint: `78cf6db4bb6db2bc5e83d5b9d63d5c3a641f6d45` (Admin manifest protection deployed to production; regression CI result remains unconfirmed; latest documentation-only commit follows the deployed code).
-- Last reviewed functional/source HEAD on beta: `eeba49a678063fda4ed302b4c424b0906986ee24`
+- Last formal handover code/documentation checkpoint: `23a9b02f7a1634832334f7f7bdc325a5b0cf3317` (OTA per-channel retention implementation and tests committed; live catalog verified; 14 stale beta APKs removed; full CI result pending).
+- Last reviewed functional/source HEAD on beta: `23a9b02f7a1634832334f7f7bdc325a5b0cf3317`
 - Stable main HEAD: `c1ad733b50d1514679d7c6868f3763859ac45b87` (PR #44 promotion; no new stable APK was built by this batch).
 - Recovery status: `PARTIAL — live books.json and all asset references verified; Admin books.json protection is deployed; OTA retention policy implemented; 14 stale beta APKs removed and one APK per channel verified; standalone tests 4/4 pass; full GitHub Actions result pending; no APK build or main code promotion`
 - Recovery reviewed on: 2026-11-01
