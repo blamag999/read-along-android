@@ -78,7 +78,7 @@ Người dùng đã xác nhận các nguyên tắc A–E:
 
 | Mốc | Phạm vi | Trạng thái hiện tại |
 |---|---|---|
-| R0 | Hợp nhất master planning, Analytics plan và nguyên tắc APK decoupling | <badge color="green">Hoàn tất</badge> |
+| R0 | Hợp nhất master planning, Analytics plan và nguyên tắc APK decoupling | **Hoàn tất** |
 | R1 | Inventory API/data, schema và marker/API boundary review | Đã hoàn tất phần inventory/contract; marker runtime conflict policy chưa chốt |
 | R2 | Static Remote Config, Data Client, cache và fallback | Đang thực hiện |
 | R3 | Analytics ingest + D1 + event thời lượng đọc/nghe | Chưa bắt đầu |
