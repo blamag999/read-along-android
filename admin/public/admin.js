@@ -856,6 +856,84 @@ async function loadPublicStats() {
     queueTelemetryEvent("public_dashboard_stats_error", { message: String(error.message || error).slice(0, 300) });
   }
 }
+function formatDuration(seconds) {
+  const value = Math.max(0, Math.floor(Number(seconds) || 0));
+  const hours = Math.floor(value / 3600), minutes = Math.floor((value % 3600) / 60);
+  return hours ? hours + " giờ " + minutes + " phút" : minutes + " phút";
+}
+function renderAnalyticsTrend(rows, rangeDays) {
+  const root = $("analyticsTrend"); root.replaceChildren();
+  if (!rows.length) { root.textContent = "Chưa có dữ liệu trong khoảng thời gian này."; return; }
+  const bucketSize = rangeDays > 365 ? "month" : rangeDays > 90 ? "week" : "day";
+  const buckets = new Map();
+  for (const row of rows) {
+    const date = new Date(row.day + "T00:00:00Z");
+    const key = bucketSize === "month" ? row.day.slice(0,7) :
+      bucketSize === "week" ? new Date(date.getTime() - ((date.getUTCDay()+6)%7)*86400000).toISOString().slice(0,10) : row.day;
+    const item = buckets.get(key) || { reading: 0, listening: 0, events: 0 };
+    item.reading += row.readingSeconds; item.listening += row.listeningSeconds; item.events += row.eventCount;
+    buckets.set(key, item);
+  }
+  const max = Math.max(1, ...[...buckets.values()].map(x => x.reading + x.listening));
+  for (const [label, item] of buckets) {
+    const group = document.createElement("div"); group.className = "analytics-bar-group";
+    const bar = document.createElement("div"); bar.className = "analytics-bar";
+    const reading = document.createElement("span"); reading.className = "analytics-reading-bar";
+    reading.style.height = Math.max(2, item.reading / max * 100) + "%";
+    const listening = document.createElement("span"); listening.className = "analytics-listening-bar";
+    listening.style.height = Math.max(2, item.listening / max * 100) + "%";
+    bar.append(reading, listening);
+    const caption = document.createElement("small"); caption.textContent = label;
+    const total = document.createElement("span"); total.textContent = formatDuration(item.reading + item.listening);
+    group.append(bar, total, caption); root.append(group);
+  }
+}
+async function loadAnalyticsDashboard() {
+  const button = $("refreshAnalyticsBtn"), status = $("analyticsStatus");
+  button.disabled = true; status.textContent = "Đang tải dữ liệu…";
+  try {
+    const days = Number($("analyticsRange").value) || 30;
+    const end = new Date(), start = new Date(end.getTime() - (days - 1) * 86400000);
+    const startText = start.toISOString().slice(0,10), endText = end.toISOString().slice(0,10);
+    const data = await api("analytics/dashboard?start=" + startText + "&end=" + endText, { cache: "no-store" });
+    const summary = data.summary || {};
+    $("analyticsReading").textContent = formatDuration(summary.readingSeconds);
+    $("analyticsListening").textContent = formatDuration(summary.listeningSeconds);
+    $("analyticsSessions").textContent = Number(summary.activeSessionDays || 0).toLocaleString("vi-VN");
+    $("analyticsDevices").textContent = summary.activeDevices === null ? "—" : Number(summary.activeDevices || 0).toLocaleString("vi-VN");
+    $("analyticsDevicesNote").textContent = data.breakdown?.available ? "Thiết bị duy nhất trong khoảng chọn" : "Ngoài cửa sổ lưu chi tiết 90 ngày";
+    $("analyticsRetentionNote").textContent = data.breakdown?.note || "";
+    $("analyticsUpdated").textContent = "Cập nhật " + formatDate(data.generatedAt) + " · UTC";
+    status.textContent = data.hasData ? "Đã tải dữ liệu tổng hợp." : "Chưa có sự kiện thống kê trong khoảng thời gian này. Có thể người dùng chưa bật đồng ý hoặc chưa phát sinh hoạt động.";
+    renderAnalyticsTrend(data.daily || [], days);
+    const body = $("analyticsPlatforms"); body.replaceChildren();
+    const platforms = data.breakdown?.platforms || [];
+    if (!platforms.length) {
+      const row = document.createElement("tr"), cell = document.createElement("td"); cell.colSpan = 6;
+      cell.className = "empty"; cell.textContent = data.breakdown?.available ? "Chưa có dữ liệu nền tảng." : "Dữ liệu nền tảng chỉ có trong 90 ngày gần nhất.";
+      row.append(cell); body.append(row);
+    } else for (const item of platforms) {
+      const row = document.createElement("tr");
+      for (const value of [item.platform, Number(item.devices || 0).toLocaleString("vi-VN"), Number(item.sessions || 0).toLocaleString("vi-VN"), formatDuration(item.readingSeconds), formatDuration(item.listeningSeconds), Number(item.events || 0).toLocaleString("vi-VN")]) {
+        const cell = document.createElement("td"); cell.textContent = value; row.append(cell);
+      }
+      body.append(row);
+    }
+  } catch (error) { status.textContent = "Không tải được Dashboard: " + error.message; }
+  finally { button.disabled = false; }
+}
+function showManagerView(view) {
+  const analytics = view === "analytics";
+  show("analyticsPanel", analytics); show("libraryPanel", !analytics);
+  $("showAnalyticsBtn").classList.toggle("active", analytics);
+  $("showLibraryBtn").classList.toggle("active", !analytics);
+  if (analytics) loadAnalyticsDashboard();
+}
+$("showAnalyticsBtn").addEventListener("click", () => showManagerView("analytics"));
+$("showLibraryBtn").addEventListener("click", () => showManagerView("library"));
+$("refreshAnalyticsBtn").addEventListener("click", loadAnalyticsDashboard);
+$("analyticsRange").addEventListener("change", loadAnalyticsDashboard);
+
 async function handleRoute() {
   if (location.hash !== "#manage") {
     show("homePanel", true); show("loginPanel", false); show("managerPanel", false);
