@@ -83,9 +83,9 @@ def main():
     history = subprocess.run(command, check=True, capture_output=True, text=True).stdout
     notes = render_notes(collect_entries(history))
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-        output.write(f"version={version_name}\\n")
-        output.write(f"prerelease={prerelease}\\n")
-        output.write("changelog<<CHANGELOG_EOF\\n" + notes + "\\nCHANGELOG_EOF\\n")
+        output.write(f"version={version_name}\n")
+        output.write(f"prerelease={prerelease}\n")
+        output.write("changelog<<CHANGELOG_EOF\n" + notes + "\nCHANGELOG_EOF\n")
     print("Release channel:", channel)
     print("Previous channel tag:", tag or "(first release)")
     print("Release notes characters:", len(notes))
