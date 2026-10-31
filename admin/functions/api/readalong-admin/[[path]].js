@@ -414,7 +414,7 @@ async function scanLibrary(bucket, prefix, db) {
     findings.push({severity:"warning",code:"name_mismatch",key:item.key,candidateKey:counterpart.key,
       similarity:Math.round(best.score*100),...(best.score>=0.95?{suggestedRename}:{}),
       message:"Tên tệp gần giống nhưng chưa trùng tên gốc; hiện không được ghép tự động.",
-      suggestion:"Nếu xác nhận cùng một sách, duyệt đổi tên thành: "+suggestedRename});
+      suggestion:best.score>=0.95?"Nếu xác nhận đúng cùng một sách, có thể duyệt đổi tên thành: "+suggestedRename:"Độ tương đồng dưới ngưỡng 95%; không đề xuất đổi tên tự động. Hãy đối chiếu thủ công trước khi sửa."});
     reported.add(item.key);
   }
   for(const item of assets.filter(x=>x.ext===".json")){
