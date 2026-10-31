@@ -222,7 +222,7 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 - [x] Bỏ giao diện Chẩn đoán/Báo lỗi khỏi ứng dụng cá nhân và ngừng nạp diagnostics client.
 - [x] Bật usage analytics mặc định, không hiển thị consent modal/menu; payload hiện hữu chỉ gồm event ẩn danh và thời lượng đọc/nghe, không gồm tên sách/tệp/nội dung.
 - [x] Đổi nhãn checkpoint thành “Mốc đọc gần đây”.
-- [ ] Chạy full regression CI trên commit chốt của batch; xử lý mọi lỗi test trước khi build APK.
-- [ ] Build và xác minh signed beta APK; kiểm thử portrait trên thiết bị cảm ứng (nhiều chiều rộng), xác nhận nút playlist hoạt động và menu gọn.
+- [x] Full regression CI đã pass ở run [41193683584](https://github.com/blamag999/read-along-android/actions/runs/41193683584) trên commit `52d56ad795d20def0c5e536587a529db6a9f5ff8`.
+- [ ] Build và xác minh signed beta APK (đang chạy workflow 41193683584); kiểm thử portrait trên thiết bị cảm ứng (nhiều chiều rộng), xác nhận nút playlist hoạt động và menu gọn.
 - [ ] Kiểm tra mở truyện R2 tải đúng JSON marker đi kèm PDF/audio; xác nhận không còn request đồng bộ marker GitHub.
 - [ ] Chỉ đóng batch sau nghiệm thu thiết bị; không promote main trước xác nhận của người dùng.
