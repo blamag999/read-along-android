@@ -65,11 +65,13 @@ Nếu thật sự cần ngoại lệ về nhánh, phải giải thích lý do k�
 6. Commit trên đúng nhánh; theo dõi CI và xử lý lỗi trên cùng nhánh, không tạo nhánh mới để né CI.
 7. Không chạy full regression trên mọi commit trung gian. Chốt một batch hoàn chỉnh bằng marker `[test]` ở commit cuối cùng của lần push; thay đổi nhạy cảm/critical phải test ngay, không đợi batch.
 
-### Sau mỗi đợt
+### Sau mỗi bước / batch — bắt buộc bàn giao liên tục
 
-- Cập nhật ROADMAP với kết quả đã hoàn thành, commit SHA, CI/test, deploy, APK/device test và giới hạn chưa xác minh.
-- PLANNING chỉ giữ phần chưa xong. Khi một mục hoàn tất: chuyển kết quả/bằng chứng sang ROADMAP rồi xóa mục đó khỏi PLANNING.
-- README chỉ cập nhật khi thay đổi quy tắc hoặc thông tin bàn giao nền tảng.
+- **Không chờ đến cuối phiên.** Sau mỗi bước công việc có kết quả độc lập (sửa code, thay workflow, migration, deploy, kiểm thử hoặc quyết định kiến trúc), phải cập nhật hồ sơ bàn giao ngay trước khi chuyển sang bước tiếp theo.
+- ROADMAP ghi kết quả vừa hoàn thành, ngày, commit SHA, file/phạm vi thay đổi, CI/test/deploy thực tế, bằng chứng và giới hạn chưa xác minh.
+- PLANNING cập nhật ngay trạng thái phụ thuộc: chỉ giữ việc chưa xong; chuyển kết quả/bằng chứng sang ROADMAP rồi bỏ checklist đã hoàn thành. Nếu bước chưa xong, ghi rõ blocker và bước tiếp theo.
+- README cập nhật ngay khi bước đó thay đổi quy tắc làm việc, CI, release hoặc thông tin bàn giao nền tảng; không đợi kết thúc phiên.
+- Trước khi kết thúc phiên, kiểm tra ba file README/ROADMAP/PLANNING đồng bộ với HEAD và trạng thái CI/deploy mới nhất.
 - Không ghi “đã kiểm thử”, “đã phát hành”, “đã deploy” nếu chưa có bằng chứng thực tế.
 
 ## 5. Quy tắc build APK và OTA
