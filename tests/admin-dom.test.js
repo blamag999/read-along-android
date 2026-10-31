@@ -48,6 +48,9 @@ assert.ok(script.includes('if (file.key === "books.json") continue;'), 'Root boo
 assert.ok(api.includes('if (key === "books.json") return json({ error: "books.json không thể xóa trực tiếp; hãy dùng Xuất bản danh mục" }, 403);'), 'API must reject direct deletion of the root catalog manifest');
 assert.ok(api.includes('if (source === "books.json" || destination === "books.json") return json({ error: "books.json chỉ được cập nhật qua Xuất bản danh mục" }, 403);'), 'API must reject rename/move into or out of the root catalog manifest');
 assert.ok(api.includes('if (key === "books.json") return json({ error: "books.json chỉ được cập nhật qua Xuất bản danh mục" }, 403);'), 'API must reject manual upload of the root catalog manifest');
+assert.ok(api.includes('route === "catalog/publish"'), 'The dedicated catalog publisher must remain available as the manifest writer');
+assert.ok(api.includes('if (key === "books.json") return json({ error: "books.json chỉ được cập nhật qua Xuất bản danh mục" }, 403);'), 'API must reject direct multipart part writes to the root manifest');
+assert.ok(api.includes('if (key === "books.json") return json({ error: "books.json chỉ được cập nhật qua Xuất bản danh mục" }, 403);'), 'API must reject direct multipart completion for the root manifest');
 assert.ok(script.includes('Đang đổi tên/di chuyển: '), 'Rename must report its in-progress state');
 assert.ok(script.includes('Đã đổi tên/di chuyển thành công: '), 'Rename must report its result');
 
