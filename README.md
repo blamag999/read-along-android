@@ -20,7 +20,7 @@ Tài liệu kỹ thuật chi tiết chỉ đọc khi công việc liên quan:
 
 - `README.md` là hồ sơ quy tắc làm việc và bàn giao **dùng chung**, nội dung phải đồng nhất tuyệt đối trên `main` và `beta`.
 - Khi README thay đổi trên một nhánh, phải đồng bộ cùng nội dung sang hai nhánh còn lại bằng commit chỉ sửa README; không merge/cherry-pick mã nguồn hoặc promote code chỉ để đồng bộ tài liệu.
-- Sau mỗi lần đồng bộ, đọc lại cả ba file và xác nhận nội dung giống hệt nhau (byte-for-byte), đồng thời ghi SHA commit từng nhánh vào ROADMAP.
+- Sau mỗi lần đồng bộ, đọc lại README/ROADMAP/PLANNING và RECOVERY trên beta và xác nhận nội dung giống hệt nhau (byte-for-byte), đồng thời ghi SHA commit từng nhánh vào ROADMAP.
 - Mỗi phiên mới phải kiểm tra README của cả ba nhánh trước khi làm việc; nếu phát hiện lệch, dùng bản quy tắc mới nhất đã được xác nhận trên beta làm nguồn chuẩn, trừ khi người dùng chỉ định khác.
 - Không sửa README riêng lẻ trên một nhánh mà bỏ quên hai nhánh còn lại. Không đồng nhất các file ROADMAP/PLANNING giữa nhánh bằng cách này; chúng phản ánh trạng thái code riêng của từng nhánh.
 
@@ -101,6 +101,51 @@ Repository sử dụng đúng **hai nhánh dài hạn**:
 - README cập nhật ngay khi bước đó thay đổi quy tắc làm việc, CI, release hoặc thông tin bàn giao nền tảng; không đợi kết thúc phiên.
 - Trước khi kết thúc phiên, kiểm tra ba file README/ROADMAP/PLANNING đồng bộ với HEAD và trạng thái CI/deploy mới nhất.
 - Không ghi “đã kiểm thử”, “đã phát hành”, “đã deploy” nếu chưa có bằng chứng thực tế.
+
+
+## 4A. Khôi phục tiến trình khi bàn giao bị thiếu hoặc lỗi thời — bắt buộc
+
+Git là nguồn sự thật về thay đổi mã nguồn; README/ROADMAP/PLANNING/RECOVERY là hồ sơ giải thích và xác nhận trạng thái. Không được coi tài liệu bàn giao cũ là trạng thái hiện tại nếu Git có commit hoặc thay đổi chưa được ghi nhận sau mốc đó.
+
+### Khi bắt đầu mỗi phiên mới
+
+1. Xác nhận đúng repository và đọc README, ROADMAP, PLANNING, RECOVERY trên `beta`; đọc README trên `main` để xác nhận quy tắc dùng chung.
+2. Đọc `RECOVERY.md` lấy `last_handover_commit` và `last_reviewed_head`. Kiểm tra HEAD hiện tại của `beta` và `main`, branch đang làm và working tree nếu có bản clone.
+3. So sánh từ `last_handover_commit` đến HEAD bằng Git history và diff; đồng thời kiểm tra thay đổi staged/unstaged/untracked. GitHub commit diff không thể phát hiện thay đổi chưa commit trong một bản clone khác.
+4. Nếu HEAD khác mốc đã ghi hoặc working tree không sạch, dừng việc phát triển tính năng mới; lập danh sách commit, file thay đổi, diff và trạng thái CI/test/deploy/build tương ứng.
+5. Phân loại từng hạng mục: `DONE` (có bằng chứng nghiệm thu), `IMPLEMENTED` (đã có code nhưng chưa kiểm chứng), `PARTIAL` (dang dở), `UNKNOWN` (không đủ bằng chứng). Commit tồn tại không tự chứng minh tính năng hoàn tất.
+6. Bảo toàn mọi thay đổi chưa commit/untracked. Không reset, clean, force-push, rebase hoặc ghi đè để làm working tree “sạch”.
+7. Cập nhật ROADMAP với phát hiện và bằng chứng; cập nhật PLANNING chỉ với việc còn lại. Sau khi đối chiếu xong, cập nhật `last_reviewed_head` trong RECOVERY. Chỉ tiếp tục công việc mới khi trạng thái đã rõ.
+
+### Lệnh đối chiếu chuẩn trong bản clone
+
+```bash
+git status --short
+git branch --show-current
+git log -n 30 --oneline --decorate
+git log --oneline LAST_HANDOVER_SHA..HEAD
+git diff --stat LAST_HANDOVER_SHA..HEAD
+git diff --name-status LAST_HANDOVER_SHA..HEAD
+git diff
+git diff --cached
+```
+
+Thay `LAST_HANDOVER_SHA` bằng SHA chính xác trong RECOVERY.md. Kiểm tra thêm untracked files từ `git status --short`; các file này không xuất hiện trong `git diff`.
+
+### Khi kết thúc hoặc bàn giao chính thức
+
+- Cập nhật ROADMAP và PLANNING theo quy tắc hiện hành; ghi rõ SHA commit, CI/test/deploy/build và phần chưa xác minh.
+- Tạo commit bàn giao tài liệu trên beta với thông điệp có `[handover]`; commit này là mốc bàn giao chính thức.
+- Cập nhật `last_handover_commit` trong RECOVERY.md tới SHA commit code/documentation cuối cùng được bàn giao (commit ngay trước commit chỉ ghi mốc handover nếu cần tránh tham chiếu vòng); ghi rõ quy ước và SHA commit handover thực tế.
+- Ghi `last_reviewed_head` là HEAD đã được đối chiếu. Không đặt mốc cao hơn commit đã kiểm tra.
+- Nếu phiên bị ngắt trước bước này, phiên sau phải phát hiện và phân tích delta Git; không được tự coi các thay đổi chưa ghi nhật ký là đã bàn giao.
+
+### Quy tắc an toàn khi khôi phục
+
+- Không tự động sửa hoặc xóa code chỉ vì không có mô tả trong ROADMAP.
+- Không kết luận CI/test/deploy thành công nếu không có run/deployment cụ thể gắn với commit tương ứng.
+- Nếu không thể truy cập working tree của phiên trước, chỉ có thể khôi phục commit đã push lên GitHub; thay đổi local chưa commit và chưa push không thể được tái dựng từ GitHub.
+- Nếu phát hiện commit trên main hoặc nhánh khác, không tự merge/promote; tuân thủ quy tắc nhánh và xác nhận của người dùng.
 
 ## 5. Quy tắc build APK và OTA
 
