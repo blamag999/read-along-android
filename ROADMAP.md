@@ -626,3 +626,14 @@ Khi một công việc trong PLANNING hoàn tất:
 - Device acceptance is still pending. Test on a touch-screen phone, especially page 5 → pages 3–4 with page 4 unmarked, three checkpoints, single-row header, notifications and touch zones limited to the PDF canvas.
 - No main/stable promotion. Android TV remains out of scope.
 
+
+
+## 2026-10-31 — Touch header và tinh gọn menu (beta, đang chờ kiểm chứng)
+
+- Header portrait: bổ sung responsive layout cho chiều rộng ≤600px và ≤380px; header title được phép ellipsis, header actions không co tràn, nhãn chữ Playlist/Đóng sách ẩn ở màn hình hẹp để giữ nút Danh sách truyện, Đóng sách và Menu tách biệt.
+- Marker: bỏ nút cập nhật marker trực tuyến, token GitHub và UI đồng bộ marker GitHub; bỏ tải remote-sync client khỏi app. Giữ marker JSON đi kèm nội dung/catalog R2 và chức năng nhập/xuất JSON cục bộ. Không thay đổi R2 object hoặc API/backend.
+- Menu: bỏ mục Chẩn đoán/Báo lỗi và không nạp diagnostics client; bỏ màn hình xin đồng ý thống kê; analytics mặc định bật. Bộ thu thập hiện hữu chỉ đo sự kiện và thời lượng đọc/nghe ẩn danh, không gửi tên sách, tên file hoặc nội dung.
+- Đổi nhãn checkpoint từ “Mốc đã đọc gần đây” thành “Mốc đọc gần đây”.
+- Regression assertions bổ sung trong `tests/modules.test.js` cho menu đã tinh gọn, header responsive, nhãn checkpoint và bảo toàn export marker local.
+- Code batch đã cập nhật trên beta tới `b0a542e75692e5ab3711d43bda68b07e8b328019`; các commit tiếp theo hiện chỉ cập nhật PLANNING/ROADMAP/RECOVERY.
+- Trạng thái: IMPLEMENTED; CI/full regression, APK build, R2 marker smoke test và nghiệm thu thiết bị CHƯA XÁC NHẬN. Không promote main.
