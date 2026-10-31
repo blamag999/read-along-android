@@ -10,6 +10,7 @@ assert.match(app, /https:\/\/pub-763a3a5ae235415cbef15b64f7a20820\.r2\.dev\/book
 assert.doesNotMatch(app, /private-comic-reader\.pages\.dev\/api\/readalong\/books/, 'catalog loading must not depend on the Pages API');
 assert.match(catalogSource, /typeof value === 'string'/, 'catalog module must accept URL strings from books.json');
 assert.match(catalogSource, /item\.sync \|\| item\.json/, 'catalog module must read the manifest sync URL');
+assert.match(catalogSource, /folder: String\(item\.folder/, 'catalog module must preserve folder metadata');
 assert.ok(Array.isArray(manifest.books) && manifest.books.length > 0, 'books.json must contain a non-empty books array');
 assert.ok(!manifest.books.some(book => book.id === 'brave'), 'deleted Brave R2 assets must not remain in the publish seed');
 const r2Host = 'pub-763a3a5ae235415cbef15b64f7a20820.r2.dev';
@@ -46,6 +47,7 @@ const remoteStories = catalog.mapRemoteCatalog({
   books: [{
     id: 'book-1',
     title: 'Book One',
+    folder: 'DISNEY',
     pdf: r2Url('one.pdf'),
     audios: [r2Url('one.mp3'), 'https://example.com/outside.mp3'],
     sync: r2Url('one.json')
@@ -69,6 +71,7 @@ const remoteStories = catalog.mapRemoteCatalog({
 assert.equal(remoteStories.length, 1, 'remote catalog must discard entries without permitted R2 assets');
 assert.equal(remoteStories[0].audios.length, 1, 'remote catalog must discard assets outside R2');
 assert.equal(remoteStories[0].pdf.name, 'one.pdf');
+assert.equal(remoteStories[0].folder, 'DISNEY', 'remote catalog must retain the folder group');
 assert.equal(remoteStories[0].json.name, 'one.json');
 
 const localItems = [
@@ -88,15 +91,17 @@ assert.deepEqual(JSON.parse(JSON.stringify(grouped[0].audios.map(item => item.pa
   ['Phần 1', 'Phần 2'], 'audio part labels must be assigned consistently');
 
 const samplePlaylist = [
-  { id: 'a', title: 'Alpha', pdf: { name: 'alpha.pdf' }, audios: [{ name: 'alpha.mp3' }] },
-  { id: 'b', title: 'Beta', pdf: { name: 'beta.pdf' }, audios: [] },
-  { id: 'c', title: 'Gamma', pdf: null, audios: [{ name: 'gamma.mp3' }] }
+  { id: 'a', title: 'Alpha', folder: 'DISNEY', pdf: { name: 'alpha.pdf' }, audios: [{ name: 'alpha.mp3' }] },
+  { id: 'b', title: 'Beta', folder: 'ONE STORY A DAY LEVEL 2 FULL', pdf: { name: 'beta.pdf' }, audios: [] },
+  { id: 'c', title: 'Gamma', folder: '', pdf: null, audios: [{ name: 'gamma.mp3' }] }
 ];
 assert.deepEqual(JSON.parse(JSON.stringify(catalog.filterPlaylist(samplePlaylist, { filter: 'paired' }).map(x => x.id))), ['a']);
 assert.deepEqual(JSON.parse(JSON.stringify(catalog.filterPlaylist(samplePlaylist, { filter: 'pdf' }).map(x => x.id))), ['a', 'b']);
 assert.deepEqual(JSON.parse(JSON.stringify(catalog.filterPlaylist(samplePlaylist, { filter: 'mp3' }).map(x => x.id))), ['a', 'c']);
 assert.deepEqual(JSON.parse(JSON.stringify(catalog.filterPlaylist(samplePlaylist, { filter: 'favorites', favorites: ['c'] }).map(x => x.id))), ['c']);
 assert.deepEqual(JSON.parse(JSON.stringify(catalog.filterPlaylist(samplePlaylist, { filter: 'all', query: 'BETA.PDF' }).map(x => x.id))), ['b']);
+assert.deepEqual(JSON.parse(JSON.stringify(catalog.filterPlaylist(samplePlaylist, { filter: 'all', folder: 'DISNEY' }).map(x => x.id))), ['a']);
+assert.deepEqual(JSON.parse(JSON.stringify(catalog.filterPlaylist(samplePlaylist, { filter: 'all', folder: '__root__' }).map(x => x.id))), ['c']);
 
 console.log('Extracted catalog/playlist module tests passed.');
 
@@ -108,6 +113,8 @@ assert.match(adminScript, /api\("catalog\/preview"\)/, 'Admin must request a fre
 assert.doesNotMatch(adminScript, /fetch\("\/books\.json"/, 'Admin must not publish the static Git seed');
 assert.match(adminApi, /route === "catalog\/preview"/, 'API must expose an authenticated R2 inventory preview');
 assert.match(adminApi, /group\.pdf\.length !== 1/, 'preview must exclude missing or duplicate PDFs');
+assert.match(adminApi, /folder: group\.dir\.replace/, 'preview must assign the source R2 folder to each book');
+assert.match(adminApi, /book\.folder/, 'publisher must validate and preserve folder metadata');
 assert.match(adminApi, /!group\.audios\.length/, 'preview must exclude books without audio');
 assert.match(adminApi, /badKeys/, 'preview must exclude files with scan errors');
 assert.ok(adminApi.includes("stem.match(/(?:_P(\\d+)"), "preview must recognize numbered audio parts");
