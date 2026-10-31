@@ -23,3 +23,5 @@ assert.ok(html.includes('id="libraryErrors"') && html.includes('id="libraryWarni
 assert.ok(html.includes('id="libraryBooks"'), 'Dashboard must expose published book count');
 assert.ok(!html.includes('analyticsSessions'), 'Dashboard must not show sessions-per-day KPI');
 assert.ok(script.includes('$("libraryErrors")') && script.includes('$("libraryWarnings")'), 'Dashboard must render latest scan findings');
+
+// [test] Final dashboard batch: no daily-session KPI; library health metrics remain visible.
