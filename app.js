@@ -72,18 +72,51 @@ function toggleFavoriteBook(bookId) {
 function getReadingSessionStorageKey(bookKey) {
   return READING_SESSION_KEY + ':' + encodeURIComponent(bookKey);
 }
-function getReadingSessionForBook(bookKey) {
-  if (!bookKey) return null;
+function getReadingSessionRecordForBook(bookKey) {
+  if (!bookKey) return { bookKey, current: null, history: [] };
   const stored = readJsonStorage(getReadingSessionStorageKey(bookKey), null);
-  if (stored && stored.bookKey === bookKey) return stored;
-
-  // Migrate the previous single-session format without losing its saved position.
-  const legacy = readJsonStorage(READING_SESSION_KEY, null);
-  if (legacy && legacy.bookKey === bookKey) {
-    try { localStorage.setItem(getReadingSessionStorageKey(bookKey), JSON.stringify(legacy)); } catch (_) {}
-    return legacy;
+  if (stored && stored.bookKey === bookKey && stored.current) {
+    return {
+      bookKey,
+      current: stored.current,
+      history: Array.isArray(stored.history) ? stored.history.filter(item => item && item.bookKey === bookKey).slice(0, 2) : []
+    };
   }
-  return null;
+  // Migrate both the previous single-session format and an earlier direct session value.
+  const legacy = stored && stored.bookKey === bookKey ? stored : readJsonStorage(READING_SESSION_KEY, null);
+  if (legacy && legacy.bookKey === bookKey && !legacy.current) {
+    const migrated = { bookKey, current: legacy, history: [] };
+    try { localStorage.setItem(getReadingSessionStorageKey(bookKey), JSON.stringify(migrated)); } catch (_) {}
+    return migrated;
+  }
+  return { bookKey, current: null, history: [] };
+}
+function getReadingSessionForBook(bookKey) {
+  return getReadingSessionRecordForBook(bookKey).current;
+}
+function getReadingCheckpointLabel(session, index) {
+  const time = formatTime(session.audioTime || 0);
+  const stamp = Number.isFinite(session.updatedAt)
+    ? new Date(session.updatedAt).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+    : '';
+  return (index === 0 ? 'Mới nhất' : 'Trước đó') + ' · Trang ' + session.page + ' · ' + time + (stamp ? ' · ' + stamp : '');
+}
+function updateReadingCheckpointsUI() {
+  if (!dom.readingCheckpointSelect || !dom.btnRestoreReadingCheckpoint) return;
+  const record = getReadingSessionRecordForBook(state.currentBookKey);
+  const checkpoints = [record.current, ...record.history].filter(Boolean).slice(0, 3);
+  dom.readingCheckpointSelect.innerHTML = '';
+  checkpoints.forEach((checkpoint, index) => {
+    const option = document.createElement('option');
+    option.value = String(index);
+    option.textContent = getReadingCheckpointLabel(checkpoint, index);
+    dom.readingCheckpointSelect.appendChild(option);
+  });
+  const available = checkpoints.length > 0 && Boolean(state.pdfDoc);
+  dom.readingCheckpointSelect.disabled = !available;
+  dom.btnRestoreReadingCheckpoint.disabled = !available;
+  dom.readingCheckpointSelect.classList.toggle('hidden', !available);
+  dom.btnRestoreReadingCheckpoint.classList.toggle('hidden', !available);
 }
 function saveReadingSession(force = false) {
   if (!state.currentBookKey || !state.pdfDoc) return;
@@ -96,7 +129,68 @@ function saveReadingSession(force = false) {
     viewMode: state.viewMode, zoomScale: state.zoomScale, pageTurnMode: state.pageTurnMode,
     autoSeekAudio: state.autoSeekAudio, updatedAt: now
   };
-  try { localStorage.setItem(getReadingSessionStorageKey(state.currentBookKey), JSON.stringify(session)); } catch (_) {}
+  const record = getReadingSessionRecordForBook(state.currentBookKey);
+  const previous = record.current;
+  const movedBackward = previous && session.audioIndex === previous.audioIndex &&
+    session.page === previous.page && session.audioTime < (previous.audioTime || 0) - 3;
+  const jumpedPosition = previous && (session.page !== previous.page ||
+    session.audioIndex !== previous.audioIndex ||
+    (session.page === previous.page && session.audioIndex === previous.audioIndex &&
+      Math.abs(session.audioTime - (previous.audioTime || 0)) >= 30) || movedBackward);
+  const history = [...record.history];
+  if (jumpedPosition && previous &&
+      !(history[0] && history[0].page === previous.page && history[0].audioIndex === previous.audioIndex &&
+        Math.abs((history[0].audioTime || 0) - (previous.audioTime || 0)) < 3)) {
+    history.unshift(previous);
+  }
+  const nextRecord = { bookKey: state.currentBookKey, current: session, history: history.slice(0, 2) };
+  try {
+    localStorage.setItem(getReadingSessionStorageKey(state.currentBookKey), JSON.stringify(nextRecord));
+  } catch (_) {}
+  updateReadingCheckpointsUI();
+}
+function restoreSelectedReadingCheckpoint() {
+  if (!state.currentBookKey || !state.pdfDoc || !dom.readingCheckpointSelect) return;
+  const index = Number.parseInt(dom.readingCheckpointSelect.value, 10);
+  if (!Number.isInteger(index) || index < 0 || index > 2) return;
+  const record = getReadingSessionRecordForBook(state.currentBookKey);
+  const checkpoints = [record.current, ...record.history].filter(Boolean).slice(0, 3);
+  const selected = checkpoints[index];
+  if (!selected) return;
+
+  // Keep the position being replaced as a recovery point before restoring an older one.
+  const history = [record.current, ...record.history].filter(item => item && item !== selected);
+  const restored = { ...selected, updatedAt: Date.now() };
+  try {
+    localStorage.setItem(getReadingSessionStorageKey(state.currentBookKey), JSON.stringify({
+      bookKey: state.currentBookKey, current: restored, history: history.slice(0, 2)
+    }));
+  } catch (_) {}
+
+  state.pageNum = Number.isInteger(restored.page) ? Math.max(1, Math.min(state.totalPages, restored.page)) : 1;
+  state.currentAudioIndex = Number.isInteger(restored.audioIndex) ? restored.audioIndex : 0;
+  state.viewMode = ['fit-height', 'fit-width', 'two-pages'].includes(restored.viewMode) ? restored.viewMode : state.viewMode;
+  state.zoomScale = Number.isFinite(restored.zoomScale) ? Math.max(0.5, Math.min(3, restored.zoomScale)) : state.zoomScale;
+  state.pageTurnMode = ['next', 'markers', 'off'].includes(restored.pageTurnMode) ? restored.pageTurnMode : state.pageTurnMode;
+  state.autoSeekAudio = typeof restored.autoSeekAudio === 'boolean' ? restored.autoSeekAudio : state.autoSeekAudio;
+  state.sessionRestorePending = true;
+  state.lastSessionSaveAt = 0;
+  dom.canvasWrapper.classList.toggle('two-page-mode', state.viewMode === 'two-pages');
+  dom.btnFitHeight?.classList.toggle('active', state.viewMode === 'fit-height');
+  dom.btnTwoPages?.classList.toggle('active', state.viewMode === 'two-pages');
+  if (dom.selPageTurnMode) dom.selPageTurnMode.value = state.pageTurnMode;
+  if (dom.chkAutoSeekAudio) dom.chkAutoSeekAudio.checked = state.autoSeekAudio;
+  updateZoomLabel();
+  updateReadMenuState();
+  renderCurrentSpread();
+  if (state.currentStoryAudios[state.currentAudioIndex]) {
+    loadAudioPart(state.currentAudioIndex, { restoreSession: true });
+  } else {
+    state.sessionRestorePending = false;
+    dom.audioElement.pause();
+  }
+  updateReadingCheckpointsUI();
+  showToast('Đã khôi phục mốc đọc đã chọn. Audio không tự phát.');
 }
 function restoreReadingSessionForCurrentBook() {
   const session = getReadingSessionForBook(state.currentBookKey);
@@ -117,6 +211,7 @@ function restoreReadingSessionForCurrentBook() {
   updateZoomLabel();
   updateReadMenuState();
   state.sessionRestorePending = true;
+  updateReadingCheckpointsUI();
   return session;
 }
 function applyPendingAudioSessionRestore() {
@@ -311,7 +406,9 @@ const dom = {
   btnClearGithubToken: document.getElementById('btnClearGithubToken'),
   importSyncInput: document.getElementById('importSyncInput'),
   btnClearSync: document.getElementById('btnClearSync'),
-  toastMessage: document.getElementById('toastMessage')
+  toastMessage: document.getElementById('toastMessage'),
+  readingCheckpointSelect: document.getElementById('readingCheckpointSelect'),
+  btnRestoreReadingCheckpoint: document.getElementById('btnRestoreReadingCheckpoint')
 };
 
 function formatTime(seconds) {
@@ -1071,6 +1168,7 @@ dom.selPageTurnMode.value = state.pageTurnMode;
   });
   dom.chkAutoSeekAudio.addEventListener('change', (e) => { state.autoSeekAudio = e.target.checked; });
   dom.btnPageJump.addEventListener('click', jumpToEnteredPage);
+  dom.btnRestoreReadingCheckpoint?.addEventListener('click', restoreSelectedReadingCheckpoint);
   dom.pageJumpInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') jumpToEnteredPage(); });
   dom.btnReplayPage.addEventListener('click', replayCurrentPage);
   dom.audioElement.playbackRate = 1.0;
