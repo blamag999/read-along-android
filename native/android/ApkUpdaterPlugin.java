@@ -96,6 +96,8 @@ public class ApkUpdaterPlugin extends Plugin {
                 }
 
                 if (totalBytes != expectedSize) throw new Exception("Tệp APK tải về bị thiếu hoặc sai kích thước.");
+                // Integrity is checked before Android PackageInstaller is ever launched.
+                // Keep this gate independent of the manifest URL or storage provider.
                 String actualSha256 = toHex(digest.digest());
                 if (!safeSha256.equals(actualSha256)) throw new Exception("Checksum SHA-256 không khớp; đã hủy cài đặt.");
                 if (!apk.isFile() || apk.length() != expectedSize) throw new Exception("Tệp APK tải về không hợp lệ.");
