@@ -879,3 +879,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - PR #43 đã chạy thành công workflow `Check Read Along Admin` run #543: `npm test` (toàn bộ contracts/release-notes/analytics/modules/marker/catalog/API/admin/OTA/native lifecycle và check:js), Pages Functions syntax, isolation checks đều pass. Hai smoke test phụ thuộc deployment bị skip theo điều kiện workflow.
 - PR #43 được squash-merge vào beta: `d10459e9788eb1d961e3dfba08a5ab95324233c6`. Không merge vào main.
 - Đã xác nhận regression pass trên merge commit. Có thể tiến hành một lần build APK beta cuối đợt; APK/OTA/device acceptance vẫn đang chờ.
+
+
+## 2026-11-01 — Finalize beta build sau regression pass
+
+- Sau khi PR #43 được merge và workflow regression pass, tạo commit `[build-apk]` trên beta: `fd0d4909994ab3d065ad4bbb3fc4221e6db8f0fc`.
+- Commit chỉ thêm CSS comment đánh dấu finalization, không thay đổi giao diện hoặc logic runtime. File `styles.css` nằm trong path filter của workflow Build and Release Read Along; commit message có marker `[build-apk]`, đáp ứng hai điều kiện trigger của build workflow.
+- Connector GitHub hiện chỉ truy xuất được workflow run gắn với PR; không có endpoint liệt kê push-triggered build runs, và combined status không có entries. Vì vậy chưa xác nhận được trạng thái build, APK artifact, GitHub Release hay R2 OTA. Không khẳng định build đã thành công.
+- Chưa thay đổi main. Sau khi có artifact, cần kiểm tra APK ký số, SHA-256, OTA manifest và thực hiện nghiệm thu trên thiết bị.
