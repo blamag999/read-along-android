@@ -139,7 +139,7 @@ assert.ok(adminScript.includes('nextPageBtn') && adminScript.includes('filteredL
 assert.ok(adminScript.includes('lastPageBtn') && adminScript.includes('filteredLibraryEntries.length'), 'last-page navigation must use the rendered filtered list');
 assert.ok(!/FFmpeg|ffmpeg|convertWmaGroup|conversion-progress|Chuyển WMA/.test(adminScript), 'Admin must not ship an audio conversion workflow');
 assert.ok(adminScript.includes('Number(finding.similarity) >= 95'), 'Rename suggestions require at least 95% similarity');
-assert.ok(adminScript.includes('Thay file bằng định dạng được ứng dụng hỗ trợ'), 'Unsupported audio must be replaced manually');
+assert.ok(adminScript.includes('Cần thay file bằng định dạng được ứng dụng hỗ trợ'), 'Unsupported audio must be replaced manually');
 const adminHtml = fs.readFileSync('admin/public/index.html', 'utf8');
 const libraryToolsIndex = adminHtml.indexOf('class="library-tools"');
 assert.ok(libraryToolsIndex >= 0 && libraryToolsIndex < adminHtml.indexOf('<div class="table-wrap">', libraryToolsIndex), 'library search and sort controls must appear before the library file table');
