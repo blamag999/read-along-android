@@ -11,10 +11,6 @@
   const MAX_INTERVAL_MS = 120000;
 
   const audio = document.getElementById('audioElement');
-  const modal = document.getElementById('analyticsModal');
-  const consentInput = document.getElementById('chkAnalyticsConsent');
-  const status = document.getElementById('analyticsStatus');
-  const closeButton = document.getElementById('btnCloseAnalytics');
 
   let consent = false;
   let installId = '';
@@ -249,7 +245,6 @@
     if (consent) {
       storageSet(CONSENT_KEY, 'true');
       ensureInstallId();
-      if (status) status.textContent = 'Đã bật thống kê ẩn danh. Chỉ ghi nhận thời lượng khi PDF đang mở và ứng dụng ở foreground.';
       syncReaderState();
       return;
     }
@@ -265,17 +260,11 @@
     previousReadingActive = false;
     previousListeningActive = false;
     lastAt = performance.now();
-    if (status) status.textContent = 'Đã tắt thống kê. Ứng dụng sẽ không gửi thêm dữ liệu sử dụng.';
   }
 
   consent = readConsent();
   if (consent) ensureInstallId();
 
-  closeButton?.addEventListener('click', () => modal?.classList.add('hidden'));
-  modal?.addEventListener('click', event => {
-    if (event.target === modal) modal.classList.add('hidden');
-  });
-  consentInput?.addEventListener('change', () => setConsent(consentInput.checked));
   document.addEventListener('visibilitychange', handleVisibilityChange);
   window.addEventListener('pagehide', handlePageHide);
   window.addEventListener('pageshow', handlePageShow);
