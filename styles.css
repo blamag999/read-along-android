@@ -2882,12 +2882,6 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
 .touch-hint-right { justify-content: flex-end; padding-right: clamp(8px, 2vw, 24px); }
 @media (pointer: coarse) { .canvas-wrapper:active .touch-control-hints { opacity: .28; } }
 @media (pointer: fine) { .touch-control-hints { display: none; } }
-.close-book-btn { border-color: rgba(248,113,113,.45); }
-.close-book-btn:hover { background: rgba(127,29,29,.28); }
-@media (max-width: 700px) {
-  .close-book-btn span { display: none; }
-  .close-book-btn { min-width: 38px; padding-inline: 9px; }
-}
 
 
 /* Touch reader polish: keep the header controls on one compact row. */
@@ -2896,16 +2890,14 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
 .app-ui-mode .app-title { overflow: hidden; text-overflow: ellipsis; }
 .app-ui-mode .header-right { flex: 0 0 auto; flex-wrap: nowrap; white-space: nowrap; gap: 5px; }
 .app-ui-mode #btnOpenPlaylist { flex: 0 0 auto; padding-inline: 9px; }
-.app-ui-mode #btnCloseBook { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 36px; width: 36px; min-width: 36px; height: 36px; min-height: 36px; padding: 0; }
-.app-ui-mode #btnCloseBook span { display: none; }
-.app-ui-mode .read-menu-button { flex: 0 0 36px; }
+.app-ui-mode .read-menu-button { flex: 0 0 auto; min-width: 72px; }
 @media (max-width: 560px) {
   .app-ui-mode .app-header { gap: 4px; padding-inline: 5px; }
   .app-ui-mode .app-title { font-size: .78rem; }
   .app-ui-mode .header-right { gap: 4px; }
   .app-ui-mode #btnOpenPlaylist { width: 36px; min-width: 36px; height: 36px; min-height: 36px; padding: 0; font-size: 1rem; }
   .app-ui-mode #btnOpenPlaylist span:not(.badge-count) { display: none !important; }
-  .app-ui-mode #btnCloseBook, .app-ui-mode .read-menu-button { width: 34px; min-width: 34px; flex-basis: 34px; height: 34px; min-height: 34px; }
+  .app-ui-mode .read-menu-button { min-width: 64px; }
 }
 
 /* Reading checkpoints are directly reachable from the reader menu. */
@@ -2960,7 +2952,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
   height: 100%;
 }
 
-/* Compact touch header: keep playlist, close-book and menu controls inside the viewport. */
+/* Compact touch header: keep only library and menu actions inside the viewport. */
 @media (max-width: 600px) {
   .app-header { display:flex; flex-wrap:nowrap; gap:6px; padding:6px 8px; min-width:0; }
   .header-left { flex:1 1 auto; min-width:0; }
@@ -2970,7 +2962,6 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
   .playlist-btn { min-width:42px; justify-content:center; }
   .playlist-btn > span:not(#lblPlaylistCount) { display:none; }
   .playlist-btn .badge-count { margin-left:0; }
-  .close-book-btn > span { display:none; }
 }
 @media (max-width: 380px) {
   .app-header { gap:4px; padding-inline:6px; }
