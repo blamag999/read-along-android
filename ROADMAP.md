@@ -258,3 +258,13 @@ Khi một công việc trong PLANNING hoàn tất:
 - Workflow commit: `733b731e0a7d1a06674eb942072ecb4880785240`; README commit: `e7d278799d44f49bb865bcdab34a2b2bc5986588`. Hồ sơ này được cập nhật tiếp theo sau từng commit như quy tắc mới.
 - Beta HEAD lúc ghi nhận: `e7d278799d44f49bb865bcdab34a2b2bc5986588`. `main` không thay đổi.
 
+
+### 2026-10-31 — Đồng bộ README quy tắc trên cả ba nhánh
+
+- Người dùng yêu cầu README phải đồng nhất giữa các nhánh để tránh hướng dẫn mâu thuẫn.
+- Chọn README mới nhất trên `beta` làm nguồn chuẩn; bổ sung quy tắc README dùng chung: mọi thay đổi phải đồng bộ byte-for-byte sang `main`, `beta`, `testing`; chỉ commit README riêng lẻ, không merge/cherry-pick code hoặc promote runtime; mỗi phiên kiểm tra cả ba nhánh.
+- Đồng bộ nội dung README (15,038 ký tự) sang cả ba nhánh. Xác minh lại bằng GitHub fetch: nội dung ba file giống hệt nhau và cùng blob SHA `b2827219f11043b93225306ede69340ea2a0da01`.
+- Commit README: `beta` `261af9c8556482252e07761fd4857c91e4a9a8e5`; `main` `4d804f173656cf8c47817c9fb6d71499b61b113a`; `testing` `ef1cde5203a7af9e3846162de8ae4b693a124d9d`.
+- Đây là thay đổi tài liệu README-only trên `main` và `testing`; không merge/promote code, không thay đổi runtime, không build APK. ROADMAP/PLANNING không bị sao chép giữa nhánh vì phản ánh trạng thái code riêng.
+- README trên cả ba nhánh đã được xác minh đồng nhất byte-for-byte. `main` vẫn giữ nguyên vai trò stable; `beta` vẫn là nhánh phát triển.
+
