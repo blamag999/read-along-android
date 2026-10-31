@@ -542,3 +542,18 @@ Khi một công việc trong PLANNING hoàn tất:
 - Collector giữ install ID qua opt-out/re-consent; regression test cập nhật để xác nhận cùng một ID trong cùng app data. Commit code: 8f7bb961; test: 3eada363, 4865e9c.
 - Production usage statistics đã reset và query xác nhận 0 cho reading events/daily/session, app visits/installations và app/platform totals; audit/security/diagnostics/library/content data được giữ.
 - Các thay đổi trên đã push beta. Chưa tuyên bố APK Core freeze hoặc APK build thành công cho đến khi full regression + build workflow hoàn tất.
+
+### 2026-10-31 — Admin Dashboard redesign and management UX (beta deployment)
+
+- Tái cấu trúc Admin thành 5 tab ngang: **Thư viện → Tổng quan → Kiểm tra → Thống kê → Nhật ký**. Sau khi khôi phục session hoặc đăng nhập OTP, tab mặc định là Thư viện. Public dashboard vẫn có KPI gọn và nút vào quản trị.
+- Bố cục được tinh gọn, tăng chiều rộng nội dung, giảm khoảng trắng dư thừa; hỗ trợ Light/Dark, lần đầu theo `prefers-color-scheme`, lựa chọn thủ công được lưu trong localStorage.
+- Mỗi tab có Status Bar riêng, thống nhất kiểu hiển thị và giữ trạng thái tại tab khởi tạo tác vụ. Thêm Status Bar cho public dashboard.
+- Thư viện: upload nhiều file có tiến trình tổng thể, kết quả từng file và tiếp tục các file còn lại nếu một file thất bại; đổi tên hiển thị tên nguồn/đích và kết quả; xóa file/thư mục yêu cầu xác nhận trong giao diện và nêu đường dẫn đối tượng.
+- Tách xuất bản `books.json` sang thao tác trong Thư viện; tab Kiểm tra tập trung vào quét và báo cáo. Bỏ toàn bộ FFmpeg/WMA→MP3 conversion từ Admin JS/CSS; gỡ CSP allowances cho jsDelivr, blob worker và WebAssembly không còn cần. WMA/định dạng không hỗ trợ chỉ được cảnh báo thay file thủ công.
+- Gợi ý ghép tên chỉ được backend cung cấp khi độ tương đồng tên chuẩn hóa >=95%; mức thấp hơn không có nút duyệt đổi tên tự động và chỉ hướng dẫn đối chiếu thủ công. Quy tắc đặt tên audio-part xác định được vẫn có thể đưa ra gợi ý tất định. Tăng scan rule version lên `2026-10-31.1` để buộc rà soát lại cache theo rule mới.
+- Bảo toàn TOTP/session/cookie, API quản lý R2, upload multipart, rename/move, delete, diagnostics scan, catalog preview/publish, Analytics và audit. Không thay đổi D1 schema, dữ liệu R2, APK hoặc native Android.
+- Files changed: `admin/public/index.html`, `admin/public/admin.css`, `admin/public/admin.js`, `admin/public/_headers`, `admin/functions/api/readalong-admin/[[path]].js`, `admin/README.md`, `tests/admin-dom.test.js`, `tests/catalog.test.js`.
+- Final beta commit: `4a6fff53bce9b1bd251bd1d129ecf784b56ca651`. Full regression workflow [41178300718](https://github.com/blamag999/read-along-android/actions/runs/41178300718) completed successfully, including `npm test`, JavaScript syntax checks and Admin DOM/API isolation tests.
+- Cloudflare Pages project `read-along-admin` deployed successfully from beta commit to deployment [0547791f](https://0547791f.read-along-admin.pages.dev); deployment ID `0547791f-5b21-41fe-b673-0424ea1ebb45`. Existing Production D1 binding `read-along-admin-db`, R2 binding `my-audio-book`, and TOTP secret binding remain configured.
+- No APK build, no D1 migration, no R2 mutation, no main branch update or stable promotion. **Pending:** user acceptance test of the deployed beta UI; see P1 in PLANNING.
+
