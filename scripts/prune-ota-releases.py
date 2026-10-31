@@ -51,9 +51,6 @@ def main():
     if not endpoint:
         raise SystemExit("R2_ENDPOINT is required")
 
-    prefix = f"releases/{channel}/"
-    keep_key = prefix + filename
-
     # Fail closed: never prune a channel unless the newly published APK is present.
     aws_json(endpoint, "head-object", "--bucket", BUCKET, "--key", keep_key)
     listing = aws_json(
