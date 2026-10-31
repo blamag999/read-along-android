@@ -11,14 +11,14 @@
 - Last reviewed functional HEAD on beta: `d83b284d8d57863763560f812f41521f897c9a3e`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
-- Latest recovery checkpoint: OTA backend + fixed client endpoint implementation commit `d34378926e02ee5226e7ffb589ddc99250e86e07`
+- Latest recovery checkpoint: touch reader corrections and beta v1.3.13 release commit `d83b284d8d57863763560f812f41521f897c9a3e`
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
 
 ## Phát hiện sau mốc bàn giao trước
 
 - OTA provider-neutral đã được triển khai trên beta: R2 bucket `read-along-releases`, Pages binding `OTA_RELEASES`, latest/download API, app.js fixed API client, native SHA-256 verification và workflow upload qua bucket-scoped S3 credentials.
 - Production OTA API smoke pass trong CI [41183506939](https://github.com/blamag999/read-along-android/actions/runs/41183506939); full npm regression, JS syntax, Pages Functions syntax và isolation cũng pass.
-- OTA chưa hoàn tất nghiệm thu phát hành: chưa có R2 API token/GitHub secrets, chưa upload manifest/APK, chưa build APK chuyển tiếp và chưa cài OTA trên thiết bị. Workflow cố ý fail-closed nếu thiếu `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`.
+- Ghi chú lịch sử tại checkpoint OTA trước đó: lúc ấy chưa có R2 API token/GitHub secrets và chưa phát hành APK. Trạng thái đó đã được giải quyết trong các batch sau; beta v1.3.13 đã build, xác minh chữ ký và publish OTA thành công.
 - Cloudflare Pages latest deployment sau commit docs có thể đang chạy; backend API code và binding đã được deploy ở các commit trước và production smoke đã pass. Không xem 404 cho channel chưa có manifest là lỗi; đó là trạng thái mong đợi trước lần upload đầu tiên.
 
 
@@ -146,7 +146,7 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Manual backward navigation now resolves the nearest valid timestamp marker at or before the requested prior page, derives the appropriate page spread, and supplies that marker to the render/audio seek path. Regression coverage includes page 5 → pages 3–4 when page 4 is unmarked.
 - Touch taps/swipes are scoped to rendered PDF canvases. The visual three-zone overlay follows the actual visible canvas bounds rather than the full viewer; bounds are recalculated after render and resize/orientation changes.
 - Header actions are compacted to keep Playlist, Close Book and Read Menu on one row. Toasts preserve line breaks; OTA confirmation copy is shortened. Release notes are generated from explicit user-facing [feature], [fix], and [perf] entries rather than raw commit subjects/hashes.
-- Runtime changes and regression coverage are being prepared on beta. CI, signed APK verification, R2 OTA publication and device acceptance are not yet confirmed for this batch. Do not promote to main or describe the batch as accepted until the relevant evidence exists.
+- Runtime changes and regression coverage were implemented on beta. CI, signed APK verification, R2 OTA publication and release are confirmed in run 41191629320 and v1.3.13. Device acceptance remains pending; do not promote to main.
 - Preserve existing OTA endpoints, R2/D1 resources, package signing key and beta/stable separation.
 
 
