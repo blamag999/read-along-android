@@ -336,11 +336,25 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - README synchronization verification after PR #42: beta blob `2c9e534869ee250de84c134a873879dad18f3a7f`, main blob `2c9e534869ee250de84c134a873879dad18f3a7f`; contents are byte-for-byte identical.
 
 
-## 2026-10-31 — Đợt 1 tinh gọn Reader/Menu (đang triển khai)
+## Bàn giao — Đợt 1 Reader/Menu (2026-10-31)
 
-- Đã loại bỏ khỏi giao diện lựa chọn chế độ đọc ba trạng thái và checkbox “Lật trang tự tua”.
-- Tự tua audio khi người đọc lật trang được cố định luôn bật trong runtime; giá trị `autoSeekAudio=false` từ session cũ không còn được áp dụng.
-- Menu “Tự lật trang” chuyển trực tiếp giữa bật/tắt; session tiếp tục lưu trạng thái bật/tắt qua trường tương thích `pageTurnMode` (giá trị `next/off`).
-- Đã bỏ các nút chọn một/hai trang và zoom nhanh khỏi HTML; chế độ hiển thị cũ trong session được chuẩn hóa về fit-height. Ghép trang theo marker tiếp tục dùng `resolveTimestampSpread()`.
-- Phạm vi chưa hoàn tất: cần loại bỏ wiring/hàm cũ còn tham chiếu phần tử UI đã xóa, cập nhật test hợp đồng và chạy regression. Chưa build APK, chưa chạy CI hoặc kiểm thử thiết bị.
-- Không thay đổi R2 catalog, marker JSON read path, local file picker hay marker manager trong đợt này.
+### Đã cập nhật trên beta
+- `index.html`: bỏ selector chế độ đọc ba trạng thái, checkbox “Lật trang tự tua”, nút fit-height/hai trang và cụm zoom nhanh khỏi giao diện.
+- `app.js`: thao tác Tự lật trang trong Menu chuyển giữa `next/off`; trạng thái cũ `markers` được chuẩn hóa về `next`, còn `off` tiếp tục là tắt. Giá trị `autoSeekAudio` cũ không còn được đọc/ghi; thao tác lật trang thủ công luôn thực hiện đồng bộ audio.
+- Khôi phục session/checkpoint chuẩn hóa layout cũ về fit-height; thuật toán `resolveTimestampSpread()` vẫn quyết định ghép trang theo marker. Giữ nguyên page/audio marker lookup và Android Back/session.
+- Loại bỏ các tham chiếu DOM đến selector, checkbox, nút hai trang/fit và zoom đã xóa.
+
+### Commit code
+- `d9605126b89b2c42900ab4016d0e3b8780fda13c` — đơn giản hóa page-turn và luôn tua audio khi lật thủ công.
+- `fec7a7e18db2211f89b876053622277c4d7c4d39` — loại bỏ quick controls khỏi HTML.
+- `35169295e7855a2d50b2319e9a3cccc24128f1f5`, `170a5c5d8ac76fb0897c59442c488e989e3f7f17`, `7e56cd43be4c3d49d2efd6ae4053c20b00eeed2f`, `1cd70bf9b031726a4d799a1e2ad274ea22321753` — dọn wiring còn sót và chuẩn hóa session cũ.
+
+### Kiểm tra và giới hạn
+- Đã rà soát lại source trên beta: HTML không còn `selPageTurnMode`, `chkAutoSeekAudio`, `btnTwoPages`, `btnFitHeight`, `btnZoomIn`, `btnZoomOut`; app không còn tham chiếu DOM đến các control đó.
+- Chưa chạy `npm test`, chưa chạy CI, chưa build APK và chưa kiểm tra trên Android/Android TV. Vì vậy đợt 1 đã cập nhật source nhưng **chưa được nghiệm thu runtime**.
+- Việc tiếp theo bắt buộc trước khi chuyển Đợt 2: cập nhật test hợp đồng cho UI/logic mới, chạy toàn bộ regression, xử lý lỗi nếu có; sau đó build một APK beta và kiểm tra manual page seek, auto flip on/off, auto spread, backward navigation, session/checkpoint, rotation và audio multi-part.
+- Không sửa marker manager, local file picker, R2 catalog, API, Worker, database, OTA endpoint hoặc signing key trong đợt này.
+
+### Trạng thái bàn giao
+- Đợt 1: source change đã ghi vào beta; chờ test/regression và device acceptance.
+- Đợt 2: chưa bắt đầu.
