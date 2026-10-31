@@ -278,24 +278,28 @@
     </div>
   </div>
 
-  <!-- SYNC MANAGEMENT MODAL -->
+  <!-- SYNC MANAGEMENT MODAL: local JSON import/export only -->
   <div id="syncModal" class="modal-overlay hidden">
     <div class="modal-content">
       <div class="modal-header">
         <h3>⏱️ Quản lý mốc thời gian theo trang</h3>
-        <button id="btnCloseSyncModal" class="close-btn">&times;</button>
+        <button id="btnCloseSyncModal" class="close-btn" type="button" aria-label="Đóng">&times;</button>
       </div>
-
       <div class="modal-body">
-        <p class="modal-desc">
-          Khi audio chạy đến số giây này, truyện sẽ tự động chuyển sang trang tương ứng:
-        </p>
-
+        <p class="modal-desc">Quản lý mốc thời gian lưu cùng sách. Có thể nhập JSON từ thiết bị hoặc xuất JSON để đặt cạnh PDF/audio trên R2.</p>
         <div class="sync-actions-row">
-          <button id="btnExportSync" class="btn-secondary" title="Xuất tệp mốc để lưu cùng thư mục truyện trên máy">📥 Tải tệp mốc (.json)</button>
-
-          
-          
+          <button id="btnExportSync" class="btn-secondary" type="button" title="Xuất tệp mốc JSON">📥 Tải tệp mốc (.json)</button>
+          <label for="importSyncInput" class="btn-secondary">📂 Nhập file mốc từ máy</label>
+          <input type="file" id="importSyncInput" accept=".json,application/json" style="display:none;">
+          <button id="btnClearSync" class="btn-danger" type="button">🗑️ Xóa hết mốc của truyện này</button>
+        </div>
+        <div class="sync-table-container">
+          <table class="sync-table">
+            <thead><tr><th>Trang</th><th>Thời điểm bắt đầu</th><th>Thao tác</th></tr></thead>
+            <tbody id="syncTableBody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
