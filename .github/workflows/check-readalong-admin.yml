@@ -6,6 +6,17 @@ on:
       - beta
       - main
       - testing
+    paths:
+      - "admin/**"
+      - "app.js"
+      - "index.html"
+      - "sw.js"
+      - "modules/**"
+      - "services/**"
+      - "schemas/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tests/**"
   workflow_dispatch:
   pull_request:
     branches:
@@ -22,8 +33,9 @@ on:
       - "tests/**"
       - ".github/workflows/check-readalong-admin.yml"
 
-# Full regression is opt-in on push: put [test] in the final commit message
-# of a completed batch. PRs remain automatically validated.
+# Workflow-level paths prevent documentation-only and unrelated pushes from creating runs.
+# Full regression remains opt-in on matching pushes via [test] in the final commit message.
+# PRs targeting beta/main remain automatically validated for the paths below.
 concurrency:
   group: readalong-check-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
