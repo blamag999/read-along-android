@@ -11,7 +11,7 @@
 - Last reviewed HEAD on beta: `48386107f6a924d8bb2f4eff0d8f9f3f9a5ec938`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
-- Latest recovery checkpoint: Online Reading Progress plan handover (commit will be recorded after checkpoint)
+- Latest recovery checkpoint: Online Reading Progress plan handover [handover] commit `cc09fddd5554c7c39760a9e37122fa0ae181d6ed`
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
 
 ## Phát hiện sau mốc bàn giao trước
@@ -89,3 +89,4 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Đã cập nhật tài liệu kiến trúc Core với hướng ANDROID_ID app-scoped, D1 table riêng theo `(device_id, book_id)`, Pages Functions hiện hữu và các giới hạn bảo mật/ổn định của device ID.
 - ROADMAP ghi nhận đây là quyết định và kế hoạch, không phải tính năng đã triển khai. Chưa thay đổi native code, API, D1 schema, progress runtime hoặc APK; chưa migrate dữ liệu local.
 - Last reviewed HEAD trước commit handover: `48386107f6a924d8bb2f4eff0d8f9f3f9a5ec938`.
+- Commit handover tài liệu: `cc09fddd5554c7c39760a9e37122fa0ae181d6ed`.
