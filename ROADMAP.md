@@ -235,3 +235,15 @@ Khi một công việc trong PLANNING hoàn tất:
 - CI regression + JS syntax + Pages Functions syntax + isolation checks **success** tại [41164377952](https://github.com/blamag999/read-along-android/actions/runs/41164377952) trên commit `6441085ee49bc2c0d4a32704d296316a2c7de9bb`. Hai lần chạy trước phát hiện lỗi cú pháp trong test assertion do chỉnh sửa nội dung; đã dọn test và run cuối thành công.
 - AN1 hoàn tất; AN2 backend ingest/D1 chưa bắt đầu.
 
+
+### 2026-10-31 — Analytics AN2 backend and D1 migration deployed to beta Pages production
+
+- Added `admin/functions/lib/analytics.mjs` for strict event/batch validation, explicit consent, one install/session per batch, ID/sequence collision checks, ISO date validation, bounded durations and opaque book IDs.
+- Added `POST /api/readalong-admin/analytics/events` to the existing Read Along Pages Functions router. Requires `consent: true`, max 25 events, max 64 KiB streamed body, local-origin CORS allowlist, 150 events/install/hour, hashed install ID and idempotent `INSERT OR IGNORE`.
+- Added `admin/migrations/0002_reading_analytics.sql`: raw event table, unique session sequence, daily totals, unique daily sessions and insert trigger. Raw events are pruned after 90 days; daily aggregates after 24 months.
+- Applied additive migration to the existing D1 database `read-along-admin-db` already bound as `DB` to Pages project `read-along-admin`; verified all 3 tables and the daily trigger. Also appended the same definitions to `admin/schema.sql` for clean database bootstrap.
+- Added unit/contract/API-boundary tests and a GitHub Actions production smoke test. Smoke test verified OPTIONS 204 + exact Capacitor CORS origin and POST without explicit consent returns 400 `Analytics consent required`.
+- CI full regression, JavaScript syntax, Pages Functions syntax, isolation and deployed consent smoke **success**: [41166166847](https://github.com/blamag999/read-along-android/actions/runs/41166166847), commit `e8691fdd320eec71cdddfba67b22c8b0891d8fbe`.
+- Cloudflare Pages production deployment for this commit is still in progress at the time of this note; the consent smoke test already reached the deployed endpoint, but a final deployment-stage success check remains.
+- Not implemented: APK/client consent UI and collector, valid event write/deduplication/aggregate end-to-end test, analytics dashboard. No APK build and no `main` promotion.
+
