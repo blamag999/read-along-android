@@ -1,4 +1,4 @@
-const CACHE_NAME = 'read-along-shell-v51-network-first';
+const CACHE_NAME = 'read-along-shell-v52-network-first';
 const APP_SHELL = [
   './',
   './index.html',
