@@ -211,7 +211,7 @@ function handleAppBack() {
   if (appLifecycle?.exitApp) {
     appLifecycle.exitApp().catch(error => {
       console.error('Không thể thoát ứng dụng:', error);
-      showToast('Không thể đóng ứng dụng. Hãy thử nút Back của Android lần nữa.');
+      showToast('Không thể thoát ứng dụng. Hãy nhấn Back lần nữa.');
     });
   } else {
     window.close();
@@ -359,7 +359,7 @@ function applyPendingAudioSessionRestore() {
   }
   dom.audioElement.pause();
   saveReadingSession(true);
-  showToast('Đã khôi phục vị trí đọc gần nhất. Nhấn Phát để tiếp tục nghe.');
+  showToast('Đã khôi phục vị trí đọc. Nhấn Phát để nghe.');
 }
 
 const DB_NAME = 'PdfAudioSyncDB';
@@ -722,10 +722,9 @@ async function loadR2Catalog() {
     renderPlaylistView();
     if (dom.lblPlaylistSubtitle) dom.lblPlaylistSubtitle.textContent = stories.length + ' mục trực tuyến';
     openPlaylistModal();
-    showToast('Đã tải ' + stories.length + ' sách trực tiếp từ books.json.');
+    showToast('Đã tải thư viện sách (' + stories.length + ' cuốn).');
   } catch (error) {
     console.error('Không thể tải books.json từ R2:', error);
-    console.error('Không thể tải danh sách truyện:', error);
     alert('Không tải được thư viện sách. Vui lòng thử lại.');
   } finally {
     dom.playlistLoading.classList.add('hidden');
@@ -745,7 +744,7 @@ function buildPlaylistFromItems(rawItems) {
       dom.lblPlaylistSubtitle.textContent = 'Tìm thấy ' + playlistArray.length + ' tập truyện trong thư mục';
     }
     openPlaylistModal();
-    showToast('Đã nạp danh sách ' + playlistArray.length + ' tập truyện!');
+    showToast('Đã tải danh sách ' + playlistArray.length + ' sách.');
   }
 }
 
@@ -968,12 +967,11 @@ async function loadStoryFromPlaylist(story, audioPartIndex) {
     }
 
     loadAudioPart(state.currentAudioIndex);
-    showToast('📖 Đang đọc: ' + story.title);
+    showToast('Đang đọc: ' + story.title);
     renderPlaylistView();
     updateAudioPartUI();
   } catch (err) {
     console.error('Lỗi khi mở truyện từ playlist:', err);
-    console.error('Không thể mở sách:', err);
     alert('Không mở được sách. Vui lòng kiểm tra tệp sách và âm thanh.');
   } finally {
     dom.pdfLoadingIndicator.classList.add('hidden');
@@ -1275,10 +1273,10 @@ dom.selPageTurnMode.value = state.pageTurnMode;
     state.resumeAfterManualTurn = false;
     showToast(
       state.pageTurnMode === 'markers'
-        ? 'Đến mốc trang kế tiếp, audio sẽ dừng chờ bạn lật trang; nếu không có mốc, audio tiếp tục.'
+        ? 'Đến mốc trang kế tiếp, âm thanh sẽ dừng chờ bạn lật trang; nếu không có mốc, âm thanh tiếp tục.'
         : state.pageTurnMode === 'next'
-          ? 'Audio tự động lật trang theo mốc thời gian.'
-          : 'Đọc liên tục; không tự dừng hoặc tự chuyển trang.'
+          ? 'Tự động lật trang theo mốc thời gian.'
+          : 'Đọc liên tục, không tự dừng hoặc chuyển trang.'
     );
   });
   dom.chkAutoSeekAudio.addEventListener('change', (e) => { state.autoSeekAudio = e.target.checked; });
@@ -1414,7 +1412,7 @@ async function handlePdfFileSelect(e) {
   } finally {
     state.pdfSelectionInProgress = false;
   }
-  showToast('Đã mở sách. Chọn tệp âm thanh tương ứng để bắt đầu nghe.');
+  showToast('Đã mở sách. Hãy chọn âm thanh để bắt đầu nghe.');
 }
 
 async function handleAudioFileSelect(e) {
@@ -1462,9 +1460,7 @@ async function handleAudioFileSelect(e) {
   loadAudioPart(0);
   updateAudioPartUI();
 
-  if (audioItems.length > 1) {
-    showToast('Đã tải âm thanh.');
-  }
+  
 
   // Tìm kiếm PDF tương ứng nếu chưa mở PDF
   const key = getBookUniqueKey(files[0].name);
@@ -1487,7 +1483,6 @@ async function handleAudioFileSelect(e) {
   showToast('Đã tải âm thanh. Nhấn Phát để nghe.');
   } catch (error) {
     console.error('Lỗi khi nạp audio:', error);
-    console.error('Không thể nạp âm thanh:', error);
     showToast('Không tải được âm thanh. Vui lòng chọn lại tệp.');
   } finally {
     dom.pdfLoadingIndicator.classList.add('hidden');
@@ -1587,7 +1582,8 @@ async function loadPdfFromUrl(url, fileName, shouldResetSync = true) {
     dom.canvasWrapper.classList.remove('hidden');
   } catch (error) {
     state.pdfDoc = null;
-    throw new Error('Không tải được PDF trực tuyến. Hãy kiểm tra địa chỉ tệp và quyền truy cập. ' + error.message);
+    console.error('Không tải được sách trực tuyến:', error);
+    throw new Error('Không tải được sách trực tuyến. Hãy kiểm tra kết nối hoặc chọn tệp khác.');
   } finally {
     state.pdfLoading = false;
     dom.pdfLoadingIndicator.classList.add('hidden');
@@ -1645,7 +1641,6 @@ async function loadPdfFromBlob(file, shouldResetSync = true) {
   } catch (error) {
     state.pdfDoc = null;
     console.error('Không thể mở sách:', error);
-    console.error('Không thể mở tệp sách:', error);
     alert('Không mở được sách. Vui lòng chọn tệp khác.');
   } finally {
     state.pdfLoading = false;
@@ -2054,10 +2049,10 @@ async function togglePlayPause() {
     updatePlayButtonState();
     console.error('Không thể phát âm thanh:', error);
     const message = error && error.name === 'NotAllowedError'
-      ? 'Trình duyệt chặn phát âm thanh. Hãy bấm Play trực tiếp sau khi chọn audio.'
+      ? 'Trình duyệt chưa cho phép phát. Hãy nhấn Phát để thử lại.'
       : error && error.name === 'NotSupportedError'
-        ? 'Định dạng hoặc codec audio này không được trình duyệt hỗ trợ. Hãy chọn file audio khác (M4A, AAC, WAV, OGG/Opus hoặc FLAC).'
-        : 'Không phát được âm thanh. Hãy kiểm tra định dạng và codec của file audio rồi thử lại.';
+        ? 'Định dạng âm thanh không được hỗ trợ. Hãy chọn tệp khác.'
+        : 'Không phát được âm thanh. Hãy kiểm tra tệp và thử lại.';
     showToast(message);
   }
 }
