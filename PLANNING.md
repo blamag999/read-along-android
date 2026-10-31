@@ -12,6 +12,16 @@
 - Không tạo API/Worker mới nếu hệ thống hiện có đáp ứng; không gộp endpoint khác trách nhiệm.
 - Không đánh dấu hoàn thành nếu thiếu bằng chứng CI, endpoint, deploy hoặc thiết bị tương ứng.
 
+## P0 — Tiếp tục hoàn tất Reader/Menu và chuyển hẳn sang R2
+
+- [ ] Audit toàn bộ caller/DOM/event listener trước khi xóa file picker, marker management, IndexedDB media Blob và luồng local library.
+- [ ] Rút menu về các mục đã duyệt: Tự lật trang, Vị trí đọc gần đây, Cập nhật OTA, Phiên bản; loại bỏ menu ẩn/hiện settings và marker editor.
+- [ ] Giữ hành vi lật trang thủ công tự tua audio luôn bật; loại bỏ nhánh pageTurnMode legacy `markers` và session compatibility không còn cần thiết, có regression test.
+- [ ] Library button mở catalog R2; nếu catalog chưa tải hoặc lỗi thì retry; không để button disabled vĩnh viễn.
+- [ ] Giữ read-only marker JSON companion từ R2; xóa UI/import/export/editor marker và không thêm API ghi marker.
+- [ ] Bổ sung regression tests cho menu, auto flip, manual seek, session legacy, R2 catalog retry và không còn luồng mở file cục bộ.
+- [ ] Chạy full regression bằng commit `[test]`; chỉ sau khi pass mới tạo một commit `[build-apk]`.
+
 ## P1 — Online Reading Progress theo ID thiết bị ổn định
 
 > Quyết định ngày 2026-10-31: tiến trình đọc/nghe là dữ liệu cần khôi phục sau khi clear app data hoặc gỡ/cài lại APK. Server là bản lưu bền vững; local chỉ là cache và hàng đợi đồng bộ offline. Mỗi thiết bị có một device ID ổn định, mỗi sách có một progress record riêng.
