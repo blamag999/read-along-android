@@ -37,7 +37,6 @@
       <div class="manager-heading"><div><div class="eyebrow">KHU VỰC QUẢN TRỊ</div><h2>Quản lý Read Along</h2><p class="muted">Quản lý nội dung, kiểm tra chất lượng và theo dõi hoạt động.</p></div><span class="session-indicator">Phiên quản trị đang hoạt động</span></div>
       <nav class="tabbar" role="tablist" aria-label="Khu vực quản lý">
         <button id="tabLibraryBtn" class="tab-button active" type="button" role="tab" aria-selected="true" aria-controls="libraryTab">Thư viện</button>
-        <button id="tabOverviewBtn" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="overviewTab">Tổng quan</button>
         <button id="tabDiagnosticsBtn" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="diagnosticsTab">Kiểm tra</button>
         <button id="tabAnalyticsBtn" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="analyticsTab">Thống kê</button>
         <button id="tabAuditBtn" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="auditTab">Nhật ký</button>
@@ -74,18 +73,7 @@
 
 
       </section>
-      </section>
-      <section id="overviewTab" class="tab-panel hidden" role="tabpanel">
-        <div class="tab-status" id="overviewStatusBar" role="status" aria-live="polite"><span class="status-dot"></span><span id="overviewStatus">Tổng quan sẵn sàng.</span></div>
-        <div class="overview-grid">
-          <article class="overview-card"><span>Thời gian đọc</span><strong id="overviewReading">—</strong></article>
-          <article class="overview-card"><span>Thời gian nghe</span><strong id="overviewListening">—</strong></article>
-          <article class="overview-card"><span>Đầu sách</span><strong id="overviewBooks">—</strong></article>
-          <article class="overview-card"><span>Lỗi lần quét gần nhất</span><strong id="overviewErrors">—</strong></article>
-        </div>
-        <section class="panel overview-trend"><div class="section-heading"><div><h3>Xu hướng đọc và nghe</h3><p class="muted">Tổng hợp theo khoảng thời gian đã chọn.</p></div><button id="overviewRefreshBtn" class="button secondary small" type="button">Làm mới</button></div><div id="overviewTrend"></div></section>
-      </section>
-      <section id="diagnosticsTab" class="tab-panel hidden" role="tabpanel">
+      </section><section id="diagnosticsTab" class="tab-panel hidden" role="tabpanel">
         <div class="tab-status" id="diagnosticsStatusBar" role="status" aria-live="polite"><span class="status-dot"></span><span id="diagnosticsStatus">Chưa chạy kiểm tra.</span></div>
               <details id="diagnosticsPanel" class="panel diagnostics-panel" aria-live="polite">
         <summary class="diagnostics-summary">

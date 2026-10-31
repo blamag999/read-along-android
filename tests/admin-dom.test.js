@@ -17,7 +17,6 @@ assert.deepEqual(missing, [], 'Admin JavaScript references missing HTML element 
 
 const expectedTabs = [
   ['tabLibraryBtn', 'libraryTab'],
-  ['tabOverviewBtn', 'overviewTab'],
   ['tabDiagnosticsBtn', 'diagnosticsTab'],
   ['tabAnalyticsBtn', 'analyticsTab'],
   ['tabAuditBtn', 'auditTab']
@@ -27,13 +26,14 @@ for (const [button, panel] of expectedTabs) {
   assert.ok(html.includes(`id="${panel}"`), `Missing tab panel: ${panel}`);
   assert.ok(script.includes(`"${button}"`), `Tab button is not wired: ${button}`);
 }
-assert.ok(html.indexOf('id="tabLibraryBtn"') < html.indexOf('id="tabOverviewBtn"'), 'Library must be the first tab');
+assert.ok(html.indexOf('id="tabLibraryBtn"') < html.indexOf('id="tabDiagnosticsBtn"'), 'Library must be the first tab');
+assert.ok(!html.includes('tabOverviewBtn') && !html.includes('id="overviewTab"'), 'Redundant Overview tab must be removed');
 assert.ok(script.includes('switchTab("library")'), 'Successful login/session must default to Library');
 assert.ok(script.includes('function switchTab(name)'), 'Horizontal tab navigation must be implemented');
 
-for (const tab of ['library', 'overview', 'diagnostics', 'analytics', 'audit']) {
+for (const tab of ['library', 'diagnostics', 'analytics', 'audit']) {
   assert.ok(html.includes(`id="${tab}StatusBar"`), `Missing tab-local status bar: ${tab}`);
-  assert.ok(script.includes(`${tab}: "${tab === 'library' ? 'status' : tab === 'overview' ? 'overviewStatus' : tab === 'diagnostics' ? 'diagnosticsStatus' : tab === 'analytics' ? 'analyticsTabStatus' : 'auditStatus'}"`), `Missing status routing for ${tab}`);
+  assert.ok(script.includes(`${tab}: "${tab === 'library' ? 'status' : tab === 'diagnostics' ? 'diagnosticsStatus' : tab === 'analytics' ? 'analyticsTabStatus' : 'auditStatus'}"`), `Missing status routing for ${tab}`);
 }
 assert.ok(script.includes('function applyTheme(theme, persist = false)'), 'Theme controller must exist');
 assert.ok(script.includes('prefers-color-scheme: light'), 'System theme preference must be supported');
@@ -57,7 +57,8 @@ assert.ok(readme.includes('does not transcode audio') || readme.includes('does n
 
 assert.ok(script.includes('async function loadAnalyticsDashboard()'), 'Analytics loader must exist');
 assert.ok(script.includes('async function loadAuditEntries()'), 'Audit tab loader must exist');
-assert.ok(html.includes('id="overviewTrend"'), 'Overview must display a trend chart');
+assert.ok(!script.includes('overviewTab') && !script.includes('tabOverviewBtn') && !script.includes('overviewRefreshBtn'), 'Overview tab handlers must be removed');
+assert.ok(html.includes('id="publicStatusBar"') && html.includes('id="publicReading"'), 'Public Dashboard must retain its own overview metrics');
 assert.ok(html.includes('id="analyticsPlatforms"'), 'Statistics tab must retain platform breakdown');
 assert.ok(html.includes('id="diagnosticsPanel"'), 'Diagnostics and catalog publishing tools must remain available');
 assert.ok(html.includes('id="publishBooksBtn"'), 'Catalog publishing action must remain available');

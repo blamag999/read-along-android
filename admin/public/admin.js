@@ -17,7 +17,7 @@ let telemetryFlushScheduled = false;
 const $ = (id) => document.getElementById(id);
 const show = (id, visible) => $(id).classList.toggle("hidden", !visible);
 let activeTab = "library";
-const tabStatusIds = { library: "status", overview: "overviewStatus", diagnostics: "diagnosticsStatus", analytics: "analyticsTabStatus", audit: "auditStatus", public: "publicStatus" };
+const tabStatusIds = { library: "status", diagnostics: "diagnosticsStatus", analytics: "analyticsTabStatus", audit: "auditStatus", public: "publicStatus" };
 const setStatus = (message, error = false, tab = "library") => {
   const target = $(tabStatusIds[tab] || "status");
   if (!target) return;
@@ -771,11 +771,6 @@ async function loadAnalyticsDashboard() {
     $("publicBooks").textContent = library.books == null ? "—" : Number(library.books).toLocaleString("vi-VN");
     $("publicErrors").textContent = scan ? Number(scan.errors || 0).toLocaleString("vi-VN") : "Chưa quét";
     setStatus(data.hasData ? "Đã cập nhật số liệu công khai." : "Chưa có số liệu trong khoảng thời gian này.", false, "public");
-    $("overviewReading").textContent = formatDuration(summary.readingSeconds);
-    $("overviewListening").textContent = formatDuration(summary.listeningSeconds);
-    $("overviewBooks").textContent = library.books == null ? "—" : Number(library.books).toLocaleString("vi-VN");
-    $("overviewErrors").textContent = scan ? Number(scan.errors || 0).toLocaleString("vi-VN") : "Chưa quét";
-    $("overviewTrend").replaceChildren(...$("analyticsTrend").cloneNode(true).childNodes);
     setStatus(data.hasData ? "Đã cập nhật dữ liệu tổng quan." : "Chưa có dữ liệu thống kê trong khoảng thời gian này.", false, "overview");
     setStatus(data.hasData ? "Đã tải dữ liệu thống kê." : "Chưa có dữ liệu thống kê trong khoảng thời gian này.", false, "analytics");
     const body = $("analyticsPlatforms"); body.replaceChildren();
@@ -791,19 +786,18 @@ async function loadAnalyticsDashboard() {
       }
       body.append(row);
     }
-  } catch (error) { status.textContent = "Không tải được Dashboard: " + error.message; setStatus("Không tải được dữ liệu tổng quan: " + error.message, true, "overview");
+  } catch (error) { status.textContent = "Không tải được Dashboard: " + error.message;
     setStatus("Không tải được số liệu Dashboard: " + error.message, true, "public"); setStatus("Không tải được thống kê: " + error.message, true, "analytics"); }
   finally { button.disabled = false; }
 }
 $("refreshAnalyticsBtn").addEventListener("click", loadAnalyticsDashboard);
-$("overviewRefreshBtn").addEventListener("click", loadAnalyticsDashboard);
 $("analyticsRange").addEventListener("change", loadAnalyticsDashboard);
 
 // Dashboard chỉ đọc là trang mặc định; khu vực quản lý thư viện vẫn yêu cầu OTP.
 $("loginHomeBtn").addEventListener("click", () => { location.hash = ""; });
 
-const tabIds = { library: "libraryTab", overview: "overviewTab", diagnostics: "diagnosticsTab", analytics: "analyticsTab", audit: "auditTab" };
-const tabButtons = { library: "tabLibraryBtn", overview: "tabOverviewBtn", diagnostics: "tabDiagnosticsBtn", analytics: "tabAnalyticsBtn", audit: "tabAuditBtn" };
+const tabIds = { library: "libraryTab", diagnostics: "diagnosticsTab", analytics: "analyticsTab", audit: "auditTab" };
+const tabButtons = { library: "tabLibraryBtn", diagnostics: "tabDiagnosticsBtn", analytics: "tabAnalyticsBtn", audit: "tabAuditBtn" };
 function switchTab(name) {
   if (!tabIds[name]) return;
   activeTab = name;
@@ -814,7 +808,7 @@ function switchTab(name) {
     button.setAttribute("aria-selected", key === name ? "true" : "false");
   }
   sessionStorage.setItem("readalong-admin-tab", name);
-  if (name === "analytics" || name === "overview") loadAnalyticsDashboard();
+  if (name === "analytics") loadAnalyticsDashboard();
   if (name === "audit") { const details = $("auditRows").closest("details"); details.open = true; loadAuditEntries(); }
   if (name === "diagnostics" && $("diagnosticsPanel").dataset.scanned !== "true") setStatus("Chưa có kết quả mới. Chọn Quét thư viện để bắt đầu.", false, "diagnostics");
 }

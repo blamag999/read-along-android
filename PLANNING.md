@@ -4,7 +4,7 @@
 
 > Phần triển khai đã hoàn tất và được deploy trên Pages beta; còn chờ người dùng kiểm tra thao tác thực tế trước khi đóng hạng mục.
 
-- [ ] Đăng nhập OTP, xác nhận mặc định mở tab Thư viện; chuyển qua lại đủ 5 tab và xác nhận không mất trạng thái tác vụ.
+- [ ] Đăng nhập OTP, xác nhận mặc định mở tab Thư viện; chuyển qua lại đủ 4 tab và xác nhận không mất trạng thái tác vụ. Kiểm tra thứ tự 4 tab: Thư viện → Kiểm tra → Thống kê → Nhật ký; Dashboard công khai vẫn hiển thị KPI riêng.
 - [ ] Thử upload nhiều file gồm file hợp lệ và file lỗi; xác nhận tiến trình, kết quả riêng từng file và tổng kết thành công/thất bại.
 - [ ] Thử đổi tên và xóa một file thử nghiệm; xác nhận thông báo đang chạy/kết quả và hộp thoại xóa hiển thị đúng tên file.
 - [ ] Chạy rà soát; xác nhận chỉ gợi ý đổi tên khi độ tương đồng tên file >=95% (ngoại lệ là quy tắc hậu tố audio-part xác định được), còn WMA/định dạng không hỗ trợ chỉ cảnh báo thay file thủ công.

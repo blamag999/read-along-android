@@ -557,3 +557,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Cloudflare Pages project `read-along-admin` deployed successfully from beta commit to deployment [0547791f](https://0547791f.read-along-admin.pages.dev); deployment ID `0547791f-5b21-41fe-b673-0424ea1ebb45`. Existing Production D1 binding `read-along-admin-db`, R2 binding `my-audio-book`, and TOTP secret binding remain configured.
 - No APK build, no D1 migration, no R2 mutation, no main branch update or stable promotion. **Pending:** user acceptance test of the deployed beta UI; see P1 in PLANNING.
 
+
+
+### 2026-10-31 — Bỏ tab Tổng quan trùng Dashboard công khai (beta)
+
+- Theo yêu cầu tinh gọn điều hướng, bỏ tab **Tổng quan** khỏi khu vực quản trị vì nội dung KPI/xu hướng trùng Dashboard công khai.
+- Điều hướng quản trị còn 4 tab: **Thư viện → Kiểm tra → Thống kê → Nhật ký**; mặc định sau đăng nhập/khôi phục session vẫn là Thư viện.
+- Dashboard công khai giữ nguyên KPI và trạng thái; thống kê chi tiết vẫn tải trong tab Thống kê. Không thay đổi API, D1, R2, TOTP/session, dữ liệu thư viện hoặc APK.
+- Cập nhật regression DOM để xác nhận không còn tab/panel/handler Tổng quan và Dashboard công khai vẫn còn số liệu. CI/deployment sẽ được ghi bổ sung sau khi xác minh.
