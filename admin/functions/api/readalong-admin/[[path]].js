@@ -430,11 +430,103 @@ async function scanLibrary(bucket, prefix, db) {
   return { prefix, scanned: items.length, changed: changed.length, skipped, removed: stale.length, errors, warnings, findings, complete: true, checkedAt: new Date().toISOString(), durationMs: Date.now() - startedAt, ruleVersion: SCAN_RULE_VERSION };
 }
 
+function validOtaChannel(value) {
+  return value === "beta" || value === "official";
+}
+
+function validOtaVersion(value) {
+  return typeof value === "string" && /^\\d{1,3}\\.\\d{1,3}\\.\\d{1,4}$/.test(value);
+}
+
+async function readOtaManifest(bucket, channel) {
+  const object = await bucket.get("channels/" + channel + "/latest.json");
+  if (!object) return { error: "OTA release not found", status: 404 };
+  let manifest;
+  try { manifest = JSON.parse(await object.text()); }
+  catch { return { error: "OTA manifest is invalid JSON", status: 502 }; }
+
+  if (!manifest || manifest.schemaVersion !== 1 ||
+      !validOtaVersion(manifest.version) ||
+      !Number.isSafeInteger(manifest.versionCode) || manifest.versionCode < 1 ||
+      manifest.filename !== "read-along-v" + manifest.version + "-android.apk" ||
+      !Number.isSafeInteger(manifest.size) || manifest.size < 1024 || manifest.size > 250 * 1024 * 1024 ||
+      typeof manifest.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(manifest.sha256) ||
+      typeof manifest.notes !== "string" || manifest.notes.length > 4000 ||
+      typeof manifest.mandatory !== "boolean" ||
+      typeof manifest.publishedAt !== "string" || !Number.isFinite(Date.parse(manifest.publishedAt))) {
+    return { error: "OTA manifest failed validation", status: 502 };
+  }
+
+  const apkKey = "releases/" + channel + "/" + manifest.filename;
+  const apk = await bucket.head(apkKey);
+  if (!apk || Number(apk.size) !== manifest.size) {
+    return { error: "OTA APK is missing or has an unexpected size", status: 502 };
+  }
+  return { manifest, apkKey, apk };
+}
+
+async function handleOtaRoute(request, env, url, route, method) {
+  if (route === "ota/latest" && method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: {
+      "access-control-allow-methods": "GET, OPTIONS",
+      "access-control-allow-headers": "content-type",
+      "access-control-max-age": "86400"
+    }});
+  }
+  if (route !== "ota/latest" && route !== "ota/download") return null;
+  if (method !== "GET" && !(method === "OPTIONS" && route === "ota/download")) {
+    return json({ error: "Method not allowed" }, 405, { allow: "GET, OPTIONS" });
+  }
+  if (method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: {
+      "access-control-allow-methods": "GET, OPTIONS",
+      "access-control-allow-headers": "content-type",
+      "access-control-max-age": "86400"
+    }});
+  }
+  if (!env.OTA_RELEASES) return json({ error: "OTA storage is not configured" }, 503);
+  const channel = url.searchParams.get("channel") || "";
+  if (!validOtaChannel(channel)) return json({ error: "Invalid OTA channel" }, 400);
+
+  const result = await readOtaManifest(env.OTA_RELEASES, channel);
+  if (result.error) return json({ error: result.error }, result.status);
+
+  if (route === "ota/latest") {
+    const downloadUrl = new URL("/api/readalong-admin/ota/download", url.origin);
+    downloadUrl.searchParams.set("channel", channel);
+    downloadUrl.searchParams.set("version", result.manifest.version);
+    return json({ ...result.manifest, downloadUrl: downloadUrl.toString() });
+  }
+
+  const requestedVersion = url.searchParams.get("version") || "";
+  if (!validOtaVersion(requestedVersion) || requestedVersion !== result.manifest.version) {
+    return json({ error: "Requested OTA version is not the current release" }, 404);
+  }
+  const object = await env.OTA_RELEASES.get(result.apkKey);
+  if (!object || Number(object.size) !== result.manifest.size) {
+    return json({ error: "OTA APK is unavailable" }, 502);
+  }
+  return new Response(object.body, {
+    status: 200,
+    headers: {
+      "content-type": "application/vnd.android.package-archive",
+      "content-length": String(result.manifest.size),
+      "content-disposition": "attachment; filename=\"" + result.manifest.filename + "\"",
+      "cache-control": "public, max-age=31536000, immutable",
+      "etag": object.httpEtag || result.manifest.sha256,
+      "x-content-type-options": "nosniff"
+    }
+  });
+}
+
 async function handle(request, env) {
   if (!env.READALONG || !env.DB) return json({ error: "Admin service is not configured" }, 503);
   const url = new URL(request.url);
   const route = url.pathname.replace(/^\/api\/readalong-admin\/?/, "").replace(/\/$/, "");
   const method = request.method.toUpperCase();
+
+  const otaResponse = await handleOtaRoute(request, env, url, route, method);
+  if (otaResponse) return otaResponse;
 
   if (route === "usage/track" && method === "OPTIONS") {
     return new Response(null, { status: 204, headers: {
