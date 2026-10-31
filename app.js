@@ -2703,3 +2703,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // =======================================================
+
+// Final batch checkpoint: per-book three-position reading recovery is enabled.
