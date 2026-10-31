@@ -340,7 +340,7 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 ### Hoàn tất batch thông báo — 2026-10-31
 
 - Đã chuẩn hóa các toast/alert còn lại: khôi phục phiên đọc, tải thư viện, mở sách, tự động lật trang, lỗi phát, chọn nhiều tệp, và thao tác marker.
-- Đã gom thông báo nạp nhiều âm thanh thành một toast cuối; bỏ toast trung gian khi chỉ là bước nạp và khi tự mở sách từ thư viện offline.
+- Đã gom thông báo nạp nhiều âm thanh thành một toast cuối; bỏ toast trung gian khi chỉ là bước nạp và khi tự mở sách từ thư viện.
 - Đã giữ lỗi kỹ thuật trong console/diagnostics; thông báo người dùng không đưa exception message/codec nội bộ ra UI.
 - Đã áp dụng “sách” / “âm thanh” vào nhãn trạng thái rỗng, nút chọn âm thanh, filter thư viện, hướng dẫn thả tệp và nhãn phần âm thanh. Tên định dạng PDF/MP3/M4A chỉ giữ khi cần hướng dẫn loại tệp.
 - Regression assertions bao phủ thông báo, nhãn UI tĩnh/động và contract workflow.
