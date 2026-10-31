@@ -46,7 +46,7 @@ class OtaRetentionTests(unittest.TestCase):
 
     def test_rejects_unexpected_channel_or_filename(self):
         self.assertNotIn("preview", pruner.CHANNELS)
-        self.assertIsNone(pruner.APK_NAME.fullmatch("read-along-v1.3.23-android.apk"))
+        self.assertIsNone(pruner.APK_NAME.fullmatch("read-along-v1.3.23-beta.apk"))
         self.assertIsNotNone(pruner.APK_NAME.fullmatch("read-along-v1.3.23-android.apk"))
 
 
