@@ -14,7 +14,7 @@
 
 - **Kiến trúc APK Core:** A–E đã được xác nhận. Master planning, roadmap, endpoint inventory và JSON Schema v1 đang được duy trì trong `PLANNING.md`, `ROADMAP.md`, `docs/architecture/data-contracts.md` và `schemas/`. Regression CI contract gần nhất [#41158627378](https://github.com/blamag999/read-along-android/actions/runs/41158627378) đã pass trên commit `24b4058`. Chưa thay đổi runtime hoặc build APK.
 
-- **Kế hoạch kiến trúc tổng thể:** xem [PLANNING.md](./PLANNING.md) và [ROADMAP.md](./ROADMAP.md). Mục tiêu đã được xác nhận là APK Core ổn định, tách dữ liệu/dịch vụ quản trị, Remote Config có cache/fallback và không thực thi JavaScript tùy ý từ xa. Inventory API/schema: [docs/architecture/data-contracts.md](./docs/architecture/data-contracts.md); JSON Schema v1 nằm trong `schemas/`.
+- **Kế hoạch kiến trúc tổng thể:** xem [PLANNING.md](./PLANNING.md) và [ROADMAP.md](./ROADMAP.md). Mục tiêu đã được xác nhận là APK Core ổn định, tách dữ liệu/dịch vụ quản trị, Remote Config có cache/fallback và không thực thi JavaScript tùy ý từ xa. Inventory API/schema: [docs/architecture/data-contracts.md](./docs/architecture/data-contracts.md); marker/API boundary review: [docs/architecture/marker-and-api-review.md](./docs/architecture/marker-and-api-review.md); JSON Schema v1 nằm trong `schemas/`.
 
 - Đã đưa nội dung từ `beta` lên `main` để chuẩn bị phát hành stable; PR [#14](https://github.com/blamag999/read-along-android/pull/14) đã được đóng/merge.
 - Đã khôi phục luồng OTA trong ứng dụng và các thành phần Android hỗ trợ cài APK: `native/android/ApkUpdaterPlugin.java`, `native/android/file_paths.xml` và cấu hình tương ứng trong `.github/workflows/build-android-apk.yml`.
