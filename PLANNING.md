@@ -554,3 +554,11 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - PR #43 was squash-merged into beta at `d10459e9788eb1d961e3dfba08a5ab95324233c6`. Deployment-dependent analytics/OTA smoke tests were skipped by workflow conditions.
 - [ ] Build one final beta APK and verify workflow artifact/release/OTA result.
 - [ ] Install and perform device acceptance; no main promotion until accepted.
+
+
+### Beta APK finalization — 2026-11-01
+
+- [x] Regression PR #43 passed full npm test, JS syntax, Pages Functions syntax and isolation checks; merged into beta at `d10459e9788eb1d961e3dfba08a5ab95324233c6`.
+- [x] Created `[build-apk]` finalization commit `fd0d4909994ab3d065ad4bbb3fc4221e6db8f0fc` on beta. It changes only an inert CSS comment in an APK-relevant path to satisfy the workflow path filter; no runtime behavior changed.
+- [ ] Confirm Build and Release workflow result, signed APK artifact, GitHub Release and R2 beta OTA manifest. Current GitHub connector does not expose push-triggered run listing.
+- [ ] Install APK and complete device acceptance. Keep main untouched until acceptance.
