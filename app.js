@@ -569,8 +569,8 @@ function updateSyncCountBadge() {
 // RESET VÀ NẠP MỐC CHUẨN XÁC THEO TỪNG CUỐN (FIX TRIỆT ĐỂ LỖI DỮ LIỆU LẠ)
 // =======================================================
 async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl = '') {
-  // Marker source order: attached book JSON, its public R2 JSON, local folder JSON, then localStorage.
-  // No GitHub/D1 online marker synchronization is used by the personal reader.
+  // Marker source order: attached book JSON, its public R2 companion JSON, local folder JSON, then localStorage.
+  // R2 marker JSON is read-only content shipped with the book/audio; no GitHub/D1 marker sync is used.
   // 1. Luôn xóa sạch toàn bộ mốc của cuốn trước đó khỏi RAM
   state.pageTimestamps = {};
   state.currentBookKey = bookKey;
