@@ -518,3 +518,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Dashboard mặc định là trang chủ Admin; khu vực “Quản lý nâng cao” vẫn đi qua OTP. Public endpoint chỉ đọc dữ liệu tổng hợp; các API thay đổi dữ liệu tiếp tục được bảo vệ.
 - Regression CI gần nhất của batch điều hướng/API: [41170506777](https://github.com/blamag999/read-along-android/actions/runs/41170506777), success trên commit `07bd866af16de1dc33d989ac8f6da90349cd539c`. Tài liệu hiện tại ở beta HEAD `3d9f4d49509c52b6f9ca9fc8ad9a47ec4a220b36`.
 - Giới hạn nghiệm thu: xác nhận Dashboard hoạt động từ người dùng; không ghi nhận việc đối chiếu số liệu thực tế với một khoảng đọc/nghe có thời lượng đo độc lập. Không cần build APK cho AN4.
+
+### 2026-10-31 — Điều chỉnh kiến trúc theo định hướng APK Core tối giản
+
+- Người dùng xác nhận không có kế hoạch sử dụng Remote Config để bật/tắt tính năng hoặc thay đổi reader từ xa; mục tiêu APK là tải PDF/audio từ cloud để đọc/nghe, dùng timestamp/marker (nếu có) để đồng bộ theo trang.
+- Chốt định hướng: không phát triển offline PDF/audio; không giữ Remote Config chỉ để có thêm một endpoint/cơ chế cấu hình chưa có consumer. PLANNING chuyển P0 sang gỡ Remote Config và kiểm tra không ảnh hưởng startup/tải PDF/audio/marker/page sync.
+- Phân tách công việc: Admin, Dashboard, Analytics backend, catalog, scan/publish, D1 và diagnostics tiếp tục phát triển/deploy độc lập; chỉ build APK khi thay đổi thực sự chạm runtime/asset/native hoặc contract cần caller APK cập nhật.
+- Analytics collector được phân loại là adapter tùy chọn phía APK, không thuộc APK Core; backend/Dashboard không phụ thuộc vào việc sửa APK. Khi có nhu cầu thay đổi collector phải gom thành một batch APK riêng.
+- Đây là quyết định và cập nhật planning; **chưa gỡ Remote Config khỏi source, Pages build gate hoặc APK**. Việc gỡ cần rà soát references/caller và thực hiện trên beta trong một batch có test; không xóa dịch vụ/backend khác.
