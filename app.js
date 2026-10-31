@@ -678,6 +678,8 @@ function isReadAlongR2Url(value) {
 }
 
 async function loadR2Catalog() {
+  if (state.catalogLoading) return;
+  state.catalogLoading = true;
   const button = dom.btnLoadR2Catalog;
   if (button) { button.disabled = true; button.textContent = '⏳ Đang tải sách...'; }
   dom.playlistLoading.classList.remove('hidden');
@@ -708,6 +710,7 @@ async function loadR2Catalog() {
   } finally {
     dom.playlistLoading.classList.add('hidden');
     if (button) { button.disabled = false; button.textContent = '☁️ Truyện trực tuyến'; }
+    state.catalogLoading = false;
   }
 }
 
@@ -730,12 +733,12 @@ function buildPlaylistFromItems(rawItems) {
 function updatePlaylistBadgeCount() {
   // Count is the number of books currently available in the loaded library/catalog.
   const count = state.playlist.length;
-  const available = count > 0;
-  dom.btnOpenPlaylist.disabled = !available;
-  dom.btnOpenPlaylist.setAttribute('aria-disabled', String(!available));
-  dom.btnOpenPlaylist.title = available
+  // Keep the primary Library action available so it can retry a failed initial catalog load.
+  dom.btnOpenPlaylist.disabled = false;
+  dom.btnOpenPlaylist.setAttribute('aria-disabled', 'false');
+  dom.btnOpenPlaylist.title = count > 0
     ? 'Mở thư viện sách (' + count + ' cuốn)'
-    : 'Chưa có danh sách sách. Chọn Bắt đầu để tải thư viện.';
+    : 'Tải hoặc thử tải lại thư viện sách.';
   dom.btnOpenPlaylist.setAttribute('aria-label', 'Thư viện sách, ' + count + ' cuốn');
   dom.lblPlaylistCount.textContent = String(count);
   dom.lblPlaylistCount.classList.remove('hidden');
@@ -1080,8 +1083,8 @@ function initEvents() {
   initIndexedDB();
 
   dom.btnOpenPlaylist.addEventListener('click', () => {
-    if (state.playlist.length === 0) return;
-    openPlaylistModal();
+    if (state.playlist.length > 0) openPlaylistModal();
+    else loadR2Catalog();
   });
 
 
