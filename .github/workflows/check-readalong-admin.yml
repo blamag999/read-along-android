@@ -17,6 +17,7 @@ on:
       - "package.json"
       - "package-lock.json"
       - "tests/**"
+      - ".github/workflows/check-readalong-admin.yml"
   workflow_dispatch:
   pull_request:
     branches:
