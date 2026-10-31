@@ -71,7 +71,7 @@
 - [ ] Ưu tiên dùng hạ tầng API/Worker hiện có của Read Along nếu đáp ứng; không tạo Analytics Worker thứ hai chỉ để tách tên.
 - [x] Viết route ingest trong Pages Functions hiện có với consent=true, validation strict, 25 events/batch, 64 KiB, rate limit theo install hash, và idempotency theo eventId + (sessionId, sequence). Chờ CI, migration và deploy để nghiệm thu production.
 - [x] Viết migration D1 additive cho raw events, daily aggregates và unique daily sessions bằng trigger; raw retention 90 ngày, daily aggregates 24 tháng. Migration đã được áp dụng additive vào database `read-along-admin-db`; đã xác minh đủ 3 bảng và trigger. Chờ Pages deployment/endpoint smoke test.
-- [x] Thêm unit/contract/API-boundary tests cho duplicate eventId/sequence, duration âm/quá lớn, batch >25, payload cap, schema, consent và origin isolation; CI + deployed consent smoke pass. **Còn pending:** valid event insert/deduplication/daily-trigger end-to-end test.
+- [x] Thêm unit/contract/API-boundary tests cho duplicate eventId/sequence, duration âm/quá lớn, batch >25, payload cap, schema, consent và origin isolation; CI + deployed consent smoke pass. **Đang nghiệm thu:** workflow production smoke test đã được mở rộng để POST event hợp lệ và replay cùng event; chờ CI và xác minh/cleanup D1. Chưa kiểm tra event conflict ngoài batch.
 - [x] Không thay đổi ý nghĩa API usage/track hiện tại: nó chỉ phản ánh visit/installation, không phải reading duration.
 
 ### AN3 — Một lần cập nhật APK cho event collector
