@@ -190,3 +190,32 @@ label{display:block;font-size:13px;font-weight:650;margin-bottom:8px}input:not([
   margin: 0;
   font-size: 0.82rem;
 }
+
+
+.move-destination-card {
+  width: min(460px, calc(100vw - 32px));
+}
+.move-destination-card > label {
+  display: grid;
+  gap: 7px;
+  margin: 14px 0;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.move-destination-card select,
+.move-destination-card input {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+.move-create-folder-row {
+  display: flex;
+  justify-content: flex-start;
+  margin: 12px 0;
+}
