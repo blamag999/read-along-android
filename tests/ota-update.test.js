@@ -11,6 +11,7 @@ console.log('OTA cache cleanup regression tests passed.');
 
 const router = fs.readFileSync(path.join(__dirname, '..', 'admin/functions/api/readalong-admin/[[path]].js'), 'utf8');
 const workflow = fs.readFileSync(path.join(__dirname, '..', '.github/workflows/build-android-apk.yml'), 'utf8');
+const native = fs.readFileSync(path.join(__dirname, '..', 'native/android/ApkUpdaterPlugin.java'), 'utf8');
 
 assert.ok(router.includes('async function handleOtaRoute'), 'Pages Functions must expose the provider-neutral OTA handler');
 assert.ok(router.includes('route === "ota/latest"'), 'OTA latest manifest route must exist');
@@ -32,4 +33,17 @@ assert.ok(workflow.includes('read-along-releases/releases/$CHANNEL/$APK'), 'Rele
 assert.ok(workflow.includes('x-amz-meta-sha256:$SHA256'), 'Release workflow must store the APK checksum as R2 object metadata');
 assert.ok(workflow.includes('read-along-releases/channels/$CHANNEL/latest.json'), 'Release workflow must publish the manifest after the APK');
 assert.ok(workflow.includes('"sha256": os.environ["SHA256"]'), 'Published manifest must contain the APK SHA-256');
+
+assert.ok(app.includes('READ_ALONG_OTA_API'), 'APK must use the fixed OTA API origin');
+assert.ok(!app.includes('READ_ALONG_RELEASES_API') && !app.includes('api.github.com/repos/blamag999/read-along-android/releases'), 'APK must not query GitHub Releases directly');
+assert.ok(app.includes('expectedSize: manifest.size') && app.includes('sha256: manifest.sha256'), 'APK must pass size and checksum to the native verifier');
+assert.ok(app.includes("meta[name=" + "'app-version-code'" + "]"), 'APK must compare the embedded versionCode');
+assert.ok(native.includes('OTA_HOST = "read-along-admin.pages.dev"'), 'Native updater must pin the OTA host');
+assert.ok(native.includes('OTA_PATH = "/api/readalong-admin/ota/download"'), 'Native updater must pin the download path');
+assert.ok(native.includes('setInstanceFollowRedirects(false)'), 'Native updater must reject redirects');
+assert.ok(native.includes('MessageDigest.getInstance("SHA-256")'), 'Native updater must hash the downloaded APK');
+assert.ok(native.includes('safeSha256.equals(actualSha256)'), 'Native updater must reject checksum mismatch');
+assert.ok(workflow.includes('VERSION_CODE: ${{ github.run_number }}'), 'Release build must embed versionCode');
+assert.ok(workflow.includes('app-version-code'), 'Release build must inject the app-version-code meta tag');
+
 assert.ok(!workflow.includes('secrets.CLOUDFLARE_ACCOUNT_ID'), 'Public account ID must not require a redundant secret');
