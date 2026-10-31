@@ -49,7 +49,7 @@
 - [x] Dùng revision để so sánh các bản versioned thuộc cùng một logical book; updatedAt chỉ tie-break khi revision và marker content giống nhau.
 - [x] Định nghĩa conflict cùng revision khác nội dung (không tự ghi đè, ưu tiên local recovery), revision/schema lỗi, clear-all bằng envelope rỗng và legacy data.
 - [ ] Thiết kế migration tương thích ngược: không ghi đè nguồn cũ trước khi bản mới được validate và lưu thành công; không tự xóa marker hoặc file JSON.
-- [x] Bổ sung pure resolver và regression tests cho revision, stale copy, conflict, import, clear-all, legacy numeric seconds, object {time,part}, marker lỗi và audio-part bounds; chờ CI xác nhận.
+- [x] Bổ sung pure resolver và regression tests cho revision, stale copy, conflict, import, clear-all, legacy numeric seconds, object {time,part}, marker lỗi và audio-part bounds. Lần CI đầu phát hiện test conflict chưa phản ánh đúng policy local recovery; đã sửa resolver để giữ localStorage candidate khi có conflict.
 - [ ] Chỉ thay đổi runtime sau khi policy/test hoàn chỉnh; nếu cần APK thì gom cùng một đợt Data Client hoặc một đợt APK riêng có phạm vi rõ ràng.
 
 ## P1 — Analytics thời lượng đọc/nghe độc lập
@@ -129,4 +129,4 @@
 Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên xử lý lỗi đó trước; cập nhật ROADMAP/PLANNING sau khi có bằng chứng.
 
 
-> Batch marker-policy resolver: implemented as an isolated pure module with regression tests; not yet wired into reader runtime. No marker files, APK runtime, signing configuration, or main branch behavior changed in this batch.
+> Batch marker-policy resolver: implemented as an isolated pure module with regression tests; not yet wired into reader runtime. No marker files, APK runtime, signing configuration, or main branch behavior changed in this batch. Re-run full regression after conflict-selection correction.
