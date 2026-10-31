@@ -238,33 +238,23 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 - [ ] Xác nhận APK ký số và OTA R2 publish hoàn tất; kiểm tra tải catalog và mở PDF/audio thực tế trên thiết bị.
 
 
-## Kho sách offline 1 GB và tinh gọn header — 2026-10-31
+## Tinh gọn header và thư viện R2 online-only — quyết định 2026-10-31
 
-- [ ] Audit luồng tải PDF/audio từ R2, cơ chế IndexedDB/native storage và quy trình OTA/cache cleanup trước khi chọn nơi lưu bền vững.
-- [ ] Thiết kế kho offline riêng trong vùng dữ liệu ứng dụng (không dùng cacheDir/Service Worker Cache); giới hạn tổng dung lượng 1 GiB, quản lý LRU theo lần truy cập gần nhất.
-- [ ] Lưu trọn bộ theo book ID: PDF, toàn bộ audio và JSON marker; tải vào vùng tạm rồi xác minh hoàn tất trước khi đưa vào thư viện offline.
-- [ ] Không xóa sách đang mở/phát; khi thiếu dung lượng, xóa trọn bộ sách ít dùng gần nhất cho đến khi đủ chỗ; xử lý sách đơn lẻ lớn hơn giới hạn và lỗi thiếu dung lượng rõ ràng.
-- [ ] Đảm bảo kho offline, marker và metadata tồn tại qua OTA update, không bị xóa cùng cache shell; chỉ dọn cache tạm/service worker cũ.
-- [ ] Bổ sung kiểm thử quota, LRU, tải dở, file thiếu, app restart, OTA update và mở sách offline; build một APK sau full regression.
-- [x] Tinh gọn toàn bộ header thành hai action: Thư viện sách và Menu; chuyển điều khiển vừa trang/hai trang/zoom, ẩn-hiện khu vực chọn file và quản lý mốc thời gian vào Menu; bỏ nút Đóng sách riêng.
-- [x] CI full regression, Pages Functions syntax, isolation và release channel validation; signed APK build/verification, OTA R2 publish, workflow artifacts và GitHub Release đều success tại [run 41205868772](https://github.com/blamag999/read-along-android/actions/runs/41205868772), commit `61b383329ac4a6d5fcc1b3e54f3e5249390e50c2`.
-- [ ] Kiểm tra trên điện thoại cảm ứng: nút Thư viện có icon + nhãn + badge số lượng, hai nút header không chồng lấn ở portrait (kể cả chiều rộng 320 px); Menu còn đủ thao tác; Android Back vẫn đóng sách và lưu phiên đọc.
-- Không đánh dấu kho offline là implemented cho đến khi có code, test và xác minh đường dẫn lưu trữ native thực tế.
+<escape>[x]</escape> Header chỉ có hai action: **Thư viện sách** và **Menu**; Android Back đóng sách và lưu phiên đọc, không có nút Đóng sách riêng.
 
+<escape>[x]</escape> Hủy hoàn toàn đề xuất kho lưu trữ sách/âm thanh 1 GB. Ứng dụng **không tải trước, không lưu bản PDF/audio bền vững trên thiết bị và không hỗ trợ đọc/nghe offline**. Nội dung được stream/đọc trực tiếp từ R2 khi mở sách.
+
+<escape>[x]</escape> Không triển khai LRU/FIFO, quota, Download Manager, offline library, tự xóa sách cũ hoặc cơ chế dọn media theo dung lượng. Không thêm media cache layer mới.
+
+<escape>[x]</escape> Chỉ giữ cache shell/app assets cần cho WebView/Service Worker và cache tạm kỹ thuật nếu cần; tuyệt đối không biến chúng thành kho PDF/audio. Không thay đổi hoặc xóa dữ liệu session/checkpoint cần thiết.
+
+<escape>[x]</escape> OTA không được xóa session/checkpoint hoặc dữ liệu trạng thái đọc. Việc cập nhật APK không được thêm hoặc xóa kho media vì kho media offline không tồn tại.
+
+- Marker JSON companion từ R2 vẫn được đọc ở chế độ read-only để đồng bộ trang/audio; không có marker write/sync từ client.
+- Việc đồng bộ tiến trình đọc/nghe online (nếu triển khai) là dữ liệu trạng thái riêng, không phải lưu trữ PDF/audio offline. Không gộp hai phạm vi này.
+- Các ghi chú lịch sử về kho offline 1 GiB/LRU ở phần dưới hoặc trong nhật ký cũ chỉ phản ánh đề xuất trước đây và đã bị quyết định này thay thế; không được coi là backlog còn mở.
 
 ### Header thư viện portrait — code đã cập nhật, chờ CI/device
-- [x] Tách icon, nhãn và badge số lượng thành các phần tử rõ ràng; badge luôn hiện số kể cả 0.
-- [x] Sửa CSS responsive ở cuối stylesheet để ưu tiên một hàng và giữ nhãn Thư viện trên màn hình dọc nhỏ.
-- [x] Thêm regression assertions cho cấu trúc nút, nhãn portrait và accessible count.
-- [ ] Chờ CI/build APK theo commit chốt; kiểm tra thực tế trên thiết bị dọc 320–600 px.
-
-
-### Kết quả CI/build header Thư viện — 2026-10-31
-
-- Commit chốt `61b383329ac4a6d5fcc1b3e54f3e5249390e50c2`; workflow [41205868772](https://github.com/blamag999/read-along-android/actions/runs/41205868772) hoàn tất success.
-- Full regression, Pages syntax/isolation, signed APK build + verification, OTA R2 publication và GitHub Release đều thành công. Không còn pending CI/build cho batch header.
-- Chỉ còn nghiệm thu thiết bị thật ở portrait 320–600 px và kiểm tra thao tác Thư viện/Menu/Android Back. Không promote `main` trước khi người dùng xác nhận.
-- Badge lấy từ `state.playlist.length`, không đại diện số blob offline trong IndexedDB.
 
 ## P2 — Chuẩn hóa Release Notes cho mọi bản build
 
