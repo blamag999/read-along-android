@@ -25,6 +25,16 @@ class OtaRetentionTests(unittest.TestCase):
             ["releases/beta/read-along-v1.3.20-android.apk"],
         )
 
+    def test_noop_when_channel_contains_only_current_apk(self):
+        self.assertEqual(
+            pruner.stale_apk_keys(
+                [{"Key": "releases/official/read-along-v1.4.0-android.apk"}],
+                "releases/official/",
+                "releases/official/read-along-v1.4.0-android.apk",
+            ),
+            [],
+        )
+
     def test_refuses_to_prune_when_current_apk_is_missing(self):
         with self.assertRaisesRegex(ValueError, "Current OTA APK is missing"):
             pruner.stale_apk_keys(
