@@ -901,7 +901,7 @@ async function loadAnalyticsDashboard() {
     $("analyticsListening").textContent = formatDuration(summary.listeningSeconds);
     $("analyticsDevices").textContent = summary.activeDevices === null ? "—" : Number(summary.activeDevices || 0).toLocaleString("vi-VN");
     const library = data.library || {};
-    $("analyticsBooks").textContent = library.books == null ? "—" : Number(library.books).toLocaleString("vi-VN");
+    $("analyticsTotal").textContent = formatDuration(summary.totalSeconds);
     $("libraryBooks").textContent = library.books == null ? "—" : Number(library.books).toLocaleString("vi-VN");
     $("libraryPdfs").textContent = library.pdfs == null ? "—" : Number(library.pdfs).toLocaleString("vi-VN");
     $("libraryAudioParts").textContent = library.audioParts == null ? "—" : Number(library.audioParts).toLocaleString("vi-VN");
