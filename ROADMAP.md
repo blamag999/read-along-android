@@ -434,3 +434,10 @@ Khi một công việc trong PLANNING hoàn tất:
 - Commits: UI disclosure `7dfe09eddd4da96b06c4413454189a7e31e85bd0`; orientation test `9b9dce7b7ebd5bb0ba4ab71c48c2422237087077`.
 - Chờ CI cuối; không build APK cho đến khi automated tests và review pass.
 
+
+### 2026-10-31 — Thêm kiểm thử telemetry không chặn reader/playback
+
+- Test collector với fetch promise không bao giờ resolve; thao tác opt-in, timer heartbeat và lifecycle vẫn tiếp tục đồng bộ, chứng minh collector không await network request và không chặn UI/audio.
+- Commit: `cb797654d019936b345d51231dd7bc714a9ace1b`.
+- Chờ CI mới; chưa build APK.
+
