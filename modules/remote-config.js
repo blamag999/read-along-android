@@ -61,6 +61,7 @@
     const nowFn = opts.now || (() => Date.now());
     const timeoutMs = Number.isFinite(opts.timeoutMs) ? Math.max(250, Math.min(10000, opts.timeoutMs)) : REQUEST_TIMEOUT_MS;
     const retryCount = Number.isInteger(opts.retries) ? Math.max(0, Math.min(RETRIES, opts.retries)) : RETRIES;
+    const retryDelayMs = Number.isFinite(opts.retryDelayMs) ? Math.max(0, Math.min(1000, opts.retryDelayMs)) : 200;
     function readCache() {
       try {
         const raw = storage && storage.getItem(CACHE_KEY);
@@ -107,7 +108,10 @@
             try { storage.setItem(CACHE_KEY, JSON.stringify({ config: fresh })); } catch (_) {}
           }
           return { config: safeClone(fresh), source: 'network', error: null };
-        } catch (error) { lastError = error; }
+        } catch (error) {
+          lastError = error;
+          if (attempt < retryCount && retryDelayMs) await new Promise(resolve => setTimeout(resolve, retryDelayMs));
+        }
       }
       return { config: safeClone(cached || DEFAULT_CONFIG), source: cached ? 'cache' : 'default', error: lastError ? lastError.message : 'Remote Config unavailable' };
     }
