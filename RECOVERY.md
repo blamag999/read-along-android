@@ -307,6 +307,7 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Đã so sánh `50b7c4961520a54e84c8400687e00bd7edad1076...beta`: 6 commits ahead, 0 behind; các file thay đổi chỉ gồm PLANNING.md, ROADMAP.md và RECOVERY.md.
 - Reviewed beta source/documentation baseline: `d6faeb3b1667bebf5130a63851c6090785a4945e`. PLANNING commits: `580fc9314baf36d0ecd6f91a0d7553f4df6d56ce`, `d6faeb3b1667bebf5130a63851c6090785a4945e`.
 - ROADMAP handover entry committed at `d13482e6ede435125600328ce05244231af8a14e`.
+- Formal `[handover]` RECOVERY commit: `768981c40d70024d6503854c7ce339c602f81710`.
 - Scope is approved for planning, not implementation. No runtime source changes, tests, CI, APK build, OTA publication, deployment or device acceptance were performed for this handover.
 - `main` was not modified. README contents on beta and main are not byte-identical at this review; no README change was made in this handover. Existing README synchronization note references PR #40.
 - Next session: verify current branch heads and docs again; audit local-open and marker-write/sync callers before code removal; then implement only on beta under the approved checklist.
