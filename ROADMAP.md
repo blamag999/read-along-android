@@ -695,3 +695,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Test commits: `b8841b9fdd3568ea8fc7e3021fffcec03ee91700`, `a36f69ecc67e16a0e8ffb9aa6c513e21f5d2446a`, `ed13753de05d7f28b797c3164f96e6c1be3dfd83`. Runtime commits: `68054fd8a7f60df8c39729ed7cc7296d063fb30a`, `2e5725c4ebaf1948d7a0698d9cd838369375d057`.
 - GitHub Actions build [run 41211770726](https://github.com/blamag999/read-along-android/actions/runs/41211770726) đã được kích hoạt trên commit runtime cuối; trạng thái lúc ghi nhận: QUEUED. Không tuyên bố APK mới sẵn sàng cho tới khi workflow build/signature/OTA hoàn tất.
 - Không promote `main`. Cần kiểm tra APK beta sau khi workflow thành công; Android device acceptance vẫn riêng biệt.
+
+## 2026-10-31 — Lập kế hoạch Release Notes và rà soát thông báo nội bộ
+
+- Đã ghi vào PLANNING hai hạng mục chưa triển khai: chuẩn hóa Release Notes cho mọi bản build và rà soát/rút gọn thông báo nội bộ trong app.
+- Release Notes đề xuất dùng bốn nhóm `[feature]`, `[improve]`, `[fix]`, `[security]`; workflow phải lấy commit từ Release gần nhất cùng kênh, dùng một changelog chung cho GitHub Release/OTA, rút gọn tối đa khoảng 400 ký tự khi hiển thị trong app.
+- Đã rà soát chỉ đọc các thông báo trong `app.js`; ghi bảng nội dung đề xuất vào PLANNING. Các thông báo close/exit/resume/clear markers và OTA đã chuẩn hóa ở batch trước được giữ nguyên.
+- Phát hiện cần xử lý ở batch sau: một số alert/toast đang đưa `error.message` trực tiếp ra người dùng; một thao tác nạp audio có thể tạo nhiều toast nối tiếp; một số thông báo dài hoặc trộn hướng dẫn và trạng thái.
+- Chưa sửa runtime, chưa chạy test/CI, chưa build APK, chưa thay đổi OTA, không cập nhật main. Commit kế hoạch: `3644258c70ea0bbe6e052d030f546a0c356fe08c`; commit ghi kết quả audit: `3acea281aa64040e4e74b1c25557007dbd56a203`.
