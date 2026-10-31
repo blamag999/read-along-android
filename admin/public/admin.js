@@ -596,7 +596,11 @@ async function runDiagnostics() {
       cell.className = "empty";
       $("diagnosticRows").append(row);
     }
-    const diagnosticBooks = libraryAssetGroups(allLibraryEntries).books;
+    const diagnosticInventory = currentPrefix
+      ? await api("files/all?prefix=", { cache: "no-store" })
+      : { folders: allLibraryEntries.filter(entry => entry.type === "folder"), files: allLibraryEntries.filter(entry => entry.type === "file") };
+    const diagnosticEntries = [...(diagnosticInventory.folders || []), ...(diagnosticInventory.files || [])];
+    const diagnosticBooks = libraryAssetGroups(diagnosticEntries).books;
     const conversionActionsShown = new Set();
     for (const finding of result.findings) {
       const row = document.createElement("tr");
