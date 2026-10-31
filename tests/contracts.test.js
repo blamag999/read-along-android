@@ -85,4 +85,14 @@ assert.ok(appSource.includes("alert('Thời gian không hợp lệ. Hãy nhập 
 assert.ok(appSource.includes("alert('Tệp mốc thời gian không hợp lệ.');"), 'Invalid marker JSON uses concise terminology');
 assert.ok(appSource.includes("console.error('Không thể nạp âm thanh:', error);"), 'Technical audio errors remain available in console');
 
+
+const releaseWorkflow = fs.readFileSync(path.join(__dirname, '..', '.github/workflows/build-android-apk.yml'), 'utf8');
+const releaseNotesGenerator = fs.readFileSync(path.join(__dirname, '..', 'scripts/generate-release-notes.py'), 'utf8');
+assert.ok(releaseWorkflow.includes('python3 scripts/generate-release-notes.py'), 'APK workflow must use the tested release notes generator');
+assert.ok(releaseWorkflow.includes('CHANGELOG: ${{ steps.release_info.outputs.changelog }}'), 'OTA manifest must receive the generated release notes');
+assert.ok(releaseNotesGenerator.includes('latest_channel_release(releases, channel)'), 'Release notes baseline must be selected by channel');
+assert.ok(releaseNotesGenerator.includes('"security": "Bảo mật"'), 'Release notes must include the security category');
+assert.ok(appSource.includes("showToast('Đã tải âm thanh. Nhấn Phát để nghe.');"), 'Audio success copy uses Vietnamese terminology');
+assert.ok(appSource.includes("showToast('Đã tự động chuyển sang phần âm thanh '"), 'Automatic part switching uses Vietnamese terminology');
+
 console.log('Read Along data contract schema tests passed.');
