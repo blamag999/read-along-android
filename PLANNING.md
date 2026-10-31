@@ -20,9 +20,10 @@
 
 ### P0.2 Chốt contract và kiểm tra config phía publish
 
-- [ ] Xác định chính xác contract config v1 đang được dùng giữa schemas/remote-config.schema.json và admin/public/remote-config.json.
-- [ ] Bổ sung validation trước khi publish/chỉnh sửa config bằng cơ chế Admin hiện có; không thêm API mới nếu generic file management hoặc Pages workflow đáp ứng.
-- [ ] Quy định xử lý schemaVersion, configVersion, issuedAt, expiresAt, field lạ, kiểu dữ liệu sai và config hết hạn.
+- [x] Chốt contract v1 giữa `schemas/remote-config.schema.json` và `admin/public/remote-config.json`; bắt buộc schemaVersion, configVersion, issuedAt, features, readerDefaults và announcements. Chi tiết/bằng chứng ở ROADMAP.
+- [x] Thêm preflight validator `scripts/validate-remote-config.js` chạy trong `npm test`/CI; từ chối field lạ, kiểu dữ liệu sai, feature/default ngoài whitelist, announcement sai/trùng ID, ngày ISO không hợp lệ và config hết hạn khi được kiểm tra theo thời điểm runtime. Negative tests đã bổ sung.
+- [ ] Xác minh luồng publish thực tế của Cloudflare Pages và bảo đảm validator là gate trước publish; hiện CI preflight kiểm tra file trong repository nhưng chưa chứng minh được mọi phương thức publish đều bị chặn nếu invalid.
+- [x] Quy định xử lý schemaVersion, configVersion, issuedAt, expiresAt, field lạ, kiểu dữ liệu sai và config hết hạn trong validator; chưa áp dụng tự động tăng configVersion.
 - [ ] Giữ config hiện tại rỗng/không thay đổi hành vi app cho đến khi từng key được whitelist và có consumer đã kiểm thử.
 
 ### P0.3 Thiết kế Data Client tối thiểu
@@ -109,8 +110,8 @@
 
 ## Thứ tự thực hiện khuyến nghị
 
-1. P0.1 xác minh Remote Config URL.
-2. P0.2 contract và publish validation.
+1. P0.1 xác minh Remote Config URL production.
+2. P0.2 hoàn tất xác minh publish gate Cloudflare Pages và quy tắc tăng configVersion.
 3. P0.3 Data Client cùng test/fallback; chưa vội tích hợp APK.
 4. P1 marker conflict policy và migration an toàn.
 5. P1 Analytics AN1 → AN2 → AN3 → AN4.
