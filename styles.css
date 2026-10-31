@@ -2112,3 +2112,5 @@ button:focus-visible, select:focus-visible, input:focus-visible{
   outline: 3px solid #fde68a;
   outline-offset: 2px;
 }
+
+/* [build-apk] Beta build finalization after full regression pass. */
