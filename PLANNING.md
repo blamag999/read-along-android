@@ -573,3 +573,13 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - [x] Chạy regression tại các mốc quan trọng; chỉ build APK cuối đợt sau khi regression pass.
 - [x] Không tạo commit giả để kích hoạt CI/build; ưu tiên sửa workflow hiện có nếu trigger cần điều chỉnh.
 - Ghi chú: PR #43 là branch kiểm thử đã tồn tại và được merge vào beta trước khi quy tắc mới được xác nhận. Không tạo thêm branch tương tự.
+
+
+### Reader viewport cleanup — PDF/audio filename labels (2026-11-01)
+
+- [x] Remove the PDF/audio filename status row from the reader canvas.
+- [x] Remove the associated DOM references, UI updates and obsolete CSS selectors.
+- [x] Preserve filename state used by book identity and session logic.
+- [x] Add regression contracts; workflow #550 passed full npm test, JS syntax, Pages Functions syntax and isolation checks.
+- [ ] Build one beta APK and verify the artifact/release/OTA publication.
+- [ ] Install and verify the reader viewport on device.
