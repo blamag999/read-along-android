@@ -966,6 +966,6 @@ Khi một công việc trong PLANNING hoàn tất:
 - Admin recursively discovers existing R2 folders and allows selecting a nested folder; it also supports creating a new top-level folder.
 - Selected destination is shown in the confirmation step and progress status. Existing collision protection, root-only file scope, `books.json` exclusion, and copy → verify size → delete source behavior are retained.
 - Catalog preview and explicit `books.json` publication confirmation remain unchanged.
-- Source commit: `424f00e0b3ad78ce31442afa62898f01c9593a14`; regression workflow [41227122514](https://github.com/blamag999/read-along-android/actions/runs/41227122514) pending at the time of this entry.
+- Source commit: `73a95d5d03d3cd61739fb703751f7079faaec396`; regression/isolation [41227211811](https://github.com/blamag999/read-along-android/actions/runs/41227211811) passed. Cloudflare Pages production deployment [daa09798](https://daa09798.read-along-admin.pages.dev) completed successfully.
 - No R2 object has been moved; no APK build is needed for this Admin-only refinement.
 
