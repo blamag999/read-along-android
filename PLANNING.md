@@ -167,3 +167,8 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 - [ ] Kiểm thử trên APK beta: mỗi sách giữ tối đa 3 checkpoint (mốc hiện tại + 2 mốc trước); chuyển trang, tua audio lùi/nhảy xa và đổi phần audio phải giữ lại vị trí trước đó.
 - [ ] Xác nhận chọn một mốc cũ để khôi phục không tự phát audio, đồng thời vị trí vừa rời đi vẫn được giữ làm mốc phục hồi.
 - [ ] Kiểm tra chuyển A → B → A, đóng/mở app và OTA update; dữ liệu checkpoint của các sách không ghi đè lẫn nhau.
+
+
+## P1 — Đồng bộ mốc audio 0 giây với trang PDF
+- [ ] Kiểm thử APK beta: nếu chỉ có mốc `{ "2": 0 }`, khi audio bắt đầu ở giây 0 reader phải chuyển tới trang 2.
+- [ ] Xác nhận các mốc bằng nhau vẫn chọn trang có số nhỏ nhất; mốc của audio part khác vẫn bị bỏ qua; kiểm tra cả chế độ một trang và hai trang.
