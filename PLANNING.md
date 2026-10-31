@@ -246,6 +246,6 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 - [ ] Không xóa sách đang mở/phát; khi thiếu dung lượng, xóa trọn bộ sách ít dùng gần nhất cho đến khi đủ chỗ; xử lý sách đơn lẻ lớn hơn giới hạn và lỗi thiếu dung lượng rõ ràng.
 - [ ] Đảm bảo kho offline, marker và metadata tồn tại qua OTA update, không bị xóa cùng cache shell; chỉ dọn cache tạm/service worker cũ.
 - [ ] Bổ sung kiểm thử quota, LRU, tải dở, file thiếu, app restart, OTA update và mở sách offline; build một APK sau full regression.
-- [x] Tinh gọn header thành đúng hai action: Thư viện sách và Menu; chuyển ẩn/hiện khu vực chọn file và quản lý mốc thời gian vào Menu; bỏ nút Đóng sách riêng.
+- [x] Tinh gọn toàn bộ header thành hai action: Thư viện sách và Menu; chuyển điều khiển vừa trang/hai trang/zoom, ẩn-hiện khu vực chọn file và quản lý mốc thời gian vào Menu; bỏ nút Đóng sách riêng.
 - [ ] Chạy CI đầy đủ và kiểm tra trên điện thoại cảm ứng: hai nút header không chồng lấn; Menu còn đủ thao tác; Android Back vẫn đóng sách và lưu phiên đọc.
 - Không đánh dấu kho offline là implemented cho đến khi có code, test và xác minh đường dẫn lưu trữ native thực tế.
