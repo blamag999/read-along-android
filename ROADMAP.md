@@ -846,3 +846,9 @@ Khi một công việc trong PLANNING hoàn tất:
 - Test commit có marker `[test]`: `4a26e502bad452dd637dcfa6ed9f0c93706c350f`. Workflow path filter bao gồm `tests/**`; combined-status query tại thời điểm kiểm tra chưa trả status entries. CI vẫn pending/UNKNOWN, không kết luận pass hoặc fail.
 - Xác minh README beta và main có cùng blob SHA `2c9e534869ee250de84c134a873879dad18f3a7f` (byte-identical). Không thay đổi main.
 - CSS audit sơ bộ trên `index.html`, `app.js` và các module runtime tìm thấy 81 class selector không có tham chiếu trong source hiện tại. Đây mới là candidate list; chưa xóa CSS vì cần phân loại rule compound/media và tránh xóa nhầm selector được sinh động.
+
+### 2026-10-31 — Sửa regex regression cho trạng thái disabled của Library
+
+- Rà soát assertion mới phát hiện regex kiểm tra thuộc tính `disabled` bị escape thừa, có thể không phát hiện trạng thái disabled thực tế.
+- Đã sửa regex thành whitespace matcher đúng trong `tests/modules.test.js`; source HTML vẫn xác nhận nút Library không có `disabled` và có `aria-disabled="false"`.
+- Commit test mới nhất có marker `[test]`: `98cd19cda1c307046078f97093d7eb03f0ecd377`. Chưa có status check được trả về để xác nhận CI; chưa tuyên bố pass.
