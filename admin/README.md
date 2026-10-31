@@ -164,18 +164,6 @@ The Admin publishes the manifest stored in `admin/public/books.json` to the root
 The pure catalog and playlist data transformations are implemented in `modules/catalog-playlist.js` in the same repository. The module is browser/Node compatible and owns only naming normalization, manifest-to-model mapping, local file grouping, sorting, and filtering. It must not perform DOM operations, storage access, network requests, or PDF/audio playback. `app.js` retains UI rendering and app-state orchestration. Admin continues to own R2 object management. The live catalog is generated from the authenticated R2 inventory preview; `admin/public/books.json` is a legacy seed only and must not be used as the publish input. Preview groups exact normalized names in the same folder, excludes incomplete/duplicate groups and files with severe scan findings, preserves numeric `_P1`, `_P2` audio ordering, and requires an explicit administrator confirmation. Publishing rechecks every object before replacing the root `books.json`; scan/preview never delete or rename source objects.
 
 
-## Browser-side WMA to MP3 conversion
-
-- Library book groups containing WMA audio expose a **Chuyển WMA → MP3** action.
-- Conversion runs locally in the administrator's browser using pinned FFmpeg.wasm `0.12.10` and the single-thread core. The engine is loaded lazily from jsDelivr only after the administrator starts a conversion; internet access is required for this first load.
-- WMA source objects are fetched from this Read Along bucket's public R2 hostname, decoded/encoded in browser memory, checked for a plausible MP3 signature, then uploaded through the existing authenticated multipart upload API.
-- Converted files use the same folder and basename with `.mp3`. Existing destination objects are never overwritten. Original WMA objects are never deleted or modified.
-- A book's WMA files are processed sequentially. If one conversion/upload fails, the batch stops; already uploaded MP3 files remain, and originals remain available. Refresh the Library and retry after resolving any conflict.
-- Browser memory is finite. Files larger than 256 MB are rejected by this UI. A real WMA sample should be tested in the target browser before relying on conversion for the full library; some WMA variants/codecs may not be present in the FFmpeg.wasm build.
-- This feature does not change the Android app or APK. The catalog preview excludes WMA and includes supported MP3 files after a later explicit publish.
-- Library search and sort controls are placed above the table. Pagination controls now share the exact filtered entry model used by rendering, including search, sort, and page-size changes.
-
-
 ## Tinh gọn trang quản lý thư viện
 
 - Admin chỉ còn một màn hình quản lý, không còn tab riêng **Kiểm tra thư viện**. Bảng sách/tệp luôn hiển thị; phần **Kiểm tra & xuất bản danh mục** được đặt ngay bên dưới trong một khối thu gọn, mở ra khi cần quét lỗi hoặc cập nhật books.json.
@@ -183,11 +171,12 @@ The pure catalog and playlist data transformations are implemented in `modules/c
 - Dòng phân trang dùng thuật ngữ **mục quản lý** và tách số bộ sách, thư mục, nhóm tệp độc lập để không nhầm số mục R2 với số đầu sách đã xuất bản.
 - Hai nút **Thư mục** và **Tải tệp lên** có cùng chiều cao, căn giữa theo trục dọc; trên màn hình hẹp dùng hai cột cân xứng.
 
+## Dashboard refresh (2026-10-31)
 
-## Quy trình chuyển WMA trong kết quả kiểm tra
-
-- Nút chuyển đổi chỉ xuất hiện trong dòng cảnh báo WMA của phần **Kiểm tra & xuất bản danh mục**; danh sách quản lý sách không còn nút chuyển đổi trùng lặp.
-- Các WMA cùng một bộ sách được gom thành một thao tác; không lặp nút cho từng phần.
-- Tiến độ hiển thị ngay dưới nút, theo các giai đoạn tải bộ chuyển đổi, tải WMA, mã hóa MP3 và tải MP3 lên R2; có trạng thái hoàn tất/lỗi.
-- Upload dùng chính xác đường dẫn đích cạnh file WMA nguồn, không phụ thuộc thư mục hiện đang mở trong giao diện.
-- MP3 đích tồn tại thì dừng, không ghi đè; file WMA gốc luôn được giữ lại.
+- Admin management is organized into compact horizontal tabs: **Thư viện → Tổng quan → Kiểm tra → Thống kê → Nhật ký**. The default tab after login is Library.
+- Light and Dark themes are supported. First visit follows the operating-system preference; a manual selection is persisted in local storage.
+- Every tab has its own visible task status bar. A task's progress/result remains attached to the tab where it started; switching tabs does not move its status into another section.
+- Library upload shows aggregate progress and per-file outcomes, continues with remaining files after an individual failure, and reports the final success/failure counts. Rename and delete report the affected object and result. File and folder deletion require explicit in-app confirmation.
+- Diagnostics is read-only apart from explicitly approved rename actions. Fuzzy book-name rename suggestions are surfaced only at similarity >=95%; deterministic audio-part naming suggestions remain available. Lower-confidence matches are not offered as automatic rename actions.
+- Unsupported formats and WMA playback compatibility are warnings to replace the source manually with a supported file. The Admin has no audio transcoding/conversion feature and never modifies source media during a scan.
+- Scan cache rule version is bumped when validation behavior changes so previous findings are re-evaluated.
