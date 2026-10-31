@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://read-along-admin.pages.dev/schemas/remote-config.schema.json",
+  "title": "Read Along Remote Config (proposed contract)",
+  "type": "object",
+  "required": ["schemaVersion", "configVersion", "features", "readerDefaults"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "configVersion": { "type": "integer", "minimum": 1 },
+    "issuedAt": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "showReadingStats": { "type": "boolean" },
+        "showAnnouncements": { "type": "boolean" },
+        "enableOnlineCatalog": { "type": "boolean" }
+      }
+    },
+    "readerDefaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pageTurnMode": { "enum": ["next", "markers", "off"] },
+        "viewMode": { "enum": ["fit-height", "fit-width", "two-pages"] },
+        "autoSeekAudio": { "type": "boolean" }
+      }
+    },
+    "announcements": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["id", "text"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "maxLength": 80 },
+          "text": { "type": "string", "maxLength": 500 },
+          "level": { "enum": ["info", "warning"] }
+        }
+      }
+    }
+  }
+}
