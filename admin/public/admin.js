@@ -780,7 +780,8 @@ async function loadAnalyticsDashboard() {
   } catch (error) { status.textContent = "Không tải được Dashboard: " + error.message; setStatus("Không tải được dữ liệu tổng quan: " + error.message, true, "overview");\n    setStatus("Không tải được số liệu Dashboard: " + error.message, true, "public"); setStatus("Không tải được thống kê: " + error.message, true, "analytics"); }
   finally { button.disabled = false; }
 }
-$("refreshAnalyticsBtn").addEventListener("click", loadAnalyticsDashboard);\n$("overviewRefreshBtn").addEventListener("click", loadAnalyticsDashboard);
+$("refreshAnalyticsBtn").addEventListener("click", loadAnalyticsDashboard);
+$("overviewRefreshBtn").addEventListener("click", loadAnalyticsDashboard);
 $("analyticsRange").addEventListener("change", loadAnalyticsDashboard);
 
 // Dashboard chỉ đọc là trang mặc định; khu vực quản lý thư viện vẫn yêu cầu OTP.
