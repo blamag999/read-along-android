@@ -5,7 +5,7 @@
 ## Nguyên tắc triển khai
 
 - Mặc định làm trực tiếp trên nhánh beta; không tạo nhánh mới, không promote main.
-- Mỗi đợt nhỏ, có test và có thể xác minh độc lập. Không build APK cho thay đổi chỉ ở Admin/backend/docs.
+- Mỗi đợt nhỏ, có test và có thể xác minh độc lập. Full regression chạy tại mốc `[test]` hoặc trước `[build-apk]`, không chạy trên commit trung gian. Không build APK cho thay đổi chỉ ở Admin/backend/docs.
 - Không thay đổi reader/audio/native hoặc marker runtime khi chưa có test hồi quy và kế hoạch bảo toàn dữ liệu.
 - Không tạo API/Worker mới nếu hệ thống hiện có đáp ứng; không gộp endpoint khác trách nhiệm.
 - Không đánh dấu hoàn thành nếu thiếu bằng chứng CI, endpoint, deploy hoặc thiết bị tương ứng.
