@@ -852,3 +852,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Rà soát assertion mới phát hiện regex kiểm tra thuộc tính `disabled` bị escape thừa, có thể không phát hiện trạng thái disabled thực tế.
 - Đã sửa regex thành whitespace matcher đúng trong `tests/modules.test.js`; source HTML vẫn xác nhận nút Library không có `disabled` và có `aria-disabled="false"`.
 - Commit test mới nhất có marker `[test]`: `98cd19cda1c307046078f97093d7eb03f0ecd377`. Chưa có status check được trả về để xác nhận CI; chưa tuyên bố pass.
+
+### 2026-10-31 — Remove obsolete manual auto page-turn control
+
+- The confirmed product requirement says auto page-turn is always enabled and does not need a user-facing setting. Source audit found the old menu button and toggle listener remained in HTML/JS.
+- Removed `menuAutoFlip`, its DOM refs, click handler, `updateReadMenuState()` and the menu button. Both legacy restoration paths now normalize `pageTurnMode` to `next`.
+- Added regression assertions for absence of the toggle and normalization of legacy `off` sessions.
+- Commits: `0f022d816ffadaab633bf086431ddfc902771e80` (HTML), `21edd11be35570fd21bdcb0e36a4b84135d1c77d` (JS), `[test]` `8dae0179bc64c98bd91ddc7e3b5635d70dc540a0`.
+- CI result remains unconfirmed; no APK build has been started.
