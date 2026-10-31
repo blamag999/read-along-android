@@ -239,3 +239,9 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Đã rà soát các alert/confirm/prompt/toast trong `app.js`, ghi các câu đề xuất và nguyên tắc xử lý lỗi vào PLANNING. Không sửa `app.js` hoặc file runtime nào.
 - Commit PLANNING đầu: `3644258c70ea0bbe6e052d030f546a0c356fe08c`; commit PLANNING audit: `3acea281aa64040e4e74b1c25557007dbd56a203`; commit ROADMAP: `96fc15e8dcdcf0ab42961e23ac4d7138618c8174`.
 - Không chạy regression/CI, không build APK, không deploy, không thay đổi OTA hoặc main. Việc tiếp theo: người dùng duyệt nội dung; sau đó mới thực hiện batch sửa thông báo với regression tests.
+
+## Quy ước thuật ngữ đã thống nhất — 2026-10-31
+
+- User-facing: “PDF” → “sách” khi nói về tài liệu đang đọc; “audio” → “âm thanh”. Tên định dạng cụ thể (PDF/MP3/M4A) vẫn được dùng trong hướng dẫn chọn tệp.
+- Không đổi identifiers/API/metadata/log kỹ thuật. Quy ước được ghi trong PLANNING; runtime chưa thay đổi.
+- Docs commits: PLANNING `751ad7311acf43dd445d48a4b443a7161f48dc2c`; ROADMAP `169ae24e8941c6a375ab6c1f255201a08f076d4d`.
