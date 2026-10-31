@@ -98,3 +98,15 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - ROADMAP ghi nhận đây là quyết định và kế hoạch, không phải tính năng đã triển khai. Chưa thay đổi native code, API, D1 schema, progress runtime hoặc APK; chưa migrate dữ liệu local.
 - Last reviewed HEAD trước commit handover: `48386107f6a924d8bb2f4eff0d8f9f3f9a5ec938`.
 - Commit handover tài liệu: `cc09fddd5554c7c39760a9e37122fa0ae181d6ed`.
+
+
+## Bàn giao batch sửa mốc audio 0 giây — 2026-10-31
+
+- Phát hiện root cause trong `modules/page-sync.js`: `findTargetPage()` loại bỏ marker có thời gian 0 nếu page > 1, khiến marker hợp lệ `{ "2": 0 }` không bao giờ chọn được trang 2 khi audio bắt đầu.
+- Đã bỏ điều kiện loại trừ này. Quy tắc tie-break vẫn giữ nguyên: nếu nhiều trang có cùng timestamp, chọn trang được đánh dấu đầu tiên (số trang nhỏ nhất). Marker thuộc audio part khác và marker vượt duration vẫn tiếp tục bị bỏ qua.
+- Regression test mới trong `tests/modules.test.js`: (1) trang 2 có marker 0 đơn lẻ → chọn trang 2; (2) trang 2 và 3 cùng marker 0 → chọn trang 2; (3) trang 1–3 cùng marker 0 → chọn trang 1.
+- Code commit: `968b7142ea13a42e29a94878d240ea6104dd047a`; test commit: `c8f6dd488a98ced98309f6fa16485d34816c7ceb`; final build-trigger commit / beta HEAD tại thời điểm handover: `ae356159a028bb90bb951e65b10a94ff9940b540`.
+- GitHub Actions build run: [41186509296](https://github.com/blamag999/read-along-android/actions/runs/41186509296). Full `npm test`, Pages Functions syntax, isolation, release-channel validation, version generation, web preparation, native updater integration, Android versioning, icon generation và signing setup đều success. Tại thời điểm ghi nhận, bước `Build signed release APK` còn in progress; chưa xác nhận APK hoặc R2 upload thành công.
+- Device acceptance pending: cài APK beta mới nhất khi workflow hoàn tất; mở sách có marker trang 2 = 0, bắt đầu audio và xác nhận reader chuyển trang 2; kiểm tra cả một trang/hai trang và các mốc tiếp theo.
+- Không thay đổi `main`, signing key, OTA backend, Cloudflare resources, R2 objects hoặc D1 data trong phần sửa runtime này.
+- Next step: kiểm tra kết quả run 41186509296; nếu build và OTA publish pass thì hướng dẫn người dùng cài/test thiết bị và cập nhật trạng thái nghiệm thu. Nếu thất bại, dùng step/log cụ thể để sửa, không tuyên bố APK sẵn sàng.
