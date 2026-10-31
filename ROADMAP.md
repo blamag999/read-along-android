@@ -765,3 +765,15 @@ Khi một công việc trong PLANNING hoàn tất:
 - Kế hoạch Menu: gỡ UI chọn file và vùng điều khiển cũ không còn cần; giữ điều khiển reader, checkpoint “Vị trí đọc gần đây” / “Xem tiếp” và OTA. Rà soát UI quản lý marker thủ công riêng; không xóa marker runtime, marker JSON R2, schema hoặc dữ liệu.
 - Kế hoạch chi tiết và kiểm thử được ghi trong PLANNING.md. Đây là phạm vi đã duyệt, chưa phải code đã triển khai.
 - Chưa sửa HTML/CSS/JavaScript/native, chưa chạy test/CI, chưa build APK, chưa thay đổi R2/Cloudflare/OTA hoặc main.
+
+
+## 2026-10-31 — Bàn giao kế hoạch tinh gọn Reader/Menu và ranh giới APK Core
+
+- Đối chiếu Git từ mốc handover trước `50b7c4961520a54e84c8400687e00bd7edad1076` đến beta HEAD đã xác nhận `d6faeb3b1667bebf5130a63851c6090785a4945e`: 6 commit mới, chỉ thay đổi `PLANNING.md`, `ROADMAP.md`, `RECOVERY.md`; không có file runtime trong delta.
+- Kế hoạch P1 đã được cập nhật tại commit `580fc9314baf36d0ecd6f91a0d7553f4df6d56ce`; bổ sung ranh giới APK Core và chính sách giảm số lần build tại `d6faeb3b1667bebf5130a63851c6090785a4945e`.
+- Phạm vi đã thống nhất: bỏ mở file tùy ý từ thiết bị; mở sách từ catalog/R2; header chỉ còn Thư viện sách và Menu; Android Back đóng sách; Menu gọn còn Tự lật trang, Vị trí đọc gần đây (tối đa 3 checkpoint, restore không autoplay), OTA và Phiên bản.
+- Reader tiếp tục đọc PDF/audio trực tiếp từ R2; giữ marker JSON R2 ở chế độ read-only để đồng bộ trang/audio. Auto-seek khi lật trang thủ công luôn bật; logic hiển thị một/hai trang tự động theo marker. Không triển khai cache media offline trong batch này.
+- Ranh giới APK Core: giữ runtime tối thiểu và contract catalog additive/fallback; không remote executable code/config, không thêm API/Worker/database/service; không refactor rộng nếu không có lợi ích test/bảo trì. Online Reading Progress được tách thành hạng mục riêng.
+- Kiểm thử/build theo batch: kiểm tra nhỏ trong quá trình làm; full regression tại commit `[test]`; chỉ một APK beta ở commit `[build-apk]` sau khi runtime batch hoàn tất.
+- Trạng thái: **PLANNED / APPROVED SCOPE, NOT IMPLEMENTED**. Chưa sửa runtime, chưa chạy test/CI cho kế hoạch này, chưa build APK, chưa deploy hoặc kiểm tra thiết bị. Không thay đổi `main`.
+- Việc tiếp theo: trước khi triển khai, đọc lại các tài liệu theo README, kiểm tra HEAD/diff mới nhất, audit đầy đủ caller của local-file opening và marker write/sync; sau đó triển khai theo checklist P1 trên beta.
