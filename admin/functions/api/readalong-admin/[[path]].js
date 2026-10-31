@@ -1105,6 +1105,7 @@ async function handle(request, env) {
     const key = String(body.key || "");
     const uploadId = String(body.uploadId || "");
     const parts = body.parts;
+    if (key === "books.json") return json({ error: "books.json chỉ được cập nhật qua Xuất bản danh mục" }, 403);
     if (!validKey(key) || !uploadId || !Array.isArray(parts) || !parts.length || parts.length > 10000) return json({ error: "Invalid multipart completion" }, 400);
     const upload = env.READALONG.resumeMultipartUpload(key, uploadId);
     await upload.complete(parts.map((part) => ({ partNumber: Number(part.partNumber), etag: String(part.etag) })));
