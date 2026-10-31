@@ -719,3 +719,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Thêm `tests/release-notes.test.py`, nối vào `npm test`, và thêm assertion thông báo vào `tests/contracts.test.js`.
 - Các commit code/test/workflow hiện tại nằm trên beta; chưa chạy regression/CI và chưa xác minh nội dung release notes trên Release thực tế. Chưa build APK/OTA và chưa nghiệm thu thiết bị. Batch thông báo trong app vẫn còn phần cần rà soát tiếp.
 - Không thay đổi main, endpoint OTA, bucket, manifest contract, signing key hoặc native installer.
+
+
+### CI kiểm tra đầu tiên cho Release Notes — 2026-10-31
+
+- Run [41212943321](https://github.com/blamag999/read-along-android/actions/runs/41212943321) trên commit `e679600bd3e7d36e9b98443991eeedf128f137bc`: full `npm test` PASS, Pages Functions syntax PASS, isolation PASS, deployed analytics smoke PASS. Deployed OTA smoke đang chạy khi cập nhật nhật ký.
+- Run trước đó fail vì test import module tên file script có dấu gạch nối; lỗi đã được sửa bằng importlib và commit test mới.
+- Release Notes workflow mới chưa được thực thi qua APK build. Không khẳng định release notes/OTA output thực tế đã được xác minh.
+- Notification batch còn một số thông báo cũ chưa xử lý; APK build và nghiệm thu thiết bị chưa thực hiện.
