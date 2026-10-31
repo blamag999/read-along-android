@@ -543,3 +543,14 @@ Khi một công việc trong PLANNING hoàn tất:
 - Domain hiện tại là `read-along-admin.pages.dev`. Nếu chỉ đổi storage provider trong khi Pages Functions vẫn là bootstrap thì APK không cần build lại. Nếu muốn chuyển cả bootstrap khỏi Cloudflare, cần custom domain do người dùng sở hữu; domain `pages.dev` không thể mang sang nhà cung cấp khác.
 - Trạng thái: audit và plan đã ghi vào PLANNING; chưa tạo bucket/binding/domain/token/secret, chưa sửa router, workflow, APK runtime hoặc dữ liệu Cloudflare; chưa build APK và chưa chạy OTA acceptance. Không thay đổi main.
 
+### 2026-10-31 — OTA backend, fixed client endpoint và native checksum gate (beta)
+
+- Tạo bucket R2 riêng `read-along-releases` ở APAC và gắn binding production `OTA_RELEASES` vào Pages project `read-along-admin`. Binding sách `READALONG` → `my-audio-book`, D1 `DB` và dữ liệu sách được giữ nguyên.
+- Mở rộng Pages Functions router hiện hữu bằng public read-only routes `GET /api/readalong-admin/ota/latest?channel=beta|official` và `GET /api/readalong-admin/ota/download?channel=...&version=...`. Manifest được validate nghiêm ngặt; object key suy ra server-side; size và R2 custom metadata SHA-256 phải khớp; file được stream qua Pages API, không expose storage URL.
+- Đổi app.js sang API Pages cố định; thêm meta app-version-code và so sánh versionName + versionCode. Native updater khóa host/path Pages, tắt redirect, giới hạn APK tối đa 250 MiB, tính SHA-256 khi stream và không mở installer nếu checksum/size mismatch.
+- GitHub Actions được bổ sung bước upload APK rồi manifest bằng S3-compatible R2 API; dùng token chỉ có Object Read & Write trên bucket riêng. Workflow fail-closed nếu thiếu hai GitHub secrets `R2_ACCESS_KEY_ID` và `R2_SECRET_ACCESS_KEY`. GitHub Releases vẫn được giữ trong giai đoạn chuyển tiếp.
+- Full regression, JS syntax, Pages Functions syntax, isolation và production OTA API smoke pass tại [41183506939](https://github.com/blamag999/read-along-android/actions/runs/41183506939); production API smoke cũng pass tại [41183146147](https://github.com/blamag999/read-along-android/actions/runs/41183146147).
+- Cloudflare Pages backend deployment đã thành công và binding được xác minh. OTA API hiện trả 404 có chủ đích khi chưa có manifest; chưa có APK/manifest thật trên R2.
+- Chưa tạo R2 API token, chưa thêm GitHub secrets, chưa upload APK, chưa chạy APK build/Gradle compile hoặc OTA install trên thiết bị. Người dùng cần tạo token bucket-scoped và lưu hai secrets theo PLANNING trước khi tạo bản APK beta chuyển tiếp.
+- Không đổi main, không chuyển repository sang Private, không đổi signing key và không xóa GitHub Releases.
+
