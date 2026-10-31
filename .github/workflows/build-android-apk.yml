@@ -1,11 +1,28 @@
 name: Build and Release Read Along
 
 on:
-  # Beta APK is built only from an explicitly marked finalization commit.
-  # Ordinary beta pushes still run validation workflows but never compile an APK.
+  # Beta APK is built only from an explicitly marked finalization commit that changes
+  # an APK-relevant path. Documentation/backend-only pushes do not create this run.
   push:
     branches:
       - beta
+    paths:
+      - "app.js"
+      - "index.html"
+      - "styles.css"
+      - "manifest.json"
+      - "sw.js"
+      - "icon.png"
+      - "www/**"
+      - "modules/**"
+      - "services/**"
+      - "native/**"
+      - "android/**"
+      - "capacitor.config.*"
+      - "package.json"
+      - "package-lock.json"
+      - "run_local.bat"
+      - "README-WEB-LOCAL.txt"
   workflow_dispatch:
     inputs:
       channel:
@@ -22,8 +39,8 @@ permissions:
 
 jobs:
   build-release:
-    # Push builds are gated by [build-apk] in the final commit message.
-    # Manual dispatch remains available for an explicitly requested stable release.
+    # Matching push builds are gated by [build-apk] in the final commit message.
+    # Manual dispatch remains available for an explicitly requested release.
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[build-apk]')) }}
     runs-on: ubuntu-latest
     steps:
