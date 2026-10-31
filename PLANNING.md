@@ -28,7 +28,7 @@
 - [x] Nghiệm thu deployment sau khi cấu hình build command: deployment `201aeb20` success, snapshot xác nhận `node scripts/validate-remote-config.js` đã chạy trước publish. Bằng chứng ở ROADMAP.
 - [x] Cấu hình Cloudflare Pages project hiện tại để chạy validator trong build step trước khi publish; build gate đã được nghiệm thu thực tế.
 - [x] Quy định xử lý schemaVersion, configVersion, issuedAt, expiresAt, field lạ, kiểu dữ liệu sai và config hết hạn trong validator. Mỗi lần sửa config đã phát hành phải tăng configVersion thủ công; validator không tự tăng.
-- [ ] Giữ config hiện tại rỗng/không thay đổi hành vi app cho đến khi từng key được whitelist và có consumer đã kiểm thử.
+- [x] Giữ config hiện tại rỗng/không thay đổi hành vi app cho đến khi từng key được whitelist và có consumer đã kiểm thử.
 
 ### P0.3 Thiết kế Data Client tối thiểu
 
@@ -39,7 +39,8 @@
 - [x] Không thực thi JavaScript/HTML và không có native command/permission trong contract.
 - [x] Test JSON lỗi, field thiếu/thừa, schemaVersion, config hết hạn, configVersion rollback, timeout, HTTP error, sai Content-Type, cache hợp lệ/hỏng, retry giới hạn, response quá lớn và offline lần đầu. HTTP status/Content-Type của production endpoint vẫn cần xác minh độc lập.
 - [x] Build beta v1.3.5 đã chạy trên HEAD `a30c6a011456befc04e5af83a51694e5e19eaa1d`; workflow run 41162360209 success, artifact đã upload, bước build signed APK và verify signature/SHA-256 đều success; GitHub Release beta đã tạo. Bằng chứng ở ROADMAP.
-- [ ] Cài APK beta v1.3.5 lên thiết bị thật; xác minh online nhận source=network, offline lần đầu fallback default, offline lần sau dùng cache; reader/audio vẫn hoạt động bình thường và không bị chặn startup.
+- [x] Người dùng xác nhận đã cài/kiểm thử APK trên điện thoại.
+- [ ] Bổ sung nghiệm thu riêng Data Client: online nhận source=network, offline lần đầu fallback default, offline lần sau dùng cache; reader/audio không bị chặn startup. Chưa có log/kết quả cụ thể cho ba tình huống này.
 - [x] Điều chỉnh workflow: các push beta thông thường không build APK; chỉ commit chốt có `[build-apk]` mới tự build một lần. Manual dispatch vẫn giữ cho stable/ngoại lệ.
 
 ## P1 — Chốt marker conflict policy và migration an toàn
@@ -49,7 +50,7 @@
 - [x] Dùng revision để so sánh các bản versioned thuộc cùng một logical book; updatedAt chỉ tie-break khi revision và marker content giống nhau.
 - [x] Định nghĩa conflict cùng revision khác nội dung (không tự ghi đè, ưu tiên local recovery), revision/schema lỗi, clear-all bằng envelope rỗng và legacy data.
 - [ ] Thiết kế migration tương thích ngược: không ghi đè nguồn cũ trước khi bản mới được validate và lưu thành công; không tự xóa marker hoặc file JSON.
-- [x] Bổ sung pure resolver và regression tests cho revision, stale copy, conflict, import, clear-all, legacy numeric seconds, object {time,part}, marker lỗi và audio-part bounds. Lần CI đầu phát hiện test conflict chưa phản ánh đúng policy local recovery; đã sửa resolver để giữ localStorage candidate khi có conflict.
+- [x] Bổ sung pure resolver và regression tests cho revision, stale copy, conflict, import, clear-all, legacy numeric seconds, object {time,part}, marker lỗi và audio-part bounds. CI [41164224271](https://github.com/blamag999/read-along-android/actions/runs/41164224271) success sau khi sửa conflict-selection.
 - [ ] Chỉ thay đổi runtime sau khi policy/test hoàn chỉnh; nếu cần APK thì gom cùng một đợt Data Client hoặc một đợt APK riêng có phạm vi rõ ràng.
 
 ## P1 — Analytics thời lượng đọc/nghe độc lập
@@ -129,4 +130,4 @@
 Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên xử lý lỗi đó trước; cập nhật ROADMAP/PLANNING sau khi có bằng chứng.
 
 
-> Batch marker-policy resolver: implemented as an isolated pure module with regression tests; not yet wired into reader runtime. No marker files, APK runtime, signing configuration, or main branch behavior changed in this batch. Re-run full regression after conflict-selection correction.
+> Batch marker-policy resolver: isolated pure module, tests and documentation complete; CI [41164224271](https://github.com/blamag999/read-along-android/actions/runs/41164224271) success. Not wired into reader runtime; no marker files, APK runtime, signing configuration or main branch behavior changed.
