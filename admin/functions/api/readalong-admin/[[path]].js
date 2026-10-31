@@ -616,19 +616,19 @@ async function handle(request, env) {
     // Build from the current R2 inventory; never use the checked-in seed manifest.
     const scan = await scanLibrary(env.READALONG, "", env.DB);
     const keys = (await listAllKeys(env.READALONG, "")).filter(key => key !== "books.json" && !key.endsWith("/"));
-    const normalize = value => String(value || "").normalize("NFKC").replace(/\\.[^/.]+$/, "")
-      .replace(/[_-]+/g, " ").replace(/[’']/g, "").replace(/\\bread\\s+along\\b/gi, " ")
-      .replace(/\\bbook\\b/gi, " ").replace(/[^\\p{L}\\p{N}]+/gu, " ")
-      .replace(/\\s+/g, " ").trim().toLocaleLowerCase("vi");
+    const normalize = value => String(value || "").normalize("NFKC").replace(/\.[^/.]+$/, "")
+      .replace(/[_-]+/g, " ").replace(/[’']/g, "").replace(/\bread\s+along\b/gi, " ")
+      .replace(/\bbook\b/gi, " ").replace(/[^\p{L}\p{N}]+/gu, " ")
+      .replace(/\s+/g, " ").trim().toLocaleLowerCase("vi");
     const badKeys = new Set(scan.findings.filter(item => item.severity === "error").map(item => item.key));
     const groups = new Map();
     for (const key of keys) {
       const ext = extensionOf(key);
-      if (ext !== ".pdf" && ext !== ".json" && !AUDIO_EXTENSIONS.has(ext)) continue;
+      if (ext !== ".pdf" && ext !== ".json" && (!AUDIO_EXTENSIONS.has(ext) || ext === ".wma")) continue;
       const file = key.split("/").pop();
-      const stem = file.replace(/\\.[^.]+$/, "");
+      const stem = file.replace(/\.[^.]+$/, "");
       const dir = key.includes("/") ? key.slice(0, key.lastIndexOf("/") + 1) : "";
-      const partMatch = ext !== ".pdf" && ext !== ".json" ? stem.match(/(?:_P(\\d+)|[_ -](?:side|part|pt|disc)[ _.-]*(\\d+))$/i) : null;
+      const partMatch = ext !== ".pdf" && ext !== ".json" ? stem.match(/(?:_P(\d+)|[_ -](?:side|part|pt|disc)[ _.-]*(\d+))$/i) : null;
       const base = partMatch ? stem.slice(0, partMatch.index) : stem;
       const normalized = normalize(ext === ".json" ? base.replace(/[_-]sync$/i, "") : base);
       if (!normalized) continue;
@@ -661,8 +661,8 @@ async function handle(request, env) {
         if (b.part !== null) return 1;
         return a.key.localeCompare(b.key, "vi", { numeric: true, sensitivity: "base" });
       });
-      const title = group.pdf[0].stem.replace(/[_-]+/g, " ").replace(/\\bread\\s+along\\b/ig, "").replace(/\\s+/g, " ").trim();
-      const slug = title.normalize("NFKD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "book";
+      const title = group.pdf[0].stem.replace(/[_-]+/g, " ").replace(/\bread\s+along\b/ig, "").replace(/\s+/g, " ").trim();
+      const slug = title.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "book";
       const id = "book-" + slug + "-" + (await sha256(group.pdf[0].key)).slice(0, 8);
       const host = "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/";
       books.push({
