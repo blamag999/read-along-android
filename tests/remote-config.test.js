@@ -90,5 +90,25 @@ function response(body, status = 200, type = 'application/json; charset=utf-8') 
   const expiredResult = await expiredCache.api.createClient({ storage: expiredCache.storage, now: () => Date.parse('2026-10-31T01:00:00Z'), retries: 0 }).load();
   assert.equal(expiredResult.source, 'default', 'Expired cached config must not be used');
 
+  const bootstrapSource = fs.readFileSync('modules/remote-config-bootstrap.js', 'utf8');
+  const bootstrapWindow = {
+    ReadAlongRemoteConfig: {
+      createClient: () => ({
+        load: async () => ({ config: fixture, source: 'network', error: null }),
+        getDefaults: () => ({ schemaVersion: 1, configVersion: 1, issuedAt: '1970-01-01T00:00:00Z', features: {}, readerDefaults: {}, announcements: [] })
+      })
+    }
+  };
+  const bootstrapContext = vm.createContext({ window: bootstrapWindow, globalThis: bootstrapWindow, Promise });
+  vm.runInContext(bootstrapSource, bootstrapContext, { filename: 'modules/remote-config-bootstrap.js' });
+  const bootstrapped = await bootstrapWindow.ReadAlongRemoteConfigReady;
+  assert.equal(bootstrapped.source, 'network');
+  assert.equal(bootstrapWindow.ReadAlongRemoteConfigState, bootstrapped, 'Bootstrap exposes state only after async load resolves');
+
+  const indexHtml = fs.readFileSync('index.html', 'utf8');
+  assert.ok(indexHtml.indexOf('src="app.js"') < indexHtml.indexOf('src="modules/remote-config.js"'));
+  assert.ok(indexHtml.indexOf('src="modules/remote-config.js"') < indexHtml.indexOf('src="modules/remote-config-bootstrap.js"'));
+  assert.ok(indexHtml.indexOf('src="modules/remote-config-bootstrap.js"') < indexHtml.indexOf('src="modules/remote-sync.js"'));
+
   console.log('Remote Config client tests passed.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
