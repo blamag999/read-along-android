@@ -474,3 +474,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - Kết quả xác minh sau cập nhật: README blob trên cả `beta` và `main` cùng SHA `7ba8a6a23ec02f151681394993d2f27098253713` (byte-for-byte giống nhau).
 - Commit cập nhật: beta README `43176eee6a394b4fc728e788ee714c5a44fc8bee`; main README-only `d683282ad319ba4b9a1bc5669a0e12667c20ac8a`; CI workflow `55499860003adbfa3c1c5ffa013a38d713c34cc6`; ROADMAP `8fe5d18af1c51dfd3016044f67e4f4f78de4ea45`; PLANNING `eaa3ff9a4ee930a80f22201113b8cd4e0255fee4`.
 - Lưu ý: sau các commit cập nhật tài liệu, HEAD beta đã tiến thêm; so sánh mới nhất cho thấy `testing` vẫn chỉ có đúng 1 commit riêng (README-only) và không có source code khác biệt cần giữ. Branch vẫn tồn tại do connector không cung cấp delete-ref action.
+
+
+### 2026-10-31 — Analytics AN3.8 beta APK build verified
+
+- Workflow [41167887202](https://github.com/blamag999/read-along-android/actions/runs/41167887202) completed successfully on `85475373bab4813589cf0d3c0777fe8c27df1da7`; npm regression, Pages Functions syntax, isolation, signed APK build, signature verification, artifact upload and GitHub Release steps all passed.
+- Release `v1.3.7` (prerelease/beta) published: https://github.com/blamag999/read-along-android/releases/tag/v1.3.7
+- APK asset: `read-along-v1.3.7-android.apk`; SHA-256: `a4f4f5e85f04af05a53925888685ed28b82ba02867571a4ffe84769bcaf06299`.
+- Device acceptance is not yet confirmed. User should install/update this APK and test Analytics consent, opt-in/out, reading/listening counters, offline behavior and playback stability. Android TV remains pending.
+- Next after AN3 device acceptance: close P0.3 Data Client online/offline acceptance, then design safe marker migration; AN4 dashboard follows AN3 collector acceptance and can be developed independently without APK build.
