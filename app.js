@@ -1227,6 +1227,7 @@ function initEvents() {
       const isOpen = !dom.readOptionsMenu.classList.contains('hidden');
       dom.readOptionsMenu.classList.toggle('hidden', isOpen);
       dom.btnOpenReadMenu.setAttribute('aria-expanded', String(!isOpen));
+      if (!isOpen) dom.readOptionsMenu.querySelector('button:not([disabled])')?.focus();
     });
     document.addEventListener('click', (event) => {
       if (!dom.readOptionsMenu.contains(event.target) && !dom.btnOpenReadMenu.contains(event.target)) {
