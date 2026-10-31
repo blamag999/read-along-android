@@ -76,7 +76,7 @@ assert.ok(appSource.includes("alert('Không tải được thư viện sách. Vu
 assert.ok(appSource.includes("alert('Không mở được sách. Vui lòng kiểm tra tệp sách và âm thanh.');"), 'Book-load errors use concise recovery guidance');
 assert.ok(appSource.includes("showToast('Đã chuyển phần âm thanh. Nhấn Phát để tiếp tục.');"), 'Audio autoplay fallback uses user-facing terminology');
 assert.ok(appSource.includes("'Định dạng âm thanh không được hỗ trợ.'"), 'Unsupported media guidance stays concise and does not prescribe unsupported format details');
-assert.ok(appSource.includes("showToast('Không tải được âm thanh. Vui lòng chọn lại tệp.');"), 'Audio-load errors do not expose exception details');
+assert.ok(appSource.includes("'Không tải được âm thanh. Hãy kiểm tra tệp và thử lại.'"), 'Audio-load errors provide concise recovery guidance without exposing exception details');
 assert.ok(appSource.includes("alert('Không mở được sách. Vui lòng chọn tệp khác.');"), 'Book document errors use the approved terminology');
 assert.ok(appSource.includes("alert('Vui lòng mở sách trước!');"), 'Marker actions refer to the reading object as a book');
 assert.ok(appSource.includes("showToast('Chưa có âm thanh. Hãy chọn tệp âm thanh trước.');"), 'Playback guidance uses Vietnamese media terminology');
