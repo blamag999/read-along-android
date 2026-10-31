@@ -421,7 +421,7 @@ jobs:
           with open("dist/ota/latest.json", "w", encoding="utf-8") as f:
               json.dump(payload, f, ensure_ascii=False, separators=(",", ":"))
           PY
-          npx --yes wrangler@4 r2 object put "read-along-releases/releases/$CHANNEL/$APK" --file="$APK" --remote --content-type="application/vnd.android.package-archive" --cache-control="public, max-age=31536000, immutable"
+          npx --yes wrangler@4 r2 object put "read-along-releases/releases/$CHANNEL/$APK" --file="$APK" --remote --content-type="application/vnd.android.package-archive" --cache-control="public, max-age=31536000, immutable" --header="x-amz-meta-sha256:$SHA256"
           npx --yes wrangler@4 r2 object put "read-along-releases/channels/$CHANNEL/latest.json" --file="dist/ota/latest.json" --remote --content-type="application/json" --cache-control="no-store"
           echo "Published OTA manifest for $CHANNEL $VERSION (sha256=$SHA256)"
 
