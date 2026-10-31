@@ -177,7 +177,15 @@ class Target {
   await tick(60000);
   assert.equal(requests.length, countAfterOptOut, 'opt-out must stop collection immediately');
   assert.equal(values.get('read_along_analytics_consent_v1'), 'false');
-  assert.equal(values.has('read_along_analytics_install_id_v1'), false, 'opt-out clears analytics install ID');
+  const installIdAfterOptOut = values.get('read_along_analytics_install_id_v1');
+  assert.ok(installIdAfterOptOut, 'opt-out retains the random local install ID but stops all collection');
+  checkbox.checked = true;
+  checkbox.dispatch('change');
+  await Promise.resolve();
+  const reconsentEvent = JSON.parse(requests.at(-1).options.body).events[0];
+  assert.equal(reconsentEvent.installId, allEvents[0].installId, 're-consent on the same app install must retain the same installation identity');
+  checkbox.checked = false;
+  checkbox.dispatch('change');
 
   const allEvents = requests.map(item => JSON.parse(item.options.body).events[0]);
   assert.equal(new Set(allEvents.map(event => event.eventId)).size, allEvents.length, 'event IDs must be unique');
