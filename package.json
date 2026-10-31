@@ -6,8 +6,8 @@
   "scripts": {
     "prepare:web": "node scripts/prepare-web.js",
     "android:sync": "npm run prepare:web && cap sync android",
-    "check:js": "node --check app.js && node --check sw.js && node --check modules/page-sync.js && node --check modules/playlist-layout.js && node --check modules/catalog-playlist.js && node --check modules/remote-sync.js && node --check modules/diagnostics.js && node --check admin/public/admin.js",
-    "test": "node admin/scripts/validate-remote-config.js && node tests/contracts.test.js && node tests/modules.test.js && node tests/catalog.test.js && node tests/api-boundaries.test.js && node tests/admin-dom.test.js && node tests/admin-stats.test.js && node tests/ota-update.test.js && npm run check:js"
+    "check:js": "node --check app.js && node --check sw.js && node --check modules/page-sync.js && node --check modules/playlist-layout.js && node --check modules/catalog-playlist.js && node --check modules/remote-config.js && node --check modules/remote-sync.js && node --check modules/diagnostics.js && node --check admin/public/admin.js",
+    "test": "node admin/scripts/validate-remote-config.js && node tests/contracts.test.js && node tests/modules.test.js && node tests/remote-config.test.js && node tests/catalog.test.js && node tests/api-boundaries.test.js && node tests/admin-dom.test.js && node tests/admin-stats.test.js && node tests/ota-update.test.js && npm run check:js"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.3",
