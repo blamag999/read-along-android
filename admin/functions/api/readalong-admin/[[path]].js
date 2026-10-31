@@ -1140,6 +1140,7 @@ async function handle(request, env) {
     assertOrigin(request);
     const key = url.searchParams.get("key") || "";
     if (!validKey(key)) return json({ error: "Invalid file key" }, 400);
+    if (key === "books.json") return json({ error: "books.json không thể xóa trực tiếp; hãy dùng Xuất bản danh mục" }, 403);
     await env.READALONG.delete(key);
     await audit(env, "delete_file", key);
     return json({ ok: true });
