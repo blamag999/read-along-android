@@ -53,6 +53,6 @@ BEGIN
   VALUES (date(NEW.received_at / 1000, 'unixepoch'), NEW.session_id);
 
   UPDATE admin_reading_daily
-  SET session_count = session_count + changes()
+  SET session_count = (SELECT COUNT(*) FROM admin_reading_daily_sessions WHERE day_utc = date(NEW.received_at / 1000, 'unixepoch'))
   WHERE day_utc = date(NEW.received_at / 1000, 'unixepoch');
 END;
