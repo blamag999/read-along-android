@@ -102,6 +102,8 @@ assert.ok(htmlSource.includes('Mốc đọc gần đây'), 'checkpoint label mus
 assert.ok(styleSource.includes('Compact touch header') && styleSource.includes('@media (max-width: 600px)'), 'portrait header must use compact responsive controls');
 assert.ok(!appSource.includes('saveSyncToDirectoryOrDownload') && !appSource.includes('exportSyncData') && !appSource.includes('importSyncData'), 'marker editing and import/export must be removed from the APK client');
 assert.ok(!/loadPdfFromBlob|loadAudioFromBlob|handlePdfFileSelect|handleAudioFileSelect|handleFolderPick|handleFileList|initDragAndDrop|saveBookToLibrary|getBookFromLibrary|indexedDB\\.open|showDirectoryPicker/.test(appSource), 'APK must not expose local PDF/audio/folder or offline media-library flows');
+assert.ok(appSource.includes('async function loadPdfFromUrl(') && appSource.includes('function loadAudioFromUrl('), 'R2 URL loaders must remain the only media loading path');
+assert.ok(appSource.includes('await loadPdfFromUrl(story.pdf.url, story.pdf.name, false);') && appSource.includes('loadAudioFromUrl(audio.url, audio.name);'), 'playlist selection must load only catalog-provided PDF/audio URLs');
 for (const localId of ['filePickerSection','folderInput','pdfFileInput','audioFileInput','btnTriggerFolderPicker','btnTriggerPdfPicker','node1Modal','dropOverlay','btnChooseAudio']) assert.ok(!htmlSource.includes('id="' + localId + '"'), 'local media UI must not contain ' + localId);
 assert.ok(!appSource.includes('loadCloudSyncForBook'), 'marker loading must not depend on online cloud synchronization');
 assert.ok(!htmlSource.includes('remote-sync.js'), 'the obsolete remote marker sync client must not be loaded');
