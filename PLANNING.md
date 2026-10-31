@@ -13,12 +13,13 @@
 - Không đánh dấu hoàn thành nếu thiếu bằng chứng CI, endpoint, deploy hoặc thiết bị tương ứng.
 
 ## P0 — Tiếp tục hoàn tất Reader/Menu và chuyển hẳn sang R2
-### Trạng thái cập nhật tại beta HEAD `ca31fc283a54905831e3913e353820aecd96a9c4`
+### Trạng thái cập nhật tại beta test commit `4a26e502bad452dd637dcfa6ed9f0c93706c350f`
 
 - Đã triển khai R2-only media loading, marker UI read-only và Library retry; sửa trạng thái disabled ban đầu của nút Library tại commit `588b3808f3d57a36be447d92523d73d72b7d27c9`.
-- Regression assertion cho trạng thái Library ban đầu được thêm tại `f588259634e24d96f12f161af74da2dc4d77b4be` và commit `[test]` `ca31fc283a54905831e3913e353820aecd96a9c4`.
+- Regression assertion cho trạng thái Library ban đầu được thêm tại `f588259634e24d96f12f161af74da2dc4d77b4be`; test commit `[test]` mới nhất là `4a26e502bad452dd637dcfa6ed9f0c93706c350f`.
 - Full regression CI chưa có status được xác nhận tại thời điểm cập nhật. Không đánh dấu nghiệm thu, không build APK cho đến khi CI pass.
-- Việc còn lại của batch: xác nhận CI; audit selector/CSS dead styles; kiểm tra diff; chạy một APK beta cuối batch và nghiệm thu trên điện thoại. Android TV vẫn ngoài phạm vi batch này.
+- Test contract đã được sửa để khớp UI tối giản thực tế: không còn yêu cầu view/zoom controls trong Menu. CSS audit sơ bộ có 81 selector candidate không được tham chiếu từ HTML/JS hiện tại; chưa xóa vì cần rà soát rule compound/media.
+- Việc còn lại của batch: xác nhận CI; hoàn tất audit selector/CSS dead styles; kiểm tra diff; chạy một APK beta cuối batch và nghiệm thu trên điện thoại. Android TV vẫn ngoài phạm vi batch này.
 
 
 - [x] Audit caller/DOM/event listener cho file picker, marker management, IndexedDB media Blob và local library; các entry point đã được gỡ, dữ liệu legacy không bị xóa.
