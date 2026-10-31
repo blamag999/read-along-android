@@ -59,6 +59,7 @@ class Target {
   const tick = async (ms = 5000) => { now += ms; timers[0](); await Promise.resolve(); await Promise.resolve(); };
 
   assert.equal(requests.length, 0, 'analytics is off by default');
+  assert.equal(typeof context.window.ReadAlongAnalytics.openSettings, 'function', 'analytics settings entry point must be available');
   context.state.pdfDoc = {};
   context.state.currentBookKey = 'private-book-title.pdf';
   await tick();
