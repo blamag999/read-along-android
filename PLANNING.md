@@ -247,7 +247,8 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 - [ ] Đảm bảo kho offline, marker và metadata tồn tại qua OTA update, không bị xóa cùng cache shell; chỉ dọn cache tạm/service worker cũ.
 - [ ] Bổ sung kiểm thử quota, LRU, tải dở, file thiếu, app restart, OTA update và mở sách offline; build một APK sau full regression.
 - [x] Tinh gọn toàn bộ header thành hai action: Thư viện sách và Menu; chuyển điều khiển vừa trang/hai trang/zoom, ẩn-hiện khu vực chọn file và quản lý mốc thời gian vào Menu; bỏ nút Đóng sách riêng.
-- [ ] Chạy CI đầy đủ / build APK chốt và kiểm tra trên điện thoại cảm ứng: nút Thư viện có icon + nhãn + badge số lượng, hai nút header không chồng lấn ở portrait (kể cả chiều rộng 320 px); Menu còn đủ thao tác; Android Back vẫn đóng sách và lưu phiên đọc.
+- [x] CI full regression, Pages Functions syntax, isolation và release channel validation; signed APK build/verification, OTA R2 publish, workflow artifacts và GitHub Release đều success tại [run 41205868772](https://github.com/blamag999/read-along-android/actions/runs/41205868772), commit `61b383329ac4a6d5fcc1b3e54f3e5249390e50c2`.
+- [ ] Kiểm tra trên điện thoại cảm ứng: nút Thư viện có icon + nhãn + badge số lượng, hai nút header không chồng lấn ở portrait (kể cả chiều rộng 320 px); Menu còn đủ thao tác; Android Back vẫn đóng sách và lưu phiên đọc.
 - Không đánh dấu kho offline là implemented cho đến khi có code, test và xác minh đường dẫn lưu trữ native thực tế.
 
 
@@ -256,3 +257,11 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 - [x] Sửa CSS responsive ở cuối stylesheet để ưu tiên một hàng và giữ nhãn Thư viện trên màn hình dọc nhỏ.
 - [x] Thêm regression assertions cho cấu trúc nút, nhãn portrait và accessible count.
 - [ ] Chờ CI/build APK theo commit chốt; kiểm tra thực tế trên thiết bị dọc 320–600 px.
+
+
+### Kết quả CI/build header Thư viện — 2026-10-31
+
+- Commit chốt `61b383329ac4a6d5fcc1b3e54f3e5249390e50c2`; workflow [41205868772](https://github.com/blamag999/read-along-android/actions/runs/41205868772) hoàn tất success.
+- Full regression, Pages syntax/isolation, signed APK build + verification, OTA R2 publication và GitHub Release đều thành công. Không còn pending CI/build cho batch header.
+- Chỉ còn nghiệm thu thiết bị thật ở portrait 320–600 px và kiểm tra thao tác Thư viện/Menu/Android Back. Không promote `main` trước khi người dùng xác nhận.
+- Badge lấy từ `state.playlist.length`, không đại diện số blob offline trong IndexedDB.
