@@ -84,8 +84,8 @@
 - [x] AN3.4 Chỉ đo khi PDF mở + document visible; listening chỉ khi audio phát + visible; monotonic clock, heartbeat 60s, clamp interval tối đa 120s.
 - [x] AN3.5 Gửi trực tiếp tới endpoint cố định; no offline queue/retry; lỗi request thì drop; không block startup/playback.
 - [x] AN3.6 Không gửi bookId, title, filename, path, URL hoặc document/audio content.
-- [ ] AN3.7 Mở rộng test: PDF switch/close, audio play/pause/ended, foreground/background, pagehide/pageshow, opt-out và privacy đã có test; CI [41167560832](https://github.com/blamag999/read-along-android/actions/runs/41167560832) success. Còn cần rotation, offline/failure, retry/drop behavior, sequence/dedup và kiểm tra không ảnh hưởng startup/playback.
-- [ ] AN3.8 Gom toàn bộ HTML/CSS/JS/service worker/tests vào một batch cuối có marker `[build-apk]` sau khi AN3.7 pass; build beta một lần và kiểm thử thiết bị thật. Android TV vẫn Pending.
+- [x] AN3.7 Automated regression hoàn tất: PDF switch/close, audio play/pause/ended, foreground/background, rotation, pagehide/pageshow, opt-out, privacy, offline drop/no retry, eventId/sequence và fetch pending không block reader lifecycle. CI [41167810567](https://github.com/blamag999/read-along-android/actions/runs/41167810567) success; rotation regression [41167772447](https://github.com/blamag999/read-along-android/actions/runs/41167772447) success. Kiểm thử WebView/Android thật vẫn pending sau APK build.
+- [ ] AN3.8 Chốt một commit `[build-apk]` để build beta APK đúng một lần; xác minh version, signature, SHA-256, Release và artifact; người dùng kiểm tra consent UI, opt-in/off, thời lượng đọc/nghe, offline và không ảnh hưởng playback trên điện thoại. Android TV vẫn Pending.
 
 ### AN4 — Dashboard
 
