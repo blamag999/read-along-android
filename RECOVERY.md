@@ -7,11 +7,11 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover code/documentation checkpoint: `2e5725c4ebaf1948d7a0698d9cd838369375d057` (the following `[handover]` commit records this checkpoint).
+- Last formal handover code/documentation checkpoint: `6b2fc0afb8b745f49874265e33d80023fa7fc3e1`.
 - Last reviewed functional HEAD on beta: `2e5725c4ebaf1948d7a0698d9cd838369375d057`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
-- Latest recovery checkpoint: four approved Confirm dialog strings updated in app.js; test commit d219ce0a109a7202c3a10a51b68ceada5b4dd792, runtime commit 4949bae9693d6bf17ccb57af81c80680d74772cf. Full regression passed; APK build/OTA publication pending at checkpoint.
+- Latest recovery checkpoint: standardized OTA user-facing notifications; tests in b8841b9, a36f69e and ed13753; runtime commit 2e5725c4ebaf1948d7a0698d9cd838369375d057. Full regression and pre-build checks passed; signed APK build/OTA publication are running in workflow 41211770726.
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
 
 ## Phát hiện sau mốc bàn giao trước
