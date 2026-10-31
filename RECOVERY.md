@@ -8,7 +8,7 @@
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
 - Last formal handover commit: `650c56059d774ccb2d29131a05d8aed6dfd9dda3`
-- Last reviewed functional HEAD on beta: `52d56ad795d20def0c5e536587a529db6a9f5ff8`
+- Last reviewed functional HEAD on beta: `9c4bf18861122df8f5dc29ac080b17aa2dd456c1`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
 - Latest recovery checkpoint: touch UI/menu simplification implementation `b0a542e75692e5ab3711d43bda68b07e8b328019` (CI/device validation pending)
@@ -177,3 +177,13 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Checkpoint label đổi thành “Mốc đọc gần đây”. Regression assertions đã thêm, nhưng chưa có bằng chứng full CI sau batch này.
 - Full regression CI pass ở run `41193683584`; signed APK build/OTA publish đang chạy. Chưa chạy smoke test marker R2, chưa nghiệm thu thiết bị; không cập nhật main, không thay đổi R2/D1/Cloudflare resource hoặc signing key.
 - Next: chạy full regression, sửa test nếu cần, build beta APK, kiểm tra portrait/playlist/menu và xác minh marker JSON tải từ R2; chỉ sau đó cập nhật trạng thái nghiệm thu.
+
+
+## Incident recovery — catalog not loading after menu cleanup (2026-10-31)
+
+- Root cause: `syncModal` markup lost required local controls (`importSyncInput`, `btnClearSync`, `syncTableBody`). `initEvents()` dereferenced missing DOM nodes, aborting before `loadR2Catalog()` ran.
+- Restored complete local-only marker management UI at `c8dd29208097064c79e36ba97ac2434fbf55f882`; online GitHub sync and token controls remain removed.
+- Removed dangling `scheduleGitHubSync()` calls and made JSON export filename generation self-contained at `ace4aa65d6a8ad3cb2c776437c713c2bd5a0a43f`.
+- Added regression assertions at `0e16c8b21533f997a8bc5e3dd8368a3a6e500c69` for required modal IDs and no remote sync invocation.
+- Functional fix commit: `9c4bf18861122df8f5dc29ac080b17aa2dd456c1`. Full regression and Pages checks passed in workflow `41202909931`; APK/R2 completion and device verification pending.
+- Do not promote main until user verifies book catalog, PDF and audio loading on device.
