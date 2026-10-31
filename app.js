@@ -1966,7 +1966,6 @@ async function pinCurrentTimeToPage() {
 
   // 2. Tự động lưu trực tiếp vào thư mục trên máy (nếu đang mở qua chọn thư mục)
   await autoSaveSyncToLocalDirectory();
-  scheduleGitHubSync();
 
   const originalText = dom.btnPinCurrentTime.textContent;
   dom.btnPinCurrentTime.textContent = 'Đã ghim: ' + formatTime(roundedTime) + '!';
@@ -1997,7 +1996,7 @@ async function autoSaveSyncToLocalDirectory() {
 
 function getSyncFileName() {
   const base = state.currentBookKey || 'truyen';
-  return `${getSyncStem()}.json`;
+  return `${base.replace(/\.[^/.]+$/, '').replace(/[\\/:*?"<>|]/g, '_').trim() || 'truyen'}.json`;
 }
 
 async function saveSyncToDirectoryOrDownload() {
