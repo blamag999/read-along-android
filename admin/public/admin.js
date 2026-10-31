@@ -16,9 +16,18 @@ let telemetryFlushScheduled = false;
 
 const $ = (id) => document.getElementById(id);
 const show = (id, visible) => $(id).classList.toggle("hidden", !visible);
-const setStatus = (message, error = false) => {
-  $("status").textContent = message;
-  $("status").classList.toggle("error", error);
+let activeTab = "library";
+const tabStatusIds = { library: "status", overview: "overviewStatus", diagnostics: "diagnosticsStatus", analytics: "analyticsTabStatus", audit: "auditStatus" };
+const setStatus = (message, error = false, tab = "library") => {
+  const target = $(tabStatusIds[tab] || "status");
+  if (!target) return;
+  target.textContent = message;
+  const bar = target.closest(".tab-status");
+  if (bar) {
+    bar.classList.toggle("is-error", !!error);
+    bar.classList.toggle("is-success", !error && /hoàn tất|thành công|đã tải|đã đổi tên|đã xóa/i.test(message));
+    bar.classList.toggle("is-running", /đang /i.test(message));
+  }
 };
 const api = async (path, options = {}) => {
   const started = performance.now();
@@ -320,125 +329,6 @@ function appendLibraryFileRow(anchorRow, file, kind, label) {
   return row;
 }
 
-const R2_PUBLIC_BASE = "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/";
-let ffmpegInstance = null;
-let ffmpegLoadPromise = null;
-async function fetchAsBlobUrl(url, mimeType) {
-  const response = await fetch(url, { mode: "cors", credentials: "omit" });
-  if (!response.ok) throw new Error("Không tải được thành phần chuyển đổi (" + response.status + ").");
-  return URL.createObjectURL(new Blob([await response.arrayBuffer()], { type: mimeType }));
-}
-async function getAudioConverter() {
-  if (ffmpegInstance) return ffmpegInstance;
-  if (!ffmpegLoadPromise) {
-    ffmpegLoadPromise = (async () => {
-      setStatus("Đang tải bộ chuyển đổi audio (chỉ tải khi cần)…");
-      const { FFmpeg } = await import("https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js");
-      const ffmpeg = new FFmpeg();
-      const workerURL = await fetchAsBlobUrl("https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/worker.js", "text/javascript");
-      const coreURL = await fetchAsBlobUrl("https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.js", "text/javascript");
-      const wasmURL = await fetchAsBlobUrl("https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.wasm", "application/wasm");
-      try {
-        await ffmpeg.load({ classWorkerURL: workerURL, coreURL, wasmURL });
-        ffmpegInstance = ffmpeg;
-        return ffmpeg;
-      } catch (error) {
-        ffmpeg.terminate();
-        throw error;
-      } finally {
-        URL.revokeObjectURL(workerURL);
-        URL.revokeObjectURL(coreURL);
-        URL.revokeObjectURL(wasmURL);
-      }
-    })().catch(error => {
-      ffmpegLoadPromise = null;
-      throw error;
-    });
-  }
-  return ffmpegLoadPromise;
-}
-function r2PublicUrl(key) {
-  return R2_PUBLIC_BASE + key.split("/").map(encodeURIComponent).join("/");
-}
-async function convertWmaGroup(group, button, reportProgress = () => {}) {
-  const sources = group.audio.filter(file => /\.wma$/i.test(file.name));
-  if (!sources.length) return;
-  const destinations = sources.map(file => file.key.replace(/\.wma$/i, ".mp3"));
-  const existing = new Set(allLibraryEntries.filter(entry => entry.type === "file").map(entry => entry.key));
-  const conflict = destinations.find(key => existing.has(key));
-  if (conflict) {
-    reportProgress("Bị chặn: MP3 đích đã tồn tại.", 0, "error");
-    setStatus("Không thể chuyển đổi: file đích đã tồn tại (" + conflict + "). Không ghi đè file MP3.", true);
-    return;
-  }
-  if (sources.some(file => Number(file.size) > 256 * 1024 * 1024)) {
-    reportProgress("Bị chặn: WMA vượt giới hạn 256 MB.", 0, "error");
-    setStatus("Bộ sách có WMA lớn hơn 256 MB. Để tránh thiếu bộ nhớ trình duyệt, hãy chuyển file này bằng công cụ ngoài rồi tải MP3 lên.", true);
-    return;
-  }
-  if (!await confirmAction("Chuyển đổi audio WMA?", "Sẽ chuyển " + sources.length + " file WMA trong bộ “" + group.title + "” sang MP3 ngay trên trình duyệt. File WMA gốc được giữ nguyên; file MP3 trùng tên sẽ không bị ghi đè. Cần kết nối mạng để tải bộ chuyển đổi lần đầu.", "Chuyển đổi và tải MP3 lên")) return;
-  button.disabled = true;
-  const oldLabel = button.textContent;
-  let ffmpeg = null, completed = 0;
-  const setProgress = (stage, percent, detail = "") => {
-    const totalPercent = Math.max(0, Math.min(100, Math.round(((completed + percent / 100) / sources.length) * 100)));
-    reportProgress(stage + " · " + (completed + 1) + "/" + sources.length + (detail ? " · " + detail : ""), totalPercent, "running");
-  };
-  try {
-    reportProgress("Đang tải bộ chuyển đổi…", 0, "running");
-    ffmpeg = await getAudioConverter();
-    ffmpeg.on("progress", ({ progress }) => {
-      setProgress("Đang giải mã và mã hóa MP3", Math.max(0, Math.min(100, Math.round((Number(progress) || 0) * 100))));
-    });
-    for (let index = 0; index < sources.length; index++) {
-      const source = sources[index];
-      const inputName = "readalong-input-" + index + ".wma";
-      const outputName = "readalong-output-" + index + ".mp3";
-      reportProgress("Đang tải WMA: " + source.name, Math.round(index / sources.length * 100), "running");
-      const response = await fetch(r2PublicUrl(source.key), { mode: "cors", credentials: "omit" });
-      if (!response.ok) throw new Error("Không tải được WMA " + source.name + " (" + response.status + ").");
-      const input = new Uint8Array(await response.arrayBuffer());
-      if (!input.length || input.length > 256 * 1024 * 1024) throw new Error("Kích thước WMA không hợp lệ hoặc vượt giới hạn bộ nhớ.");
-      await ffmpeg.writeFile(inputName, input);
-      reportProgress("Đang chuyển đổi: " + source.name, Math.round(index / sources.length * 100), "running");
-      const exitCode = await ffmpeg.exec(["-y", "-i", inputName, "-map", "0:a:0", "-vn", "-c:a", "libmp3lame", "-q:a", "3", outputName]);
-      if (exitCode !== 0) throw new Error("FFmpeg không giải mã được " + source.name + ". Có thể codec WMA không được hỗ trợ bởi bản engine này.");
-      const output = await ffmpeg.readFile(outputName);
-      if (!(output instanceof Uint8Array) || output.length < 128) throw new Error("MP3 đầu ra rỗng hoặc quá nhỏ: " + source.name);
-      const hasId3 = output.length >= 3 && output[0] === 0x49 && output[1] === 0x44 && output[2] === 0x33;
-      const hasMpegFrame = output.length >= 2 && output[0] === 0xff && (output[1] & 0xe0) === 0xe0;
-      if (!hasId3 && !hasMpegFrame) throw new Error("Đầu ra không có chữ ký MP3 hợp lệ: " + source.name);
-      const outputFile = new File([output], source.name.replace(/\.wma$/i, ".mp3"), { type: "audio/mpeg" });
-      reportProgress("Đang tải MP3 lên R2: " + outputFile.name, Math.round(index / sources.length * 100), "running");
-      await uploadOne(outputFile, index, sources.length, destinations[index], percent => {
-        setProgress("Đang tải MP3 lên R2", percent, outputFile.name);
-      });
-      completed++;
-      await ffmpeg.deleteFile(inputName).catch(() => {});
-      await ffmpeg.deleteFile(outputName).catch(() => {});
-      reportProgress("Đã xử lý " + source.name, Math.round(completed / sources.length * 100), "running");
-    }
-    queueTelemetryEvent("library_wma_conversion_success", { fileCount: completed });
-    reportProgress("Hoàn tất " + completed + "/" + sources.length + " file MP3. WMA gốc vẫn được giữ.", 100, "success");
-    setStatus("Đã chuyển và tải lên " + completed + "/" + sources.length + " file MP3. File WMA gốc vẫn được giữ nguyên.");
-    await loadFiles();
-    await runDiagnostics();
-  } catch (error) {
-    queueTelemetryEvent("library_wma_conversion_error", { completed, error: String(error.message || error).slice(0, 300) });
-    reportProgress("Dừng sau " + completed + "/" + sources.length + ": " + error.message, 0, "error");
-    setStatus("Chuyển đổi dừng sau " + completed + "/" + sources.length + " file: " + error.message + ". Các file WMA gốc không bị thay đổi.", true);
-    if (completed) { await loadFiles(); await runDiagnostics(); }
-  } finally {
-    if (ffmpeg) {
-      ffmpeg.terminate();
-      ffmpegInstance = null;
-      ffmpegLoadPromise = null;
-    }
-    button.disabled = false;
-    button.textContent = oldLabel;
-  }
-}
-
 function renderLibraryPage() {
   const term=normalizeSearch($("searchFilesInput").value.trim());
   const sort=$("sortFilesSelect").value;
@@ -615,38 +505,11 @@ async function runDiagnostics() {
       addCell(row, finding.message);
       addCell(row, finding.suggestion || "Kiểm tra tệp gốc.");
       const actionCell = document.createElement("td");
-      if (finding.code === "playback_compatibility" && /\.wma$/i.test(finding.key)) {
-        const group = diagnosticBooks.find(book => book.audio.some(file => file.key === finding.key));
-        if (group && !conversionActionsShown.has(group.key)) {
-          conversionActionsShown.add(group.key);
-          const wmaCount = group.audio.filter(file => /\.wma$/i.test(file.name)).length;
-          const convertButton = actionButton("Chuyển " + wmaCount + " WMA → MP3", () => {}, "convert-audio");
-          const progressBox = document.createElement("div");
-          progressBox.className = "conversion-progress hidden";
-          const progressText = document.createElement("span");
-          progressText.className = "conversion-progress-text";
-          progressText.textContent = "Chưa chạy";
-          const progressTrack = document.createElement("div");
-          progressTrack.className = "conversion-progress-track";
-          const progressFill = document.createElement("span");
-          progressTrack.append(progressFill);
-          progressBox.append(progressText, progressTrack);
-          convertButton.addEventListener("click", () => {
-            convertWmaGroup(group, convertButton, (message, percent, state) => {
-              progressBox.classList.remove("hidden");
-              progressBox.classList.toggle("is-error", state === "error");
-              progressBox.classList.toggle("is-success", state === "success");
-              progressText.textContent = message;
-              progressFill.style.width = percent + "%";
-            });
-          });
-          actionCell.append(convertButton, progressBox);
-        } else if (group) {
-          const note = document.createElement("span");
-          note.className = "muted diagnostic-group-note";
-          note.textContent = "Đã gộp trong thao tác chuyển đổi cùng bộ sách.";
-          actionCell.append(note);
-        }
+      if (finding.code === "playback_compatibility" || finding.code === "unsupported_extension") {
+        const warning = document.createElement("span");
+        warning.className = "compatibility-warning";
+        warning.textContent = "Cần thay file bằng định dạng được ứng dụng hỗ trợ. Admin không chuyển đổi audio.";
+        actionCell.append(warning);
       }
       if (finding.candidateKey) {
         const match = document.createElement("div");
@@ -654,9 +517,9 @@ async function runDiagnostics() {
         match.textContent = "Tệp đối chiếu: " + finding.candidateKey + (finding.similarity ? " · " + finding.similarity + "%" : "");
         actionCell.append(match);
       }
-      if (finding.suggestedRename) {
+      if (finding.suggestedRename && Number(finding.compatibilityConfidence) >= 95) {
         actionCell.append(actionButton("Duyệt gợi ý đổi tên", async () => {
-          const destination = prompt("Xác nhận tên mới cho tệp này:", finding.suggestedRename);
+          const destination = prompt("Xác nhận tên mới cho tệp này (độ tin cậy " + Number(finding.compatibilityConfidence) + "%):", finding.suggestedRename);
           if (!destination || destination === finding.key) return;
           if (!allowed.test(destination)) { setStatus("Tên tệp hoặc định dạng không hợp lệ.", true); return; }
           try {
@@ -664,7 +527,7 @@ async function runDiagnostics() {
             setStatus("Đã đổi tên theo gợi ý. Hãy quét lại thư viện để xác nhận ghép cặp.");
             await loadFiles();
             await runDiagnostics();
-          } catch (error) { setStatus(error.message, true); }
+          } catch (error) { setStatus(error.message, true, "diagnostics"); }
         }));
       }
       actionCell.append(actionButton("Mở thư mục", () => {
@@ -677,7 +540,7 @@ async function runDiagnostics() {
       row.append(actionCell);
       $("diagnosticRows").append(row);
     }
-    setStatus("Kiểm tra hoàn tất: " + result.changed + " file mới/thay đổi, bỏ qua " + result.skipped + " file · " + result.errors + " lỗi, " + result.warnings + " cảnh báo.", result.errors > 0);
+    setStatus("Kiểm tra hoàn tất: " + result.changed + " file mới/thay đổi, bỏ qua " + result.skipped + " file · " + result.errors + " lỗi, " + result.warnings + " cảnh báo.", result.errors > 0, "diagnostics");
   } catch (error) {
     $("diagnosticsSummary").textContent = "Không thể hoàn tất kiểm tra: " + error.message + (error.rayId ? " · Ray ID: " + error.rayId : "");
     const row = document.createElement("tr");
@@ -899,7 +762,7 @@ async function loadAnalyticsDashboard() {
     $("analyticsRetentionNote").textContent = data.breakdown?.note || "";
     $("analyticsUpdated").textContent = "Cập nhật " + formatDate(data.generatedAt) + " · UTC";
     status.textContent = data.hasData ? "Đã tải dữ liệu tổng hợp." : "Chưa có sự kiện thống kê trong khoảng thời gian này. Có thể người dùng chưa bật đồng ý hoặc chưa phát sinh hoạt động.";
-    renderAnalyticsTrend(data.daily || [], days);
+    renderAnalyticsTrend(data.daily || [], days);\n    $("overviewReading").textContent = formatDuration(summary.readingSeconds);\n    $("overviewListening").textContent = formatDuration(summary.listeningSeconds);\n    $("overviewBooks").textContent = library.books == null ? "—" : Number(library.books).toLocaleString("vi-VN");\n    $("overviewErrors").textContent = scan ? Number(scan.errors || 0).toLocaleString("vi-VN") : "Chưa quét";\n    $("overviewTrend").replaceChildren(...$("analyticsTrend").cloneNode(true).childNodes);\n    setStatus(data.hasData ? "Đã cập nhật dữ liệu tổng quan." : "Chưa có dữ liệu thống kê trong khoảng thời gian này.", false, "overview");\n    setStatus(data.hasData ? "Đã tải dữ liệu thống kê." : "Chưa có dữ liệu thống kê trong khoảng thời gian này.", false, "analytics");
     const body = $("analyticsPlatforms"); body.replaceChildren();
     const platforms = data.breakdown?.platforms || [];
     if (!platforms.length) {
@@ -921,7 +784,7 @@ function showManagerView() {
   $("showLibraryBtn").classList.add("active");
 }
 $("showLibraryBtn").addEventListener("click", showManagerView);
-$("refreshAnalyticsBtn").addEventListener("click", loadAnalyticsDashboard);
+$("refreshAnalyticsBtn").addEventListener("click", loadAnalyticsDashboard);\n$("overviewRefreshBtn").addEventListener("click", loadAnalyticsDashboard);
 $("analyticsRange").addEventListener("change", loadAnalyticsDashboard);
 
 // Dashboard chỉ đọc là trang mặc định; khu vực quản lý thư viện vẫn yêu cầu OTP.
@@ -929,6 +792,54 @@ $("homePanel").append($("analyticsPanel"));
 $("analyticsPanel").classList.remove("hidden");
 $("loginHomeBtn").addEventListener("click", () => { location.hash = ""; });
 
+const tabIds = { library: "libraryTab", overview: "overviewTab", diagnostics: "diagnosticsTab", analytics: "analyticsTab", audit: "auditTab" };
+const tabButtons = { library: "tabLibraryBtn", overview: "tabOverviewBtn", diagnostics: "tabDiagnosticsBtn", analytics: "tabAnalyticsBtn", audit: "tabAuditBtn" };
+function switchTab(name) {
+  if (!tabIds[name]) return;
+  activeTab = name;
+  for (const [key, id] of Object.entries(tabIds)) show(id, key === name);
+  for (const [key, id] of Object.entries(tabButtons)) {
+    const button = $(id);
+    button.classList.toggle("active", key === name);
+    button.setAttribute("aria-selected", key === name ? "true" : "false");
+  }
+  sessionStorage.setItem("readalong-admin-tab", name);
+  if (name === "analytics" || name === "overview") loadAnalyticsDashboard();
+  if (name === "audit") loadAuditEntries();
+  if (name === "diagnostics" && $("diagnosticsPanel").dataset.scanned !== "true") setStatus("Chưa có kết quả mới. Chọn Quét thư viện để bắt đầu.", false, "diagnostics");
+}
+for (const [key, id] of Object.entries(tabButtons)) $(id).addEventListener("click", () => switchTab(key));
+function applyTheme(theme, persist = false) {
+  const selected = ["light", "dark"].includes(theme) ? theme : "system";
+  const resolved = selected === "system" ? (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : selected;
+  document.documentElement.dataset.theme = resolved;
+  document.documentElement.dataset.themePreference = selected;
+  $("themeToggleBtn").textContent = "Giao diện: " + (selected === "system" ? "Hệ thống" : selected === "light" ? "Sáng" : "Tối");
+  if (persist) localStorage.setItem("readalong-admin-theme", selected);
+}
+applyTheme(localStorage.getItem("readalong-admin-theme") || "system");
+$("themeToggleBtn").addEventListener("click", () => {
+  const current = document.documentElement.dataset.themePreference || "system";
+  applyTheme(current === "system" ? "light" : current === "light" ? "dark" : "system", true);
+});
+window.matchMedia("(prefers-color-scheme: light)").addEventListener?.("change", () => {
+  if ((document.documentElement.dataset.themePreference || "system") === "system") applyTheme("system");
+});
+async function loadAuditEntries() {
+  setStatus("Đang tải nhật ký thao tác…", false, "audit");
+  try {
+    const result = await api("audit");
+    $("auditRows").replaceChildren();
+    for (const entry of result.entries || []) {
+      const row = document.createElement("div"); row.className = "audit-entry";
+      const left = document.createElement("span"); left.textContent = entry.action + (entry.object_key ? " · " + entry.object_key : "");
+      const right = document.createElement("time"); right.textContent = formatDate(entry.created_at);
+      row.append(left, right); $("auditRows").append(row);
+    }
+    if (!(result.entries || []).length) $("auditRows").textContent = "Chưa có thao tác.";
+    setStatus("Đã tải " + (result.entries || []).length + " bản ghi nhật ký.", false, "audit");
+  } catch (error) { $("auditRows").textContent = error.message; setStatus("Không tải được nhật ký: " + error.message, true, "audit"); }
+}
 async function handleRoute() {
   if (location.hash !== "#manage") {
     show("homePanel", true); show("loginPanel", false); show("managerPanel", false);
