@@ -1,3 +1,4 @@
+import { validateAnalyticsBatch } from '../../lib/analytics.mjs';
 const SESSION_COOKIE = "readalong_admin_session";
 const SESSION_TTL = 30 * 60;
 const RATE_WINDOW_MS = 15 * 60 * 1000;
@@ -519,6 +520,55 @@ async function handle(request, env) {
       updatedAt: new Date().toISOString()
     });
   }
+  if (route === "analytics/events" && method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: {
+      "access-control-allow-methods": "POST, OPTIONS",
+      "access-control-allow-headers": "content-type",
+      "access-control-max-age": "86400"
+    }});
+  }
+  if (route === "analytics/events" && method === "POST") {
+    const contentLength = Number(request.headers.get("content-length") || 0);
+    if (contentLength > 65536) return json({ error: "Request too large" }, 413);
+    let raw, body;
+    try {
+      raw = await request.text();
+      if (raw.length > 65536) return json({ error: "Request too large" }, 413);
+      body = JSON.parse(raw);
+    } catch { return json({ error: "Invalid JSON" }, 400); }
+    const validation = validateAnalyticsBatch(body);
+    if (!validation.valid) return json({ error: validation.error }, 400);
+
+    const now = Date.now();
+    const installHash = await sha256(validation.installId);
+    const recent = await env.DB.prepare(
+      "SELECT COUNT(*) AS total FROM admin_reading_events WHERE install_hash = ? AND received_at >= ?"
+    ).bind(installHash, now - 60 * 60 * 1000).first();
+    if (Number(recent?.total || 0) + body.events.length > 150) {
+      return json({ error: "Analytics rate limit exceeded" }, 429);
+    }
+
+    const statements = body.events.map(event => env.DB.prepare(
+      "INSERT OR IGNORE INTO admin_reading_events (event_id, session_id, install_hash, sequence, event_type, occurred_at, received_at, platform, app_version, reading_seconds, listening_seconds, book_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    ).bind(
+      event.eventId, event.sessionId, installHash, event.sequence, event.type,
+      event.occurredAt, now, event.platform, event.appVersion,
+      event.readingSeconds || 0, event.listeningSeconds || 0, event.bookId || null
+    ));
+    statements.push(env.DB.prepare(
+      "DELETE FROM admin_reading_events WHERE received_at < ?"
+    ).bind(now - 90 * 86400000));
+    statements.push(env.DB.prepare(
+      "DELETE FROM admin_reading_daily_sessions WHERE day_utc < date('now', '-24 months')"
+    ));
+    statements.push(env.DB.prepare(
+      "DELETE FROM admin_reading_daily WHERE day_utc < date('now', '-24 months')"
+    ));
+    const results = await env.DB.batch(statements);
+    const accepted = results.slice(0, body.events.length).reduce((sum, result) => sum + Number(result.meta?.changes || 0), 0);
+    return json({ ok: true, accepted, duplicates: body.events.length - accepted });
+  }
+
   if (route === "telemetry/events" && method === "POST") {
     assertOrigin(request);
     let body;
@@ -906,7 +956,8 @@ export async function onRequest(context) {
   const request = context.request, origin = request.headers.get("Origin") || "";
   const allowedOrigins = new Set(["https://localhost", "http://localhost", "capacitor://localhost"]);
   const corsAllowed = allowedOrigins.has(origin);
-  if (new URL(request.url).pathname.endsWith("/usage/track") && origin && !corsAllowed) {
+  const requestPath = new URL(request.url).pathname;
+  if ((requestPath.endsWith("/usage/track") || requestPath.endsWith("/analytics/events")) && origin && !corsAllowed) {
     return new Response(JSON.stringify({ error: "Origin not allowed" }), { status: 403, headers: { "content-type": "application/json" } });
   }
   try {
