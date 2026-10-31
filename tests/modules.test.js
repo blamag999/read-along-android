@@ -77,6 +77,9 @@ assert.ok(!appSource.includes("dom.viewerContainer.addEventListener('touchstart'
 assert.ok(appSource.includes('getRenderedPdfBounds'), 'touch zones must be bounded by rendered PDF canvases');
 assert.ok(htmlSource.includes('readingCheckpointMenuGroup'), 'three recent checkpoints must be reachable from the reader menu');
 assert.ok(htmlSource.includes('id="btnOpenPlaylist"') && htmlSource.includes('id="btnOpenReadMenu"'), 'header must retain the library and menu actions');
+assert.ok(htmlSource.includes('class="playlist-icon"') && htmlSource.includes('class="playlist-label"'), 'library button must expose a recognizable icon and readable label');
+assert.ok(styleSource.includes('.playlist-btn .playlist-label { display: inline !important; }'), 'portrait library action must keep its label visible');
+assert.ok(appSource.includes("dom.lblPlaylistCount.classList.remove('hidden')") && appSource.includes("setAttribute('aria-label', 'Thư viện sách, ' + count + ' cuốn')"), 'library badge and accessible label must always reflect the loaded book count');
 const headerSource = htmlSource.slice(htmlSource.indexOf('<header'), htmlSource.indexOf('</header>'));
 assert.ok(!headerSource.includes('view-controls-bar') && headerSource.indexOf('id="btnFitHeight"') > headerSource.indexOf('id="readOptionsMenu"') && headerSource.indexOf('id="btnTwoPages"') > headerSource.indexOf('id="readOptionsMenu"'), 'view and zoom controls must be nested inside the menu, not beside the top-bar actions');
 assert.deepEqual([...headerSource.matchAll(/<button id="([^"]+)"/g)].map(match => match[1]).filter(id => ['btnOpenPlaylist', 'btnOpenReadMenu'].includes(id)).sort(), ['btnOpenPlaylist', 'btnOpenReadMenu'], 'top bar must expose exactly the library and menu buttons');
