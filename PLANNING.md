@@ -154,7 +154,9 @@ Thống kê theo ngày/tuần/tháng/năm, theo sách và theo nền tảng; tha
 - [x] Lập inventory endpoint, URL, nguồn dữ liệu và caller trong app/Admin ở `docs/architecture/data-contracts.md`.
 - [x] Xác định nguồn hiện tại cho catalog, media, marker, usage, telemetry, diagnostics và OTA; phân biệt rõ phần đang chạy với phần đề xuất.
 - [ ] Chốt precedence/conflict resolution của marker và nguồn dữ liệu chính thức cuối cùng.
-- [ ] Viết JSON Schema/contract tests cho catalog, marker, config và analytics.
+- [x] Định nghĩa JSON Schema version 1 cho catalog, marker, remote config và analytics event tại `schemas/`.
+- [x] Thêm `tests/contracts.test.js` vào `npm test` để khóa các ranh giới schema quan trọng và ngăn remote config/analytics nhận field không được duyệt.
+- [ ] Chạy CI trên HEAD mới và xác minh tương thích với manifest catalog thực tế.
 - [ ] Rà soát chồng chéo API và chỉ hợp nhất khi chứng minh không phá tương thích.
 - [x] Không thay đổi thuật toán reader/audio trong đợt kiểm kê.
 
@@ -220,8 +222,10 @@ Cần build APK cho:
 - Đã kiểm tra mã hiện tại: `app.js` vẫn là entrypoint lớn; modules page-sync/catalog/playlist/remote-sync/diagnostics được tải từ `index.html`; Service Worker cache shell network-first.
 - Đã xác nhận `usage/track` và `usage/stats` hiện chỉ ghi lượt mở/installation và số liệu inventory; chưa có analytics thời lượng đọc/nghe.
 - Chưa thay đổi mã runtime hoặc build APK.
-- Beta HEAD tại thời điểm bắt đầu: `02d90abaa4f58295e6e53ee409ee0a2cb9275317`.
+- Beta HEAD trước đợt schema: `02d90abaa4f58295e6e53ee409ee0a2cb9275317`.
 - CI gần nhất được kiểm tra: Admin workflow run `41157267352` success cho commit `8ae1b0df0d8646108302e3230d7c56a00bbb7ec5`; các run kế tiếp thuộc cùng đợt push có run bị cancel. Run này không kiểm thử commit planning mới nhất; cần CI chạy lại cho HEAD hiện tại sau thay đổi tiếp theo.
 - Đã tạo `docs/architecture/data-contracts.md`, liệt kê endpoint/caller/trust boundary và các khoảng trống hiện tại.
-- Phase 1: inventory nguồn dữ liệu/API đã hoàn tất bước đầu; schema contract, marker precedence và quyết định hợp nhất API còn pending.
+- Đã thêm JSON Schema v1 cho catalog, marker, Remote Config và Analytics event; thêm structural regression tests vào `npm test`.
+- Schema mới chỉ là contract định hướng; chưa tích hợp runtime validator hoặc endpoint Remote Config/Analytics thời lượng. Cần CI và kiểm chứng compatibility trước khi coi là ổn định.
+- Phase 1: inventory và bản schema đầu tiên hoàn tất; marker precedence, API overlap review và CI validation còn pending.
 - Tiến độ: Phase 0 hoàn tất; Phase 1 đang thực hiện.
