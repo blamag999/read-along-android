@@ -67,7 +67,7 @@ assert.ok(html.includes('id="publicStatusBar"') && html.includes('id="publicRead
 assert.ok(script.includes('window.addEventListener("hashchange", handleRoute)'), 'Admin route handler must be connected');
 
 assert.ok((script.match(/switchTab\("library"\)/g) || []).length >= 2, 'Session restore and OTP login must both open Library');
-console.log('Admin dashboard, task status, theme, library operation and diagnostics tests passed.');
+console.log('Admin dashboard (four-tab navigation), task status, theme, library operation and diagnostics tests passed.');
 
 // Regression rerun after correcting auth-tab test formatting.
 
