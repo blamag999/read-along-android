@@ -71,4 +71,18 @@ assert.equal(analytics.allOf.length, 5, 'Duration fields are required for heartb
 
 
 
+
+assert.ok(appSource.includes("alert('Không tải được thư viện sách. Vui lòng thử lại.');"), 'Catalog errors must not expose technical details');
+assert.ok(appSource.includes("alert('Không mở được sách. Vui lòng kiểm tra tệp sách và âm thanh.');"), 'Book-load errors use concise recovery guidance');
+assert.ok(appSource.includes("showToast('Đã chuyển phần âm thanh. Nhấn Phát để tiếp tục.');"), 'Audio autoplay fallback uses user-facing terminology');
+assert.ok(appSource.includes("showToast('Định dạng âm thanh không được hỗ trợ. Hãy chọn MP3, M4A hoặc định dạng tương thích.');"), 'Unsupported media guidance names formats only where needed');
+assert.ok(appSource.includes("showToast('Không tải được âm thanh. Vui lòng chọn lại tệp.');"), 'Audio-load errors do not expose exception details');
+assert.ok(appSource.includes("alert('Không mở được sách. Vui lòng chọn tệp khác.');"), 'Book document errors use the approved terminology');
+assert.ok(appSource.includes("alert('Vui lòng mở sách trước!');"), 'Marker actions refer to the reading object as a book');
+assert.ok(appSource.includes("showToast('Chưa có âm thanh. Hãy chọn tệp âm thanh trước.');"), 'Playback guidance uses Vietnamese media terminology');
+assert.ok(appSource.includes("showToast('Không thể phát lại trang này. Hãy thử nhấn Phát.');"), 'Page replay error gives a concise recovery action');
+assert.ok(appSource.includes("alert('Thời gian không hợp lệ. Hãy nhập giây hoặc MM:SS.');"), 'Timestamp validation keeps its input format guidance');
+assert.ok(appSource.includes("alert('Tệp mốc thời gian không hợp lệ.');"), 'Invalid marker JSON uses concise terminology');
+assert.ok(appSource.includes("console.error('Không thể nạp âm thanh:', error);"), 'Technical audio errors remain available in console');
+
 console.log('Read Along data contract schema tests passed.');
