@@ -1,6 +1,11 @@
 name: Build and Release Read Along
 
 on:
+  # Beta APK is built only from an explicitly marked finalization commit.
+  # Ordinary beta pushes still run validation workflows but never compile an APK.
+  push:
+    branches:
+      - beta
   workflow_dispatch:
     inputs:
       channel:
@@ -17,6 +22,9 @@ permissions:
 
 jobs:
   build-release:
+    # Push builds are gated by [build-apk] in the final commit message.
+    # Manual dispatch remains available for an explicitly requested stable release.
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[build-apk]')) }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout selected workflow ref
@@ -28,7 +36,7 @@ jobs:
 
       - name: Validate release channel
         env:
-          CHANNEL: ${{ inputs.channel }}
+          CHANNEL: ${{ github.event_name == 'workflow_dispatch' && inputs.channel || 'beta' }}
           SELECTED_REF: ${{ github.ref }}
         run: |
           if [[ "$CHANNEL" == "stable" && "$SELECTED_REF" != "refs/heads/main" ]]; then
@@ -40,7 +48,7 @@ jobs:
         id: release_info
         env:
           GH_TOKEN: ${{ github.token }}
-          CHANNEL: ${{ inputs.channel }}
+          CHANNEL: ${{ github.event_name == 'workflow_dispatch' && inputs.channel || 'beta' }}
         run: |
           RELEASES="$(gh release list --limit 100 --json tagName,isPrerelease,publishedAt)"
           export RELEASES
@@ -355,7 +363,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.release_info.outputs.version }}
           PRERELEASE: ${{ steps.release_info.outputs.prerelease }}
-          CHANNEL: ${{ inputs.channel }}
+          CHANNEL: ${{ github.event_name == 'workflow_dispatch' && inputs.channel || 'beta' }}
           CHANGELOG: ${{ steps.release_info.outputs.changelog }}
         run: |
           set -euo pipefail
