@@ -570,7 +570,7 @@ function updateSyncCountBadge() {
 // =======================================================
 async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl = '') {
   // Marker source order: attached book JSON, its public R2 companion JSON, local folder JSON, then localStorage.
-  // R2 marker JSON is read-only content shipped with the book/audio; no GitHub/D1 marker sync is used.
+  // R2 marker JSON is a read-only companion asset for the book/audio; the reader never uploads or syncs markers online.
   // 1. Luôn xóa sạch toàn bộ mốc của cuốn trước đó khỏi RAM
   state.pageTimestamps = {};
   state.currentBookKey = bookKey;
