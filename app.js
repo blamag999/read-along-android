@@ -18,6 +18,7 @@ const state = {
   currentStoryIndex: -1,
   activeFilter: 'paired', // Mặc định chỉ hiện mục đủ PDF và audio
   searchQuery: '',
+  playlistFolderFilter: '',
   playlistPage: 1,
   playlistPageSize: 0,
   playlistTotalPages: 1,
@@ -350,6 +351,7 @@ const dom = {
   btnClosePlaylist: document.getElementById('btnClosePlaylist'),
   lblPlaylistSubtitle: document.getElementById('lblPlaylistSubtitle'),
   txtPlaylistSearch: document.getElementById('txtPlaylistSearch'),
+  selPlaylistFolder: document.getElementById('selPlaylistFolder'),
   playlistItemsList: document.getElementById('playlistItemsList'),
   playlistLoading: document.getElementById('playlistLoading'),
   btnPlaylistPrevPage: document.getElementById('btnPlaylistPrevPage'),
@@ -513,6 +515,34 @@ function isReadAlongR2Url(value) {
   }
 }
 
+function updatePlaylistFolderOptions() {
+  const select = dom.selPlaylistFolder;
+  if (!select) return;
+  const counts = new Map();
+  state.playlist.forEach(story => {
+    const folder = String(story.folder || '');
+    counts.set(folder, (counts.get(folder) || 0) + 1);
+  });
+  const folders = [...counts.keys()].sort((a, b) =>
+    a.localeCompare(b, 'vi', { sensitivity: 'base', numeric: true })
+  );
+  select.replaceChildren();
+  const allOption = document.createElement('option');
+  allOption.value = '';
+  allOption.textContent = 'Tất cả thư mục (' + state.playlist.length + ')';
+  select.appendChild(allOption);
+  folders.forEach(folder => {
+    const option = document.createElement('option');
+    option.value = folder || '__root__';
+    option.textContent = (folder || 'Chưa phân nhóm (gốc)') + ' (' + counts.get(folder) + ')';
+    select.appendChild(option);
+  });
+  if (![...select.options].some(option => option.value === state.playlistFolderFilter)) {
+    state.playlistFolderFilter = '';
+  }
+  select.value = state.playlistFolderFilter;
+}
+
 async function loadR2Catalog() {
   if (state.catalogLoading) return;
   state.catalogLoading = true;
@@ -531,11 +561,16 @@ async function loadR2Catalog() {
     });
 
     state.playlist = stories;
+    state.playlistFolderFilter = '';
+    updatePlaylistFolderOptions();
     state.activeFilter = 'paired';
     state.playlistPage = 1;
     updatePlaylistBadgeCount();
     renderPlaylistView();
-    if (dom.lblPlaylistSubtitle) dom.lblPlaylistSubtitle.textContent = stories.length + ' mục trực tuyến';
+    if (dom.lblPlaylistSubtitle) {
+      const folderCount = new Set(stories.map(story => String(story.folder || ''))).size;
+      dom.lblPlaylistSubtitle.textContent = stories.length + ' cuốn · ' + folderCount + ' thư mục';
+    }
     openPlaylistModal();
     showToast('Đã tải thư viện sách (' + stories.length + ' cuốn).');
   } catch (error) {
@@ -586,6 +621,7 @@ function renderPlaylistView() {
   const filtered = window.ReadAlongCatalogPlaylist.filterPlaylist(state.playlist, {
     query: state.searchQuery,
     filter: state.activeFilter,
+    folder: state.playlistFolderFilter,
     favorites
   });
 
@@ -908,6 +944,12 @@ function initEvents() {
 
   dom.txtPlaylistSearch.addEventListener('input', (e) => {
     state.searchQuery = e.target.value;
+    state.playlistPage = 1;
+    renderPlaylistView();
+  });
+
+  dom.selPlaylistFolder.addEventListener('change', () => {
+    state.playlistFolderFilter = dom.selPlaylistFolder.value;
     state.playlistPage = 1;
     renderPlaylistView();
   });
