@@ -66,21 +66,26 @@
 
 ### AN2 — Backend ingest và D1
 
- > AN1 contract/schema đã chốt ở `schemas/analytics-event.schema.json` và `docs/architecture/data-contracts.md`; CI [41164377952](https://github.com/blamag999/read-along-android/actions/runs/41164377952) success. Endpoint và D1 chưa triển khai.
+> AN2 production acceptance completed. Evidence: CI [41167147802](https://github.com/blamag999/read-along-android/actions/runs/41167147802); final non-mutating CI [41167200825](https://github.com/blamag999/read-along-android/actions/runs/41167200825).
 
-- [ ] Ưu tiên dùng hạ tầng API/Worker hiện có của Read Along nếu đáp ứng; không tạo Analytics Worker thứ hai chỉ để tách tên.
-- [x] Viết route ingest trong Pages Functions hiện có với consent=true, validation strict, 25 events/batch, 64 KiB, rate limit theo install hash, và idempotency theo eventId + (sessionId, sequence). Chờ CI, migration và deploy để nghiệm thu production.
-- [x] Viết migration D1 additive cho raw events, daily aggregates và unique daily sessions bằng trigger; raw retention 90 ngày, daily aggregates 24 tháng. Migration đã được áp dụng additive vào database `read-along-admin-db`; đã xác minh đủ 3 bảng và trigger. Chờ Pages deployment/endpoint smoke test.
-- [x] Thêm unit/contract/API-boundary tests cho duplicate eventId/sequence, duration âm/quá lớn, batch >25, payload cap, schema, consent và origin isolation; CI + deployed consent smoke pass. **Đang nghiệm thu:** workflow production smoke test đã được mở rộng để POST event hợp lệ và replay cùng event; push path filter cũng đã sửa để workflow tự chạy khi chính file CI thay đổi. Chờ CI và xác minh/cleanup D1. Chưa kiểm tra event conflict ngoài batch.
-- [x] Không thay đổi ý nghĩa API usage/track hiện tại: nó chỉ phản ánh visit/installation, không phải reading duration.
+- [x] Ưu tiên Pages Functions router hiện có; không tạo Analytics Worker riêng.
+- [x] Ingest route có explicit consent, strict validation, 25 events/batch, 64 KiB streaming cap, rate limit theo hashed install ID và idempotency eventId + (sessionId, sequence).
+- [x] D1 migration additive đã áp dụng vào đúng `read-along-admin-db`; raw events 90 ngày, daily aggregates 24 tháng.
+- [x] Unit/contract/API-boundary tests, CORS/consent smoke và production HTTP write/replay/sequence-conflict acceptance.
+- [x] Production HTTP: first write accepted=1; exact replay accepted=0/duplicates=1; conflicting eventId cùng sessionId+sequence accepted=0/duplicates=1.
+- [x] D1 aggregate chỉ tăng 7s reading + 11s listening + 1 event + 1 session; toàn bộ smoke rows và aggregate deltas đã cleanup, final query zero.
+- [x] Bỏ production mutating POST khỏi CI thường trực; chỉ giữ CORS/consent non-mutating smoke. API usage/track hiện tại không đổi ý nghĩa.
 
 ### AN3 — Một lần cập nhật APK cho event collector
 
-- [ ] Chỉ sau khi AN1/AN2 ổn định mới bổ sung collector tối thiểu vào APK.
-- [ ] Không làm chậm reader, playback hoặc startup khi telemetry timeout/offline.
-- [ ] Queue có giới hạn, retry có giới hạn và không làm tăng dữ liệu nhạy cảm.
-- [ ] Có test cho foreground/background, audio pause/resume, rotation, app kill/restart, offline/online và deduplication.
-- [ ] Build APK beta một lần cho toàn bộ thay đổi collector liên quan và kiểm thử trên thiết bị thật.
+- [x] AN3.1 Thêm collector độc lập `modules/analytics-collector.js`; không gộp diagnostics hoặc sửa app.js core.
+- [x] AN3.2 Thêm opt-in UI riêng trong read menu/modal; default off; consent key riêng, không dùng diagnostics consent; opt-out dừng collection, xóa install/session state.
+- [x] AN3.3 Install/session/event IDs random opaque; analytics install ID riêng, chỉ tạo sau opt-in; sequence tăng đơn điệu trong session.
+- [x] AN3.4 Chỉ đo khi PDF mở + document visible; listening chỉ khi audio phát + visible; monotonic clock, heartbeat 60s, clamp interval tối đa 120s.
+- [x] AN3.5 Gửi trực tiếp tới endpoint cố định; no offline queue/retry; lỗi request thì drop; không block startup/playback.
+- [x] AN3.6 Không gửi bookId, title, filename, path, URL hoặc document/audio content.
+- [ ] AN3.7 Mở rộng test: PDF switch/close, audio play/pause/ended, foreground/background, pagehide/pageshow, opt-out và privacy đã có test; CI [41167560832](https://github.com/blamag999/read-along-android/actions/runs/41167560832) success. Còn cần rotation, offline/failure, retry/drop behavior, sequence/dedup và kiểm tra không ảnh hưởng startup/playback.
+- [ ] AN3.8 Gom toàn bộ HTML/CSS/JS/service worker/tests vào một batch cuối có marker `[build-apk]` sau khi AN3.7 pass; build beta một lần và kiểm thử thiết bị thật. Android TV vẫn Pending.
 
 ### AN4 — Dashboard
 
