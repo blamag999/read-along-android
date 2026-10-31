@@ -32,3 +32,5 @@ assert.ok(dashboard.includes('Math.max(startMs, cutoff)'), 'Raw breakdown must r
 assert.ok(dashboard.includes('!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)'), 'Dashboard date parser must validate YYYY-MM-DD');
 assert.ok(!dashboard.includes('activeSessionDays'), 'Dashboard must not promote daily session count as a KPI');
 console.log('Analytics dashboard API regression tests passed.');
+
+// [test] Re-run full dashboard regression after fixing library table placement assertion.
