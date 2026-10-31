@@ -385,16 +385,19 @@ jobs:
 
       - name: Publish OTA objects to Cloudflare R2 (optional during migration)
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_R2_UPLOAD_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: 27391a829e8e4a38e9411d17ce76b5ba
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: "true"
+          R2_ENDPOINT: https://27391a829e8a38e9411d17ce76b5ba.r2.cloudflarestorage.com
           VERSION: ${{ steps.release_info.outputs.version }}
           VERSION_CODE: ${{ github.run_number }}
           RELEASE_CHANNEL: ${{ github.event_name == 'workflow_dispatch' && inputs.channel || 'beta' }}
           CHANGELOG: ${{ steps.release_info.outputs.changelog }}
         run: |
           set -euo pipefail
-          if [[ -z "${CLOUDFLARE_API_TOKEN:-}" ]]; then
-            echo "::warning::Cloudflare R2 upload skipped. Configure the CLOUDFLARE_R2_UPLOAD_TOKEN repository secret to enable OTA publishing."
+          if [[ -z "${AWS_ACCESS_KEY_ID:-}" || -z "${AWS_SECRET_ACCESS_KEY:-}" ]]; then
+            echo "::warning::Cloudflare R2 upload skipped. Configure R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY repository secrets to enable OTA publishing."
             exit 0
           fi
 
@@ -424,8 +427,8 @@ jobs:
           with open("dist/ota/latest.json", "w", encoding="utf-8") as f:
               json.dump(payload, f, ensure_ascii=False, separators=(",", ":"))
           PY
-          npx --yes wrangler@4 r2 object put "read-along-releases/releases/$CHANNEL/$APK" --file="$APK" --remote --content-type="application/vnd.android.package-archive" --cache-control="public, max-age=31536000, immutable" --header="x-amz-meta-sha256:$SHA256"
-          npx --yes wrangler@4 r2 object put "read-along-releases/channels/$CHANNEL/latest.json" --file="dist/ota/latest.json" --remote --content-type="application/json" --cache-control="no-store"
+          aws --no-cli-pager --endpoint-url "$R2_ENDPOINT" s3api put-object --bucket read-along-releases --key "releases/$CHANNEL/$APK" --body "$APK" --content-type "application/vnd.android.package-archive" --cache-control "public, max-age=31536000, immutable" --metadata "sha256=$SHA256"
+          aws --no-cli-pager --endpoint-url "$R2_ENDPOINT" s3api put-object --bucket read-along-releases --key "channels/$CHANNEL/latest.json" --body "dist/ota/latest.json" --content-type "application/json" --cache-control "no-store"
           echo "Published OTA manifest for $CHANNEL $VERSION (sha256=$SHA256)"
 
       - name: Upload versioned workflow artifacts
