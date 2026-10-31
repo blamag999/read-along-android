@@ -454,3 +454,12 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Final PR CI run #543 (`Check Read Along Admin`, run ID `41223060317`) completed successfully. `npm test` passed, including release notes, analytics, module, marker, catalog, API boundaries, admin DOM/stats, OTA, native lifecycle and JS syntax. Pages Functions syntax and isolation checks also passed. Deployment-dependent analytics consent and OTA API smoke tests were skipped by workflow conditions.
 - PR #43 squash-merged into beta: `d10459e9788eb1d961e3dfba08a5ab95324233c6`. `main` remains untouched.
 - Regression is confirmed for this beta tree. Next action: one `[build-apk]` finalization commit changing an APK-relevant path, then monitor the beta build, artifact, GitHub Release and R2 OTA publication. Device acceptance still required.
+
+
+## Recovery update — beta build trigger commit (2026-11-01)
+
+- Full regression evidence: PR #43 / `Check Read Along Admin` run #543 (`41223060317`) completed successfully. `npm test`, JS syntax, Pages Functions syntax and isolation checks passed. Deployment-dependent analytics/OTA smoke tests were skipped by workflow conditions.
+- PR #43 merged to beta by squash at `d10459e9788eb1d961e3dfba08a5ab95324233c6`.
+- Build finalization commit: `fd0d4909994ab3d065ad4bbb3fc4221e6db8f0fc`, message `[build-apk] finalize beta APK after regression pass`. It adds only an inert comment to styles.css, which is an APK-relevant path in `.github/workflows/build-android-apk.yml`; the marker and path filter conditions are satisfied.
+- The available connector exposes PR-triggered workflow runs only. `fetch_commit_workflow_runs` and combined status cannot confirm the push-triggered APK workflow; therefore build status/artifacts/release/R2 OTA remain unknown and must be verified before declaring success.
+- No main promotion or device acceptance yet. Next: verify the beta build job and signed APK/OTA outputs, then install and test on Android phone/TV as applicable.
