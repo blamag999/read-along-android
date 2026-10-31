@@ -485,3 +485,9 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Updated `tests/contracts.test.js` and `tests/modules.test.js` to enforce the new UI and the approved checkpoint labels.
 - Regression: `Check Read Along Admin` run #550, commit `921833ce96b1740e103f99828db55f481bdc859e`, completed successfully. `npm test`, JS syntax, Pages Functions syntax, isolation and deployment smoke checks passed.
 - No APK build or device acceptance in this batch. `main` remains unchanged.
+
+
+## Tiến độ mới nhất — Menu OTA compact (2026-11-01)
+- Đã cập nhật index.html và styles.css trên beta: ba thành phần OTA được gom thành nhóm Cập nhật ứng dụng; giữ nguyên chkBetaOta, installedAppVersion, menuCheckUpdates và hành vi OTA.
+- Đã bổ sung contract test bảo vệ cấu trúc nhóm và CSS compact.
+- CI và APK beta chưa được xác minh tại thời điểm ghi nhật ký; tiếp tục từ HEAD mới nhất của beta, không checkout theo commit bàn giao cũ.
