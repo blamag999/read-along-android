@@ -132,3 +132,16 @@ assert.equal(libraryGroups.books[0].json[0].name, "Oliver_Company.json");
 assert.equal(libraryGroups.books[0].status, "compatibility", "WMA should mark the grouped book as requiring compatibility handling");
 assert.deepEqual(Array.from(libraryGroups.ungrouped, file => file.name), ["orphan.bin"], "unsupported files must remain visible in the unmatched section");
 console.log("Admin book-grouping regression tests passed.");
+
+// Admin library pagination must use the same filtered entries for rendering and navigation.
+assert.match(adminScript, /filteredLibraryEntries = entries;/, 'pagination must store the exact filtered list used by the current render');
+assert.match(adminScript, /nextPageBtn.*filteredLibraryEntries\\.length/s, 'next-page navigation must use the rendered filtered list');
+assert.match(adminScript, /lastPageBtn.*filteredLibraryEntries\\.length/s, 'last-page navigation must use the rendered filtered list');
+assert.match(adminScript, /function convertWmaGroup\\(group, button\\)/, 'WMA conversion must be available from a book group');
+assert.match(adminScript, /@ffmpeg\\/ffmpeg@0\\.12\\.10/, 'browser conversion engine must use a pinned FFmpeg.wasm version');
+assert.match(adminScript, /@ffmpeg\\/core@0\\.12\\.10/, 'FFmpeg core must use a pinned version');
+assert.match(adminScript, /libmp3lame/, 'WMA conversion must encode MP3 audio');
+assert.match(adminScript, /file đích đã tồn tại/, 'conversion must refuse to overwrite an existing MP3');
+assert.match(adminScript, /file WMA gốc vẫn được giữ nguyên/, 'conversion must preserve original WMA files');
+assert.ok(fs.readFileSync('admin/public/index.html', 'utf8').indexOf('class="library-tools"') < fs.readFileSync('admin/public/index.html', 'utf8').indexOf('<div class="table-wrap">'), 'library search and sort controls must appear before the file table');
+console.log('Admin pagination, WMA conversion and search placement regression tests passed.');
