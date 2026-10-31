@@ -637,3 +637,13 @@ Khi một công việc trong PLANNING hoàn tất:
 - Regression assertions bổ sung trong `tests/modules.test.js` cho menu đã tinh gọn, header responsive, nhãn checkpoint và bảo toàn export marker local.
 - Code batch được mở rộng thêm bằng commit `163abfbeab279b479e358e39ada6f3fa63fda3dd`: loại bỏ fallback `loadCloudSyncForBook()` để không còn nạp đè marker R2 bằng nguồn đồng bộ online. Regression assertions bổ sung tại `f2bebf47071a712021e29e6645551e8bdc910475`, cùng analytics default-on test tại `2298de525308f5dd257e818a5a9c1e966169dd69`.
 - Trạng thái: IMPLEMENTED; full regression, Pages syntax/isolation, channel validation và web/native preparation PASS trong workflow [41193683584](https://github.com/blamag999/read-along-android/actions/runs/41193683584). Signed APK build và R2 publication đang chạy tại thời điểm cập nhật; R2 marker smoke test và nghiệm thu thiết bị chưa xác nhận. Không promote main.
+
+
+## Incident fix — sách không tải sau batch tinh gọn menu (2026-10-31)
+
+- Nguyên nhân gốc: khi gỡ UI cloud sync/analytics/diagnostics, phần cuối HTML của `syncModal` bị cắt thiếu `importSyncInput`, `btnClearSync` và `syncTableBody`. `initEvents()` có listener registration không null-guard nên throw trước khi `DOMContentLoaded` tiếp tục gọi `loadR2Catalog()`; vì vậy danh sách sách R2 không được tải.
+- Khắc phục ở commit `c8dd29208097064c79e36ba97ac2434fbf55f882`: khôi phục local-only marker modal với export/import/clear/table. Cloud sync buttons và token controls không được khôi phục.
+- Khắc phục ở commit `ace4aa65d6a8ad3cb2c776437c713c2bd5a0a43f`: xóa các lời gọi `scheduleGitHubSync()` còn sót; local export tự tạo filename, không phụ thuộc remote-sync module.
+- Regression guard tại `0e16c8b21533f997a8bc5e3dd8368a3a6e500c69` kiểm tra DOM IDs thiết yếu và không có cloud sync invocation.
+- Full regression, Pages syntax/isolation, channel validation và chuẩn bị assets đều pass trong workflow [41202909931](https://github.com/blamag999/read-along-android/actions/runs/41202909931); signed APK build/verification/R2 publish đang chạy tại thời điểm ghi nhận.
+- Trạng thái: code fix implemented + regression pass; device acceptance pending. Không promote main.
