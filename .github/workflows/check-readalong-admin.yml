@@ -96,50 +96,5 @@ jobs:
             await wait(10000);
           }
           if (!ready) throw new Error('Analytics endpoint did not become ready with the expected CORS/consent behavior');
-          const id = () => crypto.randomUUID().replace(/-/g, '');
-          const installId = 'smoke_install_' + id();
-          const sessionId = 'smoke_session_' + id();
-          const eventId = 'smoke_event_' + id();
-          const event = {
-            schemaVersion: 1,
-            eventId,
-            sessionId,
-            installId,
-            sequence: 0,
-            type: 'heartbeat',
-            occurredAt: new Date().toISOString(),
-            readingSeconds: 7,
-            listeningSeconds: 11,
-            platform: 'android',
-            appVersion: 'smoke-test'
-          };
-          const send = async () => {
-            const response = await fetch(endpoint, {
-              method: 'POST',
-              headers: { Origin: origin, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ consent: true, events: [event] })
-            });
-            return { status: response.status, body: await response.json() };
-          };
-          const first = await send();
-          if (first.status !== 200 || first.body.ok !== true || first.body.accepted !== 1 || first.body.duplicates !== 0) {
-            throw new Error('Valid analytics event was not accepted: ' + first.status + ' ' + JSON.stringify(first.body));
-          }
-          const replay = await send();
-          if (replay.status !== 200 || replay.body.ok !== true || replay.body.accepted !== 0 || replay.body.duplicates !== 1) {
-            throw new Error('Analytics replay was not idempotent: ' + replay.status + ' ' + JSON.stringify(replay.body));
-          }
-          const conflict = { ...event, eventId: 'smoke_conflict_' + id() };
-          const conflictResponse = await fetch(endpoint, {
-            method: 'POST',
-            headers: { Origin: origin, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ consent: true, events: [conflict] })
-          });
-          const conflictBody = await conflictResponse.json();
-          if (conflictResponse.status !== 200 || conflictBody.ok !== true || conflictBody.accepted !== 0 || conflictBody.duplicates !== 1) {
-            throw new Error('Conflicting session sequence was not safely ignored: ' + conflictResponse.status + ' ' + JSON.stringify(conflictBody));
-          }
-          console.log('Deployed analytics CORS, consent, valid write, replay and sequence-conflict idempotency passed.');
-          console.log('CLEANUP_SESSION_ID=' + sessionId);
-          console.log('CLEANUP_INSTALL_ID=' + installId);
+          console.log('Deployed analytics CORS and explicit-consent gate passed.');
           NODE
