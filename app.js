@@ -319,10 +319,8 @@ function restoreReadingSessionForCurrentBook() {
   }
   state.timestampSpread = false;
   if (Number.isInteger(session.page) && session.page >= 1 && session.page <= state.totalPages) state.pageNum = session.page;
-  if (['fit-height', 'fit-width', 'two-pages'].includes(session.viewMode)) {
-    state.viewMode = session.viewMode;
-    dom.canvasWrapper.classList.remove('two-page-mode');
-  }
+  state.viewMode = 'fit-height';
+  dom.canvasWrapper.classList.remove('two-page-mode');
   if (Number.isFinite(session.zoomScale)) state.zoomScale = Math.max(0.5, Math.min(3, session.zoomScale));
   state.pageTurnMode = session.pageTurnMode === 'off' ? 'off' : 'next';
   
