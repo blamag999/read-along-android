@@ -9,7 +9,7 @@
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
 - Last formal handover code/documentation checkpoint: `d13482e6ede435125600328ce05244231af8a14e` (ROADMAP handover record; source review baseline remains `d6faeb3b1667bebf5130a63851c6090785a4945e`).
 - Last reviewed functional/source HEAD on beta: `d6faeb3b1667bebf5130a63851c6090785a4945e`
-- Recovery status: `DOCUMENTATION POLICY UPDATED — quyết định online-only media đã được ghi rõ; thay đổi lượt này chỉ cập nhật tài liệu, không xác minh lại toàn bộ runtime HEAD`
+- Recovery status: `PARTIAL — source audit caught and fixed a duplicate JavaScript declaration; remaining reader/menu cleanup and regression are pending`
 - Recovery reviewed on: 2026-10-31
 - Latest policy update: quyết định không lưu PDF/audio offline đã được ghi vào README/ROADMAP/PLANNING/RECOVERY. Xem mục “Quyết định thay thế kế hoạch kho offline”; các checkpoint cũ bên dưới chỉ là lịch sử.
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
@@ -358,3 +358,11 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 ### Trạng thái bàn giao
 - Đợt 1: source change đã ghi vào beta; chờ test/regression và device acceptance.
 - Đợt 2: chưa bắt đầu.
+
+
+## Hotfix source audit — 2026-10-31
+
+- Starting beta HEAD: `350be680119c4b300d565d98e7ed8064254f3fe8`.
+- Source audit found a JavaScript syntax error in `onAudioTimeUpdate()`: `let alignedPage` and a second `const alignedPage` were declared in the same scope. This would fail the repository's `node --check app.js` validation and block the beta build.
+- Removed the unused `let alignedPage` declaration. Runtime logic is otherwise unchanged. Code commit: `d2a7733fb864fb26786cdc2aab057463ebcbdc5b`.
+- This is a source hotfix only; regression CI, APK build, OTA publication and device acceptance have not yet run. The broader Reader/Menu and R2-only cleanup remain in progress; do not mark Phase 1 accepted.
