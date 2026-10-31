@@ -285,7 +285,7 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 - [ ] Tiếp tục rút gọn các thông báo còn lại và thống nhất thuật ngữ; batch hiện tại mới xử lý nhóm lỗi tải, chọn tệp, marker và phát lại; bỏ emoji trang trí và chi tiết kỹ thuật không giúp người dùng xử lý.
 - [x] Giữ thông tin lỗi kỹ thuật trong console/diagnostics ở các nhánh lỗi catalog, mở sách và nạp âm thanh đã chỉnh; thông báo người dùng chỉ nêu việc không thực hiện được và bước khắc phục phù hợp.
 - [x] Không thay đổi điều kiện hiển thị/luồng xử lý của các nhánh đã chỉnh; giữ nguyên Confirm/Prompt dữ liệu động và OTA đã chuẩn hóa; bổ sung regression assertions trước khi sửa.
-- [ ] Chỉ build APK khi batch thay đổi runtime đã hoàn tất và full regression pass; nghiệm thu nội dung trên thiết bị thật.
+- [ ] Hoàn tất audit các thông báo còn lại, sau đó chạy full regression và build APK beta một lần; nghiệm thu nội dung trên thiết bị thật.
 
 ### Kết quả rà soát thông báo hiện tại — 2026-10-31 (chỉ đề xuất, chưa sửa app.js)
 
@@ -338,3 +338,10 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - Đã thêm `tests/release-notes.test.py` và nối vào `npm test` để kiểm tra category, deduplication, nội dung rỗng và channel isolation.
 - App notification: đã rút gọn một nhóm lỗi catalog/sách/âm thanh, tệp không hỗ trợ, thao tác marker và phát lại; giữ chi tiết lỗi ở console trong các nhánh đã sửa. Một số thông báo cũ/emoji/thuật ngữ chưa được xử lý; batch thông báo chưa hoàn tất.
 - Chưa chạy npm test/CI, chưa xác minh release notes thực tế, chưa build APK và chưa kiểm tra thiết bị. Do app.js thay đổi, cần một APK beta sau khi hoàn tất toàn bộ notification batch và full regression.
+
+
+### CI cập nhật — 2026-10-31
+
+- Workflow [41212943321](https://github.com/blamag999/read-along-android/actions/runs/41212943321) trên commit `e679600bd3e7d36e9b98443991eeedf128f137bc`: `npm test`, Pages Functions syntax và isolation checks đều PASS; smoke test analytics đã PASS. Smoke test OTA contract còn đang chạy tại thời điểm ghi nhận.
+- Hai lần CI trước thất bại ở bước import module Python trong test do tên script có dấu gạch nối; đã thay bằng importlib theo đúng đường dẫn. Không coi các run thất bại trước là xác nhận test.
+- Còn pending: kết luận cuối cùng run 41212943321, audit thông báo app còn lại, xác minh changelog thực tế trong release beta. Chưa build APK.
