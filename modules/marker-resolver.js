@@ -63,7 +63,9 @@
       const newest = parsedVersioned.filter(item => item.parsed.revision === revision);
       if (new Set(newest.map(item => canonical(item.parsed.markers))).size > 1) {
         const order = opts.conflictSourceOrder || SOURCE_ORDER;
-        const selected = newest.slice().sort((a, b) => (order.indexOf(a.source) < 0 ? order.length : order.indexOf(a.source)) -
+        const recovery = parsedVersioned.find(item => item.source === 'localStorage');
+        const conflictPool = recovery ? [recovery] : newest;
+        const selected = conflictPool.slice().sort((a, b) => (order.indexOf(a.source) < 0 ? order.length : order.indexOf(a.source)) -
           (order.indexOf(b.source) < 0 ? order.length : order.indexOf(b.source)) || a.index - b.index)[0];
         return { status: 'conflict', selected: selected.source, markers: selected.parsed.markers, conflict: true, revision, persist: false };
       }
