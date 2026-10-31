@@ -66,11 +66,15 @@ function validateAnalyticsBatch(body) {
     if (sessionId === null) sessionId = event.sessionId;
     if (event.installId !== installId || event.sessionId !== sessionId) return { valid: false, error: "A batch must contain one install and one session" };
   }
-  const sorted = body.events.slice().sort((a, b) => a.sequence - b.sequence);
-  for (let i = 1; i < sorted.length; i++) {
-    if (sorted[i].sequence === sorted[i - 1].sequence && sorted[i].eventId !== sorted[i - 1].eventId) {
-      return { valid: false, error: "Conflicting sequence in batch" };
-    }
+  const sequenceIds = new Map(), eventPayloads = new Map();
+  for (const event of body.events) {
+    const previousId = sequenceIds.get(event.sequence);
+    if (previousId && previousId !== event.eventId) return { valid: false, error: "Conflicting sequence in batch" };
+    sequenceIds.set(event.sequence, event.eventId);
+    const canonical = JSON.stringify(Object.keys(event).sort().reduce((out, key) => { out[key] = event[key]; return out; }, {}));
+    const previousPayload = eventPayloads.get(event.eventId);
+    if (previousPayload && previousPayload !== canonical) return { valid: false, error: "Conflicting eventId in batch" };
+    eventPayloads.set(event.eventId, canonical);
   }
   return { valid: true, error: null, installId, sessionId };
 }
