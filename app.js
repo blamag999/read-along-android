@@ -40,7 +40,6 @@ const state = {
   // MULTI-AUDIO STATE
   currentAudioIndex: 0,   // Phần âm thanh đang phát trong currentStoryAudios
   currentStoryAudios: [], // Danh sách các phần âm thanh của truyện đang mở
-  pdfSelectionInProgress: false,
   sessionRestorePending: false,
   lastSessionSaveAt: 0,
   lastAudioObservedTime: null,
@@ -150,7 +149,6 @@ async function closeCurrentBook() {
   dom.canvasWrapper.classList.remove('two-page-mode');
   dom.emptyState.classList.remove('hidden');
   dom.readerPageStatus.classList.add('hidden');
-  dom.btnChooseAudio.classList.add('hidden');
   dom.pdfFileName.textContent = '📖 Chưa có sách';
   dom.pdfFileName.classList.add('empty');
   dom.audioFileName.textContent = '🎵 Chưa có âm thanh';
@@ -344,77 +342,6 @@ function applyPendingAudioSessionRestore() {
   showToast('Đã khôi phục vị trí đọc. Nhấn Phát để nghe.');
 }
 
-const DB_NAME = 'PdfAudioSyncDB';
-const DB_STORE = 'book_library';
-let dbInstance = null;
-
-function initIndexedDB() {
-  return new Promise((resolve) => {
-    const request = indexedDB.open(DB_NAME, 2);
-    request.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(DB_STORE)) {
-        db.createObjectStore(DB_STORE, { keyPath: 'id' });
-      }
-    };
-    request.onsuccess = (e) => {
-      dbInstance = e.target.result;
-      resolve(dbInstance);
-    };
-    request.onerror = () => resolve(null);
-  });
-}
-
-function getBookUniqueKey(pdfName, audioName) {
-  return window.ReadAlongCatalogPlaylist.getBookUniqueKey(pdfName, audioName);
-}
-
-function normalizeStoryTitle(filename) {
-  return window.ReadAlongCatalogPlaylist.normalizeStoryTitle(filename);
-}
-
-async function saveBookToLibrary(bookData) {
-  if (!dbInstance) await initIndexedDB();
-  if (!dbInstance || !bookData.id) return;
-
-  try {
-    const tx = dbInstance.transaction(DB_STORE, 'readwrite');
-    const store = tx.objectStore(DB_STORE);
-    const getReq = store.get(bookData.id);
-    getReq.onsuccess = () => {
-      const existing = getReq.result || {};
-      const merged = {
-        id: bookData.id,
-        pdfName: bookData.pdfName || existing.pdfName || '',
-        pdfBlob: bookData.pdfBlob || existing.pdfBlob || null,
-        audioName: bookData.audioName || existing.audioName || '',
-        audioBlob: bookData.audioBlob || existing.audioBlob || null,
-        audios: (bookData.audios !== undefined) ? bookData.audios : (existing.audios || []),
-        timestamps: (bookData.timestamps !== undefined) ? bookData.timestamps : (existing.timestamps || {}),
-        updatedAt: Date.now()
-      };
-      store.put(merged);
-    };
-  } catch (err) {}
-}
-
-async function getBookFromLibrary(key) {
-  if (!dbInstance) await initIndexedDB();
-  if (!dbInstance || !key) return null;
-
-  return new Promise((resolve) => {
-    try {
-      const tx = dbInstance.transaction(DB_STORE, 'readonly');
-      const store = tx.objectStore(DB_STORE);
-      const req = store.get(key.toLowerCase());
-      req.onsuccess = () => resolve(req.result || null);
-      req.onerror = () => resolve(null);
-    } catch (e) {
-      resolve(null);
-    }
-  });
-}
-
 // DOM ELEMENTS
 const dom = {
   btnOpenReadMenu: document.getElementById('btnOpenReadMenu'),
@@ -438,28 +365,15 @@ const dom = {
   lblPlaylistPage: document.getElementById('lblPlaylistPage'),
   playlistPagination: document.getElementById('playlistPagination'),
 
-  btnNode1FolderOnline: document.getElementById('btnNode1FolderOnline'),
-  menuToggleSettings: document.getElementById('menuToggleSettings'),
-  btnChooseAudio: document.getElementById('btnChooseAudio'),
-  folderInput: document.getElementById('folderInput'),
-  pdfFileInput: document.getElementById('pdfFileInput'),
-  audioFileInput: document.getElementById('audioFileInput'),
 
-  node1Modal: document.getElementById('node1Modal'),
-  btnCloseNode1Modal: document.getElementById('btnCloseNode1Modal'),
-  btnTriggerFolderPicker: document.getElementById('btnTriggerFolderPicker'),
-  btnTriggerPdfPicker: document.getElementById('btnTriggerPdfPicker'),
-  btnLoadR2Catalog: document.getElementById('btnLoadR2Catalog'),
 
   pdfFileName: document.getElementById('pdfFileName'),
   audioFileName: document.getElementById('audioFileName'),
   syncBanner: document.getElementById('syncBanner'),
 
-  filePickerSection: document.getElementById('filePickerSection'),
 
 
   viewerContainer: document.getElementById('viewerContainer'),
-  dropOverlay: document.getElementById('dropOverlay'),
   emptyState: document.getElementById('emptyState'),
   canvasWrapper: document.getElementById('canvasWrapper'),
   touchCenterIcon: document.getElementById('touchCenterIcon'),
@@ -612,8 +526,6 @@ function isReadAlongR2Url(value) {
 async function loadR2Catalog() {
   if (state.catalogLoading) return;
   state.catalogLoading = true;
-  const button = dom.btnLoadR2Catalog;
-  if (button) { button.disabled = true; button.textContent = '⏳ Đang tải sách...'; }
   dom.playlistLoading.classList.remove('hidden');
   dom.playlistItemsList.replaceChildren();
   try {
@@ -641,24 +553,7 @@ async function loadR2Catalog() {
     alert('Không tải được thư viện sách. Vui lòng thử lại.');
   } finally {
     dom.playlistLoading.classList.add('hidden');
-    if (button) { button.disabled = false; button.textContent = '☁️ Truyện trực tuyến'; }
     state.catalogLoading = false;
-  }
-}
-
-function buildPlaylistFromItems(rawItems) {
-  const playlistArray = window.ReadAlongCatalogPlaylist.buildPlaylistFromFiles(rawItems);
-  state.playlist = playlistArray;
-  state.playlistPage = 1;
-  updatePlaylistBadgeCount();
-  renderPlaylistView();
-
-  if (playlistArray.length > 0) {
-    if (dom.lblPlaylistSubtitle) {
-      dom.lblPlaylistSubtitle.textContent = 'Tìm thấy ' + playlistArray.length + ' tập truyện trong thư mục';
-    }
-    openPlaylistModal();
-    showToast('Đã tải danh sách ' + playlistArray.length + ' sách.');
   }
 }
 
@@ -875,8 +770,8 @@ async function loadStoryFromPlaylist(story, audioPartIndex) {
     await resetAndLoadSyncForBook(uniqueKey, story.json ? story.json.url : '');
 
     if (story.pdf) {
-      if (story.pdf.blob) await loadPdfFromBlob(story.pdf.blob, false);
-      else if (story.pdf.url) await loadPdfFromUrl(story.pdf.url, story.pdf.name, false);
+      if (!story.pdf.url) throw new Error('Sách chưa có địa chỉ PDF trực tuyến hợp lệ.');
+      await loadPdfFromUrl(story.pdf.url, story.pdf.name, false);
     }
 
     loadAudioPart(state.currentAudioIndex);
@@ -928,8 +823,8 @@ function loadAudioPart(index, options = {}) {
     });
   }
 
-  if (audio.blob) loadAudioFromBlob(audio.blob);
-  else if (audio.url) loadAudioFromUrl(audio.url, audio.name);
+  if (!audio.url) { showToast('Phần âm thanh chưa có địa chỉ trực tuyến hợp lệ.'); return; }
+  loadAudioFromUrl(audio.url, audio.name);
   updateAudioPartUI();
 }
 
@@ -1011,7 +906,6 @@ window.selectAudioPart = function(index) {
 // SỰ KIỆN GIAO DIỆN
 // =======================================================
 function initEvents() {
-  initIndexedDB();
 
   dom.btnOpenPlaylist.addEventListener('click', () => {
     if (state.playlist.length > 0) openPlaylistModal();
@@ -1091,45 +985,6 @@ function initEvents() {
     });
   });
 
-  dom.btnNode1FolderOnline.addEventListener('click', () => dom.node1Modal.classList.remove('hidden'));
-  dom.menuToggleSettings.addEventListener('click', () => {
-    const willHide = !dom.filePickerSection.classList.contains('hidden');
-    dom.filePickerSection.classList.toggle('hidden', willHide);
-    dom.syncBanner.classList.toggle('hidden', willHide);
-    dom.menuToggleSettings.setAttribute('aria-expanded', String(!willHide));
-    dom.menuToggleSettings.querySelector('span:last-child').textContent = willHide
-      ? 'Hiện chọn tệp và tùy chọn'
-      : 'Ẩn chọn tệp và tùy chọn';
-    dom.readOptionsMenu.classList.add('hidden');
-    dom.btnOpenReadMenu.setAttribute('aria-expanded', 'false');
-  });
-  dom.btnChooseAudio.addEventListener('click', () => dom.audioFileInput.click());
-  dom.btnCloseNode1Modal.addEventListener('click', () => dom.node1Modal.classList.add('hidden'));
-  dom.node1Modal.addEventListener('click', (e) => {
-    if (e.target === dom.node1Modal) dom.node1Modal.classList.add('hidden');
-  });
-
-  if (dom.btnLoadR2Catalog) dom.btnLoadR2Catalog.addEventListener('click', () => {
-    dom.node1Modal.classList.add('hidden');
-    loadR2Catalog();
-  });
-
-  dom.btnTriggerFolderPicker.addEventListener('click', () => {
-    dom.node1Modal.classList.add('hidden');
-    handleFolderPick();
-  });
-  dom.btnTriggerPdfPicker.addEventListener('click', () => {
-    dom.node1Modal.classList.add('hidden');
-    dom.pdfFileInput.click();
-  });
-  dom.folderInput.addEventListener('change', (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length) handleFileList(files);
-    e.target.value = '';
-  });
-  dom.pdfFileInput.addEventListener('change', handlePdfFileSelect);
-  dom.audioFileInput.addEventListener('change', handleAudioFileSelect);
-
   if (dom.btnOpenReadMenu && dom.readOptionsMenu) {
     dom.btnOpenReadMenu.addEventListener('click', () => {
       const isOpen = !dom.readOptionsMenu.classList.contains('hidden');
@@ -1157,7 +1012,6 @@ function initEvents() {
   });
 
 
-  initDragAndDrop();
 
   dom.btnPageJump.addEventListener('click', jumpToEnteredPage);
   dom.btnRestoreReadingCheckpoint?.addEventListener('click', restoreSelectedReadingCheckpoint);
@@ -1239,173 +1093,6 @@ function initEvents() {
   }
 }
 
-// =======================================================
-// XỬ LÝ CHỌN FILE LẺ NÚT 2 & 3
-// =======================================================
-async function handlePdfFileSelect(e) {
-  const file = e.target.files[0];
-  e.target.value = '';
-  if (!file) return;
-
-  const key = getBookUniqueKey(file.name);
-  saveReadingSession(true);
-  if (state.currentBookKey && state.currentBookKey !== key) dom.audioElement.pause();
-  state.lastSessionSaveAt = 0;
-  state.currentBookKey = key;
-  dom.btnChooseAudio.classList.remove('hidden');
-  state.pdfSelectionInProgress = true;
-  state.currentStoryAudios = [];
-  state.currentAudioIndex = 0;
-  dom.audioElement.pause();
-  dom.audioElement.removeAttribute('src');
-  dom.audioElement.load();
-  dom.audioFileName.textContent = '🎵 Chưa có âm thanh';
-  dom.audioFileName.classList.add('empty');
-  updateAudioPartUI();
-
-  // Không tự mở hộp thoại chọn audio; người dùng chủ động bấm nút "Chọn audio".
-  try {
-    await loadPdfFromBlob(file, true);
-    saveBookToLibrary({
-      id: key,
-      pdfName: file.name,
-      pdfBlob: file
-    });
-  } finally {
-    state.pdfSelectionInProgress = false;
-  }
-  showToast('Đã mở sách. Hãy chọn âm thanh để bắt đầu nghe.');
-}
-
-async function handleAudioFileSelect(e) {
-  const selectedFiles = Array.from(e.target.files || []);
-  e.target.value = '';
-  if (selectedFiles.length === 0) return;
-  const files = selectedFiles.filter(file => isSupportedAudioFileName(file.name));
-  const skippedCount = selectedFiles.length - files.length;
-  if (files.length === 0) {
-    showToast('Định dạng âm thanh không được hỗ trợ. Hãy chọn MP3, M4A hoặc định dạng tương thích.');
-    return;
-  }
-  dom.pdfLoadingIndicator.classList.remove('hidden');
-  dom.lblLoadingText.textContent = 'Đang nạp tệp âm thanh...';
-  try {
-  // Chuyển danh sách file thành audio items có partLabel và sắp xếp
-  const audioItems = files.map(f => {
-    const partMatch = f.name.match(/part[_\s-]*(\d+)|side[_\s-]*([ab])|disc[_\s-]*(\d+)|\b(\d+)\s*of\s*\d+/i);
-    const partLabel = partMatch
-      ? (partMatch[1] ? ('Phần ' + partMatch[1]) : partMatch[2] ? ('Mặt ' + partMatch[2].toUpperCase()) : partMatch[3] ? ('Đĩa ' + partMatch[3]) : ('Phần ' + partMatch[4]))
-      : null;
-    return {
-      name: f.name,
-      blob: f,
-      type: 'audio',
-      partLabel: partLabel
-    };
-  });
-
-  audioItems.sort((a, b) => a.name.localeCompare(b.name, 'vi', { numeric: true }));
-  if (audioItems.length > 1) {
-    audioItems.forEach((aud, i) => {
-      if (!aud.partLabel) aud.partLabel = 'Phần ' + (i + 1);
-    });
-  }
-
-  // Cập nhật danh sách audio đang mở vào state
-  state.currentStoryAudios = audioItems;
-  state.currentAudioIndex = 0;
-  if (state.pdfDoc) dom.btnChooseAudio.classList.remove('hidden');
-
-  // Nạp part đầu tiên và hiển thị thanh chọn part
-  loadAudioPart(0);
-  updateAudioPartUI();
-
-  
-
-  // Tìm kiếm PDF tương ứng nếu chưa mở PDF
-  const key = getBookUniqueKey(files[0].name);
-  if (!state.pdfDoc && !state.pdfSelectionInProgress) {
-    const saved = await getBookFromLibrary(key);
-    if (saved && saved.pdfBlob) {
-      state.currentBookKey = key;
-      await loadPdfFromBlob(saved.pdfBlob, true);
-    }
-  }
-
-  const currentKey = state.currentBookKey || key;
-  await saveBookToLibrary({
-    id: currentKey,
-    audioName: audioItems[0].name,
-    audioBlob: audioItems[0].blob,
-    audios: audioItems
-  });
-  showToast('Đã tải âm thanh.' + (skippedCount > 0 ? ' Đã bỏ qua ' + skippedCount + ' tệp không hỗ trợ.' : ' Nhấn Phát để nghe.'));
-  } catch (error) {
-    console.error('Lỗi khi nạp audio:', error);
-    showToast('Không tải được âm thanh. Vui lòng chọn lại tệp.');
-  } finally {
-    dom.pdfLoadingIndicator.classList.add('hidden');
-  }
-}
-
-// =======================================================
-// XỬ LÝ NÚT 1: CHỌN THƯ MỤC TRÊN MÁY
-// =======================================================
-async function handleFolderPick() {
-  if ('showDirectoryPicker' in window) {
-    try {
-      state.dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-      state.folderJsonFiles = [];
-      const files = [];
-      for await (const entry of state.dirHandle.values()) {
-        if (entry.kind === 'file') {
-          const file = await entry.getFile();
-          files.push(file);
-        }
-      }
-      handleFileList(files);
-      return;
-    } catch (err) {
-      if (err.name === 'AbortError') return;
-    }
-  }
-  dom.folderInput.click();
-}
-
-function handleFileList(files) {
-  if (!files || files.length === 0) return;
-
-  const rawItems = [];
-  const unsupportedWmaCount = files.filter(file => /\.wma$/i.test(file.name)).length;
-  state.folderJsonFiles = [];
-  files.forEach(f => {
-    const l = f.name.toLowerCase();
-    let type = 'unknown';
-    if (l.endsWith('.pdf')) type = 'pdf';
-    else if (isSupportedAudioFileName(l)) type = 'audio';
-    else if (l.endsWith('.json')) type = 'json';
-
-    if (type === 'json') state.folderJsonFiles.push({ name: f.name, blob: f });
-    if (type !== 'unknown') {
-      rawItems.push({
-        name: f.name,
-        blob: f,
-        type: type
-      });
-    }
-  });
-
-  if (rawItems.length > 0) {
-    buildPlaylistFromItems(rawItems);
-    if (unsupportedWmaCount > 0) showToast('Đã bỏ qua ' + unsupportedWmaCount + ' tệp WMA. Hãy dùng MP3 hoặc M4A.');
-    if (state.playlist.length > 0) {
-      loadStoryFromPlaylist(state.playlist[0]);
-    }
-  } else {
-    alert('Không tìm thấy sách hoặc tệp âm thanh phù hợp trong thư mục.');
-  }
-}
-
 async function loadPdfFromUrl(url, fileName, shouldResetSync = true) {
   state.pdfFileName = fileName || url.split('/').pop() || 'book.pdf';
   dom.pdfFileName.textContent = '📄 ' + state.pdfFileName;
@@ -1448,101 +1135,6 @@ async function loadPdfFromUrl(url, fileName, shouldResetSync = true) {
     dom.pdfLoadingIndicator.classList.add('hidden');
   }
   if (state.pdfDoc) renderCurrentSpread();
-}
-
-async function loadPdfFromBlob(file, shouldResetSync = true) {
-  state.pdfFileName = file.name;
-  dom.pdfFileName.textContent = `📄 ${file.name}`;
-  dom.pdfFileName.classList.remove('empty');
-  dom.lblLoadingText.textContent = 'Đang tải trang sách...';
-  dom.pdfLoadingIndicator.classList.remove('hidden');
-
-  const key = state.currentBookKey || getBookUniqueKey(file.name);
-  state.currentBookKey = key;
-
-  if (shouldResetSync) {
-    await resetAndLoadSyncForBook(key, null);
-  }
-
-  state.pdfLoading = true;
-  try {
-    // Chờ tác vụ vẽ hiện tại kết thúc trước khi giải phóng tài liệu cũ.
-    while (state.pageRendering) {
-      await new Promise(resolve => setTimeout(resolve, 16));
-    }
-
-    const previousDoc = state.pdfDoc;
-    state.pdfDoc = null;
-    if (previousDoc && typeof previousDoc.destroy === 'function') {
-      try { await previousDoc.destroy(); } catch (cleanupError) {
-        console.warn('Không thể giải phóng PDF cũ:', cleanupError);
-      }
-    }
-
-    // Giải phóng bộ đệm ảnh của canvas cũ trước khi nạp tài liệu mới.
-    [dom.pdfCanvasLeft, dom.pdfCanvasRight].forEach(canvas => {
-      if (!canvas) return;
-      canvas.width = 0;
-      canvas.height = 0;
-    });
-
-    const typedarray = new Uint8Array(await file.arrayBuffer());
-    const loadingTask = pdfjsLib.getDocument(typedarray);
-    const nextDoc = await loadingTask.promise;
-    state.pdfDoc = nextDoc;
-    state.totalPages = nextDoc.numPages;
-    state.pageNum = 1;
-    restoreReadingSessionForCurrentBook();
-
-    dom.lblTotalPages.textContent = state.totalPages;
-    dom.emptyState.classList.add('hidden');
-    dom.canvasWrapper.classList.remove('hidden');
-  } catch (error) {
-    state.pdfDoc = null;
-    alert('Không mở được sách. Vui lòng chọn tệp khác.');
-  } finally {
-    state.pdfLoading = false;
-    dom.pdfLoadingIndicator.classList.add('hidden');
-  }
-
-  if (state.pdfDoc) renderCurrentSpread();
-}
-
-function loadAudioFromBlob(file) {
-  if (!(file instanceof Blob)) {
-    showToast('Tệp âm thanh không hợp lệ. Vui lòng chọn lại.');
-    return false;
-  }
-
-  state.audioFileName = file.name || 'audio';
-  dom.audioElement.pause();
-  dom.audioElement.playbackRate = 1.0;
-  dom.audioFileName.textContent = `🎵 ${state.audioFileName}`;
-  dom.audioFileName.classList.remove('empty');
-  if (dom.audioSeeker) dom.audioSeeker.value = 0;
-  if (dom.lblAudioCurrentTime) dom.lblAudioCurrentTime.textContent = '00:00';
-
-  // Gán nguồn mới trước khi đặt currentTime. Sau khi chọn PDF, audio element
-  // không còn nguồn; gán currentTime=0 lúc này có thể ném InvalidStateError
-  // trên một số trình duyệt và làm dừng luồng xử lý chọn audio.
-  const objectUrl = URL.createObjectURL(file);
-  const previousUrl = dom.audioElement.dataset.objectUrl;
-  if (previousUrl) URL.revokeObjectURL(previousUrl);
-  dom.audioElement.dataset.objectUrl = objectUrl;
-  dom.audioElement.src = objectUrl;
-  dom.audioElement.load();
-
-  dom.audioElement.addEventListener('loadedmetadata', () => {
-    try { dom.audioElement.currentTime = 0; } catch (error) {
-      console.warn('Không thể đặt thời gian về đầu audio:', error);
-    }
-    if (dom.audioSeeker) {
-      dom.audioSeeker.max = Number.isFinite(dom.audioElement.duration) ? dom.audioElement.duration : 0;
-      dom.audioSeeker.value = 0;
-    }
-  }, { once: true });
-
-  return true;
 }
 
 function isTwoPageLayout() {
@@ -1763,8 +1355,6 @@ async function togglePlayPause() {
   const hasAudioSource = Boolean(dom.audioElement.currentSrc || dom.audioElement.src);
   if (!hasAudioSource || !state.currentStoryAudios || state.currentStoryAudios.length === 0) {
     showToast('Chưa có âm thanh. Hãy chọn tệp âm thanh trước.');
-    dom.btnChooseAudio.classList.remove('hidden');
-    dom.btnChooseAudio.focus({ preventScroll: true });
     return;
   }
 
@@ -2036,28 +1626,6 @@ function saveSyncToStorage() {
   } catch (e) {
     console.error(e);
   }
-}
-
-function initDragAndDrop() {
-  window.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dom.dropOverlay.classList.remove('hidden');
-  });
-
-  window.addEventListener('dragleave', (e) => {
-    if (e.relatedTarget === null || e.clientX <= 0 || e.clientY <= 0) {
-      dom.dropOverlay.classList.add('hidden');
-    }
-  });
-
-  window.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dom.dropOverlay.classList.add('hidden');
-    const dt = e.dataTransfer;
-    if (dt && dt.files && dt.files.length > 0) {
-      handleFileList(Array.from(dt.files));
-    }
-  });
 }
 
 function initTouchGestures() {
