@@ -5,7 +5,7 @@ on:
     branches:
       - beta
       - main
-      - "feature/**"
+      - testing
     paths:
       - "admin/**"
       - "app.js"
