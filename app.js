@@ -423,7 +423,6 @@ async function getBookFromLibrary(key) {
 
 // DOM ELEMENTS
 const dom = {
-  btnAutoFlipToggle: document.getElementById('btnAutoFlipToggle'),
   btnOpenReadMenu: document.getElementById('btnOpenReadMenu'),
   readOptionsMenu: document.getElementById('readOptionsMenu'),
   menuAutoFlip: document.getElementById('menuAutoFlip'),
@@ -1241,11 +1240,6 @@ function initEvents() {
   initDragAndDrop();
 
 dom.selPageTurnMode.value = state.pageTurnMode;
-  if (dom.btnAutoFlipToggle) {
-    const autoFlipOn = state.pageTurnMode === 'next';
-    dom.btnAutoFlipToggle.classList.toggle('active', autoFlipOn);
-    dom.btnAutoFlipToggle.setAttribute('aria-pressed', String(autoFlipOn));
-  }
   dom.btnPageJump.addEventListener('click', jumpToEnteredPage);
   dom.btnRestoreReadingCheckpoint?.addEventListener('click', restoreSelectedReadingCheckpoint);
   dom.pageJumpInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') jumpToEnteredPage(); });
@@ -1769,25 +1763,6 @@ async function renderCurrentSpread(syncAudioToPage = false) {
       }
     }
   }
-}
-
-function setViewMode(mode) {
-  state.viewMode = mode;
-  state.zoomScale = 1.0;
-
-  dom.btnFitHeight.classList.toggle('active', mode === 'fit-height');
-  dom.btnTwoPages.classList.toggle('active', mode === 'two-pages');
-  dom.btnTwoPages.setAttribute('aria-pressed', String(mode === 'two-pages'));
-  updateReadMenuState();
-
-  if (mode === 'two-pages') {
-    dom.canvasWrapper.classList.add('two-page-mode');
-  } else {
-    dom.canvasWrapper.classList.remove('two-page-mode');
-  }
-
-  saveReadingSession(true);
-  if (state.pdfDoc) renderCurrentSpread();
 }
 
 function changeZoom(delta) {
