@@ -94,6 +94,9 @@ assert.ok(appSource.includes("showToast('Đang đọc: ' + story.title);"), 'Rea
 assert.ok(appSource.includes("Trình duyệt chưa cho phép phát. Hãy nhấn Phát để thử lại."), 'Autoplay errors provide a direct recovery action');
 assert.ok(appSource.includes("Không tải được sách trực tuyến. Hãy kiểm tra kết nối hoặc chọn tệp khác."), 'Remote book errors do not expose exception details');
 const readerHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+assert.ok(readerHtml.includes('↶ Vị trí đã xem'), 'Reading checkpoint menu uses the approved title');
+assert.ok(readerHtml.includes('>Xem tiếp</button>'), 'Reading checkpoint restore action uses the approved concise label');
+assert.ok(!readerHtml.includes('Mốc đọc gần đây') && !readerHtml.includes('>Khôi phục vị trí</button>'), 'Previous reading checkpoint labels stay removed');
 assert.ok(readerHtml.includes('📖 Chưa có sách'), 'Empty reader document label uses book terminology');
 assert.ok(readerHtml.includes('🎵 Chưa có âm thanh'), 'Empty reader media label uses Vietnamese terminology');
 assert.ok(readerHtml.includes('📖 Đủ sách và âm thanh'), 'Library filter uses consistent reader terminology');
