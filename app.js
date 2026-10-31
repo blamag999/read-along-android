@@ -569,6 +569,8 @@ function updateSyncCountBadge() {
 // RESET VÀ NẠP MỐC CHUẨN XÁC THEO TỪNG CUỐN (FIX TRIỆT ĐỂ LỖI DỮ LIỆU LẠ)
 // =======================================================
 async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl = '') {
+  // Marker source order: attached book JSON, its public R2 JSON, local folder JSON, then localStorage.
+  // No GitHub/D1 online marker synchronization is used by the personal reader.
   // 1. Luôn xóa sạch toàn bộ mốc của cuốn trước đó khỏi RAM
   state.pageTimestamps = {};
   state.currentBookKey = bookKey;
@@ -605,7 +607,7 @@ async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl 
     } catch (e) {}
   }
 
-  // 2a. Ưu tiên JSON đồng bộ công khai trên R2; nếu GitHub có bản mới hơn thì dùng bản GitHub.
+  // 2a. Nạp file JSON marker đi kèm sách trên R2.
   if (remoteSyncUrl) {
     try {
       const response = await fetch(remoteSyncUrl, { cache: 'no-store' });
@@ -617,9 +619,6 @@ async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl 
           updatePageTimestampBadge();
           updateSyncCountBadge();
           updateSaveStatusBadge('☁️ Đã nạp mốc đọc');
-          if (await loadCloudSyncForBook()) {
-            updateSaveStatusBadge('☁️ Đã nạp mốc đọc mới nhất');
-          }
           return;
         }
       }
@@ -653,7 +652,6 @@ async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl 
     }
   }
 // 3. THỨ TỰ ƯU TIÊN 2: Kiểm tra trong bộ nhớ LocalStorage của trình duyệt
-  if (await loadCloudSyncForBook()) { showToast('Đã tải mốc thời gian.'); return; }
   const storageKey = `sync_${bookKey}`;
   try { const raw=localStorage.getItem(storageKey); if(raw){const parsed=JSON.parse(raw);if(parsed&&typeof parsed==='object'&&Object.keys(parsed).length){state.pageTimestamps=parsed;updatePageTimestampBadge();updateSyncCountBadge();updateSaveStatusBadge('💾 Đã nạp từ bộ nhớ máy');return;}} } catch(e) {}
 
