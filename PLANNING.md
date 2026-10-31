@@ -1,58 +1,15 @@
 # Read Along Android — PLANNING (công việc còn lại)
 
-## P1 — Cải tiến Admin Dashboard: giao diện gọn, hiện đại và thao tác an toàn
+## P1 — Nghiệm thu Admin Dashboard beta
 
-> Ưu tiên cao nhất tiếp theo. Chỉ triển khai trên Admin web ở nhánh beta sau khi người dùng xác nhận. Không sửa APK/reader/audio/native; không thay đổi D1 schema hoặc API nếu chưa chứng minh cần thiết.
+> Phần triển khai đã hoàn tất và được deploy trên Pages beta; còn chờ người dùng kiểm tra thao tác thực tế trước khi đóng hạng mục.
 
-### DA1 — Tái cấu trúc giao diện và điều hướng
-- [ ] Thiết kế lại theo mô hình KPI dashboard + các khu vực chức năng riêng; giảm khoảng trắng dư thừa, tăng mật độ thông tin hợp lý và hỗ trợ desktop/mobile.
-- [ ] Dùng thanh tab ngang theo thứ tự: **Thư viện → Tổng quan → Kiểm tra → Thống kê → Nhật ký**.
-- [ ] Sau đăng nhập mặc định mở tab **Thư viện**.
-- [ ] Tổng quan hiển thị KPI vận hành và biểu đồ xu hướng; Thống kê giữ phân tích chi tiết.
-- [ ] Giữ nguyên chức năng và luồng dữ liệu hiện có; tránh tải lặp dữ liệu khi chuyển tab.
-
-### DA2 — Light/Dark theme
-- [ ] Hỗ trợ Light và Dark; lần đầu theo `prefers-color-scheme`.
-- [ ] Cho phép chuyển theme thủ công và lưu lựa chọn trong localStorage; lựa chọn đã lưu được ưu tiên ở lần truy cập sau.
-- [ ] Khi chưa có lựa chọn thủ công, theo dõi thay đổi theme của hệ điều hành.
-- [ ] Đồng bộ màu cho mọi tab, bảng, biểu đồ, modal, input, trạng thái và thông báo.
-
-### DA3 — Thư viện: phản hồi tác vụ rõ ràng và an toàn
-- [ ] Đổi tên: hiển thị tên cũ/tên mới, trạng thái xử lý và kết quả thành công hoặc lỗi.
-- [ ] Upload một/nhiều file: hiển thị tiến trình tổng thể và trạng thái riêng từng file; phân biệt thành công, thất bại và lỗi.
-- [ ] Xóa file: bắt buộc xác nhận bằng hộp thoại trong giao diện, nêu tên file và cảnh báo không thể khôi phục; không xóa trước khi xác nhận.
-- [ ] Sau thao tác thành công, cập nhật danh sách; chống gửi lặp khi tác vụ đang chạy.
-- [ ] Lỗi phải nêu nguyên nhân API cung cấp và hướng xử lý nếu xác định được; không báo thành công giả.
-
-### DA4 — Status Bar thống nhất, đúng ngữ cảnh tab
-- [ ] Xây dựng cơ chế quản lý trạng thái tác vụ dùng chung, nhưng mỗi tab có vùng Status Bar riêng, thống nhất bố cục, màu sắc, biểu tượng và cách trình bày.
-- [ ] Đặt Status Bar ở vị trí dễ thấy ngay dưới tiêu đề tab và trước vùng thao tác chính.
-- [ ] Trạng thái upload/đổi tên/xóa thuộc Thư viện; trạng thái rà soát thuộc Kiểm tra; không hiển thị nhầm tác vụ ở tab khác.
-- [ ] Chuyển tab không làm gián đoạn tác vụ; quay lại tab khởi tạo phải xem được tiến trình/kết quả chính xác.
-- [ ] Nếu tác vụ hoàn tất khi người dùng ở tab khác, lưu kết quả tại tab gốc; header chỉ có thể có chỉ báo nhỏ nếu cần.
-- [ ] Chuẩn hóa trạng thái: sẵn sàng, đang xử lý, thành công, thành công một phần, thất bại và cần xác nhận. Không tự ẩn quá nhanh thông báo quan trọng.
-- [ ] Tránh thông báo trùng lặp hoặc chung chung khiến người dùng không biết tác vụ thuộc khu vực nào.
-
-### DA5 — Kiểm tra thư viện: chỉ nhận diện và đề xuất đổi tên
-- [ ] Tab Kiểm tra chỉ rà soát định dạng và gợi ý đổi tên; **không có chức năng chuyển đổi audio**.
-- [ ] Dùng ngưỡng tin cậy **95%** cho gợi ý đổi tên có thể áp dụng sau xác nhận. Mức 80% đến dưới 95% chỉ là gợi ý tham khảo; dưới 80% yêu cầu kiểm tra thủ công.
-- [ ] Độ tin cậy dựa chủ yếu vào magic bytes và cấu trúc/container/codec; phần mở rộng và MIME type chỉ là tín hiệu bổ sung. Không dựa riêng vào tên file hoặc MIME khai báo.
-- [ ] Chỉ đề xuất đổi phần mở rộng khi định dạng thực tế được nhận diện chắc chắn và phần mở rộng hiện tại không khớp; đổi tên không phải chuyển đổi định dạng.
-- [ ] Nếu định dạng thực tế không được APK hỗ trợ, chỉ cảnh báo cần thay file thủ công bằng định dạng được hỗ trợ; không chuyển đổi hoặc sửa nội dung file.
-- [ ] Không tự đổi tên hàng loạt ở giai đoạn đầu; mỗi đề xuất cần người dùng xác nhận.
-- [ ] Không nhận diện được định dạng hoặc cấu trúc file không hợp lệ: cảnh báo và yêu cầu kiểm tra thủ công, không suy đoán phần mở rộng.
-
-### DA6 — Bảo toàn chức năng, kiểm thử và triển khai
-- [ ] Trước khi sửa, lập bản đồ DOM ID, event listeners, data loading, API calls và luồng auth hiện tại.
-- [ ] Bảo toàn TOTP, session, cookie HttpOnly, logout/refresh, R2 browsing/upload/rename/move/delete, scan/publish, Analytics và audit log.
-- [ ] Không thay đổi APK, `app.js`, modules Android, D1 schema, R2 data hoặc API contract nếu không có lý do và phê duyệt riêng.
-- [ ] Bổ sung kiểm thử tab/theme/status bar và hồi quy upload/rename/delete/scan/publish/auth; lỗi API không được hiển thị thành số 0 hoặc thành công giả.
-- [ ] Kiểm tra chuyển tab khi tác vụ đang chạy và quay lại xem tiến trình/kết quả; kiểm tra upload nhiều file có cả thành công và thất bại.
-- [ ] Chạy full regression sau batch thay đổi có ý nghĩa; deploy Pages beta sau khi CI pass để người dùng kiểm tra.
-- [ ] Không build APK; không thay đổi `main` hoặc promote stable nếu chưa có xác nhận riêng.
-- [ ] Sau nghiệm thu, ghi bằng chứng vào ROADMAP và xóa mục hoàn thành khỏi PLANNING.
-
-
+- [ ] Đăng nhập OTP, xác nhận mặc định mở tab Thư viện; chuyển qua lại đủ 5 tab và xác nhận không mất trạng thái tác vụ.
+- [ ] Thử upload nhiều file gồm file hợp lệ và file lỗi; xác nhận tiến trình, kết quả riêng từng file và tổng kết thành công/thất bại.
+- [ ] Thử đổi tên và xóa một file thử nghiệm; xác nhận thông báo đang chạy/kết quả và hộp thoại xóa hiển thị đúng tên file.
+- [ ] Chạy rà soát; xác nhận chỉ gợi ý đổi tên khi độ tương đồng tên file >=95% (ngoại lệ là quy tắc hậu tố audio-part xác định được), còn WMA/định dạng không hỗ trợ chỉ cảnh báo thay file thủ công.
+- [ ] Kiểm tra Light/Dark, chế độ theo hệ thống, màn hình desktop/mobile, Tổng quan, Thống kê và Nhật ký.
+- [ ] Sau khi người dùng xác nhận đạt, ghi nghiệm thu cuối vào ROADMAP và xóa mục P1 này khỏi PLANNING.
 
 > **Quy tắc nhánh hiện hành (2026-10-31):** chỉ còn hai nhánh dài hạn `beta` (phát triển/tích hợp) và `main` (stable). Làm việc trực tiếp trên beta; chỉ promote qua PR beta → main khi người dùng xác nhận. Không dùng testing. Xem README mục 3. Việc xóa branch testing và bật branch protection cho main đang chờ thao tác quản trị GitHub ngoài khả năng connector hiện tại; không được coi là đã hoàn tất.
 
