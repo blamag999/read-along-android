@@ -75,12 +75,15 @@ Nếu thật sự cần ngoại lệ về nhánh, phải giải thích lý do k�
 
 Read Along là ứng dụng Capacitor/WebView. HTML/CSS/JavaScript được đóng gói trong APK cần build APK mới khi thay đổi, trừ phần đã được thiết kế rõ ràng để lấy dữ liệu/cấu hình từ xa. Dịch vụ Admin và dữ liệu độc lập không tự động đòi hỏi build APK.
 
-### Chỉ build APK khi
+### Chính sách build một lần ở bước chốt
 
-- Thay đổi JavaScript/HTML/CSS runtime được đóng gói hoặc UI interaction mới.
-- Thay đổi thuật toán PDF/audio/marker, vòng đời Android/WebView hoặc khôi phục phiên đọc.
-- Thêm/sửa native plugin, bridge, permission, FileProvider hoặc OTA installer.
-- Sửa lỗi lõi nghiêm trọng, bảo mật hoặc tương thích nền tảng.
+- Trong suốt quá trình phát triển trên `beta`, mỗi commit chỉ chạy CI/test phù hợp; **không build APK sau từng commit**.
+- Khi toàn bộ thay đổi APK của một đợt đã hoàn tất, test pass và tài liệu đã cập nhật, commit cuối cùng phải có chuỗi `[build-apk]` trong commit message. Push commit này lên `beta` sẽ tự kích hoạt đúng một lần build APK beta.
+- Các push beta thông thường không có dấu mốc trên sẽ không chạy job build APK.
+- Không tạo commit `[build-apk]` khi còn dự định sửa runtime; nếu build cuối thất bại thì sửa lỗi trước, sau đó tạo một commit chốt mới có dấu mốc để thử lại.
+- Build APK chỉ cần thiết khi thay đổi JavaScript/HTML/CSS runtime đóng gói, UI interaction, PDF/audio/marker runtime, Android/WebView lifecycle, native plugin/bridge/permission/FileProvider hoặc OTA installer.
+- Sửa tài liệu, Admin/backend, schema, test độc lập, catalog/media hoặc Remote Config values không tự yêu cầu build APK.
+- Workflow dispatch thủ công được giữ lại cho trường hợp phát hành stable có chủ đích từ `main` hoặc thao tác khẩn cấp; không dùng làm bước thường lệ cho beta.
 
 ### Không build APK chỉ vì
 
