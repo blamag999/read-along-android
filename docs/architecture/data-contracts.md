@@ -53,8 +53,10 @@ Keep the current `books.json` contract stable. Metadata-only additions must be o
 ### Markers
 Keep current JSON marker shape compatible with `modules/page-sync.js`. Any schema extension must be additive and have a fallback for existing marker files.
 
-### Remote Config (proposed; not deployed)
-- Read-only public endpoint or static JSON on the existing Read Along origin/R2.
+### Remote Config (initial static document added; runtime client not deployed)
+- Static JSON file: `admin/public/remote-config.json`.
+- Expected Pages URL: `https://read-along-admin.pages.dev/remote-config.json` (Pages root `admin`, output `public`; verify after the next successful production deployment).
+- Read-only public document; it contains no secrets or user data. Static Pages hosting avoids creating another Worker/API.
 - Versioned JSON only; no executable content.
 - Whitelisted feature flags and reader defaults only.
 - Validate schema/version/expiry; cache last-known-good; fallback to packaged defaults.
@@ -77,7 +79,15 @@ Keep current JSON marker shape compatible with `modules/page-sync.js`. Any schem
 - Reader playback, PDF rendering and page/audio sync must never wait on config/analytics endpoints.
 - Document every endpoint, payload schema, authentication model, retention and caller in this file as implementation proceeds.
 
-## 6. Phase 1 status
+## 6. Remote Config bootstrap status
+
+- [x] Added an initial versioned static config document with empty feature/default maps and no announcements; it changes no app behavior.
+- [x] Added regression checks for the document's required version fields and empty allowlisted sections.
+- [ ] Verify the public URL after Pages deployment.
+- [ ] Add a protected Admin editing workflow only if generic file management is not sufficient; do not add another API by default.
+- [ ] Integrate an APK client only after backend/schema/cache/fallback tests and one grouped APK update.
+
+## 7. Phase 1 status
 
 - [x] Enumerate current app-facing catalog, media, marker, usage, telemetry, diagnostics and OTA sources.
 - [x] Identify existing Admin API route families and trust boundaries.
@@ -86,4 +96,4 @@ Keep current JSON marker shape compatible with `modules/page-sync.js`. Any schem
 - [ ] Define machine-readable JSON schemas and regression tests for catalog/marker/config/analytics.
 - [ ] Review endpoint overlap and choose any consolidation only after compatibility analysis.
 
-No runtime code was changed as part of this inventory.
+No APK runtime code was changed as part of this inventory or the initial static config bootstrap.
