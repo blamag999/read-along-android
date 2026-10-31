@@ -30,3 +30,5 @@ assert.ok(html.includes('id="loginHomeBtn"'), "OTP screen must provide a direct 
 assert.ok(script.includes('$("homePanel").append($("analyticsPanel"))'), "Analytics dashboard must be the public landing page");
 assert.ok(script.includes('$("loginHomeBtn").addEventListener("click"'), "OTP screen must navigate back to Dashboard");
 assert.ok(!html.includes('id="showAnalyticsBtn"'), "Analytics must not be hidden behind admin navigation");
+
+// [test] Public dashboard landing page and OTP return navigation batch.
