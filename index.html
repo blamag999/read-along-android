@@ -56,6 +56,7 @@
           <span class="menu-option-icon">ⓘ</span><span>Phiên bản đang cài</span><strong id="installedAppVersion">Đang tải…</strong>
         </div>
         <button id="menuDiagnostics" class="read-menu-option" type="button"><span class="menu-option-icon">🛡️</span><span>Chẩn đoán / Báo lỗi</span></button>
+        <button id="menuAnalytics" class="read-menu-option" type="button"><span class="menu-option-icon">📊</span><span>Thống kê sử dụng</span><span class="menu-option-state">Tùy chọn</span></button>
         <button id="menuCheckUpdates" class="read-menu-option hidden" type="button"><span class="menu-option-icon" aria-hidden="true">⬆️</span><span>Kiểm tra cập nhật</span></button>
       </div>
       <button id="btnReloadMarkers" class="icon-btn apk-icon-button hidden" type="button" title="Tải mốc thời gian mới nhất" aria-label="Tải mốc thời gian mới nhất">⟳</button>
@@ -341,6 +342,25 @@
     </div>
   </div>
 
+  <!-- MODAL THỐNG KÊ ẨN DANH: consent độc lập với diagnostics -->
+  <div id="analyticsModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="analyticsTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="analyticsTitle">📊 Thống kê thời lượng đọc/nghe</h3>
+        <button id="btnCloseAnalytics" class="close-btn" type="button" aria-label="Đóng">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">Tùy chọn này mặc định tắt. Nếu bật, ứng dụng chỉ gửi thời lượng đọc khi PDF đang mở và ứng dụng ở foreground; thời lượng nghe chỉ tính khi audio đang phát và ứng dụng ở foreground.</p>
+        <p class="modal-desc">Dữ liệu gửi đi chỉ gồm mã ngẫu nhiên, phiên bản ứng dụng, nền tảng và số giây đọc/nghe. Không gửi tên sách, tên tệp, đường dẫn, URL, nội dung tài liệu hoặc âm thanh. Dữ liệu không được lưu hàng đợi khi offline; gửi lỗi thì khoảng thời gian đó bị bỏ qua.</p>
+        <p id="analyticsStatus" class="modal-desc diagnostics-action-status" role="status">Thống kê đang tắt. Chỉ bật khi bạn chủ động đồng ý.</p>
+        <label class="diagnostics-consent">
+          <input id="chkAnalyticsConsent" type="checkbox">
+          <span>Tôi đồng ý gửi thống kê thời lượng đọc và nghe ẩn danh. Tôi có thể tắt bất cứ lúc nào.</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST THÔNG BÁO -->
   <div id="toastMessage" class="toast-message hidden"></div>
 
@@ -352,6 +372,7 @@
   <script src="modules/playlist-layout.js"></script>
   <script src="modules/catalog-playlist.js"></script>
   <script src="app.js"></script>
+  <script src="modules/analytics-collector.js"></script>
   <script src="modules/remote-config.js"></script>
   <script src="modules/remote-config-bootstrap.js"></script>
   <script src="modules/remote-sync.js"></script>
