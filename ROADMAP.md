@@ -286,3 +286,15 @@ Khi một công việc trong PLANNING hoàn tất:
 - Run của commit smoke test trước `0b013fa` không được tạo; không dùng làm bằng chứng. Chờ run mới trên commit này.
 - Không thay đổi runtime/APK hoặc nhánh khác. README giữ nguyên và vẫn đồng nhất ba nhánh.
 
+
+### 2026-10-31 — Sửa accepted count của Analytics ingest sau production smoke test
+
+- Production smoke test run [#41166904866](https://github.com/blamag999/read-along-android/actions/runs/41166904866) đã chạy qua `npm test`, Pages Functions syntax và isolation; bước HTTP ingest phát hiện API trả `accepted=4, duplicates=-3` cho một event hợp lệ.
+- Root cause: D1 `meta.changes` tính cả các thay đổi phát sinh từ trigger daily aggregate (event + daily row + daily session + daily update), không chỉ số event được insert trực tiếp.
+- Đã kiểm tra D1 production: chỉ có đúng một event smoke test, duration 7s reading + 11s listening, một session/day aggregate. Đã xóa event, session row và daily row thử nghiệm; truy vấn xác nhận event_rows=0, session_rows=0, daily_rows=0. Không còn dữ liệu thử nghiệm.
+- Sửa route ingest: sau mỗi `INSERT OR IGNORE`, chạy `SELECT changes() AS inserted`; SQLite `changes()` đếm thay đổi trực tiếp của statement và không cộng side effects từ trigger. API accepted count đọc kết quả select tương ứng, duplicates = batch length - accepted.
+- Thêm API-boundary regression assertions để giữ semantics này.
+- Commits: route fix `426ffbe4223d072459bf0996c03e0bc54322078c`; regression assertion `c841083c99d69429b543ae6de9ba55d6fcda69c9`.
+- **Chưa nghiệm thu:** cần CI mới pass, Pages production deploy route fix, sau đó production HTTP smoke test phải chứng minh accepted=1/duplicates=0 ở lần đầu và accepted=0/duplicates=1 khi replay; cuối cùng xác minh và dọn dữ liệu D1.
+- Không thay đổi APK/client, không build APK, không thay đổi main/testing. README không đổi, vẫn đồng nhất ba nhánh.
+
