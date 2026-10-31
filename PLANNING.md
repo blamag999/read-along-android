@@ -13,38 +13,34 @@
 - Không tạo API/Worker mới nếu hệ thống hiện có đáp ứng; không gộp endpoint khác trách nhiệm.
 - Không đánh dấu hoàn thành nếu thiếu bằng chứng CI, endpoint, deploy hoặc thiết bị tương ứng.
 
-## P0 — Hoàn tất Remote Config bootstrap và Data Client
+## P0 — Tinh gọn ranh giới APK Core và backend
 
-> Người dùng xác nhận nội dung PDF/audio phải lấy từ cloud; không đặt mục tiêu đọc/nghe offline. Data Client là cấu hình phụ trợ, không phải nguồn nội dung sách. Chỉ cần bảo đảm lỗi Remote Config không chặn reader/audio; kiểm thử Android TV được quản lý riêng ở P2.
+> Quyết định kiến trúc ngày 2026-10-31: APK chỉ tập trung vào tải nội dung từ cloud và trải nghiệm đọc/nghe. Không xây dựng offline PDF/audio. PDF/audio vẫn phải lấy từ cloud; timestamp/marker (nếu có) dùng để đồng bộ vị trí đọc theo trang. Không duy trì Remote Config vì hiện không có kế hoạch điều khiển tính năng/reader từ xa. Admin, Dashboard, Analytics backend, catalog, scan và vận hành phải phát triển độc lập, không kéo theo build APK nếu không thay đổi mã runtime APK.
 
-### P0.1 Xác minh static config đang được publish
+### P0.1 Loại bỏ Remote Config không còn nhu cầu
 
-- [x] Người dùng mở endpoint và gửi lại JSON body trùng khớp file `admin/public/remote-config.json`; ghi nhận xác nhận thủ công ngày 2026-10-31. HTTP status và Content-Type vẫn chưa được kiểm tra độc lập.
-- [x] Đối chiếu Pages project/root/output/production branch và deployment commit; cấu hình Pages hiện tại được xác minh đúng repository/branch/root/output, build gate đã pass.
-- [x] GitHub Actions endpoint smoke test xác minh trực tiếp HTTP 200, `Content-Type: application/json`, schemaVersion 1 và configVersion 1 trên production endpoint.
-- [x] Ghi URL, thời điểm và giới hạn bằng chứng vào ROADMAP.
+- [ ] Gỡ modules/remote-config.js và modules/remote-config-bootstrap.js khỏi app shell/đóng gói APK; xóa caller, global state và cache key liên quan sau khi rà soát toàn bộ references.
+- [ ] Gỡ contract/schema, validator, test, static JSON và build/deploy gate chỉ phục vụ Remote Config; kiểm tra Cloudflare Pages build command trước khi bỏ validator để không làm hỏng deploy Admin.
+- [ ] Xóa URL/hostname Remote Config khỏi docs, workflow, smoke tests và cấu hình repo nếu không còn caller nào.
+- [ ] Không xóa hoặc thay đổi các dịch vụ độc lập đang được dùng (Admin, catalog/media, marker storage, Analytics/Dashboard, Diagnostics) chỉ vì bỏ Remote Config.
+- [ ] Chạy regression [test]; nếu thay đổi app runtime/shell thì gom cùng batch APK Core và chỉ tạo một commit [build-apk] sau khi review/test pass.
+- [ ] Không yêu cầu nghiệm thu offline PDF/audio. Chỉ xác nhận việc bỏ Remote Config không ảnh hưởng startup, tải PDF, tải/phát audio, marker/page sync và OTA.
 
-### P0.2 Chốt contract và kiểm tra config phía publish
+### P0.2 Chốt hợp đồng dữ liệu tối thiểu của APK Core
 
-- [x] Chốt contract v1 giữa `schemas/remote-config.schema.json` và `admin/public/remote-config.json`; bắt buộc schemaVersion, configVersion, issuedAt, features, readerDefaults và announcements. Chi tiết/bằng chứng ở ROADMAP.
-- [x] Thêm preflight validator `admin/scripts/validate-remote-config.js` chạy trong `npm test`/CI; từ chối field lạ, kiểu dữ liệu sai, feature/default ngoài whitelist, announcement sai/trùng ID, ngày ISO không hợp lệ và config hết hạn khi được kiểm tra theo thời điểm runtime. Negative tests đã bổ sung.
-- [x] Nghiệm thu deployment sau khi cấu hình build command: deployment `201aeb20` success, snapshot xác nhận `node scripts/validate-remote-config.js` đã chạy trước publish. Bằng chứng ở ROADMAP.
-- [x] Cấu hình Cloudflare Pages project hiện tại để chạy validator trong build step trước khi publish; build gate đã được nghiệm thu thực tế.
-- [x] Quy định xử lý schemaVersion, configVersion, issuedAt, expiresAt, field lạ, kiểu dữ liệu sai và config hết hạn trong validator. Mỗi lần sửa config đã phát hành phải tăng configVersion thủ công; validator không tự tăng.
-- [x] Giữ config hiện tại rỗng/không thay đổi hành vi app cho đến khi từng key được whitelist và có consumer đã kiểm thử.
+- [ ] Rà soát data path thực tế của PDF, audio, catalog và marker; lập danh sách endpoint/caller/contract đang được APK sử dụng.
+- [ ] Giữ nguyên nguồn PDF/audio trên cloud; app chỉ tải/chạy nội dung khi có kết nối và dữ liệu hợp lệ.
+- [ ] Timestamp/marker nếu có phải liên kết đúng trang và audio segment; không tự suy diễn marker khi thiếu hoặc sai dữ liệu.
+- [ ] Tách lỗi tải config/phân tích/quản trị khỏi lỗi tải nội dung; backend phụ trợ lỗi không được làm hỏng reader/audio.
+- [ ] Không thêm API, cache/offline content layer, Remote Config hay cơ chế điều khiển từ xa nếu chưa có nhu cầu được người dùng xác nhận.
 
-### P0.3 Thiết kế Data Client tối thiểu
+### P0.3 Nguyên tắc phân loại thay đổi để tránh build APK không cần thiết
 
-- [x] Chốt boundary module độc lập `modules/remote-config.js`; chưa refactor transport API khác.
-- [x] Nạp client qua `modules/remote-config-bootstrap.js` sau `app.js`; tải cấu hình bất đồng bộ, không chặn reader startup và chưa áp dụng setting/feature flag vào UI hoặc reader.
-- [x] URL HTTPS và hostname cố định `read-along-admin.pages.dev`; không nhận URL/hostname từ payload.
-- [x] Có timeout 4 giây, tối đa 1 retry, validate schema v1, cache bản hợp lệ gần nhất và fallback defaults; cache hết hạn/hỏng bị bỏ qua.
-- [x] Không thực thi JavaScript/HTML và không có native command/permission trong contract.
-- [x] Test JSON lỗi, field thiếu/thừa, schemaVersion, config hết hạn, configVersion rollback, timeout, HTTP error, sai Content-Type, cache hợp lệ/hỏng, retry giới hạn, response quá lớn và offline lần đầu. HTTP status/Content-Type của production endpoint vẫn cần xác minh độc lập.
-- [x] Build beta v1.3.5 đã chạy trên HEAD `a30c6a011456befc04e5af83a51694e5e19eaa1d`; workflow run 41162360209 success, artifact đã upload, bước build signed APK và verify signature/SHA-256 đều success; GitHub Release beta đã tạo. Bằng chứng ở ROADMAP.
-- [x] Người dùng xác nhận đã cài/kiểm thử APK trên điện thoại.
-- [ ] Nghiệm thu Data Client theo đúng phạm vi: khi online tải được config hợp lệ từ production (source=network); khi endpoint lỗi/timeout thì fallback cache/default và tuyệt đối không chặn startup/reader/audio. Không yêu cầu PDF/audio hoạt động offline vì nội dung được lấy từ cloud.
-- [x] Điều chỉnh workflow: các push beta thông thường không build APK; chỉ commit chốt có `[build-apk]` mới tự build một lần. Manual dispatch vẫn giữ cho stable/ngoại lệ.
+- [ ] Backend/Admin/Dashboard/Analytics API, D1, catalog scan/publish, báo cáo và docs: kiểm thử/deploy độc lập; không build APK nếu không đổi file runtime APK hoặc contract mà APK tiêu thụ.
+- [ ] Thay đổi PDF/audio/marker contract chỉ cần build APK khi thay đổi đó yêu cầu sửa caller/runtime trong APK; nếu backend vẫn giữ tương thích ngược thì deploy backend riêng.
+- [ ] Thay đổi HTML/CSS/JS trong www/, modules/ được đóng gói, Service Worker hoặc Android native: gom theo batch; full regression ở commit chốt và chỉ một APK beta build.
+- [ ] Analytics collector là adapter phía APK, không phải APK Core. Giữ backend/Dashboard độc lập; chỉ sửa collector/consent UI khi có yêu cầu đo lường cụ thể và gom thành một batch APK riêng, không để công việc Dashboard/backend kéo theo build.
+- [ ] Không đưa nội dung thông báo/theme/reader defaults từ server vào APK nếu chưa có use case cụ thể; không tạo hạng mục UI cấu hình từ xa mặc định.
 
 ## P1 — Chốt marker conflict policy và migration an toàn
 
