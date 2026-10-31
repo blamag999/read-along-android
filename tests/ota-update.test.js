@@ -22,7 +22,7 @@ assert.ok(router.includes('manifest.sha256'), 'OTA manifest must require a SHA-2
 assert.ok(router.includes('manifest.size'), 'OTA manifest must require and verify the APK size');
 assert.ok(router.includes('manifest.channel !== channel'), 'OTA manifest must match the requested channel');
 assert.ok(router.includes('apk.customMetadata?.sha256 !== manifest.sha256'), 'R2 object checksum metadata must match the manifest');
-assert.ok(router.includes('/^\\\\d{1,3}\\\\.\\\\d{1,3}\\\\.\\\\d{1,4}$/'), 'OTA version must be strictly validated');
+assert.ok(router.includes('function validOtaVersion(value)') && router.includes('validOtaVersion(manifest.version)'), 'OTA manifest version must be validated before serving');
 assert.ok(router.includes('requestedVersion !== result.manifest.version'), 'Download route must reject stale or arbitrary version requests');
 assert.ok(!router.includes('manifest.downloadUrl'), 'Backend must not redirect clients to a storage-provider URL');
 
