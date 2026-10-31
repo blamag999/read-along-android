@@ -7,11 +7,11 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover code/documentation checkpoint: `50b7c4961520a54e84c8400687e00bd7edad1076` (implementation/test checkpoint; handover documentation follows).
-- Last reviewed functional HEAD on beta: `e679600bd3e7d36e9b98443991eeedf128f137bc`
-- Recovery status: `RECONCILED — beta HEAD đã đối chiếu; kế hoạch local-open/menu đã ghi nhận; chưa triển khai`
+- Last formal handover code/documentation checkpoint: `d13482e6ede435125600328ce05244231af8a14e` (ROADMAP handover record; source review baseline remains `d6faeb3b1667bebf5130a63851c6090785a4945e`).
+- Last reviewed functional/source HEAD on beta: `d6faeb3b1667bebf5130a63851c6090785a4945e`
+- Recovery status: `RECONCILED — 6 commit sau mốc handover cũ đã đối chiếu; cập nhật kế hoạch APK Core/Reader Menu; runtime chưa triển khai`
 - Recovery reviewed on: 2026-10-31
-- Latest recovery checkpoint: beta HEAD 50b7c4961520a54e84c8400687e00bd7edad1076 được đối chiếu; kế hoạch bỏ mở sách cục bộ và tinh gọn Menu được duyệt ngày 2026-10-31. Chỉ cập nhật tài liệu; không có runtime changes.
+- Latest recovery checkpoint: beta HEAD d6faeb3b1667bebf5130a63851c6090785a4945e được đối chiếu; 6 commit kể từ 50b7c496 chỉ thay đổi tài liệu. Phạm vi tinh gọn Reader/Menu và ranh giới APK Core đã được ghi nhận; chưa có runtime changes.
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
 
 ## Phát hiện sau mốc bàn giao trước
@@ -300,3 +300,13 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Header mục tiêu: Thư viện sách và Menu; Android Back đóng sách; bỏ entry point chọn file và UI cũ không còn cần; giữ điều khiển reader, checkpoint “Vị trí đọc gần đây” / “Xem tiếp” và OTA.
 - Kế hoạch chi tiết được thêm vào PLANNING.md; quyết định và ranh giới dữ liệu được ghi vào ROADMAP.md.
 - Không sửa source/runtime, test, workflow, OTA, R2/Cloudflare hoặc main. Không chạy CI/build APK trong bước lập kế hoạch.
+
+
+## Formal handover — Reader/Menu plan and APK Core boundary (2026-10-31)
+
+- Đã so sánh `50b7c4961520a54e84c8400687e00bd7edad1076...beta`: 6 commits ahead, 0 behind; các file thay đổi chỉ gồm PLANNING.md, ROADMAP.md và RECOVERY.md.
+- Reviewed beta source/documentation baseline: `d6faeb3b1667bebf5130a63851c6090785a4945e`. PLANNING commits: `580fc9314baf36d0ecd6f91a0d7553f4df6d56ce`, `d6faeb3b1667bebf5130a63851c6090785a4945e`.
+- ROADMAP handover entry committed at `d13482e6ede435125600328ce05244231af8a14e`.
+- Scope is approved for planning, not implementation. No runtime source changes, tests, CI, APK build, OTA publication, deployment or device acceptance were performed for this handover.
+- `main` was not modified. README contents on beta and main are not byte-identical at this review; no README change was made in this handover. Existing README synchronization note references PR #40.
+- Next session: verify current branch heads and docs again; audit local-open and marker-write/sync callers before code removal; then implement only on beta under the approved checklist.
