@@ -102,4 +102,12 @@ assert.ok(appSource.includes("Trình duyệt chưa cho phép phát. Hãy nhấn 
 assert.ok(appSource.includes("Đến mốc trang kế tiếp, âm thanh sẽ dừng chờ bạn lật trang"), 'Page-turn mode guidance uses Vietnamese media terminology');
 assert.ok(appSource.includes("Không tải được sách trực tuyến. Hãy kiểm tra kết nối hoặc chọn tệp khác."), 'Remote book errors do not expose exception details');
 
+
+const readerHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+assert.ok(readerHtml.includes('🎵 Chọn âm thanh'), 'Reader file picker uses Vietnamese media terminology');
+assert.ok(readerHtml.includes('📖 Chưa có sách'), 'Empty reader document label uses book terminology');
+assert.ok(readerHtml.includes('🎵 Chưa có âm thanh'), 'Empty reader media label uses Vietnamese terminology');
+assert.ok(readerHtml.includes('📖 Đủ sách và âm thanh'), 'Library filter uses consistent reader terminology');
+assert.ok(appSource.includes("label.textContent = 'Phần âm thanh:';"), 'Audio part label uses Vietnamese terminology');
+
 console.log('Read Along data contract schema tests passed.');
