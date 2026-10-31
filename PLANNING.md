@@ -24,9 +24,9 @@
 - [x] Cloudflare Pages deployment hoàn tất: [deployment c3dbf307](https://c3dbf307.read-along-admin.pages.dev), production branch `beta`, build và deploy đều success.
 - [x] Cải tiến Admin: nút **Chuyển tệp ngoài thư mục…** cho phép chọn bất kỳ thư mục R2 hiện có (kể cả thư mục con) hoặc tạo thư mục cấp gốc mới; tên đích không còn hardcode `DISNEY`. Giữ nguyên `books.json`, kiểm tra collision và copy → verify size → delete source.
 - [x] Regression/isolation CI cho bộ chọn thư mục mới pass tại [run 41227211811](https://github.com/blamag999/read-along-android/actions/runs/41227211811); Pages deployment [daa09798](https://daa09798.read-along-admin.pages.dev) build/deploy success.
-- [ ] Đăng nhập Admin, ở thư mục gốc chạy **Chuyển tệp ngoài thư mục…**; chọn thư mục đích hoặc tạo mới, kiểm tra tiến độ và lỗi. Dự kiến 179 tệp (~1.65 GB); `books.json` và 24 object của `ONE STORY A DAY LEVEL 2 FULL` phải giữ nguyên.
-- [ ] Sau khi chuyển thành công, xác nhận bản xem trước catalog không loại nhóm nào; dự kiến 84 sách trong `DISNEY` (82 sách đang có + 2 cặp chưa có catalog) và 12 sách trong `ONE STORY A DAY LEVEL 2 FULL`.
-- [ ] Xuất bản `books.json`; xác minh tất cả URL PDF/audio/JSON tồn tại, tổng số sách và phân nhóm đúng; đồng bộ seed `admin/public/books.json` sau khi manifest live đã được kiểm tra.
+- [x] Read-only inventory recheck hiện ghi nhận 179 object đã nằm trong `DISNEY/` (84 PDF, 87 MP3, 8 JSON; 1,647,458,551 bytes), thư mục gốc chỉ còn `books.json`, và `ONE STORY A DAY LEVEL 2 FULL/` vẫn có 24 object. Di chuyển dữ liệu đã được phản ánh trong R2.
+- [ ] Xác minh nội dung live `books.json` sau lần cập nhật gần đây: object root hiện 38,453 bytes (ETag đã đổi so với inventory ban đầu 34,440 bytes); connector không đọc được body public của object nên chưa xác nhận được số sách và trường `folder`. Dùng Admin preview hoặc kiểm tra trên app để xác nhận 84 sách DISNEY và 12 sách One Story.
+- [ ] Nếu preview/live catalog chưa phản ánh đúng folder, chạy lại preview/publish từ Admin; xác minh tất cả URL PDF/audio/JSON tồn tại, tổng số sách và phân nhóm đúng; đồng bộ seed `admin/public/books.json` sau khi manifest live đã được kiểm tra.
 - [ ] Smoke test app: tải catalog, chuyển qua lại hai folder, mở PDF/audio, xác nhận JSON mốc thời gian vẫn khớp; chạy regression cuối batch và build một APK beta để kiểm thử thiết bị.
 - [ ] Ghi nhật ký bàn giao cuối mốc sau khi xác minh dữ liệu R2, catalog live, CI, Pages deploy và APK/device test.
 
