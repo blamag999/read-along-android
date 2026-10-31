@@ -524,3 +524,10 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - [x] Keep R2 PDF/audio URL loading, remote catalog, session/checkpoint and marker read-only paths.
 - [ ] Run full regression and fix any missing DOM or source contract issues.
 - [ ] Audit and remove dead CSS only after selector usage review.
+
+### Auto page-turn policy correction — 2026-10-31
+
+- Removed the obsolete `Tự lật trang` menu toggle and all DOM/event wiring; automatic page-turn remains built-in and always on.
+- Legacy session values `pageTurnMode: off` are normalized to `next` during both checkpoint and session restoration.
+- Regression assertions added in `[test]` commit `8dae0179bc64c98bd91ddc7e3b5635d70dc540a0`.
+- CI status is still unconfirmed; do not build APK until the test result is available.
