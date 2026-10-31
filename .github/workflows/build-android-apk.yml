@@ -16,6 +16,7 @@ on:
       - "www/**"
       - "modules/**"
       - "services/**"
+      - "scripts/**"
       - "native/**"
       - "android/**"
       - "capacitor.config.*"
