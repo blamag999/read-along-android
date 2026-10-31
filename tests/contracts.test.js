@@ -97,10 +97,17 @@ const readerHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'ut
 assert.ok(readerHtml.includes('↶ Vị trí đã xem'), 'Reading checkpoint menu uses the approved title');
 assert.ok(readerHtml.includes('>Xem tiếp</button>'), 'Reading checkpoint restore action uses the approved concise label');
 assert.ok(!readerHtml.includes('Mốc đọc gần đây') && !readerHtml.includes('>Khôi phục vị trí</button>'), 'Previous reading checkpoint labels stay removed');
-assert.ok(readerHtml.includes('📖 Chưa có sách'), 'Empty reader document label uses book terminology');
-assert.ok(readerHtml.includes('🎵 Chưa có âm thanh'), 'Empty reader media label uses Vietnamese terminology');
+assert.ok(!readerHtml.includes('reader-source-status') && !readerHtml.includes('pdfFileName') && !readerHtml.includes('audioFileName'), 'PDF/audio filename status UI is absent from the reader');
+assert.ok(!readerHtml.includes('file-status-pill'), 'Obsolete filename status pill classes are absent from HTML');
+assert.ok(!appSource.includes('dom.pdfFileName') && !appSource.includes('dom.audioFileName'), 'App runtime has no DOM wiring for removed filename labels');
+assert.ok(appSource.includes("state.pdfFileName = fileName || url.split('/').pop() || 'book.pdf';"), 'PDF filename state remains available for reader identity and session logic');
+assert.ok(appSource.includes("state.audioFileName = name || url.split('/').pop() || 'audio';"), 'Audio filename state remains available for audio/session logic');
+const readerStyles = fs.readFileSync(path.join(__dirname, '..', 'styles.css'), 'utf8');
+assert.ok(!readerStyles.includes('.file-status-pill'), 'Obsolete filename status pill styles are removed');
+
+
 assert.ok(readerHtml.includes('📖 Đủ sách và âm thanh'), 'Library filter uses consistent reader terminology');
 assert.ok(appSource.includes("label.textContent = 'Phần âm thanh:';"), 'Audio part label uses Vietnamese terminology');
-assert.ok(appSource.includes("dom.audioFileName.textContent = '🎵 Chưa có âm thanh';"), 'Dynamic empty media labels use Vietnamese terminology');
-assert.ok(appSource.includes("dom.pdfFileName.textContent = '📖 Chưa có sách';"), 'Dynamic empty book labels use book terminology');
+
+
 console.log('Read Along data contract schema tests passed.');
