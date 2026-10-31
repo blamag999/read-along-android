@@ -611,6 +611,71 @@ async function handle(request, env) {
   if (auth.response) return auth.response;
 
 
+  if (route === "catalog/preview" && method === "GET") {
+    assertOrigin(request);
+    // Build from the current R2 inventory; never use the checked-in seed manifest.
+    const scan = await scanLibrary(env.READALONG, "", env.DB);
+    const keys = (await listAllKeys(env.READALONG, "")).filter(key => key !== "books.json" && !key.endsWith("/"));
+    const normalize = value => String(value || "").normalize("NFKC").replace(/\\.[^/.]+$/, "")
+      .replace(/[_-]+/g, " ").replace(/[’']/g, "").replace(/\\bread\\s+along\\b/gi, " ")
+      .replace(/\\bbook\\b/gi, " ").replace(/[^\\p{L}\\p{N}]+/gu, " ")
+      .replace(/\\s+/g, " ").trim().toLocaleLowerCase("vi");
+    const badKeys = new Set(scan.findings.filter(item => item.severity === "error").map(item => item.key));
+    const groups = new Map();
+    for (const key of keys) {
+      const ext = extensionOf(key);
+      if (ext !== ".pdf" && ext !== ".json" && !AUDIO_EXTENSIONS.has(ext)) continue;
+      const file = key.split("/").pop();
+      const stem = file.replace(/\\.[^.]+$/, "");
+      const dir = key.includes("/") ? key.slice(0, key.lastIndexOf("/") + 1) : "";
+      const partMatch = ext !== ".pdf" && ext !== ".json" ? stem.match(/(?:_P(\\d+)|[_ -](?:side|part|pt|disc)[ _.-]*(\\d+))$/i) : null;
+      const base = partMatch ? stem.slice(0, partMatch.index) : stem;
+      const normalized = normalize(ext === ".json" ? base.replace(/[_-]sync$/i, "") : base);
+      if (!normalized) continue;
+      const groupKey = dir + "|" + normalized;
+      if (!groups.has(groupKey)) groups.set(groupKey, { dir, normalized, pdf: [], audios: [], sync: [] });
+      const group = groups.get(groupKey);
+      const item = { key, stem, ext, part: partMatch ? Number(partMatch[1] || partMatch[2]) : null, partStyle: partMatch ? (partMatch[1] ? "P" : "legacy") : null };
+      if (ext === ".pdf") group.pdf.push(item);
+      else if (ext === ".json") group.sync.push(item);
+      else group.audios.push(item);
+    }
+    const books = [], excluded = [];
+    const encodeKey = key => key.split("/").map(encodeURIComponent).join("/");
+    for (const group of groups.values()) {
+      const label = group.pdf[0]?.stem || group.audios[0]?.stem || group.sync[0]?.stem || group.normalized;
+      const reasons = [];
+      if (group.pdf.length !== 1) reasons.push(group.pdf.length ? "Có nhiều PDF trùng tên" : "Thiếu PDF");
+      if (!group.audios.length) reasons.push("Thiếu audio");
+      if (group.sync.length > 1) reasons.push("Có nhiều JSON đồng bộ trùng tên");
+      const selected = [...group.pdf, ...group.audios, ...group.sync];
+      const invalid = selected.filter(item => badKeys.has(item.key));
+      if (invalid.length) reasons.push("Có tệp bị đánh dấu lỗi khi quét: " + invalid.map(item => item.key).join(", "));
+      if (reasons.length) {
+        excluded.push({ title: label, files: selected.map(item => item.key), reasons });
+        continue;
+      }
+      group.audios.sort((a,b) => {
+        if (a.part !== null && b.part !== null) return a.part-b.part || a.key.localeCompare(b.key);
+        if (a.part !== null) return -1;
+        if (b.part !== null) return 1;
+        return a.key.localeCompare(b.key, "vi", { numeric: true, sensitivity: "base" });
+      });
+      const title = group.pdf[0].stem.replace(/[_-]+/g, " ").replace(/\\bread\\s+along\\b/ig, "").replace(/\\s+/g, " ").trim();
+      const slug = title.normalize("NFKD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "book";
+      const id = "book-" + slug + "-" + (await sha256(group.pdf[0].key)).slice(0, 8);
+      const host = "https://pub-763a3a5ae235415cbef15b64f7a20820.r2.dev/";
+      books.push({
+        id, title,
+        pdf: host + encodeKey(group.pdf[0].key),
+        audios: group.audios.map(item => host + encodeKey(item.key)),
+        sync: group.sync.length ? host + encodeKey(group.sync[0].key) : null
+      });
+    }
+    books.sort((a,b) => a.title.localeCompare(b.title, "vi", { sensitivity: "base" }));
+    return json({ ok: true, manifest: { books }, included: books.length, excluded, scanned: scan.scanned, errors: scan.errors, warnings: scan.warnings, checkedAt: scan.checkedAt });
+  }
+
   if (route === "catalog/publish" && method === "POST") {
     assertOrigin(request);
     let manifest;
