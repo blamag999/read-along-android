@@ -380,6 +380,50 @@ jobs:
           "$APKSIGNER" verify --verbose --print-certs "$APK"
           sha256sum "$APK" > "$APK.sha256"
 
+      - name: Publish OTA objects to Cloudflare R2 (optional during migration)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_R2_UPLOAD_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          VERSION: ${{ steps.release_info.outputs.version }}
+          VERSION_CODE: ${{ github.run_number }}
+          RELEASE_CHANNEL: ${{ github.event_name == 'workflow_dispatch' && inputs.channel || 'beta' }}
+          CHANGELOG: ${{ steps.release_info.outputs.changelog }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${CLOUDFLARE_API_TOKEN:-}" || -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]]; then
+            echo "::warning::Cloudflare R2 upload skipped. Configure CLOUDFLARE_R2_UPLOAD_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets to enable OTA publishing."
+            exit 0
+          fi
+
+          if [[ "$RELEASE_CHANNEL" == "stable" ]]; then CHANNEL="official"; else CHANNEL="beta"; fi
+          APK="read-along-v${VERSION}-android.apk"
+          SHA256="$(sha256sum "$APK" | awk '{print $1}')"
+          mkdir -p dist/ota
+          python3 - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
+          version = os.environ["VERSION"]
+          channel = "official" if os.environ["RELEASE_CHANNEL"] == "stable" else "beta"
+          filename = f"read-along-v{version}-android.apk"
+          payload = {
+              "schemaVersion": 1,
+              "channel": channel,
+              "version": version,
+              "versionCode": int(os.environ["VERSION_CODE"]),
+              "filename": filename,
+              "size": os.path.getsize(filename),
+              "sha256": os.environ["SHA256"],
+              "notes": os.environ.get("CHANGELOG", "")[:4000],
+              "mandatory": False,
+              "publishedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+          }
+          with open("dist/ota/latest.json", "w", encoding="utf-8") as f:
+              json.dump(payload, f, ensure_ascii=False, separators=(",", ":"))
+          PY
+          npx --yes wrangler@4 r2 object put "read-along-releases/releases/$CHANNEL/$APK" --file="$APK" --remote --content-type="application/vnd.android.package-archive" --cache-control="public, max-age=31536000, immutable"
+          npx --yes wrangler@4 r2 object put "read-along-releases/channels/$CHANNEL/latest.json" --file="dist/ota/latest.json" --remote --content-type="application/json" --cache-control="no-store"
+          echo "Published OTA manifest for $CHANNEL $VERSION (sha256=$SHA256)"
+
       - name: Upload versioned workflow artifacts
         uses: actions/upload-artifact@v6
         with:
