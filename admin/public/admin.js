@@ -131,6 +131,7 @@ async function checkSession() {
       expiresAt: result.expiresAt || null, durationMs: Math.round(performance.now() - startedAt), host: location.host
     });
     show("loginPanel", !result.authenticated);
+    show("loginHomeBtn", !result.authenticated);
     show("managerPanel", result.authenticated);
     show("homePanel", false);
     show("logoutBtn", result.authenticated);
@@ -150,6 +151,7 @@ async function checkSession() {
       durationMs: Math.round(performance.now() - startedAt), host: location.host
     });
     show("loginPanel", true);
+    show("loginHomeBtn", true);
     show("managerPanel", false);
     show("logoutBtn", false);
     show("homeBtn", false);
@@ -934,23 +936,24 @@ async function loadAnalyticsDashboard() {
   } catch (error) { status.textContent = "Không tải được Dashboard: " + error.message; }
   finally { button.disabled = false; }
 }
-function showManagerView(view) {
-  const analytics = view === "analytics";
-  show("analyticsPanel", analytics); show("libraryPanel", !analytics);
-  $("showAnalyticsBtn").classList.toggle("active", analytics);
-  $("showLibraryBtn").classList.toggle("active", !analytics);
-  if (analytics) loadAnalyticsDashboard();
+function showManagerView() {
+  show("libraryPanel", true);
+  $("showLibraryBtn").classList.add("active");
 }
-$("showAnalyticsBtn").addEventListener("click", () => showManagerView("analytics"));
-$("showLibraryBtn").addEventListener("click", () => showManagerView("library"));
+$("showLibraryBtn").addEventListener("click", showManagerView);
 $("refreshAnalyticsBtn").addEventListener("click", loadAnalyticsDashboard);
 $("analyticsRange").addEventListener("change", loadAnalyticsDashboard);
+
+// Dashboard chỉ đọc là trang mặc định; khu vực quản lý thư viện vẫn yêu cầu OTP.
+$("homePanel").append($("analyticsPanel"));
+$("analyticsPanel").classList.remove("hidden");
+$("loginHomeBtn").addEventListener("click", () => { location.hash = ""; });
 
 async function handleRoute() {
   if (location.hash !== "#manage") {
     show("homePanel", true); show("loginPanel", false); show("managerPanel", false);
     show("logoutBtn", false); show("homeBtn", false);
-    await loadPublicStats();
+    loadAnalyticsDashboard();
     return;
   }
   show("homePanel", false);
