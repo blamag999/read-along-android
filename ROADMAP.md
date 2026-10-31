@@ -807,3 +807,14 @@ Khi một công việc trong PLANNING hoàn tất:
 - Chưa chạy test/CI; assertion mới chưa được xác nhận bằng `npm test`. Đây là thay đổi source, không phải nghiệm thu.
 - Audit tiếp tục xác nhận UI marker cũ còn menu/modal, ghim/xóa/sửa marker, import/export và ghi marker local; các phần này phụ thuộc vào cùng state `pageTimestamps` được dùng cho read-only R2 sync. Phải tách rõ read path khỏi write path trước khi xóa. Không xóa marker JSON R2, parser, IndexedDB/localStorage legacy hoặc session/checkpoint.
 - Phạm vi file picker/local media vẫn chưa được gỡ. Không có thay đổi API, R2, Cloudflare, OTA, signing key hoặc `main`.
+
+
+## 2026-10-31 — Gỡ marker manager, giữ marker R2 read-only (beta)
+
+- `index.html`: đã bỏ menu quản lý mốc, modal marker, bảng mốc, nút ghim/lưu mốc, import/export/clear và các nhãn trạng thái chỉ phục vụ chỉnh marker.
+- `app.js`: đã bỏ handler/UI DOM và các hàm tạo/sửa/xóa/nhập/xuất marker cùng ghi marker vào thư mục cục bộ. Giữ `state.pageTimestamps`, `normalizeMarker`/lookup/resolve spread và luồng đồng bộ PDF/audio.
+- `resetAndLoadSyncForBook()` hiện chỉ nạp marker companion qua URL R2; nếu tải thất bại/không có URL thì dùng localStorage marker cũ như fallback read-only. Không xóa key localStorage/IndexedDB cũ. Việc lưu snapshot R2 vào localStorage là cache trạng thái đọc cũ, không phải chức năng chỉnh sửa marker.
+- Sửa caller playlist để truyền URL companion R2 đúng tham số sau khi loại bỏ nhánh JSON Blob local.
+- Test contract cập nhật để cấm marker manager/import/export UI. Các commit: `c6b8e2b` (app), `a2d4e4f` (HTML), `df032da` (test), cùng caller correction ở commit sau đó.
+- Source audit hiện còn `state.pageTimestamps` chỉ được gán khi reset, nạp R2 hoặc fallback localStorage; `saveSyncToStorage()` chỉ được gọi sau khi nạp marker companion R2. Chưa chạy npm test/CI, chưa build APK và chưa kiểm thử thiết bị; không đánh dấu nghiệm thu.
+- Chưa gỡ local PDF/audio/folder picker, Blob loading, drag/drop hoặc các hàm IndexedDB legacy. Không thay đổi API/Admin/R2 objects/Cloudflare/OTA/signing key/main.
