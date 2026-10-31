@@ -7,7 +7,7 @@ const ids = new Set(Array.from(html.matchAll(/\bid=["']([^"']+)["']/g), match =>
 const refs = Array.from(script.matchAll(/\$\(["']([^"']+)["']\)/g), match => match[1]);
 const missing = Array.from(new Set(refs.filter(id => !ids.has(id))));
 assert.deepEqual(missing, [], 'Admin JavaScript references missing HTML element IDs');
-assert.ok(script.includes('async function loadPublicStats()'), 'Dashboard stats loader must exist');
+assert.ok(script.includes('async function loadAnalyticsDashboard()'), 'Dashboard analytics loader must exist');
 assert.ok(script.includes('window.addEventListener("hashchange", handleRoute)'), 'Admin route handler must be connected');
 console.log('Admin DOM reference tests passed.');
 
