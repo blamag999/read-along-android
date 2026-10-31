@@ -112,3 +112,23 @@ assert.match(adminApi, /!group\.audios\.length/, 'preview must exclude books wit
 assert.match(adminApi, /badKeys/, 'preview must exclude files with scan errors');
 assert.ok(adminApi.includes("stem.match(/(?:_P(\\d+)"), "preview must recognize numbered audio parts");
 console.log('R2-generated catalog preview regression tests passed.');
+
+const libraryGroupingStart = adminScript.indexOf("function libraryAssetGroups(entries) {");
+const libraryGroupingEnd = adminScript.indexOf("\nconst expandedLibraryGroups", libraryGroupingStart);
+assert.ok(libraryGroupingStart >= 0 && libraryGroupingEnd > libraryGroupingStart, "Admin must expose deterministic book grouping logic");
+const libraryContext = vm.createContext({ Set, String, Number, Math, Date });
+vm.runInContext(adminScript.slice(libraryGroupingStart, libraryGroupingEnd), libraryContext);
+const libraryGroups = libraryContext.libraryAssetGroups([
+  { key: "Oliver_Company.pdf", name: "Oliver_Company.pdf", type: "file", size: 100, uploaded: "2026-01-01" },
+  { key: "Oliver_Company_P2.mp3", name: "Oliver_Company_P2.mp3", type: "file", size: 20, uploaded: "2026-01-01" },
+  { key: "Oliver_Company_P1.wma", name: "Oliver_Company_P1.wma", type: "file", size: 30, uploaded: "2026-01-01" },
+  { key: "Oliver_Company.json", name: "Oliver_Company.json", type: "file", size: 10, uploaded: "2026-01-01" },
+  { key: "orphan.bin", name: "orphan.bin", type: "file", size: 1, uploaded: "2026-01-01" }
+]);
+assert.equal(libraryGroups.books.length, 1, "PDF/audio/JSON with the same normalized stem must form one book");
+assert.equal(libraryGroups.books[0].pdf[0].name, "Oliver_Company.pdf");
+assert.deepEqual(Array.from(libraryGroups.books[0].audio, file => file.name), ["Oliver_Company_P1.wma", "Oliver_Company_P2.mp3"], "numbered audio parts must sort numerically");
+assert.equal(libraryGroups.books[0].json[0].name, "Oliver_Company.json");
+assert.equal(libraryGroups.books[0].status, "compatibility", "WMA should mark the grouped book as requiring compatibility handling");
+assert.deepEqual(Array.from(libraryGroups.ungrouped, file => file.name), ["orphan.bin"], "unsupported files must remain visible in the unmatched section");
+console.log("Admin book-grouping regression tests passed.");
