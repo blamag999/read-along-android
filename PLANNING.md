@@ -498,3 +498,12 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - [x] Add source-level assertions in `tests/modules.test.js`.
 - [ ] Run full regression after the Reader/Menu and R2-only cleanup batch; no test pass is claimed yet.
 - Code commits: `4539b6f79ac8635b0a8133955cb78febf752ebcd` and `cbf7515e6f3de252dbc4ff474608c023f75806b6`.
+
+
+### Progress note — Marker manager removal
+- [x] Remove marker manager modal, manual pin/edit/delete, clear, import/export and local-folder marker write path from APK UI/runtime.
+- [x] Keep R2 marker companion URL read path and timestamp normalization/page/audio synchronization.
+- [x] Keep existing localStorage marker data as a read-only legacy fallback; do not delete stored user data.
+- [x] Update source contract assertions to reject marker manager UI and client import/export.
+- [ ] Run full regression after local-file removal and menu cleanup; no test pass is claimed yet.
+- Remaining caller audit: ensure only R2 companion and legacy localStorage read paths assign `state.pageTimestamps`; inspect CSS and native file access before deleting local-file flows.
