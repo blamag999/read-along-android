@@ -483,3 +483,14 @@ Khi một công việc trong PLANNING hoàn tất:
 - APK asset: `read-along-v1.3.7-android.apk`; SHA-256: `a4f4f5e85f04af05a53925888685ed28b82ba02867571a4ffe84769bcaf06299`.
 - Device acceptance is not yet confirmed. User should install/update this APK and test Analytics consent, opt-in/out, reading/listening counters, offline behavior and playback stability. Android TV remains pending.
 - Next after AN3 device acceptance: close P0.3 Data Client online/offline acceptance, then design safe marker migration; AN4 dashboard follows AN3 collector acceptance and can be developed independently without APK build.
+
+
+### 2026-10-31 — AN3 device acceptance confirmed; AN4 dashboard scope and implementation batch
+
+- Người dùng xác nhận hoàn tất kiểm tra APK beta v1.3.7; đợt kiểm tra không phát hiện lỗi. Đối chiếu số liệu Analytics chuyển sang bước nghiệm thu Dashboard; Android TV vẫn pending.
+- Theo yêu cầu người dùng, loại bỏ KPI “phiên hoạt động/ngày”; KPI sử dụng gồm thời gian đọc, thời gian nghe, tổng thời gian sử dụng và thiết bị hoạt động.
+- Bổ sung nhóm Library Health: số đầu sách trong manifest đã xuất bản, số PDF, phần audio, sách có sync JSON; lỗi/cảnh báo/tệp đã quét/thời điểm của lần quét thư viện gần nhất.
+- Dashboard API và UI đã được thêm trên beta; các commit batch gồm API 1aca05e/d664b73/d586fd6/2097370, UI 238b8f8/e1044de/4decafe/658b968, render a543bc9/61b9350, tests bf4fd4c/d669aa3, styles 6d3bf84.
+- Chú ý privacy: không có thống kê sách đã đọc theo đầu sách vì Analytics collector không gửi bookId/tên sách. Số đầu sách trên Dashboard là số sách hiện có trong manifest đã xuất bản, không phải số sách từng được mở.
+- Chú ý freshness: lỗi/cảnh báo phản ánh lần quét gần nhất trong admin_scan_logs; Dashboard không tự chạy scan khi mở để tránh tốn tải và tránh tác động dữ liệu vận hành.
+- Còn pending: chạy regression CI, kiểm tra Pages deployment, kiểm tra authenticated Dashboard và đối chiếu thời lượng đọc/nghe thật sau opt-in. Chưa tuyên bố Dashboard hoàn tất.
