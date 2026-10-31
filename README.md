@@ -11,9 +11,7 @@
 Tài liệu kỹ thuật chi tiết chỉ đọc khi công việc liên quan:
 - `docs/architecture/data-contracts.md`: endpoint, caller, nguồn dữ liệu và contract.
 - `docs/architecture/marker-and-api-review.md`: thứ tự nạp marker, xung đột nguồn và đánh giá API.
-- `schemas/`: JSON Schema được áp dụng cho catalog, marker, Remote Config và analytics event.
-- `admin/scripts/validate-remote-config.js`: kiểm tra chặt Remote Config; được chạy trong `npm test` và Cloudflare Pages build command trước khi publish.
-- `modules/remote-config.js` và `modules/remote-config-bootstrap.js`: Data Client tải JSON từ hostname cố định, validate, cache bản hợp lệ và fallback offline. Bootstrap chạy bất đồng bộ sau app startup; config hiện chỉ được lưu ở `window.ReadAlongRemoteConfigState`, chưa áp dụng vào reader.
+- `schemas/`: JSON Schema được áp dụng cho catalog, marker và analytics event.
 - `tests/`: kiểm thử hợp đồng và module.
 
 ## Quy tắc README dùng chung trên mọi nhánh
@@ -158,14 +156,14 @@ Read Along là ứng dụng Capacitor/WebView. HTML/CSS/JavaScript được đó
 - Các push beta thông thường không có dấu mốc trên sẽ không chạy job build APK.
 - Không tạo commit `[build-apk]` khi còn dự định sửa runtime; nếu build cuối thất bại thì sửa lỗi trước, sau đó tạo một commit chốt mới có dấu mốc để thử lại.
 - Build APK chỉ cần thiết khi thay đổi JavaScript/HTML/CSS runtime đóng gói, UI interaction, PDF/audio/marker runtime, Android/WebView lifecycle, native plugin/bridge/permission/FileProvider hoặc OTA installer.
-- Sửa tài liệu, Admin/backend, schema, test độc lập, catalog/media hoặc Remote Config values không tự yêu cầu build APK.
+- Sửa tài liệu, Admin/backend, schema, test độc lập, catalog/media không tự yêu cầu build APK.
 - Workflow dispatch thủ công được giữ lại cho trường hợp phát hành stable có chủ đích từ `main` hoặc thao tác khẩn cấp; không dùng làm bước thường lệ cho beta.
 
 ### Không build APK chỉ vì
 
 - Sửa tài liệu, README, roadmap, planning, schema hoặc test.
 - Sửa Admin UI/API, báo cáo, dashboard hoặc diagnostics backend.
-- Thay đổi catalog, metadata, PDF/audio trên R2, marker JSON hoặc Remote Config values trong schema APK đã hỗ trợ.
+- Thay đổi catalog, metadata, PDF/audio trên R2, marker JSON APK đã hỗ trợ.
 
 ### OTA / release
 
@@ -185,14 +183,13 @@ PDF viewer, audio player, đồng bộ trang/audio, orientation/lifecycle, khôi
 
 ### Dịch vụ/dữ liệu độc lập
 
-Catalog và media trên R2, marker JSON, Admin, Diagnostics backend, Analytics backend/dashboard, Remote Config và nội dung trợ giúp/thông báo.
+Catalog và media trên R2, marker JSON, Admin, Diagnostics backend, Analytics backend/dashboard và nội dung trợ giúp/thông báo.
 
 ### Nguyên tắc giao tiếp
 
 - API có contract/schema version rõ ràng; HTTPS và hostname allowlist.
 - Timeout hữu hạn, retry có giới hạn; validate dữ liệu trước khi áp dụng.
 - Cache bản hợp lệ gần nhất và offline fallback.
-- Không thực thi JavaScript tùy ý từ server; Remote Config chỉ chứa giá trị/flag/nội dung đã whitelist.
 - Không làm reader crash hoặc mất khả năng offline khi API/config lỗi.
 - Giữ API riêng nếu khác mục đích, quyền hoặc vòng đời dữ liệu; chỉ dùng chung transport client khi có lợi ích thực tế.
 
@@ -211,7 +208,6 @@ Catalog và media trên R2, marker JSON, Admin, Diagnostics backend, Analytics b
 - Commit `[build-apk]` tự chạy lại toàn bộ kiểm thử trên đúng commit sẽ đóng gói APK. Chỉ khi test pass mới tiếp tục build, verify chữ ký và SHA-256, upload artifact và tạo Release.
 - `[build-apk]` không đồng thời kích hoạt workflow push `[test]`, tránh chạy trùng hai bộ full test cho cùng commit.
 - Lỗi bảo mật, mất dữ liệu, reader/audio, WebView lifecycle hoặc native bridge: chạy kiểm thử ngay khi sửa xong, không chờ batch.
-- Remote Config endpoint smoke test vẫn chạy riêng theo path filter hoặc manual dispatch.
 - Không cấu hình full regression workflow làm required status check cho mọi push nếu branch protection không phân biệt marker; PR workflow vẫn tự động kiểm tra.
 
 - [ ] Xác nhận đúng repository, branch và HEAD.
@@ -229,8 +225,7 @@ Không tuyên bố hoàn tất nếu còn thiếu kiểm thử bắt buộc; ghi
 
 ## 8. Quy tắc dữ liệu và vận hành
 
-- Cloudflare Pages `read-along-admin` lấy source từ repository này, production branch `beta`, root `admin`, output `public`; build command `node scripts/validate-remote-config.js` phải pass trước khi publish.
-- Mỗi lần thay đổi Remote Config đã phát hành phải tăng `configVersion`; không tái sử dụng version cũ cho nội dung mới.
+- Cloudflare Pages `read-along-admin` lấy source từ repository này, production branch `beta`, root `admin`, output `public`; build command `true`, không có custom pre-publish validator.
 - R2 bucket sách hiện dùng trong dự án: `my-audio-book`; catalog manifest là `books.json` ở root bucket. Chỉ sử dụng endpoint/hostname được cấu hình trong repository.
 - Admin catalog: scan inventory → preview → người quản trị xác nhận → kiểm tra HEAD từng object → publish. Không tự động xóa, đổi tên hoặc di chuyển file gốc.
 - Ghép sách theo tên đã chuẩn hóa và cùng thư mục; không fuzzy matching. Audio part `_P1`, `_P2`… phải giữ thứ tự số.
