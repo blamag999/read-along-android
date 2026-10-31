@@ -332,6 +332,7 @@ function appendLibraryFileRow(anchorRow, file, kind, label) {
 }
 
 function renderLibraryPage() {
+  show("moveRootAssetsToDisneyBtn", !currentPrefix);
   const term=normalizeSearch($("searchFilesInput").value.trim());
   const sort=$("sortFilesSelect").value;
   const grouped = libraryAssetGroups(allLibraryEntries);
@@ -593,6 +594,100 @@ async function renameEntry(entry) {
     await loadFiles();
   } catch (error) { setStatus("Không thể đổi tên/di chuyển " + entry.key + ": " + error.message, true); }
 }
+async function moveRootAssetsToDisney() {
+  const button = $("moveRootAssetsToDisneyBtn");
+  if (currentPrefix) return;
+  button.disabled = true;
+  try {
+    const inventory = await api("files/all?prefix=");
+    const candidates = (inventory.files || []).filter(file =>
+      file && file.type === "file" && file.key !== "books.json" &&
+      !file.key.includes("/") && allowed.test(file.key)
+    );
+    if (!candidates.length) {
+      setStatus("Không còn tệp sách nào ở thư mục gốc cần di chuyển.");
+      return;
+    }
+    const destination = await api("files/all?prefix=DISNEY");
+    const existing = new Set((destination.files || []).map(file => file.key));
+    const conflicts = candidates.filter(file => existing.has("DISNEY/" + file.name));
+    if (conflicts.length) {
+      throw new Error("Đã có " + conflicts.length + " tên tệp trùng trong DISNEY. Không di chuyển tệp nào; hãy xử lý xung đột trước.");
+    }
+    const totalBytes = candidates.reduce((sum, file) => sum + Number(file.size || 0), 0);
+    const approved = await confirmAction(
+      "Di chuyển thư viện gốc vào DISNEY?",
+      "Sẽ chuyển " + candidates.length + " tệp (" + formatSize(totalBytes) + ") vào DISNEY.\n\n" +
+      "books.json được giữ nguyên ở thư mục gốc. Thư mục ONE STORY A DAY LEVEL 2 FULL và nội dung các thư mục khác không bị thay đổi.\n\n" +
+      "Mỗi tệp được sao chép, kiểm tra dung lượng ở đích rồi mới xóa bản nguồn. Nếu một tệp lỗi, bản nguồn của tệp đó được giữ lại.",
+      "Bắt đầu di chuyển"
+    );
+    if (!approved) return;
+
+    let nextIndex = 0, completed = 0;
+    const failures = [];
+    const worker = async () => {
+      while (nextIndex < candidates.length) {
+        const file = candidates[nextIndex++];
+        try {
+          await postJson("rename", { source: file.key, destination: "DISNEY/" + file.name });
+          completed++;
+        } catch (error) {
+          failures.push({ key: file.key, error: error.message || String(error) });
+        }
+        setStatus("Đang di chuyển vào DISNEY: " + completed + "/" + candidates.length +
+          " thành công · " + failures.length + " lỗi");
+      }
+    };
+    await Promise.all([worker(), worker()]);
+    await loadFiles();
+    if (failures.length) {
+      setStatus("Đã chuyển " + completed + "/" + candidates.length + " tệp. " +
+        failures.length + " tệp lỗi vẫn được giữ ở nguồn; xử lý lỗi rồi chạy lại. " +
+        failures.slice(0, 3).map(item => item.key + ": " + item.error).join(" · "), true);
+      return;
+    }
+
+    setStatus("Đã chuyển " + completed + " tệp vào DISNEY. Đang tạo bản xem trước books.json…");
+    const preview = await api("catalog/preview");
+    const excluded = preview.excluded || [];
+    const folderCounts = (preview.manifest?.books || []).reduce((counts, book) => {
+      const folder = book.folder || "Chưa phân nhóm";
+      counts[folder] = (counts[folder] || 0) + 1;
+      return counts;
+    }, {});
+    const folderSummary = Object.entries(folderCounts)
+      .sort((a, b) => a[0].localeCompare(b[0], "vi", { sensitivity: "base" }))
+      .map(([folder, count]) => folder + ": " + count + " sách")
+      .join("\n");
+    if (excluded.length) {
+      setStatus("Đã di chuyển nhưng bản xem trước loại " + excluded.length +
+        " nhóm. Chưa xuất bản books.json; hãy kiểm tra phần xem trước trong Admin.", true);
+      return;
+    }
+    const publishApproved = await confirmAction(
+      "Xác nhận xuất bản books.json",
+      "Bản xem trước gồm " + preview.included + " sách từ " + preview.scanned +
+      " tệp đã quét.\n\n" + folderSummary +
+      "\n\nKhông có nhóm sách nào bị loại. Chỉ books.json được cập nhật; các tệp media không bị thay đổi.",
+      "Xuất bản books.json"
+    );
+    if (!publishApproved) {
+      setStatus("Đã di chuyển tệp vào DISNEY; books.json chưa được xuất bản. Có thể chạy lại chức năng tạo danh mục.");
+      return;
+    }
+    const result = await postJson("catalog/publish", preview.manifest);
+    setStatus("Hoàn tất: đã chuyển " + completed + " tệp và xuất bản books.json gồm " +
+      result.books + " sách, " + result.files + " tài nguyên đã xác minh.");
+    await loadFiles();
+  } catch (error) {
+    setStatus("Không thể hoàn tất di chuyển vào DISNEY: " + error.message, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+$("moveRootAssetsToDisneyBtn").addEventListener("click", moveRootAssetsToDisney);
+
 async function deleteFile(entry) {
   if (!await confirmAction("Xác nhận xóa tệp?", "Bạn sắp xóa tệp:\n" + entry.key + "\n\nTệp sẽ bị xóa khỏi bucket my-audio-book. Thao tác này không thể hoàn tác.", "Xóa vĩnh viễn")) return;
   try {
