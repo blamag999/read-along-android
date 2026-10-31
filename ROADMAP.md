@@ -18,7 +18,7 @@ Giảm số lần build APK bằng cách tách catalog, marker, cấu hình, ana
 |---|---|---|
 | R0 | Hợp nhất Analytics plan và APK decoupling thành master planning | <badge>Hoàn tất</badge> |
 | R1 | Kiểm kê API, URL, nguồn dữ liệu và caller; chuẩn hóa contract | Gần hoàn tất — API review và CI pass; marker envelope v1 draft tương thích legacy; runtime revision policy còn pending |
-| R2 | Remote Config + Data Client + fallback offline | Chưa bắt đầu |
+| R2 | Remote Config + Data Client + fallback offline | Đang thực hiện — static config v1 đã thêm vào Admin Pages; chờ CI và xác minh URL deploy |
 | R3 | Analytics ingest/D1 và sự kiện thời lượng đọc/nghe | Chưa bắt đầu |
 | R4 | Admin Analytics dashboard ngày/tuần/tháng/năm | Chưa bắt đầu |
 | R5 | Nội dung trợ giúp/thông báo và theme/config độc lập | Chưa bắt đầu |
@@ -29,7 +29,8 @@ Giảm số lần build APK bằng cách tách catalog, marker, cấu hình, ana
 - R1 gần hoàn tất: API overlap review đã xong và không gộp các endpoint có mục đích/quyền khác nhau. Marker source precedence được ghi tại [marker-and-api-review.md](./docs/architecture/marker-and-api-review.md). Schema marker envelope v1 đã draft, vẫn chấp nhận legacy map và empty map; runtime revision policy/migration còn pending.
 - CI [41159251879](https://github.com/blamag999/read-along-android/actions/runs/41159251879) pass sau khi sửa regression test.
 - Inventory endpoint/caller và schema đã được CI kiểm tra tại [41158627378](https://github.com/blamag999/read-along-android/actions/runs/41158627378).
-- Chưa thay đổi mã runtime, chưa build APK, chưa promote stable.
+- R2 bắt đầu ở lớp dữ liệu: thêm `admin/public/remote-config.json` v1 với feature/default maps rỗng; không thay đổi hành vi app.
+- Chưa thay đổi mã APK runtime, chưa build APK, chưa promote stable.
 - Usage API hiện có chỉ ghi lượt mở/installation và thống kê inventory; analytics thời lượng đọc/nghe vẫn cần thiết kế và triển khai.
 - CI cần được xác nhận trên commit mới nhất; không lấy run cũ làm bằng chứng cho HEAD mới.
 
