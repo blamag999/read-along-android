@@ -12,6 +12,7 @@ Tài liệu kỹ thuật chi tiết chỉ đọc khi công việc liên quan:
 - `docs/architecture/data-contracts.md`: endpoint, caller, nguồn dữ liệu và contract.
 - `docs/architecture/marker-and-api-review.md`: thứ tự nạp marker, xung đột nguồn và đánh giá API.
 - `schemas/`: JSON Schema được áp dụng cho catalog, marker, Remote Config và analytics event.
+- `scripts/validate-remote-config.js`: kiểm tra chặt cấu hình Remote Config trước khi CI cho phép tích hợp/deploy.
 - `tests/`: kiểm thử hợp đồng và module.
 
 ## 2. Phạm vi dự án — không dùng tài nguyên dự án khác
