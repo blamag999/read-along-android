@@ -457,3 +457,15 @@ Khi một công việc trong PLANNING hoàn tất:
 - Thay đổi source trong commit chỉ là comment giải thích polling boundary; toàn bộ collector/UI/Service Worker/tests đã có ở các commit trước và CI [41167810567](https://github.com/blamag999/read-along-android/actions/runs/41167810567) success.
 - Build workflow dự kiến tạo beta APK, verify signature/SHA-256 và GitHub prerelease. Chưa có kết quả build tại thời điểm ghi; không tuyên bố APK đã phát hành.
 
+
+
+## 2026-10-31 — Chuẩn hóa Git workflow còn hai nhánh
+
+- Người dùng xác nhận chuyển sang mô hình hai nhánh dài hạn: `beta` (phát triển/tích hợp) và `main` (stable).
+- Quy trình mới: làm việc trực tiếp trên `beta`; kiểm thử theo batch; nếu có thay đổi APK runtime thì build beta ở commit chốt `[build-apk]` và nghiệm thu trên thiết bị; chỉ promote sang `main` qua PR khi người dùng xác nhận phát hành stable.
+- Hotfix là ngoại lệ: nhánh tạm `hotfix/*` tạo từ `main`, PR vào `main`, sau đó back-merge về `beta`. Không tạo nhánh tạm cho từng lỗi thông thường.
+- Kiểm tra lịch sử `testing`: HEAD `ef1cde5203a7af9e3846162de8ae4b693a124d9d`, chỉ ahead `beta` 1 commit và behind 290 commits; commit duy nhất có message “Sync shared working rules README from beta”, chỉ sửa README. Blob README là `b2827219f11043b93225306ede69340ea2a0da01`, trùng blob README hiện tại trên `beta`. Không có code/runtime commit riêng cần bảo toàn. Việc bỏ nhánh này không làm mất thay đổi nội dung.
+- Workflow `.github/workflows/check-readalong-admin.yml` đã bỏ `testing` khỏi push branch filter; PR checks vẫn áp dụng cho `beta` và `main`.
+- README được chuẩn hóa cho hai nhánh và đồng bộ byte-for-byte trên `beta`/ `main` bằng commit README-only. Chi tiết commit SHA sẽ được bổ sung sau khi xác minh các lần ghi.
+- Trạng thái giới hạn: connector GitHub hiện không cung cấp thao tác xóa branch hoặc quản trị branch protection. Không tuyên bố `testing` đã xóa hoặc `main` đã được bảo vệ cho đến khi xác minh trực tiếp trên GitHub Settings. Không force-update hoặc ghi đè lịch sử.
+- Không thay đổi APK/runtime/backend/Cloudflare, không build APK và không promote code sang `main` trong đợt chuẩn hóa workflow này.
