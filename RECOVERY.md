@@ -491,3 +491,5 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Đã cập nhật index.html và styles.css trên beta: ba thành phần OTA được gom thành nhóm Cập nhật ứng dụng; giữ nguyên chkBetaOta, installedAppVersion, menuCheckUpdates và hành vi OTA.
 - Đã bổ sung contract test bảo vệ cấu trúc nhóm và CSS compact.
 - CI và APK beta chưa được xác minh tại thời điểm ghi nhật ký; tiếp tục từ HEAD mới nhất của beta, không checkout theo commit bàn giao cũ.
+
+- CI verification update: GitHub Actions run #554 completed successfully on beta commit 0243a8177c282758369f11e0503c7a89cd467d2b; all job steps passed. APK build and device acceptance remain pending.
