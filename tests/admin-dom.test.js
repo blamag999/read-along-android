@@ -13,7 +13,8 @@ console.log('Admin DOM reference tests passed.');
 
 assert.ok(!html.includes('id="libraryTabBtn"') && !html.includes('id="diagnosticsTabBtn"'), 'library management must not require switching tabs');
 assert.ok(html.includes('<details id="diagnosticsPanel"'), 'diagnostics and publishing tools must be collapsible inside the library view');
-assert.ok(html.indexOf('<details id="diagnosticsPanel"') > html.indexOf('id="fileRows"'), 'diagnostics tools must live below the library table in the same view');
+assert.ok(html.includes('mục quản lý mỗi trang'), 'pagination size label must describe management items rather than books only');
+assert.ok(html.indexOf('<details id="diagnosticsPanel"') > html.indexOf('id="fileRows"') && html.indexOf('<details id="diagnosticsPanel"') < html.indexOf('</section>', html.indexOf('<section id="libraryPanel"')), 'diagnostics tools must be nested inside the library management section');
 assert.ok(script.includes('$("diagnosticsPanel").open = true;'), 'running diagnostics must expand the integrated tools panel');
 assert.ok(script.includes('mục quản lý') && script.includes('bộ sách') && script.includes('thư mục'), 'library count must distinguish management items, books and folders');
 assert.match(fs.readFileSync('admin/public/admin.css', 'utf8'), /library-actions[^]*height:44px/, 'folder and upload buttons must share the same height and alignment');
