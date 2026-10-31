@@ -77,6 +77,9 @@ assert.ok(!appSource.includes("dom.viewerContainer.addEventListener('touchstart'
 assert.ok(appSource.includes('getRenderedPdfBounds'), 'touch zones must be bounded by rendered PDF canvases');
 assert.ok(htmlSource.includes('readingCheckpointMenuGroup'), 'three recent checkpoints must be reachable from the reader menu');
 assert.ok(htmlSource.includes('id="btnOpenPlaylist"') && htmlSource.includes('id="btnOpenReadMenu"'), 'header must retain the library and menu actions');
+const headerSource = htmlSource.slice(htmlSource.indexOf('<header'), htmlSource.indexOf('</header>'));
+assert.ok(!headerSource.includes('view-controls-bar') && !headerSource.includes('btnFitHeight') && !headerSource.includes('btnTwoPages'), 'view and zoom controls must be inside the menu, not the top bar');
+assert.ok(htmlSource.includes('class="menu-view-controls"'), 'view and zoom controls must remain available inside the menu');
 assert.ok(!htmlSource.includes('id="btnCloseBook"') && !htmlSource.includes('id="btnToggleSettings"') && !htmlSource.includes('id="btnOpenSyncModal"'), 'header must not expose separate close-book, settings, or marker buttons');
 assert.ok(htmlSource.includes('id="menuToggleSettings"') && htmlSource.includes('id="menuOpenSyncModal"'), 'settings visibility and timestamp management must remain accessible inside the menu');
 assert.ok(!appSource.includes('btnCloseBook') && !appSource.includes('btnToggleSettings') && !appSource.includes('btnOpenSyncModal'), 'removed header controls must not be referenced by reader initialization');
