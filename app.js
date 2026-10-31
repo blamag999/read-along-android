@@ -171,7 +171,7 @@ async function closeCurrentBook() {
 function requestCloseBook() {
   if (!state.pdfDoc) return;
   const title = state.pdfFileName || 'sách hiện tại';
-  if (!window.confirm('Bạn có muốn đóng ' + title + ' không?\nVị trí đọc và thời gian audio sẽ được lưu để lần sau tiếp tục.')) return;
+  if (!window.confirm('Đóng sách “' + title + '”?')) return;
   closeCurrentBook();
 }
 
@@ -206,7 +206,7 @@ function handleAppBack() {
     requestCloseBook();
     return;
   }
-  if (!window.confirm('Bạn có muốn thoát ứng dụng Read Along không?')) return;
+  if (!window.confirm('Bạn muốn thoát Read Along?')) return;
   const appLifecycle = window.Capacitor?.Plugins?.AppLifecycle;
   if (appLifecycle?.exitApp) {
     appLifecycle.exitApp().catch(error => {
@@ -315,7 +315,7 @@ function restoreReadingSessionForCurrentBook() {
   const session = getReadingSessionForBook(state.currentBookKey);
   if (!session) return null;
   const resumeLabel = 'Trang ' + (session.page || 1) + ' · ' + formatTime(session.audioTime || 0);
-  const shouldResume = window.confirm('Sách này có vị trí đọc đã lưu (' + resumeLabel + ').\nBạn có muốn tiếp tục từ vị trí gần nhất không?\nChọn “Không” để bắt đầu từ đầu; bạn vẫn có thể chọn một trong ba mốc đọc đã lưu sau khi mở sách.');
+  const shouldResume = window.confirm('Tiếp tục xem: ' + resumeLabel + '?');
   if (!shouldResume) {
     state.sessionRestorePending = false;
     state.timestampSpread = false;
@@ -2440,7 +2440,7 @@ window.setManualSync = function(page) {
 };
 
 function clearAllSync() {
-  if (confirm('Bạn có chắc muốn xóa tất cả mốc đồng bộ của cuốn truyện này không?')) {
+  if (confirm('Xóa tất cả mốc thời gian của sách?')) {
     state.pageTimestamps = {};
     saveSyncToStorage();
     autoSaveSyncToLocalDirectory();
