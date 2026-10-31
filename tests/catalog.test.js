@@ -11,7 +11,13 @@ const manifest = JSON.parse(fs.readFileSync('admin/public/books.json', 'utf8'));
 assert.match(app, /https:\/\/pub-763a3a5ae235415cbef15b64f7a20820\.r2\.dev\/books\.json/, 'app must fetch the public R2 manifest directly');
 assert.match(readerHtml, /id="selPlaylistFolder"/, 'reader must expose the folder selector');
 assert.match(app, /selPlaylistFolder\.addEventListener\('change'/, 'reader must apply folder selection');
-assert.match(adminScriptSource, /moveRootAssetsToDisney/, 'Admin must expose the guarded root-to-DISNEY migration');
+assert.match(readerHtml, /id="moveDestinationDialog"/, 'Admin must provide a destination picker dialog');
+assert.match(readerHtml, /id="moveExistingFolder"/, 'Admin must allow selecting an existing R2 folder');
+assert.match(readerHtml, /id="moveNewFolderName"/, 'Admin must allow creating a new destination folder');
+assert.match(adminScriptSource, /listAllMoveDestinationFolders/, 'Admin must enumerate existing R2 folders recursively');
+assert.match(adminScriptSource, /moveRootAssetsBtn/, 'Admin must expose the generic root-file migration action');
+assert.match(adminScriptSource, /destination\.type === "new"/, 'Admin must create a selected new destination folder');
+assert.doesNotMatch(adminScriptSource, /moveRootAssetsToDisney|DISNEY\//, 'bulk migration must not hardcode DISNEY as destination');
 
 assert.doesNotMatch(app, /private-comic-reader\.pages\.dev\/api\/readalong\/books/, 'catalog loading must not depend on the Pages API');
 assert.match(catalogSource, /typeof value === 'string'/, 'catalog module must accept URL strings from books.json');
