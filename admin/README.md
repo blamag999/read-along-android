@@ -78,7 +78,7 @@ Production is the only environment with the `DB` and `READALONG` bindings. Previ
 - Delete files and recursively delete folders (maximum 5,000 objects per operation).
 - View the latest 100 audit events.
 
-Supported library extensions: PDF, JSON, MP3, M4A/M4B, AAC, WAV, OGG/OGA, Opus, FLAC, WMA. WMA can be stored but may not play in Android WebView. Audio transcoding is intentionally not included in this first management layer; it needs a separately tested FFmpeg runtime or browser-side transcoding flow.
+Supported library extensions: PDF, JSON, MP3, M4A/M4B, AAC, WAV, OGG/OGA, Opus, FLAC, WMA. WMA can be stored but may not play in Android WebView. The Admin only warns that a manual replacement is required; it does not transcode audio.
 
 ## Operational notes
 
