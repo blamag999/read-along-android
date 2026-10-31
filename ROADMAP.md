@@ -411,3 +411,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Commit test: `723a38ead8458cf04e4a3b8bb31cf13dda946737`.
 - Chờ CI; chưa build APK hoặc kiểm thử Android thật.
 
+
+### 2026-10-31 — Chỉnh expected duration sau offline heartbeat
+
+- CI [#41167683913](https://github.com/blamag999/read-along-android/actions/runs/41167683913) thất bại do test kỳ vọng pagehide reading=4s nhưng trước đó còn 5s foreground sau heartbeat failure; collector đúng khi chỉ giữ 9s kể từ lần flush lỗi (5s + 4s), listening=4s.
+- Sửa assertion readingSeconds=9 và ghi rõ semantics: heartbeat failure drop interval trước đó; thời gian mới sau lỗi vẫn được tính đến lần flush kế tiếp.
+- Commit: `cab0bf478abd8785d61c5fdc3fe075315c9d1d89`.
+- Chờ CI mới; không build APK.
+
