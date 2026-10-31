@@ -262,3 +262,13 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Workflow run [41212943321](https://github.com/blamag999/read-along-android/actions/runs/41212943321): npm test, Pages Functions syntax, isolation and deployed analytics smoke passed. Deployed OTA smoke remained in progress at this handover.
 - Earlier failed runs [41212800363](https://github.com/blamag999/read-along-android/actions/runs/41212800363), [41212818586](https://github.com/blamag999/read-along-android/actions/runs/41212818586), and [41212912614](https://github.com/blamag999/read-along-android/actions/runs/41212912614) were caused by the initial Python test module import path; the latest test run has passed the npm test step.
 - Last reviewed code/test HEAD: `e679600bd3e7d36e9b98443991eeedf128f137bc`. No APK build or OTA publication has been triggered for this batch; main remains unchanged.
+
+
+## Recovery — notification batch and OTA smoke correction (2026-10-31)
+
+- Final code/test checkpoint before APK finalization: `b1d3ac247e8e6fd463be813cc7169a6ce26407f4`.
+- App UI/notification batch is complete on beta: concise reader/book/audio messages, one final toast for multi-audio loading, reduced duplicate toasts, and consistent “sách” / “âm thanh” labels in static and dynamic UI. Technical exceptions remain in console/diagnostics.
+- Regression coverage updated in `tests/contracts.test.js` for message copy, static labels, dynamic empty-state labels, release generator wiring and OTA manifest output contract.
+- OTA smoke test failure in run 41212943321 was a stale expectation that the live endpoint must return 404. Live endpoint correctly returned a beta manifest (HTTP 200, version 1.3.20). Smoke test now validates the actual manifest contract and correct regex escaping.
+- Full workflow [41213578916](https://github.com/blamag999/read-along-android/actions/runs/41213578916) completed successfully on `b1d3ac247e8e6fd463be813cc7169a6ce26407f4`: npm test PASS; Pages Functions syntax PASS; isolation PASS; analytics smoke PASS; OTA beta manifest smoke PASS.
+- Next action: one final beta commit marked `[build-apk]` touching an APK-relevant path. Build workflow will rerun full regression, build/sign APK, verify SHA-256 and publish release/OTA. Do not claim artifact availability until run is complete and release assets are inspected. Keep main unchanged.
