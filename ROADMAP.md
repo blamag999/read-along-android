@@ -268,3 +268,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - Đây là thay đổi tài liệu README-only trên `main` và `testing`; không merge/promote code, không thay đổi runtime, không build APK. ROADMAP/PLANNING không bị sao chép giữa nhánh vì phản ánh trạng thái code riêng.
 - README trên cả ba nhánh đã được xác minh đồng nhất byte-for-byte. `main` vẫn giữ nguyên vai trò stable; `beta` vẫn là nhánh phát triển.
 
+
+### 2026-10-31 — Bổ sung production HTTP smoke test cho Analytics AN2
+
+- Cập nhật `.github/workflows/check-readalong-admin.yml` để smoke test production không chỉ kiểm tra OPTIONS/CORS và từ chối consent=false, mà còn gửi một event hợp lệ có ID ngẫu nhiên, xác nhận lần đầu `accepted=1, duplicates=0`, gửi lại nguyên event và xác nhận `accepted=0, duplicates=1`.
+- Smoke test in ra session/install ID để truy vấn và dọn dữ liệu tổng hợp thử nghiệm sau khi workflow chạy. Không sử dụng dữ liệu sách/tên file hoặc thông tin người dùng.
+- Commit: `0b013fa54a87d8a5e24e9de8c68d9394f19cbf12`.
+- **Trạng thái tại lúc ghi:** mới thêm kiểm thử; chưa có kết quả CI/HTTP. Không đánh dấu nghiệm thu trước khi workflow hoàn tất và xác minh D1.
+- Không thay đổi app runtime, không thêm collector, không build APK, không thay đổi main/testing. README không đổi nên vẫn giữ đồng nhất ba nhánh.
+
