@@ -2835,6 +2835,7 @@ async function checkReadAlongUpdates() {
         sha256: manifest.sha256
       });
     } else {
+      showToast('Đang tải bản cập nhật Read Along…');
       window.location.href = downloadUrl;
     }
   } catch (error) {
