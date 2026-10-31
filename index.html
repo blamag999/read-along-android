@@ -157,6 +157,12 @@
 
       <div class="playlist-search-bar">
         <input type="text" id="txtPlaylistSearch" class="search-input" placeholder="🔍 Tìm kiếm tập truyện...">
+        <label class="playlist-folder-filter" for="selPlaylistFolder">
+          <span>Thư mục</span>
+          <select id="selPlaylistFolder" aria-label="Lọc sách theo thư mục">
+            <option value="">Tất cả thư mục</option>
+          </select>
+        </label>
         <div class="playlist-filter-tabs">
           <button class="filter-tab active" data-filter="paired">📖 Đủ sách và âm thanh</button>
           <button class="filter-tab" data-filter="all">Tất cả</button>
