@@ -16,6 +16,14 @@ Tài liệu kỹ thuật chi tiết chỉ đọc khi công việc liên quan:
 - `modules/remote-config.js` và `modules/remote-config-bootstrap.js`: Data Client tải JSON từ hostname cố định, validate, cache bản hợp lệ và fallback offline. Bootstrap chạy bất đồng bộ sau app startup; config hiện chỉ được lưu ở `window.ReadAlongRemoteConfigState`, chưa áp dụng vào reader.
 - `tests/`: kiểm thử hợp đồng và module.
 
+## Quy tắc README dùng chung trên mọi nhánh
+
+- `README.md` là hồ sơ quy tắc làm việc và bàn giao **dùng chung**, nội dung phải đồng nhất tuyệt đối trên `main`, `beta` và `testing`.
+- Khi README thay đổi trên một nhánh, phải đồng bộ cùng nội dung sang hai nhánh còn lại bằng commit chỉ sửa README; không merge/cherry-pick mã nguồn hoặc promote code chỉ để đồng bộ tài liệu.
+- Sau mỗi lần đồng bộ, đọc lại cả ba file và xác nhận nội dung giống hệt nhau (byte-for-byte), đồng thời ghi SHA commit từng nhánh vào ROADMAP.
+- Mỗi phiên mới phải kiểm tra README của cả ba nhánh trước khi làm việc; nếu phát hiện lệch, dùng bản quy tắc mới nhất đã được xác nhận trên beta làm nguồn chuẩn, trừ khi người dùng chỉ định khác.
+- Không sửa README riêng lẻ trên một nhánh mà bỏ quên hai nhánh còn lại. Không đồng nhất các file ROADMAP/PLANNING giữa nhánh bằng cách này; chúng phản ánh trạng thái code riêng của từng nhánh.
+
 ## 2. Phạm vi dự án — không dùng tài nguyên dự án khác
 
 - Chỉ làm việc trong repository `blamag999/read-along-android` và các dịch vụ/tài nguyên được cấu hình, liên kết trực tiếp từ repository này.
