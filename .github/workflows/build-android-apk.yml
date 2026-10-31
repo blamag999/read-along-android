@@ -383,15 +383,15 @@ jobs:
       - name: Publish OTA objects to Cloudflare R2 (optional during migration)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_R2_UPLOAD_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: 27391a829e8e4a38e9411d17ce76b5ba
           VERSION: ${{ steps.release_info.outputs.version }}
           VERSION_CODE: ${{ github.run_number }}
           RELEASE_CHANNEL: ${{ github.event_name == 'workflow_dispatch' && inputs.channel || 'beta' }}
           CHANGELOG: ${{ steps.release_info.outputs.changelog }}
         run: |
           set -euo pipefail
-          if [[ -z "${CLOUDFLARE_API_TOKEN:-}" || -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]]; then
-            echo "::warning::Cloudflare R2 upload skipped. Configure CLOUDFLARE_R2_UPLOAD_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets to enable OTA publishing."
+          if [[ -z "${CLOUDFLARE_API_TOKEN:-}" ]]; then
+            echo "::warning::Cloudflare R2 upload skipped. Configure the CLOUDFLARE_R2_UPLOAD_TOKEN repository secret to enable OTA publishing."
             exit 0
           fi
 
