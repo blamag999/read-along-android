@@ -155,3 +155,10 @@ Khi một công việc trong PLANNING hoàn tất:
 - Cấu hình build command của project thành `node scripts/validate-remote-config.js`. Validator được đặt trong `admin/scripts/`, cùng build root; do đó Pages build sẽ dừng nếu Remote Config JSON không đạt contract trước khi publish thư mục `public`.
 - Project-level build config đã được API trả về xác nhận có build command mới. Deployment khởi chạy đồng thời với lúc cập nhật setting có snapshot build command cũ, nên cần thêm một commit sau khi setting đã lưu để nghiệm thu deployment dùng gate mới.
 - Quy tắc version: mọi thay đổi nội dung Remote Config sau khi phát hành phải tăng `configVersion`; validator kiểm tra kiểu/giá trị dương nhưng không tự tăng version và không so sánh được với bản production trước đó. Người sửa config chịu trách nhiệm tăng version.
+
+
+### 2026-10-31 — Pages deploy-time validator verified
+- Deployment [201aeb20](https://201aeb20.read-along-admin.pages.dev) được Cloudflare xác nhận success cho commit `1d0e557444cb501bf0535fb7d719d0a22cba672c`; deployment snapshot ghi nhận build command `node scripts/validate-remote-config.js`, root `admin`, output `public`. Điều này xác nhận Pages đã chạy build command trước publish thành công.
+- Project-level build config hiện giữ build command `node scripts/validate-remote-config.js`; deployment tiếp theo từ beta cũng nhận cấu hình này.
+- CI [41161257650](https://github.com/blamag999/read-along-android/actions/runs/41161257650) success trên commit `59a78ea50991afc1df24d945add91892252f1046`, bao gồm validator trong `npm test`.
+- Còn thiếu duy nhất bước kiểm tra trực tiếp HTTP status/content-type/body của public URL `https://read-along-admin.pages.dev/remote-config.json`. Hai công cụ truy cập ngoài gặp lỗi DNS/internal error; deployment success không thay thế xác minh response.
