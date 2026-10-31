@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://read-along-admin.pages.dev/schemas/analytics-event.schema.json",
+  "title": "Read Along anonymous analytics event (proposed contract)",
+  "type": "object",
+  "required": ["schemaVersion", "eventId", "sessionId", "installId", "sequence", "type", "occurredAt", "platform", "appVersion"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "eventId": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,100}$" },
+    "sessionId": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,100}$" },
+    "installId": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,100}$" },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "type": { "enum": ["reader_start", "heartbeat", "reader_pause", "reader_resume", "reader_stop", "audio_play", "audio_pause", "audio_stop"] },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "durationSeconds": { "type": "integer", "minimum": 0, "maximum": 120 },
+    "platform": { "enum": ["android", "web"] },
+    "appVersion": { "type": "string", "maxLength": 40 },
+    "bookId": { "type": "string", "maxLength": 160 }
+  }
+}
