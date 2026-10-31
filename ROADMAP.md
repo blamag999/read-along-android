@@ -958,3 +958,14 @@ Khi một công việc trong PLANNING hoàn tất:
 5. Run the beta app, test folder filtering and open books from both folders; verify marker JSON and audio synchronization.
 6. Run the final regression, build one beta APK, complete device acceptance, then update this handover with actual R2/catalog/APK evidence.
 
+
+
+## Admin migration destination picker (2026-11-01)
+
+- Replaced the DISNEY-specific bulk-move button with **Chuyển tệp ngoài thư mục…**.
+- Admin recursively discovers existing R2 folders and allows selecting a nested folder; it also supports creating a new top-level folder.
+- Selected destination is shown in the confirmation step and progress status. Existing collision protection, root-only file scope, `books.json` exclusion, and copy → verify size → delete source behavior are retained.
+- Catalog preview and explicit `books.json` publication confirmation remain unchanged.
+- Source commit: `424f00e0b3ad78ce31442afa62898f01c9593a14`; regression workflow [41227122514](https://github.com/blamag999/read-along-android/actions/runs/41227122514) pending at the time of this entry.
+- No R2 object has been moved; no APK build is needed for this Admin-only refinement.
+
