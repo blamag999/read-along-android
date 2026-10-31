@@ -253,8 +253,8 @@
       return;
     }
     storageSet(CONSENT_KEY, 'false');
-    storageRemove(INSTALL_KEY);
-    installId = '';
+    // Keep the random local installation ID for a later re-consent on this same app install.
+    // No events are sent while consent is false; retaining it avoids counting a consent toggle as a new device.
     sessionId = '';
     sequence = 0;
     sessionBookKey = '';
