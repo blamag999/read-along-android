@@ -7,7 +7,7 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover commit: `161fafae7b604eb1862e160c28ed44f2d5b38f7f`
+- Last formal handover code/documentation checkpoint: `4949bae9693d6bf17ccb57af81c80680d74772cf` (the following `[handover]` commit records this checkpoint).
 - Last reviewed functional HEAD on beta: `4949bae9693d6bf17ccb57af81c80680d74772cf`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
