@@ -2969,3 +2969,30 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
   .header-right { gap:4px; }
   .header-right > .icon-btn { padding:5px 7px; }
 }
+
+/* View controls live inside the single application menu, not the top bar. */
+.menu-view-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  padding: 8px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid rgba(255,255,255,.14);
+}
+.menu-view-controls .view-btn {
+  min-height: 36px;
+  border-radius: 7px;
+  padding: 6px 8px;
+}
+.menu-view-controls .zoom-group {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.menu-view-controls .view-btn-mini {
+  min-width: 38px;
+  min-height: 34px;
+  border-radius: 7px;
+}
