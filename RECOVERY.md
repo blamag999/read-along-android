@@ -7,11 +7,11 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover code/documentation checkpoint: `e679600bd3e7d36e9b98443991eeedf128f137bc` (implementation/test checkpoint; handover documentation follows).
+- Last formal handover code/documentation checkpoint: `50b7c4961520a54e84c8400687e00bd7edad1076` (implementation/test checkpoint; handover documentation follows).
 - Last reviewed functional HEAD on beta: `e679600bd3e7d36e9b98443991eeedf128f137bc`
-- Recovery status: `PARTIAL — npm regression passed; deployed OTA smoke and release verification pending`
+- Recovery status: `RECONCILED — beta HEAD đã đối chiếu; kế hoạch local-open/menu đã ghi nhận; chưa triển khai`
 - Recovery reviewed on: 2026-10-31
-- Latest recovery checkpoint: docs-only plan and audit for release notes and app notifications; no runtime files changed. OTA notification implementation remains at prior checkpoint; build workflow 41211770726 status must be checked before claiming APK availability.
+- Latest recovery checkpoint: beta HEAD 50b7c4961520a54e84c8400687e00bd7edad1076 được đối chiếu; kế hoạch bỏ mở sách cục bộ và tinh gọn Menu được duyệt ngày 2026-10-31. Chỉ cập nhật tài liệu; không có runtime changes.
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
 
 ## Phát hiện sau mốc bàn giao trước
@@ -291,3 +291,12 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - GitHub Release assets include APK, SHA-256 text file and Web Local ZIP. Artifact ID `13047033500`, expires 2026-11-30.
 - Important outstanding issue: actual Release Notes include English/technical commit titles (e.g. CI regex/script changes). Version/channel baseline and common Release/OTA changelog path worked, but content quality is not acceptable as final user-facing Vietnamese. Fix generator policy before stable promotion; likely use explicit Vietnamese `Release-Note:` body fields and ignore internal maintenance commits.
 - Device test has not been performed. User should install beta APK and verify app notifications/labels, reader/audio/marker/orientation and OTA behavior. Main remains unchanged.
+
+
+## Recovery checkpoint — approved local-open removal and menu cleanup plan (2026-10-31)
+
+- Đã đối chiếu beta HEAD 50b7c4961520a54e84c8400687e00bd7edad1076; ghi nhận yêu cầu bỏ khả năng mở file tùy ý từ thiết bị, mọi sách mở qua catalog/thư viện R2.
+- Bảo toàn cache/offline của nội dung tải từ R2, kho offline 1 GiB theo kế hoạch hiện có, IndexedDB/native storage, session/checkpoint, marker và page/audio sync.
+- Header mục tiêu: Thư viện sách và Menu; Android Back đóng sách; bỏ entry point chọn file và UI cũ không còn cần; giữ điều khiển reader, checkpoint “Vị trí đọc gần đây” / “Xem tiếp” và OTA.
+- Kế hoạch chi tiết được thêm vào PLANNING.md; quyết định và ranh giới dữ liệu được ghi vào ROADMAP.md.
+- Không sửa source/runtime, test, workflow, OTA, R2/Cloudflare hoặc main. Không chạy CI/build APK trong bước lập kế hoạch.
