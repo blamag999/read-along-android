@@ -42,11 +42,10 @@
     </section>
 
     <section id="managerPanel" class="hidden">
-      <nav class="tabbar" aria-label="Khu vực quản lý"><button id="libraryTabBtn" class="tab-button active" type="button">Thư viện</button><button id="diagnosticsTabBtn" class="tab-button" type="button">Kiểm tra thư viện</button></nav>
       <section id="libraryPanel">
       <div class="summary-row">
         <div><div class="eyebrow">THƯ VIỆN R2</div><h2>Quản lý nội dung</h2><p class="muted">Chỉ thao tác trên bucket Read Along.</p></div>
-        <div class="toolbar">
+        <div class="toolbar library-actions">
           <button id="newFolderBtn" class="button secondary" type="button">＋ Thư mục</button>
           <label class="button primary file-button">↑ Tải tệp lên<input id="fileInput" type="file" multiple accept=".pdf,.json,.mp3,.m4a,.m4b,.aac,.wav,.ogg,.oga,.opus,.flac,.wma"></label>
         </div>
@@ -72,11 +71,15 @@
       </div>
       </section>
 
-      <section id="diagnosticsPanel" class="panel diagnostics-panel hidden" aria-live="polite">
+      <details id="diagnosticsPanel" class="panel diagnostics-panel" aria-live="polite">
+        <summary class="diagnostics-summary">
+          <span><strong>Kiểm tra &amp; xuất bản danh mục</strong><small id="diagnosticsSummary" class="muted">Chưa chạy kiểm tra.</small></span>
+          <span class="details-hint">Mở công cụ ▾</span>
+        </summary>
+        <div class="diagnostics-content">
         <div class="diagnostics-heading">
-          <div><div class="eyebrow">KIỂM TRA TÍNH TOÀN VẸN</div><h3>Kết quả kiểm tra thư viện</h3><p id="diagnosticsSummary" class="muted">Chưa chạy kiểm tra.</p></div>
-          <button id="scanBtn" class="button secondary" type="button">Quét thư viện</button>
-            <button id="publishBooksBtn" class="button secondary" type="button">Tạo danh mục từ R2</button>
+          <div><div class="eyebrow">KIỂM TRA TÍNH TOÀN VẸN</div><h3>Kết quả kiểm tra thư viện</h3><p class="muted">Quét lỗi, xem nhóm bị loại và xuất bản books.json ngay tại trang quản lý này.</p></div>
+          <div class="diagnostics-actions"><button id="scanBtn" class="button secondary" type="button">Quét thư viện</button><button id="publishBooksBtn" class="button primary" type="button">Tạo danh mục từ R2</button></div>
         </div>
         <div id="diagnosticStats" class="diagnostic-stats"></div>
         <div class="table-wrap">
@@ -86,7 +89,8 @@
           </table>
         </div>
         <p class="footnote">Kiểm tra chữ ký/metadata, ghép tự động khi tên chuẩn hóa trùng khớp và cảnh báo tên gần giống. Gợi ý đổi tên chỉ được áp dụng sau khi quản trị viên duyệt; không tự sửa tệp. Đây không phải bộ giải mã đầy đủ.</p>
-      </section>
+        </div>
+      </details>
 
       <details class="panel audit-panel">
         <summary>Lịch sử thao tác quản trị</summary>
