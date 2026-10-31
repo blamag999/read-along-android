@@ -154,9 +154,9 @@ async function closeCurrentBook() {
   dom.emptyState.classList.remove('hidden');
   dom.readerPageStatus.classList.add('hidden');
   dom.btnChooseAudio.classList.add('hidden');
-  dom.pdfFileName.textContent = '📄 Chưa có PDF';
+  dom.pdfFileName.textContent = '📖 Chưa có sách';
   dom.pdfFileName.classList.add('empty');
-  dom.audioFileName.textContent = '🎵 Chưa có audio';
+  dom.audioFileName.textContent = '🎵 Chưa có âm thanh';
   dom.audioFileName.classList.add('empty');
   dom.lblCurrentPage.textContent = '0';
   dom.lblTotalPages.textContent = '0';
@@ -853,13 +853,13 @@ function renderPlaylistView() {
       if (story.pdf) {
         const pdfTag = document.createElement('span');
         pdfTag.className = 'mini-badge badge-pdf';
-        pdfTag.textContent = '📄 ' + String(story.pdf.name || 'PDF');
+        pdfTag.textContent = '📖 ' + String(story.pdf.name || 'Sách');
         tags.appendChild(pdfTag);
       }
       (Array.isArray(story.audios) ? story.audios : []).forEach((aud) => {
         const audioTag = document.createElement('span');
         audioTag.className = 'mini-badge badge-mp3';
-        audioTag.textContent = '🎵 ' + String(aud.name || 'Audio');
+        audioTag.textContent = '🎵 ' + String(aud.name || 'Âm thanh');
         tags.appendChild(audioTag);
       });
       titleCol.appendChild(tags);
@@ -1068,7 +1068,7 @@ function updateAudioPartUI() {
   container.replaceChildren();
   const label = document.createElement('span');
   label.className = 'audio-part-label';
-  label.textContent = 'Phần audio:';
+  label.textContent = 'Phần âm thanh:';
   container.appendChild(label);
   audios.forEach(function(a, i) {
     const button = document.createElement('button');
