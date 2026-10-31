@@ -25,16 +25,6 @@
       <h1 class="app-title">📖 Read Along</h1>
     </div>
 
-    <!-- Thu gọn các chế độ xem vào menu để dành không gian cho trang sách. -->
-    <div class="view-controls-bar" aria-label="Điều khiển hiển thị">
-      <button id="btnFitHeight" class="view-btn active" type="button" title="Vừa trang">↔</button>
-      <button id="btnTwoPages" class="view-btn" type="button" title="Bật/tắt hiển thị 2 trang" aria-pressed="false">▣</button>
-      <div class="zoom-group">
-        <button id="btnZoomOut" class="view-btn-mini" title="Thu nhỏ">➖</button>
-        <span id="lblZoomLevel" class="zoom-label">100%</span>
-        <button id="btnZoomIn" class="view-btn-mini" title="Phóng to">➕</button>
-      </div>
-    </div>
 
     <div class="header-right">
       <!-- NÚT MỞ DANH SÁCH TẬP TRUYỆN (PLAYLIST) -->
@@ -45,9 +35,17 @@
 
       <button id="btnOpenReadMenu" class="icon-btn read-menu-button" type="button" aria-label="Mở menu" aria-controls="readOptionsMenu" aria-expanded="false" title="Menu">☰ <span>Menu</span></button>
       <div id="readOptionsMenu" class="read-options-menu hidden" role="group" aria-label="Menu ứng dụng">
+        <div class="menu-view-controls" aria-label="Điều khiển hiển thị">
+          <button id="btnFitHeight" class="view-btn active" type="button" title="Vừa trang">↔ Vừa trang</button>
+          <button id="btnTwoPages" class="view-btn" type="button" title="Bật/tắt hiển thị 2 trang" aria-pressed="false">▣ Hai trang</button>
+          <div class="zoom-group">
+            <button id="btnZoomOut" class="view-btn-mini" type="button" title="Thu nhỏ">➖</button>
+            <span id="lblZoomLevel" class="zoom-label">100%</span>
+            <button id="btnZoomIn" class="view-btn-mini" type="button" title="Phóng to">➕</button>
+          </div>
+        </div>
         <button id="menuToggleSettings" class="read-menu-option" type="button" aria-expanded="true"><span class="menu-option-icon" aria-hidden="true">⚙️</span><span>Ẩn/hiện chọn tệp và tùy chọn</span></button>
         <button id="menuOpenSyncModal" class="read-menu-option" type="button"><span class="menu-option-icon" aria-hidden="true">⏱️</span><span>Mốc thời gian</span></button>
-        <button id="menuTwoPages" class="read-menu-option" type="button" aria-pressed="false"><span class="menu-option-icon" aria-hidden="true">📖</span><span>Hiện 2 trang</span><span class="menu-option-state" id="menuTwoPagesState">Tắt</span></button>
         <button id="menuAutoFlip" class="read-menu-option" type="button" aria-pressed="true"><span class="menu-option-icon" aria-hidden="true">🔄</span><span>Tự lật trang</span><span class="menu-option-state" id="menuAutoFlipState">Bật</span></button>
 
         <div id="readingCheckpointMenuGroup" class="read-menu-checkpoints hidden">
