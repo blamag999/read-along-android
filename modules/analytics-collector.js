@@ -268,15 +268,6 @@
     if (status) status.textContent = 'Đã tắt thống kê. Ứng dụng sẽ không gửi thêm dữ liệu sử dụng.';
   }
 
-  function openSettings() {
-    if (!modal) return;
-    if (consentInput) consentInput.checked = consent;
-    if (status) status.textContent = consent
-      ? 'Thống kê ẩn danh đang bật. Bạn có thể tắt bất cứ lúc nào.'
-      : 'Thống kê đang tắt. Chỉ bật khi bạn chủ động đồng ý.';
-    modal.classList.remove('hidden');
-  }
-
   consent = readConsent();
   if (consent) ensureInstallId();
 
@@ -294,5 +285,5 @@
   setInterval(syncReaderState, POLL_MS);
   syncReaderState();
 
-  window.ReadAlongAnalytics = { openSettings };
+  window.ReadAlongAnalytics = { setEnabled: setConsent };
 })();
