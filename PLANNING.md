@@ -69,8 +69,8 @@
  > AN1 contract/schema đã chốt ở `schemas/analytics-event.schema.json` và `docs/architecture/data-contracts.md`; CI [41164377952](https://github.com/blamag999/read-along-android/actions/runs/41164377952) success. Endpoint và D1 chưa triển khai.
 
 - [ ] Ưu tiên dùng hạ tầng API/Worker hiện có của Read Along nếu đáp ứng; không tạo Analytics Worker thứ hai chỉ để tách tên.
-- [ ] Triển khai ingest endpoint có validation, rate limit, batch size limit và idempotency.
-- [ ] Lưu raw event/session vào D1 và tạo daily aggregates có thể tái tạo.
+- [x] Viết route ingest trong Pages Functions hiện có với consent=true, validation strict, 25 events/batch, 64 KiB, rate limit theo install hash, và idempotency theo eventId + (sessionId, sequence). Chờ CI, migration và deploy để nghiệm thu production.
+- [x] Viết migration D1 additive cho raw events, daily aggregates và unique daily sessions bằng trigger; raw retention 90 ngày, daily aggregates 24 tháng. Chưa áp dụng migration production.
 - [ ] Thêm test chống trùng, sequence sai, thời gian âm/quá lớn, payload lớn, schema cũ/mới và request không hợp lệ.
 - [ ] Không thay đổi ý nghĩa API usage/track hiện tại: nó chỉ phản ánh visit/installation, không phải reading duration.
 
@@ -136,3 +136,6 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 
 
 > Analytics AN1: proposed schema and privacy/event semantics documented; no client collector, API route, D1 table or dashboard deployed yet. Full regression phát hiện assertion bị cắt dòng và phần test trùng ở cuối `tests/contracts.test.js`; đã sửa cả hai và cần chạy lại.
+
+
+> Analytics AN2 backend code staged: endpoint, strict validation helper, D1 migration and regression tests added. It is not active until CI passes, migration is applied to the existing Read Along D1 database, and Pages production deploy/endpoint smoke test are verified. No client collector, dashboard or APK change.
