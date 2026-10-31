@@ -218,7 +218,7 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 ## Batch touch UI và tinh gọn menu — 2026-10-31
 
 - [x] Sửa header màn hình dọc: thu gọn tên app, ẩn nhãn chữ của nút Danh sách truyện/Đóng sách ở màn hình hẹp, giữ nút không co chồng lấn và chừa không gian cho Menu.
-- [x] Bỏ thao tác cập nhật marker từ GitHub và giao diện token/đồng bộ marker online; giữ luồng marker JSON gắn với catalog/media R2 cùng thao tác nhập/xuất JSON cục bộ.
+- [x] Bỏ thao tác cập nhật marker từ GitHub và giao diện token/đồng bộ marker online; giữ luồng marker JSON gắn với catalog/media R2 cùng thao tác nhập/xuất JSON cục bộ. Đã bỏ luôn lời gọi fallback `loadCloudSyncForBook()` để tránh phụ thuộc vào remote-sync client.
 - [x] Bỏ giao diện Chẩn đoán/Báo lỗi khỏi ứng dụng cá nhân và ngừng nạp diagnostics client.
 - [x] Bật usage analytics mặc định, không hiển thị consent modal/menu; payload hiện hữu chỉ gồm event ẩn danh và thời lượng đọc/nghe, không gồm tên sách/tệp/nội dung.
 - [x] Đổi nhãn checkpoint thành “Mốc đọc gần đây”.
