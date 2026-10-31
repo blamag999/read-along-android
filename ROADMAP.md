@@ -441,3 +441,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - Commit: `cb797654d019936b345d51231dd7bc714a9ace1b`.
 - Chờ CI mới; chưa build APK.
 
+
+### 2026-10-31 — AN3 automated acceptance complete; ready for one beta APK build
+
+- CI [#41167810567](https://github.com/blamag999/read-along-android/actions/runs/41167810567) **success** trên commit `cb797654d019936b345d51231dd7bc714a9ace1b`: full regression, JS syntax, Pages Functions syntax, isolation và non-mutating production CORS/consent smoke.
+- CI [#41167772447](https://github.com/blamag999/read-along-android/actions/runs/41167772447) success sau khi thêm orientation regression.
+- Automated collector coverage hiện gồm: default off/no ID before consent; opt-in/out; unique opaque IDs; reader open/close/PDF switch; heartbeat 60s; audio play/pause/end; foreground/background; orientationchange; pagehide/pageshow; offline drop/no retry; sequence monotonicity; không gửi book/title/file/path/URL/content; pending fetch không block reader lifecycle.
+- Code review xác nhận `scripts/prepare-web.js` copy toàn bộ `modules/` vào `www/`, build workflow path filter bao gồm index.html, modules/**, sw.js và package.json; collector được đóng gói vào APK và Service Worker cache v50.
+- **Ready for one beta APK build** bằng commit cuối có marker `[build-apk]`. Chưa build trong entry này; kiểm thử WebView/Android thật và Android TV vẫn pending.
+
