@@ -67,6 +67,7 @@ class Target {
   assert.equal('bookId' in sent[0], false);
   assert.equal(JSON.stringify(sent).includes('private-book-title'), false, 'book key/title must never leave the device');
 
+  await tick(5000);
   await tick(55000);
   sent = requests.map(x => JSON.parse(x.options.body).events[0]);
   const heartbeat = sent.find(x => x.type === 'heartbeat');
