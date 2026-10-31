@@ -745,3 +745,13 @@ Khi một công việc trong PLANNING hoàn tất:
 - Finalization commit: `5839851550c29a1fcb17d8815426db1783b0936d` (`[build-apk]`).
 - Workflow [41213680238](https://github.com/blamag999/read-along-android/actions/runs/41213680238): completed successfully through full regression, Pages Functions syntax, isolation, release channel validation, release version/changelog generation, web asset preparation, version embedding, Web Local ZIP, native updater integration, Android version, launcher icons and signing configuration.
 - APK Gradle build is still in progress. Signature/SHA-256 verification, OTA R2 publication, artifact upload and GitHub Release creation remain pending. Do not report APK available until all steps and assets are verified.
+
+
+## 2026-10-31 — Beta v1.3.21 đã build, ký và phát hành
+
+- Finalization commit: `5839851550c29a1fcb17d8815426db1783b0936d`; version `1.3.21`, versionCode `199`, channel beta, GitHub Release prerelease.
+- GitHub Actions [41213680238](https://github.com/blamag999/read-along-android/actions/runs/41213680238): completed/success. Full regression, Pages syntax, isolation, channel validation, release version/changelog generation, Web Local packaging, native updater integration, Android version, launcher icons, signing setup, signed APK build, rename/signature verification, OTA R2 publication, artifact upload and GitHub Release creation all passed.
+- APK: `read-along-v1.3.21-android.apk`, 3,436,157 bytes. Signature verification: v1/JAR and v2 true. OTA manifest SHA-256: `fbe5f4650d1b54c5e29ac4a81a0e895b59321287ef0e923bbd23ba143e667723`.
+- Release assets: APK, SHA-256 file, Web Local ZIP. Workflow artifact `read-along-v1.3.21-build` ID `13047033500` (expires 2026-11-30).
+- Release Notes generator correctly used previous beta tag `v1.3.20` and generated `1.3.21`; however, actual notes include English/technical commit subjects for workflow/test fixes. This is a content-quality defect; generator is implemented but Release Notes quality remains pending correction before stable promotion.
+- Runtime notification/UI terminology batch is complete. Device acceptance remains pending; do not promote main.
