@@ -430,20 +430,28 @@ async function runDiagnostics() {
 }
 $("publishBooksBtn").addEventListener("click", async () => {
   const button = $("publishBooksBtn");
-  if (!await confirmAction("Tạo / cập nhật books.json?", "Sẽ kiểm tra toàn bộ đường dẫn PDF, audio và sync trong manifest, sau đó ghi đè books.json ở thư mục gốc Bucket my-audio-book. APK sẽ dùng manifest này qua API.", "Tạo / cập nhật")) return;
+  if (!await confirmAction("Tạo danh mục từ thư viện R2?", "Hệ thống sẽ quét danh sách tệp hiện tại, ghép chính xác theo tên chuẩn hóa và chỉ đưa sách có đủ PDF/audio, không trùng và không có lỗi nghiêm trọng vào bản xem trước. Không tệp nào trong R2 bị xóa hoặc đổi tên.", "Tạo bản xem trước")) return;
   button.disabled = true;
   const oldLabel = button.textContent;
-  button.textContent = "Đang kiểm tra tệp…";
+  button.textContent = "Đang quét và tạo bản xem trước…";
   try {
-    const response = await fetch("/books.json", { cache: "no-store" });
-    if (!response.ok) throw new Error("Không đọc được file mẫu books.json (" + response.status + ")");
-    const manifest = await response.json();
-    if (!manifest || !Array.isArray(manifest.books)) throw new Error("File mẫu không đúng cấu trúc { books: [...] }");
-    const result = await postJson("catalog/publish", manifest);
-    setStatus("Đã tạo books.json: " + result.books + " sách, " + result.files + " tệp đã xác minh.");
+    const preview = await api("catalog/preview");
+    if (!preview.manifest || !Array.isArray(preview.manifest.books)) throw new Error("Không nhận được bản xem trước hợp lệ.");
+    const included = preview.included;
+    const excluded = preview.excluded || [];
+    const details = excluded.slice(0, 8).map(item => "• " + item.title + ": " + item.reasons.join("; ")).join("\\n");
+    const message = "Sẽ xuất bản " + included + " sách từ thư viện R2.\\n" +
+      "Loại khỏi danh mục: " + excluded.length + " nhóm.\\n" +
+      "Quét: " + preview.scanned + " tệp · " + preview.errors + " lỗi · " + preview.warnings + " cảnh báo.\\n\\n" +
+      (details ? "Một số nhóm bị loại:\\n" + details + (excluded.length > 8 ? "\\n… và " + (excluded.length - 8) + " nhóm khác.\\n" : "\\n") : "") +
+      "\\nChỉ books.json được ghi lại; tệp PDF/audio/JSON trong R2 không bị thay đổi.";
+    if (!await confirmAction("Duyệt và xuất bản danh mục?", message, "Xuất bản books.json")) return;
+    button.textContent = "Đang xác minh và xuất bản…";
+    const result = await postJson("catalog/publish", preview.manifest);
+    setStatus("Đã cập nhật books.json từ R2: " + result.books + " sách, " + result.files + " tệp đã xác minh. Đã loại " + excluded.length + " nhóm không đủ điều kiện.");
     await loadFiles();
   } catch (error) {
-    setStatus("Không thể tạo books.json: " + error.message, true);
+    setStatus("Không thể tạo danh mục: " + error.message, true);
   } finally {
     button.disabled = false;
     button.textContent = oldLabel;
