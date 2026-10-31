@@ -256,6 +256,7 @@ function libraryAssetGroups(entries) {
     .replace(/\bbook\b/gi, " ").replace(/[^\p{L}\p{N}]+/gu, " ")
     .replace(/\s+/g, " ").trim().toLocaleLowerCase("vi");
   for (const file of files) {
+    if (file.key === "books.json") { ungrouped.push(file); continue; }
     const ext = extension(file.name);
     const isPdf = ext === ".pdf", isJson = ext === ".json", isAudio = audioExtensions.has(ext);
     if (!isPdf && !isJson && !isAudio) { ungrouped.push(file); continue; }
@@ -347,7 +348,7 @@ function renderLibraryPage() {
       const row=document.createElement("tr"); addEntry(row,item.entry); $("fileRows").append(row); continue;
     }
     if (item.type === "unmatched") {
-      const section=document.createElement("tr"), cell=addCell(section,"Chưa ghép được · "+item.entry.length+" file");
+      const section=document.createElement("tr"), cell=addCell(section,"Tệp độc lập / chưa ghép · "+item.entry.length+" file");
       cell.colSpan=5; cell.className="library-unmatched-heading"; $("fileRows").append(section);
       for (const file of item.entry) { const row=document.createElement("tr"); addEntry(row,file); $("fileRows").append(row); }
       continue;
