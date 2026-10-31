@@ -18,3 +18,8 @@ assert.ok(html.indexOf('<details id="diagnosticsPanel"') > html.indexOf('id="fil
 assert.ok(script.includes('$("diagnosticsPanel").open = true;'), 'running diagnostics must expand the integrated tools panel');
 assert.ok(script.includes('mục quản lý') && script.includes('bộ sách') && script.includes('thư mục'), 'library count must distinguish management items, books and folders');
 assert.match(fs.readFileSync('admin/public/admin.css', 'utf8'), /library-actions[^]*height:44px/, 'folder and upload buttons must share the same height and alignment');
+
+assert.ok(html.includes('id="libraryErrors"') && html.includes('id="libraryWarnings"'), 'Dashboard must expose library errors and warnings');
+assert.ok(html.includes('id="libraryBooks"'), 'Dashboard must expose published book count');
+assert.ok(!html.includes('analyticsSessions'), 'Dashboard must not show sessions-per-day KPI');
+assert.ok(script.includes('$("libraryErrors")') && script.includes('$("libraryWarnings")'), 'Dashboard must render latest scan findings');
