@@ -116,32 +116,6 @@ body {
   border-radius: 10px;
 }
 
-.file-status-pill {
-  font-size: 0.78rem;
-  padding: 4px 10px;
-  border-radius: 20px;
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  max-width: 170px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-weight: 500;
-}
-
-.file-status-pill.sync-pill {
-  background: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
-  border-color: rgba(56, 189, 248, 0.3);
-}
-
-.file-status-pill.empty {
-  background: rgba(148, 163, 184, 0.1);
-  color: var(--text-muted);
-  border-color: rgba(148, 163, 184, 0.2);
-}
-
 /* MAIN VIEWER CONTAINER */
 .viewer-container {
   flex: 1;
@@ -748,7 +722,6 @@ button:focus-visible, select:focus-visible, input:focus-visible{
 .app-title { font-size: clamp(.95rem, 1.3vw, 1.12rem); }
 .header-right { flex-wrap: wrap; justify-content: flex-end; }
 .icon-btn { min-height: 36px; }
-.file-status-pill { max-width: min(240px, 30vw); }
 .viewer-container {
   min-height: 0;
   padding: clamp(8px, 1.4vw, 20px);
@@ -858,7 +831,6 @@ button:focus-visible, select:focus-visible, input:focus-visible{
   .app-title { font-size: .96rem; }
   .header-right { gap: 5px; }
   .icon-btn { min-height: 36px; padding: 7px 9px; }
-  .file-status-pill { max-width: 100%; flex: 1 1 130px; }
   .viewer-container { padding: 8px; }
   .canvas-wrapper.two-page-mode { align-items: flex-start; }
   .app-footer { padding: 9px 10px max(10px, env(safe-area-inset-bottom)); }
@@ -884,8 +856,6 @@ button:focus-visible, select:focus-visible, input:focus-visible{
   .app-title { font-size: .88rem; }
   .header-right { gap: 4px; }
   .icon-btn { padding: 7px; font-size: .76rem; }
-  .file-status-pill { max-width: 100%; min-width: 0; }
-  .file-status-pill.sync-pill { grid-column: 1 / -1; }
   .page-jump-control { flex-wrap: wrap; }
   .controls-row { gap: 6px; }
   .ctrl-btn { font-size: .8rem; }
@@ -936,13 +906,6 @@ button:focus-visible, select:focus-visible, input:focus-visible{
 
 /* Tinh chỉnh theo phản hồi: thanh chọn tệp một dòng, nút điều khiển phân cấp rõ */
 @media (min-width: 1101px) {
-  .file-status-pill {
-    max-width: 230px;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
 }
 .controls-row {
   grid-template-columns: minmax(125px,1.2fr) minmax(30px,.36fr) minmax(72px,.9fr) minmax(30px,.36fr) minmax(125px,1.2fr) minmax(76px,.68fr) 64px;
@@ -1001,7 +964,6 @@ button:focus-visible, select:focus-visible, input:focus-visible{
   .replay-page-btn { grid-column: span 2; min-height: 26px !important; height: 26px; font-size: .62rem !important; }
   .replay-page-icon { font-size: .78rem; }
 }
-.file-status-pill { font-size: .76rem; padding: 6px 9px; }
 .controls-row {
   grid-template-columns: minmax(112px,1.25fr) minmax(42px,.52fr) minmax(54px,.62fr) minmax(42px,.52fr) minmax(112px,1.25fr) minmax(94px,.85fr) 68px;
   gap: 7px;
@@ -1051,7 +1013,6 @@ button:focus-visible, select:focus-visible, input:focus-visible{
   .replay-page-btn { grid-column: span 2; min-height: 28px !important; height: 28px; }
 }
 @media (max-width: 420px) {
-  .file-status-pill { max-width: 100%; }
   .controls-row { gap: 5px; }
   .ctrl-btn.page-ctrl { font-size: .75rem; }
 }
