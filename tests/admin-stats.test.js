@@ -31,6 +31,8 @@ assert.ok(dashboard.includes('Date range cannot exceed 24 months'), 'Dashboard m
 assert.ok(dashboard.includes('Math.max(startMs, cutoff)'), 'Raw breakdown must respect 90-day retention while retaining aggregate range');
 assert.ok(dashboard.includes('!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)'), 'Dashboard date parser must validate YYYY-MM-DD');
 assert.ok(!dashboard.includes('activeSessionDays'), 'Dashboard must not promote daily session count as a KPI');
+const dashboardHtml = fs.readFileSync(path.join(__dirname, '..', 'admin/public/index.html'), 'utf8');
+assert.ok(!dashboardHtml.includes('analyticsSessions'), 'Dashboard HTML must not render sessions-per-day KPI');
 console.log('Analytics dashboard API regression tests passed.');
 
 // [test] Re-run full dashboard regression after fixing library table placement assertion.
