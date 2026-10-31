@@ -46,6 +46,12 @@ assert.ok(workflow.includes('--key "channels/$CHANNEL/latest.json"'), 'Release w
 assert.ok(workflow.includes('"sha256": os.environ["SHA256"]'), 'Published manifest must contain the APK SHA-256');
 
 assert.ok(app.includes('READ_ALONG_OTA_API'), 'APK must use the fixed OTA API origin');
+assert.ok(app.includes("showToast('Hiện chưa có bản cập nhật Read Along trên kênh ' + channelLabel + '.');"), 'Missing channel release uses concise user-facing copy');
+assert.ok(app.includes("showToast('Bạn đang sử dụng phiên bản Read Along mới nhất.');"), 'Current version uses concise latest-version notice');
+assert.ok(app.includes("'Tải và cài đặt ngay?\\nAndroid sẽ hiển thị bước xác nhận cài đặt.'"), 'OTA prompt explains Android installation confirmation');
+assert.ok(app.includes("showToast('Đang tải bản cập nhật Read Along…\\nVui lòng không đóng ứng dụng.');"), 'OTA download shows a clear progress notice');
+assert.ok(app.includes("'Không thể kiểm tra hoặc cài đặt cập nhật.\\nVui lòng kiểm tra kết nối Internet và thử lại.'"), 'OTA errors use concise recovery guidance');
+assert.ok(!app.includes('versionCode ' + "' + manifest.versionCode"), 'Normal no-update notice does not expose versionCode details');
 assert.ok(!app.includes('READ_ALONG_RELEASES_API') && !app.includes('api.github.com/repos/blamag999/read-along-android/releases'), 'APK must not query GitHub Releases directly');
 assert.ok(app.includes('expectedSize: manifest.size') && app.includes('sha256: manifest.sha256'), 'APK must pass size and checksum to the native verifier');
 assert.ok(app.includes("'/download?channel='"), 'APK must construct the download route from the fixed OTA API');
