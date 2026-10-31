@@ -15,6 +15,7 @@ class OtaRetentionTests(unittest.TestCase):
             {"Key": "releases/beta/read-along-v1.3.23-android.apk"},
             {"Key": "releases/official/read-along-v1.4.0-android.apk"},
             {"Key": "releases/beta/notes.txt"},
+            {"Key": "releases/beta/read-along-v1.3.22-android.apk.sha256"},
             {"Key": "channels/beta/latest.json"},
         ]
         self.assertEqual(
