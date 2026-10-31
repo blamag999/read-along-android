@@ -129,3 +129,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - Cập nhật trạng thái mốc tương ứng.
 - Chỉ sau đó xóa mục hoàn tất khỏi PLANNING.
 - Giữ lại lịch sử có giá trị; không biến ROADMAP thành backlog mới.
+
+
+### 2026-10-31 — Remote Config contract hardening and branch CI alignment
+- Bổ sung runtime-style contract assertions cho static Remote Config fixture: schema version, config version, timestamp parse, feature flags/default whitelist, announcements, field lạ và expiresAt trước issuedAt.
+- Negative tests xác nhận từ chối schema version không hỗ trợ, configVersion không hợp lệ, field ngoài whitelist, feature/default lạ, announcement field lạ và cấu hình hết hạn không hợp lệ.
+- Điều chỉnh workflow `.github/workflows/check-readalong-admin.yml`: push validation chỉ áp dụng ba nhánh `beta`, `main`, `testing`; bỏ pattern nhánh `feature/**` và cho phép kiểm thử push trên `testing`.
+- CI [41160461292](https://github.com/blamag999/read-along-android/actions/runs/41160461292) success trên commit `e3f448ad778b5db7cf1d945aef827c6b248dd26d`.
+- Không thay đổi APK/runtime reader, không build APK.
+- Public URL `https://read-along-admin.pages.dev/remote-config.json` chưa xác minh được HTTP response/body trong phiên này; static deployment chưa được xem là hoàn tất tích hợp.
