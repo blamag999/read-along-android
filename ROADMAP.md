@@ -247,3 +247,14 @@ Khi một công việc trong PLANNING hoàn tất:
 - Cloudflare Pages production deployment for commit `e8691fdd320eec71cdddfba67b22c8b0891d8fbe` completed successfully. A synthetic D1 trigger smoke test inserted a temporary event, verified 12 reading seconds + 3 listening seconds + one event + one unique session in the daily aggregate, then removed all synthetic rows. No test data remains.
 - Not implemented: APK/client consent UI and collector, valid event write/deduplication/aggregate end-to-end test, analytics dashboard. No APK build and no `main` promotion.
 
+
+### 2026-10-31 — Workflow path filters refined and continuous handover rule enforced
+
+- Kiểm tra lại cả hai workflow trên beta. Xác nhận Check Read Along Admin đã lọc push theo admin/app shell/modules/services/schemas/package/tests; full regression vẫn yêu cầu marker `[test]`, PR và workflow_dispatch vẫn giữ nguyên.
+- Xác nhận Build and Release Read Along đã lọc push beta theo runtime/assets/native Android/build manifests; job build vẫn yêu cầu `[build-apk]`, manual dispatch giữ nguyên. Backend/Admin/docs không thuộc path filter nên không tạo APK workflow run.
+- Thu hẹp `.github/workflows/build-android-apk.yml` từ `scripts/**` thành đúng `scripts/prepare-web.js`, tránh script tiện ích không liên quan làm phát sinh APK workflow run.
+- Cập nhật README mục “Sau mỗi bước / batch”: bắt buộc cập nhật ROADMAP và PLANNING ngay sau mỗi kết quả độc lập, cập nhật README ngay khi thay đổi quy tắc nền tảng; trước khi kết thúc phiên phải đối chiếu ba hồ sơ với HEAD/CI/deploy. Không chờ đến cuối phiên.
+- Workflow/path filtering và handover policy đã được kiểm tra ở source trên beta. Không có thay đổi runtime/APK; không chạy build APK. Do các file thay đổi chỉ là README, ROADMAP và workflow build, path filters không tự tạo regression/build run; CI đầy đủ vẫn có thể gọi thủ công khi cần.
+- Workflow commit: `733b731e0a7d1a06674eb942072ecb4880785240`; README commit: `e7d278799d44f49bb865bcdab34a2b2bc5986588`. Hồ sơ này được cập nhật tiếp theo sau từng commit như quy tắc mới.
+- Beta HEAD lúc ghi nhận: `e7d278799d44f49bb865bcdab34a2b2bc5986588`. `main` không thay đổi.
+
