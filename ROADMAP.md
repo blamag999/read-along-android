@@ -494,3 +494,10 @@ Khi một công việc trong PLANNING hoàn tất:
 - Chú ý privacy: không có thống kê sách đã đọc theo đầu sách vì Analytics collector không gửi bookId/tên sách. Số đầu sách trên Dashboard là số sách hiện có trong manifest đã xuất bản, không phải số sách từng được mở.
 - Chú ý freshness: lỗi/cảnh báo phản ánh lần quét gần nhất trong admin_scan_logs; Dashboard không tự chạy scan khi mở để tránh tốn tải và tránh tác động dữ liệu vận hành.
 - Còn pending: chạy regression CI, kiểm tra Pages deployment, kiểm tra authenticated Dashboard và đối chiếu thời lượng đọc/nghe thật sau opt-in. Chưa tuyên bố Dashboard hoàn tất.
+
+
+### 2026-10-31 — AN4 dashboard regression CI passed
+
+- CI [41169858843](https://github.com/blamag999/read-along-android/actions/runs/41169858843) success trên commit e03acee6141ddc064f162475fad0e2c67655c994: full npm regression, JS syntax, Pages Functions syntax, isolation và non-mutating production consent smoke đều pass.
+- Trong quá trình test đã sửa assertion catalog.test.js để kiểm tra đúng bảng file trong library (không nhầm bảng phân bổ analytics), bỏ hoàn toàn activeSessionDays khỏi API response vì người dùng không cần KPI này.
+- Cloudflare Pages deployment của commit e03acee đang ở trạng thái Building tại thời điểm ghi; chưa xác nhận production dashboard hoạt động. Chưa kiểm tra số liệu thật và chưa đóng AN4.
