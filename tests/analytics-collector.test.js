@@ -144,6 +144,10 @@ class Target {
   const switchedSessionStart = JSON.parse(requests.at(-1).options.body).events[0];
   assert.equal(switchedSessionStart.type, 'reader_start', 'switching PDF starts a new analytics session');
   assert.notEqual(switchedSessionStart.sessionId, firstSessionId, 'PDF switch must start a distinct session');
+  window.dispatch('orientationchange');
+  await tick(5000);
+  assert.equal(requests.map(item => JSON.parse(item.options.body).events[0]).filter(event => event.type === 'reader_start' && event.sessionId === switchedSessionStart.sessionId).length, 1,
+    'rotation must not start a duplicate reader session');
 
   failNextRequest = true;
   const beforeOfflineHeartbeat = requests.length;
