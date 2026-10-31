@@ -268,14 +268,14 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 
 ## P2 — Chuẩn hóa Release Notes cho mọi bản build
 
-> Đề xuất đã ghi vào kế hoạch ngày 2026-10-31; chưa triển khai workflow. Phạm vi áp dụng trước trên beta, chỉ promote cùng bản stable khi người dùng xác nhận.
+> Đã triển khai generator và tích hợp vào workflow beta ngày 2026-10-31. Còn một lỗi chất lượng nội dung được phát hiện khi nghiệm thu Release v1.3.21; chưa coi hạng mục hoàn tất.
 
 - [x] Chuẩn hóa commit subject với bốn nhóm dành cho người dùng: `[feature]`, `[improve]`, `[fix]`, `[security]`; các marker nội bộ như `[test]`, `[docs]`, `[build-apk]`, `[handover]` không xuất hiện trong ghi chú phát hành.
 - [x] Điều chỉnh workflow `.github/workflows/build-android-apk.yml` để tổng hợp commit từ mốc phát hành trước **cùng kênh** (beta/official), tránh trộn lịch sử hai kênh; xác minh cách xử lý lần phát hành đầu tiên.
 - [x] Sinh Release Notes tiếng Việt theo các nhóm Tính năng mới / Cải tiến / Sửa lỗi / Bảo mật; chỉ hiển thị nhóm có nội dung, loại bỏ trùng lặp và commit nội bộ, không tự thêm câu cải thiện chung nếu không có thay đổi tương ứng.
 - [x] Dùng một nội dung changelog duy nhất cho GitHub Release và OTA manifest; thông báo trong app lấy cùng nội dung nhưng rút gọn khoảng 400 ký tự, giữ các thay đổi quan trọng trước.
 - [x] Bổ sung regression test cho phân loại commit, lọc marker nội bộ, mốc release theo channel và nội dung rỗng; kiểm tra giới hạn OTA 400 ký tự ở phía app hiện có; không thay đổi versioning, signing hoặc cơ chế tải/cài OTA.
-- [ ] Kiểm tra Release Notes thực tế của một bản beta sau khi workflow chạy thành công; chưa coi là hoàn tất chỉ dựa trên test tổng hợp.
+- [ ] Cải thiện chất lượng Release Notes: run v1.3.21 xác nhận generator hoạt động nhưng nội dung còn lẫn commit subject tiếng Anh/kỹ thuật. Cần bổ sung trường `Release-Note:` tiếng Việt tường minh hoặc quy tắc loại commit không hướng người dùng; kiểm thử và xác minh trên beta tiếp theo trước khi đánh dấu hoàn tất.
 
 ## P2 — Rà soát và rút gọn thông báo nội bộ trong ứng dụng
 
@@ -363,3 +363,10 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - Đã tạo commit chốt `[build-apk]` `5839851550c29a1fcb17d8815426db1783b0936d`.
 - Workflow build [41213680238](https://github.com/blamag999/read-along-android/actions/runs/41213680238) đã PASS full regression, Pages syntax, isolation, release channel validation và bước generate version/changelog. Prepare web assets, embed version, Web Local ZIP, native updater, Android version, launcher icons và cấu hình ký đều PASS.
 - Bước `Build signed release APK` đang chạy; chưa có kết quả signature/SHA-256, R2 publication, artifact upload hoặc GitHub Release tại thời điểm ghi nhận.
+
+
+### Kết quả nghiệm thu Release Notes trên beta v1.3.21 — 2026-10-31
+
+- Build [41213680238](https://github.com/blamag999/read-along-android/actions/runs/41213680238) thành công; generator chọn đúng mốc cùng channel `v1.3.20`, sinh version `1.3.21`, phát hành prerelease beta.
+- Changelog chung đã được đưa vào GitHub Release và OTA manifest. Tuy nhiên, nội dung thực tế còn đưa một số commit subject tiếng Anh/kỹ thuật vào nhóm Cải tiến/Sửa lỗi (ví dụ thay đổi regex, output script, workflow), không phù hợp với người dùng cuối.
+- Vì vậy, chức năng channel/version/generation đã hoạt động và được xác minh, nhưng chất lượng nội dung tiếng Việt chưa đạt. Không đánh dấu Release Notes hoàn tất; cần thiết kế trường `Release-Note:` tường minh hoặc lọc commit nội bộ theo policy rồi xác minh ở beta kế tiếp.
