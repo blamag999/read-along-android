@@ -147,6 +147,7 @@ async function checkSession() {
     show("homeBtn", result.authenticated);
     if (result.authenticated) {
       $("loginError").textContent = "";
+      switchTab("library");
       await loadFiles();
       startSessionHeartbeat();
     } else {
