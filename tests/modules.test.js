@@ -85,4 +85,6 @@ assert.ok(!htmlSource.includes('menuAnalytics') && !htmlSource.includes('analyti
 assert.ok(htmlSource.includes('Mốc đọc gần đây'), 'checkpoint label must use the concise Vietnamese name');
 assert.ok(styleSource.includes('Compact touch header') && styleSource.includes('@media (max-width: 600px)'), 'portrait header must use compact responsive controls');
 assert.ok(appSource.includes('saveSyncToDirectoryOrDownload'), 'local marker JSON export must remain available');
+assert.ok(!appSource.includes('loadCloudSyncForBook'), 'marker loading must not depend on online cloud synchronization');
+assert.ok(!htmlSource.includes('remote-sync.js'), 'the obsolete remote marker sync client must not be loaded');
 console.log('Module behavior and touch-reader UI contract tests passed.');
