@@ -409,3 +409,12 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - README is shared policy; prior RECOVERY record confirms beta/main README blobs were byte-identical after PR #42. No main code was changed in this batch.
 - This is a partial recovery, not a formal handover. The connector exposes aggregate compare but not a complete local working tree or full per-commit diff sequence here; uncommitted/untracked changes in any external clone cannot be observed. Keep `last_reviewed_head` at its previous fully reviewed checkpoint until the remaining commit-by-commit reconciliation is completed.
 - Pending: confirm CI for `ca31fc283a54905831e3913e353820aecd96a9c4`; finish selector/CSS dead-style audit; inspect final diff; then build one beta APK at the end of the runtime batch and obtain device acceptance. Do not promote `main`.
+
+## Recovery update — test contract correction and CSS candidate audit (2026-10-31)
+
+- Latest runtime/test commit: `4a26e502bad452dd637dcfa6ed9f0c93706c350f`; subsequent commits only update ROADMAP/PLANNING/RECOVERY.
+- The current HTML intentionally removes fit-height, two-page and zoom controls from the menu. Two stale assertions in `tests/modules.test.js` incorrectly required those controls; they were replaced with assertions that the legacy controls remain absent.
+- Latest test commit carries `[test]` and changes `tests/modules.test.js`, which is included in the workflow path filter. GitHub combined-status query returned no entries for this commit at review time; do not mark regression passed.
+- Preliminary CSS selector audit compared `styles.css` against `index.html`, `app.js`, `modules/page-sync.js`, `modules/playlist-layout.js`, `modules/catalog-playlist.js`, and `modules/analytics-collector.js`. It identified 81 class-name candidates without source references. This is not sufficient evidence to delete whole CSS rules: compound selectors, media blocks, and CSS-only state dependencies still require inspection.
+- README byte identity was rechecked: beta and main blob SHA are both `2c9e534869ee250de84c134a873879dad18f3a7f`.
+- Current review remains partial. Keep the prior `last_reviewed_head` and formal handover checkpoint unchanged until per-commit reconciliation and CI evidence are available. No APK build/device acceptance or main code change has occurred.
