@@ -18,7 +18,7 @@
 ## Mốc R2 folder/catalog — 2026-11-01
 
 - Beta source HEAD: `410e292477519143176fc7b5bf45b9b8099ccc0a`; regression/isolation run [41226438099](https://github.com/blamag999/read-along-android/actions/runs/41226438099) passed.
-- Cloudflare Pages deployment ID: `c3dbf307-e516-43f5-8421-5a1714edd902`; at last check its build stage had passed and deploy stage was still active. Recheck before using Admin.
+- Cloudflare Pages deployment ID: `c3dbf307-e516-43f5-8421-5a1714edd902`; production deployment for beta commit `410e292...` completed successfully (build and deploy stages success). Admin URL: https://read-along-admin.pages.dev.
 - R2 inventory baseline: bucket `my-audio-book`, 204 objects; root contains 180 objects including `books.json`; `ONE STORY A DAY LEVEL 2 FULL/` contains 24 objects (12 PDF + 12 MP3).
 - Current manifest contains 82 books and references 175 existing objects. Four additional root objects form two complete PDF/MP3 books: `Oliver_Company` and `Sleeping Beauty`.
 - No R2 object has been moved or deleted by this source batch. Live `books.json` remains unchanged until the authenticated Admin operation is run.
