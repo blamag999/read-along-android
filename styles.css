@@ -2996,3 +2996,80 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
   min-height: 34px;
   border-radius: 7px;
 }
+
+
+/* Library action: clear visual priority and stable portrait layout. */
+.app-header {
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+.header-left { flex: 1 1 auto; min-width: 0; }
+.header-right { flex: 0 0 auto; flex-wrap: nowrap; min-width: 0; }
+.playlist-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 7px 12px;
+  border: 1px solid #7dd3fc;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(14,165,233,.32), inset 0 1px 0 rgba(255,255,255,.18);
+  font-size: .88rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.playlist-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+  transform: translateY(-1px);
+}
+.playlist-btn:disabled {
+  opacity: .82;
+  cursor: default;
+}
+.playlist-btn .playlist-icon { font-size: 1.35rem; line-height: 1; }
+.playlist-btn .playlist-label { white-space: nowrap; }
+.playlist-btn .badge-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 23px;
+  height: 23px;
+  padding: 0 6px;
+  margin-left: 1px;
+  border: 1px solid rgba(255,255,255,.7);
+  border-radius: 999px;
+  background: #fef08a;
+  color: #713f12;
+  font-size: .76rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 1px 4px rgba(0,0,0,.22);
+}
+@media (max-width: 600px) {
+  .app-header { gap: 5px; padding: 6px 8px; }
+  .app-title { font-size: clamp(.72rem, 3.2vw, .9rem); }
+  .header-right { gap: 5px; }
+  .header-right > .icon-btn { min-height: 40px; }
+  .playlist-btn {
+    width: auto !important;
+    min-width: 0 !important;
+    height: 40px;
+    padding: 5px 8px !important;
+    gap: 5px;
+    font-size: .78rem;
+  }
+  .playlist-btn .playlist-icon { font-size: 1.2rem; }
+  .playlist-btn .badge-count { min-width: 21px; height: 21px; font-size: .72rem; }
+  .playlist-btn .playlist-label { display: inline !important; }
+}
+@media (max-width: 380px) {
+  .app-header { gap: 4px; padding-inline: 6px; }
+  .app-title { font-size: .7rem; }
+  .header-right { gap: 4px; }
+  .playlist-btn { padding-inline: 6px !important; gap: 4px; }
+  .playlist-btn .playlist-label { font-size: .72rem; }
+  .read-menu-button { min-width: 58px !important; padding-inline: 7px !important; }
+}
