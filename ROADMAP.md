@@ -373,3 +373,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Commit: `d57969b7da63f9c33cf9a21a5cb205cb2dfba06a`.
 - Chờ CI [test]; chưa nghiệm thu runtime hoặc APK. README không đổi.
 
+
+### 2026-10-31 — Điều chỉnh kỳ vọng heartbeat trong collector test
+
+- CI [#41167459727](https://github.com/blamag999/read-along-android/actions/runs/41167459727) phát hiện test kỳ vọng 60s nhưng collector đã bắt đầu session ngay khi bật consent; test thêm 5s tick sau đó nên tổng thời lượng hợp lệ là 65s. Đây là sai lệch kỳ vọng test, không phải collector đếm vượt thời gian.
+- Điều chỉnh test để tick thêm 55s sau 5s đầu, tổng đúng 60s tại heartbeat threshold.
+- Commit: `75d6f0e39cc2f492c185ef60b1ba9927e85cde11`.
+- Chờ CI mới; chưa nghiệm thu collector runtime. README không đổi.
+
