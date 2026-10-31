@@ -70,6 +70,40 @@ Keep current JSON marker shape compatible with `modules/page-sync.js`. Any schem
 - No book filename, document content, audio URL or personal identifier.
 - Dashboard changes stay in Admin; only adding the first reliable event collector requires an APK update.
 
+
+## 4A. Reading/listening analytics event contract v1 (proposed; not deployed)
+
+The existing `usage/track` route remains visit/install counting and `telemetry/events` remains bounded diagnostic telemetry. Reading-time analytics is a separate data purpose and must use a distinct `analytics/events` route in the existing Read Along Pages Functions router; do not create another Worker by default.
+
+### Consent and collection rules
+
+- Explicit opt-in is required before the client sends any reading/listening analytics event; default is off. Diagnostics-report consent is not reused as analytics consent.
+- No analytics request is sent before opt-in. The client must provide a clear explanation and a way to opt out; revocation stops future events.
+- Count reading time only while a book is open and the app/document is foreground and visible.
+- Count listening time only while audio is actively playing and the app/document is foreground and visible. Reading and listening seconds are separate measures and may overlap by design.
+- Emit a heartbeat approximately every 60 seconds. Each duration field is bounded to 0–120 seconds.
+- Do not queue or accumulate offline time. If offline or a request fails, drop that interval; analytics must never delay reader startup, PDF rendering or audio playback.
+- Event IDs and session IDs are random opaque identifiers. The existing installation ID is hashed server-side before storage. Sequence starts at zero and increments within one session.
+- `occurredAt` is client-supplied context only; server `received_at` is authoritative for daily aggregation. Do not infer elapsed time from untrusted client timestamps.
+- `bookId` is optional and may contain only an opaque stable catalog ID. If a catalog ID reveals a title, filename or path, omit it. Never send book title, filename, document text, media URL or account/personal identifiers.
+
+### Event semantics
+
+- `reader_start`: a reading session begins after the reader is ready.
+- `heartbeat`: periodic bounded `readingSeconds` and/or `listeningSeconds` since the preceding event.
+- `reader_pause` / `reader_resume`: the app/document becomes inactive/active while the reading session remains open.
+- `reader_stop`: the reader closes or the session ends; include any final bounded duration.
+- `audio_play` / `audio_pause` / `audio_stop`: audio playback state transitions; audio duration is attributed only to active playback.
+
+### Payload and server requirements
+
+- Contract is defined by `schemas/analytics-event.schema.json`: schemaVersion 1, eventId, sessionId, installId, sequence, type, occurredAt, platform and appVersion; optional readingSeconds, listeningSeconds and opaque bookId.
+- Unknown fields are rejected. Do not add a free-form details object.
+- The endpoint accepts bounded batches (maximum 25 events), validates every field, enforces per-install rate limits and rejects malformed or excessive durations.
+- D1 deduplication uses unique eventId and unique (sessionId, sequence). Duplicate retries must not increment totals.
+- Store only the hash of installId. Keep raw event records for 90 days; retain daily aggregates for 24 months. Retention enforcement is part of the backend implementation, not assumed from the schema.
+- This contract is proposed only. No collector, endpoint, D1 analytics tables or dashboard are implemented by this schema change.
+
 ## 5. Migration rules
 
 - Do not change existing public URLs or API behavior until all callers and backward compatibility are identified.
