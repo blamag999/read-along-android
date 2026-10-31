@@ -170,7 +170,7 @@ async function inspectLibraryObject(bucket, item) {
   const issues = [];
   const add = (severity, code, message, suggestion) => issues.push({ severity, code, key, message, suggestion });
   if (!ALLOWED_EXTENSIONS.has(ext)) {
-    add("error", "unsupported_format", "Định dạng tệp không được Read Along Admin hỗ trợ.", "Chuyển đổi sang PDF, MP3 hoặc định dạng audio được hỗ trợ; sau đó tải lại.");
+    add("error", "unsupported_format", "Định dạng tệp không được Read Along hỗ trợ.", "Thay tệp này thủ công bằng PDF hoặc định dạng audio được ứng dụng hỗ trợ, sau đó tải lại.");
     return issues;
   }
   if (size === 0) {
@@ -178,7 +178,7 @@ async function inspectLibraryObject(bucket, item) {
     return issues;
   }
   if (ext === ".wma") {
-    add("warning", "playback_compatibility", "WMA có thể lưu trữ nhưng phát không ổn định hoặc không được hỗ trợ trên Android WebView.", "Ưu tiên chuyển sang MP3 hoặc M4A/AAC.");
+    add("warning", "playback_compatibility", "WMA có thể không phát được trên Android WebView.", "Thay tệp WMA thủ công bằng MP3 hoặc M4A/AAC được ứng dụng hỗ trợ.");
     return issues;
   }
 
@@ -224,7 +224,7 @@ async function inspectLibraryObject(bucket, item) {
   return issues;
 }
 
-const SCAN_RULE_VERSION = "2026-10-30.3";
+const SCAN_RULE_VERSION = "2026-10-31.1";
 
 async function listAllObjects(bucket, prefix) {
   const objects = [];
