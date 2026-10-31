@@ -392,6 +392,21 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - **Không bỏ dữ liệu marker đọc từ R2**: JSON marker đi kèm catalog vẫn là dữ liệu đầu vào read-only để đồng bộ PDF/audio và xác định trang/spread. Đây không phải chức năng quản lý hay đồng bộ marker online. Không tạo API marker mới.
 - Không cache PDF/audio R2; tiếp tục stream/đọc online như hiện tại.
 
+### Ranh giới APK Core và nguyên tắc giảm số lần build
+
+Áp dụng kiến trúc đã chốt trong docs/architecture/core-extensibility.md; batch tinh gọn này không được mở rộng phạm vi thành refactor toàn bộ Core.
+
+- [ ] APK chỉ giữ runtime tối thiểu: catalog client, resolver URL R2/allowlist, PDF reader, audio player/multi-part, page/audio sync dựa trên marker R2, checkpoint/session, UI tối thiểu, Android lifecycle/Back và OTA installer.
+- [ ] Nội dung thay đổi thường xuyên (sách, PDF, audio, marker JSON, title, category, thứ tự và metadata được contract hỗ trợ) phải cập nhật qua R2/catalog/Admin, không nhúng vào APK.
+- [ ] Giữ books.json là contract dữ liệu ổn định; mọi trường mới phải additive, có default/fallback, không đổi nghĩa hoặc xóa field cũ đột ngột. APK phải bỏ qua field không biết và vẫn mở được catalog cũ.
+- [ ] Không tải hoặc thực thi JavaScript, HTML, CSS, plugin hay mã thực thi từ server. Không xây remote-config/remote-control để thay đổi hành vi reader; chỉ dùng dữ liệu catalog/content đã định nghĩa trong contract.
+- [ ] Không tạo API, Worker, database, cache media hoặc dịch vụ mới cho batch này. Không cache PDF/audio R2; chỉ giữ cache shell/app assets hiện có nếu không ảnh hưởng cập nhật OTA và streaming/Range.
+- [ ] Không refactor rộng app.js hoặc tách module chỉ để “đẹp kiến trúc”. Chỉ tách phần có ranh giới rõ, có nhiều caller hoặc cần unit test độc lập; ưu tiên thay đổi nhỏ, ít phụ thuộc.
+- [ ] Phân loại build theo ownership: R2 content/catalog/Admin/backend/docs-only không build APK; HTML/CSS/JS runtime đóng gói trong APK, interaction/menu/reader behavior, native bridge/permission/OTA installer đều phải test và build APK beta.
+- [ ] Gom thay đổi runtime đã được phê duyệt thành một batch hoàn chỉnh; chạy unit/contract tests trong các bước nhỏ, full regression một lần tại commit [test], sau đó một APK tại commit [build-apk]. Không tạo APK cho mỗi commit trung gian.
+- [ ] Không gộp Online Reading Progress (stable device ID + D1 + sync/outbox) vào batch bỏ local-open/Menu. Đây là dự án runtime/native/backend riêng trong PLANNING, cần audit và nghiệm thu độc lập; chỉ triển khai khi được ưu tiên/phê duyệt riêng.
+- [ ] Giữ OTA là cơ chế phát hành APK có ký số; không gọi OTA hiện tại là cập nhật JavaScript từ xa. Không thay signing key hoặc installer trong batch tinh gọn.
+
 ### Kết quả rà soát source liên quan
 
 - app.js hiện có state.pageTurnMode với ba giá trị next/markers/off và state.autoSeekAudio; session restore đang đọc cả hai giá trị. Menu menuAutoFlip đang chuyển giữa next/off, trong khi quick-options có select ba mode và checkbox auto-seek.
