@@ -176,3 +176,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - P0.1 body được người dùng xác nhận; kiểm tra HTTP status/Content-Type vẫn pending. P0.3 đã hoàn tất module nền và một phần test, chưa tích hợp APK.
 
 - Hồ sơ bàn giao cập nhật sau batch Data Client; beta HEAD tại thời điểm cập nhật: `debd81d7a69c95f2e3acbae2b772106ce5e57cb0`.
+
+
+### 2026-10-31 — Production endpoint verified; Data Client bootstrapped in app shell
+- Thêm workflow `.github/workflows/check-remote-config-endpoint.yml` để kiểm tra endpoint production sau thay đổi Remote Config và có thể chạy thủ công. Workflow chạy trên GitHub-hosted runner, kiểm tra status, Content-Type, kích thước response và cấu trúc v1.
+- Endpoint smoke test [41161849355](https://github.com/blamag999/read-along-android/actions/runs/41161849355) success trên commit `a2f7132f45ba76a4b5b6f95ac3e7da444f0b1b52`. Log thực tế xác nhận HTTP **200**, Content-Type **application/json**, schemaVersion **1**, configVersion **1**. Đây là bằng chứng trực tiếp cho P0.1; nội dung body đã được người dùng đối chiếu ở bước trước.
+- Tích hợp `modules/remote-config.js` và `modules/remote-config-bootstrap.js` vào `index.html` sau `app.js`; bootstrap tải cấu hình bất đồng bộ, không chặn khởi động reader. Kết quả được lưu tại `window.ReadAlongRemoteConfigState`; chưa consumer nào áp dụng feature/defaults, do đó config rỗng không thay đổi hành vi PDF/audio.
+- Sửa timeout bao trùm cả response body parsing; cập nhật Service Worker shell cache từ v48 lên v49 và thêm hai module vào APP_SHELL. Việc dọn cache chỉ tác động shell cache có version, không xóa localStorage hoặc dữ liệu đọc.
+- Bổ sung test bootstrap ordering/state; CI [41161982280](https://github.com/blamag999/read-along-android/actions/runs/41161982280) success trên commit `6b9d28d6bbdc279d8f659eda9918a252c5478d30`, gồm toàn bộ npm test và JS syntax checks.
+- Đây là thay đổi runtime đóng gói APK. Chưa build/phát hành APK: workflow `build-android-apk.yml` chỉ chạy bằng workflow_dispatch, không có action dispatch khả dụng trong phiên làm việc. Cần chạy workflow thủ công chọn ref `beta`, channel `beta`; sau đó cài và kiểm tra trên thiết bị thật trước khi xem P0.3 hoàn tất.
