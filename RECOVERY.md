@@ -7,9 +7,9 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover code/documentation checkpoint: `63fc3f279f6f28e7075d049ff6c423ed8739672a` (implementation checkpoint; handover commit to follow).
-- Last reviewed functional HEAD on beta: `63fc3f279f6f28e7075d049ff6c423ed8739672a`
-- Recovery status: `PARTIAL — implementation pushed; regression and release verification pending`
+- Last formal handover code/documentation checkpoint: `e679600bd3e7d36e9b98443991eeedf128f137bc` (implementation/test checkpoint; handover documentation follows).
+- Last reviewed functional HEAD on beta: `e679600bd3e7d36e9b98443991eeedf128f137bc`
+- Recovery status: `PARTIAL — npm regression passed; deployed OTA smoke and release verification pending`
 - Recovery reviewed on: 2026-10-31
 - Latest recovery checkpoint: docs-only plan and audit for release notes and app notifications; no runtime files changed. OTA notification implementation remains at prior checkpoint; build workflow 41211770726 status must be checked before claiming APK availability.
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
@@ -254,3 +254,11 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Release Notes generator/tests/workflow edits: `f0506562ab2ee00181b0fda2bda6ea1c018bb40e`, `2b9a742af049fa0948d0ac44be0a3664474b226a`, `04323771c6059b3477b8e810ed0c25b4346fa17f`, `108158e291302596b2d5be1a935d9214d7edd789`, `5b07dc2a11aa24914eb17843347509ab31d45587`, `9d724505cea2c6437a286394ed5d6a76d740dc6e`, `c1af5b3e302b334ed4a066d89ee4c02b6c1d7de7`, `63fc3f279f6f28e7075d049ff6c423ed8739672a`.
 - Implementation is not yet DONE: no regression/CI evidence, release generation has not been exercised in Actions, and the in-app notification audit still has unmodified legacy messages. No APK or OTA publication from this batch.
 - Next: validate the Python generator/tests and workflow outputs; complete remaining user-facing notification strings and add coverage; then run one full regression batch and one final beta APK build. Keep main unchanged.
+
+
+## Recovery update — CI for release notes and notifications (2026-10-31)
+
+- Corrected the Python regression test import for the hyphenated script filename in commit `e679600bd3e7d36e9b98443991eeedf128f137bc`.
+- Workflow run [41212943321](https://github.com/blamag999/read-along-android/actions/runs/41212943321): npm test, Pages Functions syntax, isolation and deployed analytics smoke passed. Deployed OTA smoke remained in progress at this handover.
+- Earlier failed runs [41212800363](https://github.com/blamag999/read-along-android/actions/runs/41212800363), [41212818586](https://github.com/blamag999/read-along-android/actions/runs/41212818586), and [41212912614](https://github.com/blamag999/read-along-android/actions/runs/41212912614) were caused by the initial Python test module import path; the latest test run has passed the npm test step.
+- Last reviewed code/test HEAD: `e679600bd3e7d36e9b98443991eeedf128f137bc`. No APK build or OTA publication has been triggered for this batch; main remains unchanged.
