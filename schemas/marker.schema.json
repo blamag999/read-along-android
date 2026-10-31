@@ -2,21 +2,53 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://read-along-admin.pages.dev/schemas/marker.schema.json",
   "title": "Read Along page/audio markers",
-  "type": "object",
-  "description": "Keys are 1-based PDF page numbers. Legacy numeric values remain supported.",
-  "propertyNames": { "pattern": "^[1-9][0-9]*$" },
-  "additionalProperties": {
-    "oneOf": [
-      { "type": "number", "minimum": 0 },
-      {
-        "type": "object",
-        "required": ["time"],
-        "additionalProperties": false,
-        "properties": {
-          "time": { "type": "number", "minimum": 0 },
-          "part": { "type": "integer", "minimum": 0 }
+  "description": "Accepts both legacy page-number maps and the proposed versioned envelope. The app must continue reading legacy maps during migration.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/legacyMap"
+    },
+    {
+      "$ref": "#/$defs/versionedEnvelope"
+    }
+  ],
+  "$defs": {
+    "markerValue": {
+      "oneOf": [
+        { "type": "number", "minimum": 0 },
+        {
+          "type": "object",
+          "required": ["time"],
+          "additionalProperties": false,
+          "properties": {
+            "time": { "type": "number", "minimum": 0 },
+            "part": { "type": "integer", "minimum": 0 }
+          }
         }
+      ]
+    },
+    "markerMap": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[1-9][0-9]*$" },
+      "additionalProperties": { "$ref": "#/$defs/markerValue" }
+    },
+    "legacyMap": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[1-9][0-9]*$" },
+      "additionalProperties": { "$ref": "#/$defs/markerValue" }
+    },
+    "versionedEnvelope": {
+      "type": "object",
+      "required": ["schemaVersion", "revision", "updatedAt", "sourceId", "markers"],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "revision": { "type": "integer", "minimum": 1 },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "sourceId": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "markers": { "$ref": "#/$defs/markerMap" }
       }
-    ]
+    }
   }
 }
