@@ -435,7 +435,7 @@ function validOtaChannel(value) {
 }
 
 function validOtaVersion(value) {
-  return typeof value === "string" && /^\\d{1,3}\\.\\d{1,3}\\.\\d{1,4}$/.test(value);
+  return typeof value === "string" && /^\d{1,3}\.\d{1,3}\.\d{1,4}$/.test(value);
 }
 
 async function readOtaManifest(bucket, channel) {
