@@ -17,7 +17,7 @@ Giảm số lần build APK bằng cách tách catalog, marker, cấu hình, ana
 | Mốc | Nội dung | Trạng thái |
 |---|---|---|
 | R0 | Hợp nhất Analytics plan và APK decoupling thành master planning | <badge>Hoàn tất</badge> |
-| R1 | Kiểm kê API, URL, nguồn dữ liệu và caller; chuẩn hóa contract | Đang thực hiện — inventory + JSON Schema v1 + structural tests; CI/compatibility và marker precedence còn pending |
+| R1 | Kiểm kê API, URL, nguồn dữ liệu và caller; chuẩn hóa contract | Đang thực hiện — inventory + JSON Schema v1 + manifest compatibility tests + CI pass; marker precedence/API overlap còn pending |
 | R2 | Remote Config + Data Client + fallback offline | Chưa bắt đầu |
 | R3 | Analytics ingest/D1 và sự kiện thời lượng đọc/nghe | Chưa bắt đầu |
 | R4 | Admin Analytics dashboard ngày/tuần/tháng/năm | Chưa bắt đầu |
@@ -26,7 +26,7 @@ Giảm số lần build APK bằng cách tách catalog, marker, cấu hình, ana
 
 ## Tiến độ hiện tại — 2026-10-31
 - R0 hoàn tất: quyết định A–E đã được người dùng xác nhận và kế hoạch tổng đã được hợp nhất.
-- R1 đang thực hiện: đã kiểm kê endpoint/caller, tạo JSON Schema v1 cho catalog/marker/config/analytics và thêm structural tests vào `npm test`. Còn pending CI, kiểm tra catalog thực tế và marker precedence.
+- R1 đang thực hiện: đã kiểm kê endpoint/caller, tạo JSON Schema v1 cho catalog/marker/config/analytics, kiểm tra manifest seed thực tế và CI pass [41158627378](https://github.com/blamag999/read-along-android/actions/runs/41158627378). Còn pending marker precedence và API overlap review.
 - Chưa thay đổi mã runtime, chưa build APK, chưa promote stable.
 - Usage API hiện có chỉ ghi lượt mở/installation và thống kê inventory; analytics thời lượng đọc/nghe vẫn cần thiết kế và triển khai.
 - CI cần được xác nhận trên commit mới nhất; không lấy run cũ làm bằng chứng cho HEAD mới.
