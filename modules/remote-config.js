@@ -82,19 +82,22 @@
             reject(new Error('Remote Config request timed out'));
           }, timeoutMs);
         });
-        const response = await Promise.race([fetchFn(CONFIG_URL, {
-          method: 'GET', headers: { Accept: 'application/json' }, cache: 'no-store',
-          signal: controller ? controller.signal : undefined
-        }), timeout]);
-        if (!response || !response.ok) throw new Error('Remote Config HTTP error');
-        const type = (response.headers && response.headers.get && response.headers.get('content-type') || '').toLowerCase();
-        if (!type.includes('application/json')) throw new Error('Remote Config content type is not JSON');
-        const text = await response.text();
-        if (typeof text !== 'string' || text.length > MAX_RESPONSE_BYTES) throw new Error('Remote Config response too large');
-        let parsed;
-        try { parsed = JSON.parse(text); } catch (_) { throw new Error('Remote Config JSON invalid'); }
-        if (!validate(parsed, nowFn())) throw new Error('Remote Config contract invalid or expired');
-        return parsed;
+        const operation = (async () => {
+          const response = await fetchFn(CONFIG_URL, {
+            method: 'GET', headers: { Accept: 'application/json' }, cache: 'no-store',
+            signal: controller ? controller.signal : undefined
+          });
+          if (!response || !response.ok) throw new Error('Remote Config HTTP error');
+          const type = (response.headers && response.headers.get && response.headers.get('content-type') || '').toLowerCase();
+          if (!type.includes('application/json')) throw new Error('Remote Config content type is not JSON');
+          const text = await response.text();
+          if (typeof text !== 'string' || text.length > MAX_RESPONSE_BYTES) throw new Error('Remote Config response too large');
+          let parsed;
+          try { parsed = JSON.parse(text); } catch (_) { throw new Error('Remote Config JSON invalid'); }
+          if (!validate(parsed, nowFn())) throw new Error('Remote Config contract invalid or expired');
+          return parsed;
+        })();
+        return await Promise.race([operation, timeout]);
       } finally { if (timer) clearTimeout(timer); }
     }
     async function load() {
