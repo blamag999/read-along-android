@@ -213,3 +213,16 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 - Release: https://github.com/blamag999/read-along-android/releases/tag/v1.3.13
 - Remaining gate: user acceptance on a touch-screen Android phone. Do not promote to main/stable before acceptance.
 
+
+
+## Batch touch UI và tinh gọn menu — 2026-10-31
+
+- [x] Sửa header màn hình dọc: thu gọn tên app, ẩn nhãn chữ của nút Danh sách truyện/Đóng sách ở màn hình hẹp, giữ nút không co chồng lấn và chừa không gian cho Menu.
+- [x] Bỏ thao tác cập nhật marker từ GitHub và giao diện token/đồng bộ marker online; giữ luồng marker JSON gắn với catalog/media R2 cùng thao tác nhập/xuất JSON cục bộ.
+- [x] Bỏ giao diện Chẩn đoán/Báo lỗi khỏi ứng dụng cá nhân và ngừng nạp diagnostics client.
+- [x] Bật usage analytics mặc định, không hiển thị consent modal/menu; payload hiện hữu chỉ gồm event ẩn danh và thời lượng đọc/nghe, không gồm tên sách/tệp/nội dung.
+- [x] Đổi nhãn checkpoint thành “Mốc đọc gần đây”.
+- [ ] Chạy full regression CI trên commit chốt của batch; xử lý mọi lỗi test trước khi build APK.
+- [ ] Build và xác minh signed beta APK; kiểm thử portrait trên thiết bị cảm ứng (nhiều chiều rộng), xác nhận nút playlist hoạt động và menu gọn.
+- [ ] Kiểm tra mở truyện R2 tải đúng JSON marker đi kèm PDF/audio; xác nhận không còn request đồng bộ marker GitHub.
+- [ ] Chỉ đóng batch sau nghiệm thu thiết bị; không promote main trước xác nhận của người dùng.
