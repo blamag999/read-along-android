@@ -25,3 +25,8 @@ assert.ok(!html.includes('analyticsSessions'), 'Dashboard must not show sessions
 assert.ok(script.includes('$("libraryErrors")') && script.includes('$("libraryWarnings")'), 'Dashboard must render latest scan findings');
 
 // [test] Final dashboard batch: no daily-session KPI; library health metrics remain visible.
+
+assert.ok(html.includes('id="loginHomeBtn"'), "OTP screen must provide a direct route back to Dashboard");
+assert.ok(script.includes('$("homePanel").append($("analyticsPanel"))'), "Analytics dashboard must be the public landing page");
+assert.ok(script.includes('$("loginHomeBtn").addEventListener("click"'), "OTP screen must navigate back to Dashboard");
+assert.ok(!html.includes('id="showAnalyticsBtn"'), "Analytics must not be hidden behind admin navigation");
