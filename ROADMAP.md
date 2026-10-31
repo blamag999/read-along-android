@@ -709,3 +709,13 @@ Khi một công việc trong PLANNING hoàn tất:
 - Đã thống nhất cách gọi hướng tới người dùng: “PDF” được gọi là “sách” khi nói về tài liệu/hoạt động đọc; “audio” được gọi là “âm thanh” trong thông báo giao diện.
 - Tên định dạng cụ thể như PDF, MP3, M4A vẫn được giữ khi cần hướng dẫn chọn đúng loại tệp. Không đổi tên kỹ thuật trong code/API/log.
 - Quy ước đã ghi vào PLANNING và sẽ áp dụng cho batch chuẩn hóa thông báo tiếp theo. Chưa sửa runtime trong lượt này.
+
+
+## 2026-10-31 — Triển khai Release Notes và thông báo trong app (beta, đang kiểm chứng)
+
+- Đã cập nhật `app.js` trên beta để rút gọn một nhóm thông báo lỗi/tác vụ: catalog, mở sách, tải/chọn âm thanh, tệp không hỗ trợ, marker và đọc lại trang. Lỗi kỹ thuật được ghi console ở các nhánh đã chỉnh; OTA/confirm đã chuẩn hóa trước đó được giữ nguyên.
+- Đã thêm `scripts/generate-release-notes.py`: chọn release baseline theo đúng channel (beta chỉ prerelease, stable chỉ non-prerelease); phân loại bốn nhóm tiếng Việt; lọc commit nội bộ; bỏ mục trùng; không tự thêm câu hiệu năng chung; xử lý first release; hỗ trợ `[perf]` cũ như alias của `[improve]`.
+- Workflow build gọi script này để tạo output changelog dùng chung cho GitHub Release và OTA manifest. Version/prerelease output cũng được giữ trong script, cần CI xác nhận.
+- Thêm `tests/release-notes.test.py`, nối vào `npm test`, và thêm assertion thông báo vào `tests/contracts.test.js`.
+- Các commit code/test/workflow hiện tại nằm trên beta; chưa chạy regression/CI và chưa xác minh nội dung release notes trên Release thực tế. Chưa build APK/OTA và chưa nghiệm thu thiết bị. Batch thông báo trong app vẫn còn phần cần rà soát tiếp.
+- Không thay đổi main, endpoint OTA, bucket, manifest contract, signing key hoặc native installer.
