@@ -17,14 +17,10 @@
 
 > Quyết định kiến trúc ngày 2026-10-31: APK chỉ tập trung vào tải nội dung từ cloud và trải nghiệm đọc/nghe. Không xây dựng offline PDF/audio. PDF/audio vẫn phải lấy từ cloud; timestamp/marker (nếu có) dùng để đồng bộ vị trí đọc theo trang. Không duy trì Remote Config vì hiện không có kế hoạch điều khiển tính năng/reader từ xa. Admin, Dashboard, Analytics backend, catalog, scan và vận hành phải phát triển độc lập, không kéo theo build APK nếu không thay đổi mã runtime APK.
 
-### P0.1 Loại bỏ Remote Config không còn nhu cầu
+### P0.1 Remote Config
 
-- [ ] Gỡ modules/remote-config.js và modules/remote-config-bootstrap.js khỏi app shell/đóng gói APK; xóa caller, global state và cache key liên quan sau khi rà soát toàn bộ references.
-- [ ] Gỡ contract/schema, validator, test, static JSON và build/deploy gate chỉ phục vụ Remote Config; kiểm tra Cloudflare Pages build command trước khi bỏ validator để không làm hỏng deploy Admin.
-- [ ] Xóa URL/hostname Remote Config khỏi docs, workflow, smoke tests và cấu hình repo nếu không còn caller nào.
-- [ ] Không xóa hoặc thay đổi các dịch vụ độc lập đang được dùng (Admin, catalog/media, marker storage, Analytics/Dashboard, Diagnostics) chỉ vì bỏ Remote Config.
-- [ ] Chạy regression [test]; nếu thay đổi app runtime/shell thì gom cùng batch APK Core và chỉ tạo một commit [build-apk] sau khi review/test pass.
-- [ ] Không yêu cầu nghiệm thu offline PDF/audio. Chỉ xác nhận việc bỏ Remote Config không ảnh hưởng startup, tải PDF, tải/phát audio, marker/page sync và OTA.
+- [x] Gỡ Remote Config khỏi APK shell, Service Worker, package scripts, schema, validator, test, static JSON và endpoint smoke workflow. Không còn caller trong `index.html`/`app.js`; Pages Admin build command đã đổi sang `true` và GET project xác nhận cấu hình đã lưu. Admin/catalog/D1/R2/Analytics/Diagnostics được giữ nguyên.
+- [x] Đổi Service Worker cache version để thiết bị nhận shell mới, không tiếp tục giữ cache entry Remote Config cũ.
 
 ### P0.2 Chốt hợp đồng dữ liệu tối thiểu của APK Core
 
