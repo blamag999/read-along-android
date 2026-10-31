@@ -27,7 +27,8 @@
 - [x] Read-only inventory recheck hiện ghi nhận 179 object đã nằm trong `DISNEY/` (84 PDF, 87 MP3, 8 JSON; 1,647,458,551 bytes), thư mục gốc chỉ còn `books.json`, và `ONE STORY A DAY LEVEL 2 FULL/` vẫn có 24 object. Di chuyển dữ liệu đã được phản ánh trong R2.
 - [ ] Xác minh nội dung live `books.json` sau lần cập nhật gần đây: object root hiện 38,453 bytes (ETag đã đổi so với inventory ban đầu 34,440 bytes); connector không đọc được body public của object nên chưa xác nhận được số sách và trường `folder`. Dùng Admin preview hoặc kiểm tra trên app để xác nhận 84 sách DISNEY và 12 sách One Story.
 - [ ] Nếu preview/live catalog chưa phản ánh đúng folder, chạy lại preview/publish từ Admin; xác minh tất cả URL PDF/audio/JSON tồn tại, tổng số sách và phân nhóm đúng; đồng bộ seed `admin/public/books.json` sau khi manifest live đã được kiểm tra.
-- [ ] Smoke test app: tải catalog, chuyển qua lại hai folder, mở PDF/audio, xác nhận JSON mốc thời gian vẫn khớp; chạy regression cuối batch và build một APK beta để kiểm thử thiết bị.
+- [ ] Sau khi live manifest được xác minh, kiểm tra trên APK hiện tại bộ lọc “Thư mục” với từng folder và mở thử PDF/audio/JSON. APK hiện tại đã có dropdown lọc folder kèm số lượng; chưa có nhãn folder riêng trên từng hàng truyện.
+- Không build APK cho batch Admin/manifest này. Màn hình folder-first và nhãn folder trên từng truyện là hạng mục APK riêng, chỉ triển khai khi người dùng yêu cầu một đợt nâng cấp app.
 - [ ] Ghi nhật ký bàn giao cuối mốc sau khi xác minh dữ liệu R2, catalog live, CI, Pages deploy và APK/device test.
 
 
