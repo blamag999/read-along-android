@@ -329,7 +329,8 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - PLANNING policy commit: `ff4a4bf0e3da7b71afd3e66d47667e52b52d78b7`; checklist formatting correction: `d8b8cec9e60f4f2a3f636d36b6f13bb4d6df3c91`; wording cleanup was applied afterward.
 - ROADMAP policy commit: `51671f1e4b757ca651c9b82b729cd2d175b8dbdc`; architecture-summary clarification was applied afterward.
 - RECOVERY decision record commit: `b2c0712cd9a26113e44041ed21fce236a1957184`.
-- README policy was committed on beta at `599e7138ff303484d26df49ffeb4abf794fd0e52`. README-only PR [#41](https://github.com/blamag999/read-along-android/pull/41) was merged to main at `500cc139bb67b721103513de9045352fe0d34ef9`.
+- README policy was committed on beta at `599e7138ff303484d26df49ffeb4abf794fd0e52`. README-only PR [#41](https://github.com/blamag999/read-along-android/pull/41) merged the policy section; PR [#42](https://github.com/blamag999/read-along-android/pull/42) then synchronized the complete shared README byte-for-byte to main at `4fd919f2ad9cc0bacd5bf9c7cdf5c01eefb2890e`.
 - Scope: documentation only. No runtime/source, API, workflow, R2/Cloudflare, OTA or signing changes; no CI, APK build, deploy or device test was run.
 
-- README synchronization verification: beta blob `2c9e534869ee250de84c134a873879dad18f3a7f`, main blob `aefc278847c565fff55209ca2b13a05f149d37d6`; contents are NOT identical.
+
+- README synchronization verification after PR #42: beta blob `2c9e534869ee250de84c134a873879dad18f3a7f`, main blob `2c9e534869ee250de84c134a873879dad18f3a7f`; contents are byte-for-byte identical.
