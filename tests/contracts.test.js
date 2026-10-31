@@ -111,3 +111,10 @@ assert.ok(appSource.includes("label.textContent = 'Phần âm thanh:';"), 'Audio
 
 
 console.log('Read Along data contract schema tests passed.');
+
+
+const htmlSource = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+const styleSource = fs.readFileSync(path.join(__dirname, '..', 'styles.css'), 'utf8');
+assert.match(htmlSource, /<section class="ota-settings-group" aria-label="Cập nhật ứng dụng">[\s\S]*?id="chkBetaOta"[\s\S]*?id="installedAppVersion"[\s\S]*?id="menuCheckUpdates"[\s\S]*?<\/section>/, 'OTA channel, installed version and update check are grouped in one compact menu section');
+assert.ok(!htmlSource.includes('Đánh dấu để dùng Beta') && !htmlSource.includes('menu-option-icon'), 'OTA controls omit redundant helper text and decorative icons');
+assert.match(styleSource, /\.app-ui-mode \.ota-settings-group[\s\S]*?\.app-ui-mode \.ota-settings-group \.update-check-row/, 'OTA menu group has compact layout styles');
