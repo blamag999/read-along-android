@@ -860,3 +860,14 @@ Khi một công việc trong PLANNING hoàn tất:
 - Added regression assertions for absence of the toggle and normalization of legacy `off` sessions.
 - Commits: `0f022d816ffadaab633bf086431ddfc902771e80` (HTML), `21edd11be35570fd21bdcb0e36a4b84135d1c77d` (JS), `[test]` `8dae0179bc64c98bd91ddc7e3b5635d70dc540a0`.
 - CI result remains unconfirmed; no APK build has been started.
+
+
+## 2026-11-01 — Dọn CSS legacy sau audit Reader/Menu (beta)
+
+- Đối chiếu selector trong styles.css với index.html, app.js và các module runtime được tải bởi reader (page-sync, playlist-layout, catalog-playlist, remote-sync, diagnostics).
+- Đã loại bỏ các rule chỉ phục vụ UI đã gỡ: file/folder picker và drag-drop cũ, nhóm nút chọn tệp, view/zoom/two-page controls, speed control, marker manager/history/table, diagnostics/checkpoint control cũ và tutorial layout cũ không còn được render.
+- Giữ nguyên style của reader hiện tại, menu, checkpoint đang dùng, touch zones, playlist/audio parts, safe-area/responsive/Android TV và các selector APK/native chưa thể xác minh độc lập như .apk-mode/icon/story styles.
+- CSS giảm từ 91,946 xuống 66,287 ký tự (giảm 25,659 ký tự, khoảng 27.9%). Không thay đổi HTML/JS runtime, API, R2, OTA, native lifecycle hoặc main.
+- Thêm regression contract trong tests/modules.test.js để ngăn các selector/ID UI đã gỡ quay lại. Đã kiểm tra tĩnh: các selector bị loại không còn trong CSS sau khi bỏ comment; không selector đã loại nào còn được tham chiếu trong các source runtime đã rà; CSS braces cân bằng.
+- Commit CSS: 03826306ddcb4c53d2f721c9363448e7832beb3c, fe22a15e917c3a5f350c7fa4b26ea899384d0dd8. Test commits: 9c20bd867a1dc5995f97dc44ea23e708fd9a2c6d, aa251299b56779bff0675099ed4e4abc0e1cee87, f50d1c766ce084cde6d2a08e19cb513ed4a85774.
+- Chưa chạy được npm test trong môi trường connector; GitHub combined status hiện chưa trả status entries. CI/regression vẫn CHƯA xác nhận pass. Chưa build APK và chưa nghiệm thu thiết bị.
