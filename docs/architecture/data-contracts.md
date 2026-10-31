@@ -42,7 +42,6 @@ Authentication/authorization must be verified from the current implementation be
 4. Remote catalog and marker data are already outside the APK. This is the model to extend for config and help/announcement content.
 5. Current usage tracking records visits/installations only. Reading/listening duration, session heartbeat, deduplication and date-bucket aggregation are not implemented.
 6. The marker sync module writes to the same Read Along repository but currently hardcodes branch `main`; it is a data-sync behavior, not a code-release promotion. Preserve existing compatibility while evaluating whether a dedicated data store would be simpler.
-7. There is no current remote-config client or validated remote-config schema in the APK.
 8. Admin API already has a single Pages Functions entry point; avoid adding another Worker/service unless an existing route cannot satisfy the requirement.
 
 ## 4. Target contract boundaries
@@ -52,16 +51,6 @@ Keep the current `books.json` contract stable. Metadata-only additions must be o
 
 ### Markers
 Keep current JSON marker shape compatible with `modules/page-sync.js`. Any schema extension must be additive and have a fallback for existing marker files.
-
-### Remote Config (initial static document added; runtime client not deployed)
-- Static JSON file: `admin/public/remote-config.json`.
-- Expected Pages URL: `https://read-along-admin.pages.dev/remote-config.json` (Pages root `admin`, output `public`; verify after the next successful production deployment).
-- Read-only public document; it contains no secrets or user data. Static Pages hosting avoids creating another Worker/API.
-- Versioned JSON only; no executable content.
-- Whitelisted feature flags and reader defaults only.
-- Validate schema/version/expiry; cache last-known-good; fallback to packaged defaults.
-- Endpoint host must be allowlisted in the APK.
-- Admin write path, if later added, must require existing Admin session and CSRF/origin validation.
 
 ### Analytics (proposed; not deployed)
 - Separate event schema for reading/listening sessions; do not overload visit counts.
@@ -125,22 +114,13 @@ The existing `usage/track` route remains visit/install counting and `telemetry/e
 - Reader playback, PDF rendering and page/audio sync must never wait on config/analytics endpoints.
 - Document every endpoint, payload schema, authentication model, retention and caller in this file as implementation proceeds.
 
-## 6. Remote Config bootstrap status
-
-- [x] Added an initial versioned static config document with empty feature/default maps and no announcements; it changes no app behavior.
-- [x] Added regression checks for the document's required version fields and empty allowlisted sections.
-- [x] Cloudflare Pages production deployment completed successfully for the commit containing the static config file.
-- [ ] Verify the actual HTTP response/body at `https://read-along-admin.pages.dev/remote-config.json`; deployment success alone does not prove the asset URL.
-- [ ] Add a protected Admin editing workflow only if generic file management is not sufficient; do not add another API by default.
-- [ ] Integrate an APK client only after backend/schema/cache/fallback tests and one grouped APK update.
-
 ## 7. Phase 1 status
 
 - [x] Enumerate current app-facing catalog, media, marker, usage, telemetry, diagnostics and OTA sources.
 - [x] Identify existing Admin API route families and trust boundaries.
-- [x] Identify current gaps: no remote config; usage tracking is not reading-time analytics.
+- [x] Identify current gap: usage tracking is not reading-time analytics.
 - [ ] Confirm exact marker JSON precedence and conflict resolution before modifying sync behavior.
 - [ ] Define machine-readable JSON schemas and regression tests for catalog/marker/config/analytics.
 - [ ] Review endpoint overlap and choose any consolidation only after compatibility analysis.
 
-No APK runtime code was changed as part of this inventory or the initial static config bootstrap.
+No APK runtime code was changed as part of this inventory.
