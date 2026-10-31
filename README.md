@@ -13,6 +13,7 @@ Tài liệu kỹ thuật chi tiết chỉ đọc khi công việc liên quan:
 - `docs/architecture/marker-and-api-review.md`: thứ tự nạp marker, xung đột nguồn và đánh giá API.
 - `schemas/`: JSON Schema được áp dụng cho catalog, marker, Remote Config và analytics event.
 - `admin/scripts/validate-remote-config.js`: kiểm tra chặt Remote Config; được chạy trong `npm test` và Cloudflare Pages build command trước khi publish.
+- `modules/remote-config.js`: Data Client độc lập, chỉ tải JSON từ hostname cố định, validate, cache bản hợp lệ và fallback offline; chưa tự áp dụng settings vào reader.
 - `tests/`: kiểm thử hợp đồng và module.
 
 ## 2. Phạm vi dự án — không dùng tài nguyên dự án khác
