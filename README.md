@@ -453,3 +453,18 @@ Quy tắc bảo trì:
 - Commits on `testing-catalog-cleanup`: `3230016a7c08baefb3c896cd3897b2f62b506b72` (manifest), `55cbc4f1fc6f1d48ec622d8cdde18c45ea249b48` (test).
 - Pending: CI; PR review/merge to `beta`; automatic Cloudflare Pages production deployment; then Admin OTP → Diagnostics → **Tạo / cập nhật books.json** to publish the corrected 82-book manifest. After publish, verify public JSON and Android catalog.
 - This correction only removes the stale Brave reference from the manifest seed. It does not restore deleted files and does not change the R2 bucket.
+
+
+### Catalog correction — deleted Brave assets removed (2026-10-31)
+
+- Root cause: `admin/public/books.json` still contained the Brave entry even though its PDF, MP3 and sync JSON had been deleted from R2. The publish validator correctly stopped instead of publishing a manifest with broken references.
+- Removed only the `id: brave` entry. Catalog seed now contains **82 books** (was 83); all other entries are unchanged.
+- Added regression test: `tests/catalog.test.js` asserts that the deleted Brave entry is not reintroduced.
+- PR [#39](https://github.com/blamag999/read-along-android/pull/39) merged into `beta`; merge commit `f0103bf1e13a4944eaabce2e7620728577661ade`.
+- CI [run #41153307569](https://github.com/blamag999/read-along-android/actions/runs/41153307569) completed **success**; regression suite, Pages Functions syntax and isolation checks passed.
+- Cloudflare Pages production Admin deployment succeeded for the merge commit:
+  - Deployment `5f7697c1-89e9-4d5b-9781-289fdebf1fc5`
+  - URL https://5f7697c1.read-along-admin.pages.dev
+  - Canonical URL https://read-along-admin.pages.dev
+- **Still pending:** use authenticated Admin OTP → Diagnostics → **Tạo / cập nhật books.json** to publish the corrected 82-book seed to R2. The change above does not alter the already-published R2 manifest. After publishing, verify the public manifest has 82 entries and no Brave URLs, then retry the app catalog on Android.
+- No APK build was triggered because this change only updates the catalog data seed/Admin web deployment; the Android app code did not change. No stable/main promotion.
