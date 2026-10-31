@@ -298,3 +298,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - **Chưa nghiệm thu:** cần CI mới pass, Pages production deploy route fix, sau đó production HTTP smoke test phải chứng minh accepted=1/duplicates=0 ở lần đầu và accepted=0/duplicates=1 khi replay; cuối cùng xác minh và dọn dữ liệu D1.
 - Không thay đổi APK/client, không build APK, không thay đổi main/testing. README không đổi, vẫn đồng nhất ba nhánh.
 
+
+### 2026-10-31 — Sửa regression assertion cho accepted-count fix
+
+- CI [#41166981068](https://github.com/blamag999/read-along-android/actions/runs/41166981068) thất bại ở bước `npm test` do chèn hai assertion vào giữa assertion nhiều dòng hiện có trong `tests/api-boundaries.test.js`, làm phát sinh SyntaxError. Các test trước đó trong suite đã chạy qua; Pages smoke test bị skip do suite dừng sớm.
+- Đã sắp xếp lại assertion block và giữ hai kiểm tra: SQL `SELECT changes() AS inserted` tồn tại; accepted count đọc result slot theo cặp statement.
+- Commit sửa test: `072740af9a3de31a5129edd265029fb386667dd5`.
+- Chờ CI mới trên commit này; chưa deploy route fix lên production và chưa chạy lại HTTP valid event/replay.
+- Không thay đổi runtime ngoài route fix đã ghi; không build APK; README giữ nguyên đồng nhất ba nhánh.
+
