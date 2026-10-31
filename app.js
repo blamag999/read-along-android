@@ -12,8 +12,6 @@ const state = {
   pdfFileName: '',
   audioFileName: '',
   currentBookKey: '', // Key định danh duy nhất của cuốn truyện hiện tại
-  dirHandle: null, // Thư mục trên máy tính nếu được cấp quyền ghi
-  folderJsonFiles: [], // Các tệp JSON trong thư mục được chọn để đồng bộ hàng loạt
 
   // DANH SÁCH TẬP TRUYỆN (PLAYLIST)
   playlist: [],
@@ -161,8 +159,6 @@ async function closeCurrentBook() {
   dom.lblTotalPages.textContent = '0';
   updateAudioPartUI();
   updateReadingCheckpointsUI();
-  updatePageTimestampBadge();
-  updateSyncCountBadge();
   showToast('Đã đóng sách và lưu vị trí đọc.');
   if (state.playlist.length) openPlaylistModal();
 }
@@ -444,7 +440,6 @@ const dom = {
 
   btnNode1FolderOnline: document.getElementById('btnNode1FolderOnline'),
   menuToggleSettings: document.getElementById('menuToggleSettings'),
-  menuOpenSyncModal: document.getElementById('menuOpenSyncModal'),
   btnChooseAudio: document.getElementById('btnChooseAudio'),
   folderInput: document.getElementById('folderInput'),
   pdfFileInput: document.getElementById('pdfFileInput'),
@@ -458,7 +453,6 @@ const dom = {
 
   pdfFileName: document.getElementById('pdfFileName'),
   audioFileName: document.getElementById('audioFileName'),
-  syncCountBadge: document.getElementById('syncCountBadge'),
   syncBanner: document.getElementById('syncBanner'),
 
   filePickerSection: document.getElementById('filePickerSection'),
@@ -482,10 +476,6 @@ const dom = {
   pageJumpInput: document.getElementById('pageJumpInput'),
   btnPageJump: document.getElementById('btnPageJump'),
   lblTotalPages: document.getElementById('lblTotalPages'),
-  lblPageTimestamp: document.getElementById('lblPageTimestamp'),
-  lblSaveStatus: document.getElementById('lblSaveStatus'),
-  btnPinCurrentTime: document.getElementById('btnPinCurrentTime'),
-  btnSaveToFolder: document.getElementById('btnSaveToFolder'),
 
   audioElement: document.getElementById('audioElement'),
   audioSeeker: document.getElementById('audioSeeker'),
@@ -499,12 +489,6 @@ const dom = {
   btnForward5: document.getElementById('btnForward5'),
   btnReplayPage: document.getElementById('btnReplayPage'),
 
-  btnCloseSyncModal: document.getElementById('btnCloseSyncModal'),
-  syncModal: document.getElementById('syncModal'),
-  syncTableBody: document.getElementById('syncTableBody'),
-  btnExportSync: document.getElementById('btnExportSync'),
-  importSyncInput: document.getElementById('importSyncInput'),
-  btnClearSync: document.getElementById('btnClearSync'),
   toastMessage: document.getElementById('toastMessage'),
   readingCheckpointSelect: document.getElementById('readingCheckpointSelect'),
   btnRestoreReadingCheckpoint: document.getElementById('btnRestoreReadingCheckpoint'),
@@ -531,22 +515,11 @@ function showToast(msg) {
   }, 3500);
 }
 
-function updateSyncCountBadge() {
-  const count = Object.keys(state.pageTimestamps).length;
-  dom.syncCountBadge.textContent = `⏱️ ${count} mốc`;
-  if (count > 0) {
-    dom.syncCountBadge.classList.remove('empty');
-  } else {
-    dom.syncCountBadge.classList.add('empty');
-  }
-}
-
 // =======================================================
 // RESET VÀ NẠP MỐC CHUẨN XÁC THEO TỪNG CUỐN (FIX TRIỆT ĐỂ LỖI DỮ LIỆU LẠ)
 // =======================================================
-async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl = '') {
-  // Marker source order: attached book JSON, its public R2 companion JSON, local folder JSON, then localStorage.
-  // R2 marker JSON is a read-only companion asset for the book/audio; marker edits remain local until exported as JSON.
+async function resetAndLoadSyncForBook(bookKey, remoteSyncUrl = '') {
+  // Marker source order: public R2 companion JSON, then legacy localStorage fallback (read-only).
   // 1. Luôn xóa sạch toàn bộ mốc của cuốn trước đó khỏi RAM
   state.pageTimestamps = {};
   state.currentBookKey = bookKey;
@@ -560,28 +533,8 @@ async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl 
   if (dom.lblAudioCurrentTime) dom.lblAudioCurrentTime.textContent = '00:00';
 
   dom.lblCurrentPage.textContent = '1';
-  dom.lblPageTimestamp.textContent = 'Mốc: Chưa gán';
-  dom.lblPageTimestamp.style.color = '#94a3b8';
-  updateSaveStatusBadge('💾 Mới (Chưa có mốc)');
-  updateSyncCountBadge();
 
   if (!bookKey) return;
-
-  // 2. THỨ TỰ ƯU TIÊN 1: Nếu có file JSON đi kèm trong thư mục
-  if (attachedJsonBlob) {
-    try {
-      const text = await attachedJsonBlob.text();
-      const parsed = JSON.parse(text);
-      if (parsed && typeof parsed === 'object') {
-        state.pageTimestamps = parsed;
-        saveSyncToStorage();
-        updatePageTimestampBadge();
-        updateSyncCountBadge();
-        updateSaveStatusBadge('💾 Đã nạp từ file .json thư mục');
-        return;
-      }
-    } catch (e) {}
-  }
 
   // 2a. Nạp file JSON marker đi kèm sách trên R2.
   if (remoteSyncUrl) {
@@ -592,10 +545,7 @@ async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl 
         if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
           state.pageTimestamps = parsed;
           saveSyncToStorage();
-          updatePageTimestampBadge();
-          updateSyncCountBadge();
-          updateSaveStatusBadge('☁️ Đã nạp mốc đọc');
-          return;
+                                  return;
         }
       }
       console.warn('Không nạp được tệp mốc trực tuyến:', response.status);
@@ -604,37 +554,19 @@ async function resetAndLoadSyncForBook(bookKey, attachedJsonBlob, remoteSyncUrl 
     }
   }
 
-  // 2b. TU DONG TIM JSON SYNC TRONG THU MUC (dirHandle) NEU CHUA CO BLOB
-  if (state.dirHandle && bookKey) {
-    var jsonNames = [
-      bookKey + '_sync.json',
-      bookKey + '.json'
-    ];
-    for (var ji = 0; ji < jsonNames.length; ji++) {
-      try {
-        var fh = await state.dirHandle.getFileHandle(jsonNames[ji]);
-        var djfile = await fh.getFile();
-        var djtext = await djfile.text();
-        var djparsed = JSON.parse(djtext);
-        if (djparsed && typeof djparsed === 'object' && Object.keys(djparsed).length > 0) {
-          state.pageTimestamps = djparsed;
-          saveSyncToStorage();
-          updatePageTimestampBadge();
-          updateSyncCountBadge();
-          updateSaveStatusBadge('Đã nạp mốc từ thư mục: ' + jsonNames[ji]);
-          return;
-        }
-      } catch (eDir) {}
-    }
-  }
 // 3. THỨ TỰ ƯU TIÊN 2: Kiểm tra trong bộ nhớ LocalStorage của trình duyệt
   const storageKey = `sync_${bookKey}`;
-  try { const raw=localStorage.getItem(storageKey); if(raw){const parsed=JSON.parse(raw);if(parsed&&typeof parsed==='object'&&Object.keys(parsed).length){state.pageTimestamps=parsed;updatePageTimestampBadge();updateSyncCountBadge();updateSaveStatusBadge('💾 Đã nạp từ bộ nhớ máy');return;}} } catch(e) {}
+  try {
+    const raw = localStorage.getItem(storageKey);
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && Object.keys(parsed).length) {
+      state.pageTimestamps = parsed;
+      return;
+    }
+  } catch (_) {}
 
   // 5. Nếu không có mốc nào: Giữ nguyên rỗng {}
   state.pageTimestamps = {};
-  updatePageTimestampBadge();
-  updateSyncCountBadge();
 }
 
 // =======================================================
@@ -1238,8 +1170,6 @@ function initEvents() {
   dom.btnPrevPage.addEventListener('click', () => changePage(-1));
   dom.btnNextPage.addEventListener('click', () => changePage(1));
 
-  dom.btnPinCurrentTime.addEventListener('click', pinCurrentTimeToPage);
-  dom.btnSaveToFolder.addEventListener('click', saveSyncToDirectoryOrDownload);
 
   dom.btnPlayPause.addEventListener('click', togglePlayPause);
   dom.btnRewind5.addEventListener('click', () => {
@@ -1296,21 +1226,6 @@ function initEvents() {
   dom.audioSeeker.addEventListener('input', (e) => {
     dom.audioElement.currentTime = parseFloat(e.target.value);
   });
-
-  dom.menuOpenSyncModal.addEventListener('click', () => {
-    dom.readOptionsMenu.classList.add('hidden');
-    dom.readOptionsMenu.setAttribute('aria-hidden', 'true');
-    dom.btnOpenReadMenu.setAttribute('aria-expanded', 'false');
-    openSyncModal();
-  });
-  dom.btnCloseSyncModal.addEventListener('click', () => dom.syncModal.classList.add('hidden'));
-  dom.syncModal.addEventListener('click', (e) => {
-    if (e.target === dom.syncModal) dom.syncModal.classList.add('hidden');
-  });
-
-  dom.btnExportSync.addEventListener('click', exportSyncData);
-  dom.importSyncInput.addEventListener('change', importSyncData);
-  dom.btnClearSync.addEventListener('click', clearAllSync);
 
   initTouchGestures();
 
@@ -1664,7 +1579,6 @@ async function renderCurrentSpread(syncAudioToPage = false) {
     dom.readerPageStatus.textContent = `Trang ${leftPageNum} / ${state.totalPages}`;
     dom.readerPageStatus.classList.remove('hidden');
   }
-  updatePageTimestampBadge();
 
   let renderSucceeded = false;
   try {
@@ -1833,99 +1747,6 @@ function changePage(delta) {
         }, 150);
       }
     }
-  }
-}
-
-function updatePageTimestampBadge() {
-  const ts = state.pageTimestamps[state.pageNum];
-  if (typeof ts === 'number') {
-    dom.lblPageTimestamp.textContent = 'Mốc: ' + formatTime(ts);
-    dom.lblPageTimestamp.style.color = '#38bdf8';
-  } else if (ts && typeof ts === 'object' && typeof ts.time === 'number') {
-    const partTxt = (ts.part !== undefined) ? (' (Phần ' + (ts.part + 1) + ')') : '';
-    dom.lblPageTimestamp.textContent = 'Mốc: ' + formatTime(ts.time) + partTxt;
-    dom.lblPageTimestamp.style.color = '#38bdf8';
-  } else {
-    dom.lblPageTimestamp.textContent = 'Mốc: Chưa gán';
-    dom.lblPageTimestamp.style.color = '#94a3b8';
-  }
-}
-function updateSaveStatusBadge(text) {
-  dom.lblSaveStatus.textContent = text;
-}
-
-// =======================================================
-// GHIM MỐC & TỰ ĐỘNG GHI FILE VÀO THƯ MỤC TRÊN MÁY
-// =======================================================
-async function pinCurrentTimeToPage() {
-  if (!state.pdfDoc) {
-    alert('Vui lòng mở sách trước!');
-    return;
-  }
-  const currentTime = dom.audioElement.currentTime || 0;
-  const roundedTime = Math.round(currentTime * 10) / 10;
-
-  if (state.currentStoryAudios && state.currentStoryAudios.length > 1) {
-    state.pageTimestamps[state.pageNum] = {
-      time: roundedTime,
-      part: state.currentAudioIndex
-    };
-  } else {
-    state.pageTimestamps[state.pageNum] = roundedTime;
-  }
-
-  // 1. Lưu vào LocalStorage
-  saveSyncToStorage();
-  updatePageTimestampBadge();
-  updateSyncCountBadge();
-
-  // 2. Tự động lưu trực tiếp vào thư mục trên máy (nếu đang mở qua chọn thư mục)
-  await autoSaveSyncToLocalDirectory();
-
-  const originalText = dom.btnPinCurrentTime.textContent;
-  dom.btnPinCurrentTime.textContent = 'Đã ghim: ' + formatTime(roundedTime) + '!';
-  dom.btnPinCurrentTime.style.backgroundColor = '#10b981';
-  setTimeout(() => {
-    dom.btnPinCurrentTime.textContent = originalText;
-    dom.btnPinCurrentTime.style.backgroundColor = '';
-  }, 1200);
-}
-// Tự động ghi thẳng file mốc .json vào thư mục máy tính
-async function autoSaveSyncToLocalDirectory() {
-  if (state.dirHandle && 'createWritable' in FileSystemFileHandle.prototype) {
-    try {
-      const fileName = getSyncFileName();
-      const fileHandle = await state.dirHandle.getFileHandle(fileName, { create: true });
-      const writable = await fileHandle.createWritable();
-      await writable.write(JSON.stringify(state.pageTimestamps, null, 2));
-      await writable.close();
-      updateSaveStatusBadge(`🟢 Đã tự lưu vào folder: ${fileName}`);
-      return true;
-    } catch (e) {
-      console.log('Không thể tự động ghi vào thư mục: ', e);
-    }
-  }
-  updateSaveStatusBadge('💾 Đã lưu vào bộ nhớ máy');
-  return false;
-}
-
-// Local JSON export naming is self-contained; no remote marker sync module is required.
-function getSyncFileName() {
-  const base = state.currentBookKey || 'truyen';
-  return `${base.replace(/\.[^/.]+$/, '').replace(/[\\/:*?"<>|]/g, '_').trim() || 'truyen'}.json`;
-}
-
-async function saveSyncToDirectoryOrDownload() {
-  if (Object.keys(state.pageTimestamps).length === 0) {
-    alert('Chưa có mốc thời gian để lưu.');
-    return;
-  }
-  const autoSaved = await autoSaveSyncToLocalDirectory();
-  if (autoSaved) {
-    showToast('Đã lưu tệp mốc thời gian.');
-  } else {
-    exportSyncData();
-    showToast('Đã tải tệp mốc thời gian về máy.');
   }
 }
 
@@ -2216,183 +2037,6 @@ function saveSyncToStorage() {
   } catch (e) {
     console.error(e);
   }
-}
-
-function openSyncModal() {
-  renderSyncTable();
-  dom.syncModal.classList.remove('hidden');
-}
-
-function renderSyncTable() {
-  dom.syncTableBody.replaceChildren();
-  const total = state.totalPages || 10;
-
-  for (let p = 1; p <= total; p++) {
-    const tr = document.createElement('tr');
-    const rawTs = state.pageTimestamps[p];
-    const hasTime = (typeof rawTs === 'number' && Number.isFinite(rawTs) && rawTs >= 0) ||
-      (rawTs && typeof rawTs === 'object' && typeof rawTs.time === 'number' && Number.isFinite(rawTs.time) && rawTs.time >= 0);
-    const sec = typeof rawTs === 'number' ? rawTs : (hasTime ? rawTs.time : 0);
-    const partNum = (hasTime && rawTs && Number.isInteger(rawTs.part) && rawTs.part >= 0) ? rawTs.part : null;
-
-    const pageCell = document.createElement('td');
-    const pageBold = document.createElement('b');
-    pageBold.textContent = 'Trang ' + p;
-    pageCell.appendChild(pageBold);
-    tr.appendChild(pageCell);
-
-    const timeCell = document.createElement('td');
-    const timeLabel = document.createElement('span');
-    timeLabel.textContent = hasTime
-      ? formatTime(sec) + (partNum !== null ? ' (Phần ' + (partNum + 1) + ')' : '')
-      : '(Chưa có)';
-    if (!hasTime) timeLabel.style.color = '#64748b';
-    if (partNum !== null) {
-      timeLabel.style.fontSize = '0.75rem';
-      timeLabel.style.color = '#38bdf8';
-    }
-    timeCell.appendChild(timeLabel);
-    tr.appendChild(timeCell);
-
-    const actionsCell = document.createElement('td');
-    if (hasTime) {
-      const playButton = document.createElement('button');
-      playButton.type = 'button';
-      playButton.className = 'btn-mini-play';
-      playButton.textContent = '▶ Nghe';
-      playButton.addEventListener('click', () => window.seekAndPlayTo(sec, p, partNum));
-      actionsCell.appendChild(playButton);
-
-      const deleteButton = document.createElement('button');
-      deleteButton.type = 'button';
-      deleteButton.className = 'btn-mini-del';
-      deleteButton.textContent = '✕ Xóa';
-      deleteButton.addEventListener('click', () => window.deleteSync(p));
-      actionsCell.appendChild(deleteButton);
-    }
-    const setButton = document.createElement('button');
-    setButton.type = 'button';
-    setButton.className = 'btn-mini-play';
-    setButton.textContent = '✏️ Đặt';
-    setButton.addEventListener('click', () => window.setManualSync(p));
-    actionsCell.appendChild(setButton);
-    tr.appendChild(actionsCell);
-    dom.syncTableBody.appendChild(tr);
-  }
-}
-
-window.seekAndPlayTo = function(seconds, page, part) {
-  if (part !== null && part !== undefined && part !== state.currentAudioIndex && state.currentStoryAudios && state.currentStoryAudios[part]) {
-    loadAudioPart(part);
-    setTimeout(() => {
-      dom.audioElement.currentTime = seconds;
-      dom.audioElement.play();
-    }, 300);
-  } else {
-    dom.audioElement.currentTime = seconds;
-    dom.audioElement.play();
-  }
-  state.pageNum = page;
-  renderCurrentSpread();
-  dom.syncModal.classList.add('hidden');
-};
-window.deleteSync = function(page) {
-  delete state.pageTimestamps[page];
-  saveSyncToStorage();
-  autoSaveSyncToLocalDirectory();
-  updatePageTimestampBadge();
-  updateSyncCountBadge();
-  renderSyncTable();
-};
-
-window.setManualSync = function(page) {
-  const rawVal = state.pageTimestamps[page];
-  const currentValSec = (typeof rawVal === 'number') ? rawVal : (rawVal && typeof rawVal === 'object' && typeof rawVal.time === 'number') ? rawVal.time : Math.floor(dom.audioElement.currentTime || 0);
-  const input = prompt(`Nhập số giây bắt đầu cho Trang ${page} (hoặc dạng MM:SS):`, formatTime(currentValSec));
-  if (!input) return;
-
-  let seconds = 0;
-  if (input.includes(':')) {
-    const parts = input.split(':').map(Number);
-    if (parts.length === 2) seconds = parts[0] * 60 + parts[1];
-    else if (parts.length === 3) seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
-  } else {
-    seconds = parseFloat(input);
-  }
-
-  if (!isNaN(seconds) && seconds >= 0) {
-    if (state.currentStoryAudios && state.currentStoryAudios.length > 1) {
-      let partIdx = state.currentAudioIndex;
-      if (rawVal && typeof rawVal === 'object' && typeof rawVal.part === 'number') {
-        partIdx = rawVal.part;
-      }
-      const partInput = prompt(`Trang ${page} thuộc phần âm thanh nào? (1 đến ${state.currentStoryAudios.length}):`, (partIdx + 1));
-      if (partInput) {
-        const parsedPart = parseInt(partInput, 10);
-        if (!isNaN(parsedPart) && parsedPart >= 1 && parsedPart <= state.currentStoryAudios.length) {
-          partIdx = parsedPart - 1;
-        }
-      }
-      state.pageTimestamps[page] = {
-        time: seconds,
-        part: partIdx
-      };
-    } else {
-      state.pageTimestamps[page] = seconds;
-    }
-    saveSyncToStorage();
-    autoSaveSyncToLocalDirectory();
-    updatePageTimestampBadge();
-    updateSyncCountBadge();
-    renderSyncTable();
-  } else {
-    alert('Thời gian không hợp lệ. Hãy nhập giây hoặc MM:SS.');
-  }
-};
-
-function clearAllSync() {
-  if (confirm('Xóa tất cả mốc thời gian của sách?')) {
-    state.pageTimestamps = {};
-    saveSyncToStorage();
-    autoSaveSyncToLocalDirectory();
-    updatePageTimestampBadge();
-    updateSyncCountBadge();
-    renderSyncTable();
-  }
-}
-
-function exportSyncData() {
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.pageTimestamps, null, 2));
-  const downloadAnchor = document.createElement('a');
-  downloadAnchor.setAttribute("href", dataStr);
-  downloadAnchor.setAttribute("download", getSyncFileName());
-  document.body.appendChild(downloadAnchor);
-  downloadAnchor.click();
-  downloadAnchor.remove();
-}
-
-function importSyncData(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function(event) {
-    try {
-      const imported = JSON.parse(event.target.result);
-      if (typeof imported === 'object') {
-        state.pageTimestamps = imported;
-        saveSyncToStorage();
-        autoSaveSyncToLocalDirectory();
-        updatePageTimestampBadge();
-        updateSyncCountBadge();
-        renderSyncTable();
-        showToast('Đã nhập mốc thời gian.');
-      }
-    } catch (err) {
-      alert('Tệp mốc thời gian không hợp lệ.');
-    }
-  };
-  reader.readAsText(file);
 }
 
 function initDragAndDrop() {
