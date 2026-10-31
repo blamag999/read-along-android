@@ -148,7 +148,9 @@ assert.match(adminScript, /libmp3lame/, 'WMA conversion must encode MP3 audio');
 assert.ok(adminScript.includes('file đích đã tồn tại'), 'conversion must refuse to overwrite an existing MP3');
 assert.ok(adminScript.includes('File WMA gốc được giữ nguyên'), 'conversion must preserve original WMA files');
 assert.ok(adminScript.includes('finding.code === "playback_compatibility"'), 'conversion action must be attached to WMA compatibility diagnostics');
-assert.ok(fs.readFileSync('admin/public/index.html', 'utf8').indexOf('class="library-tools"') < fs.readFileSync('admin/public/index.html', 'utf8').indexOf('<div class="table-wrap">'), 'library search and sort controls must appear before the file table');
+const adminHtml = fs.readFileSync('admin/public/index.html', 'utf8');
+const libraryToolsIndex = adminHtml.indexOf('class="library-tools"');
+assert.ok(libraryToolsIndex >= 0 && libraryToolsIndex < adminHtml.indexOf('<div class="table-wrap">', libraryToolsIndex), 'library search and sort controls must appear before the library file table');
 console.log('Admin pagination, WMA conversion and search placement regression tests passed.');
 
 assert.match(fs.readFileSync('admin/public/_headers', 'utf8'), /worker-src 'self' blob:/, 'CSP must allow the local FFmpeg worker');
