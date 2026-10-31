@@ -46,13 +46,18 @@ class Target {
   let idCounter = 0;
   const timers = [];
   const requests = [];
+  let failNextRequest = false;
   const context = {
     window, document, state: { pdfDoc: null, currentBookKey: '' }, localStorage,
     performance: { now: () => now },
     crypto: { randomUUID: () => String(++idCounter).padStart(32, '0'), getRandomValues: bytes => bytes.fill(1) },
     Uint8Array, Date, Math, Number, Boolean, String, JSON, Promise,
     setInterval: callback => { timers.push(callback); return timers.length; },
-    fetch: (url, options) => { requests.push({ url, options }); return Promise.resolve({ ok: true }); },
+    fetch: (url, options) => {
+      requests.push({ url, options });
+      if (failNextRequest) { failNextRequest = false; return Promise.reject(new Error('offline')); }
+      return Promise.resolve({ ok: true });
+    },
     console
   };
   vm.runInNewContext(fs.readFileSync('modules/analytics-collector.js', 'utf8'), context);
@@ -73,6 +78,7 @@ class Target {
   await tick();
   let sent = requests.map(x => JSON.parse(x.options.body).events[0]);
   assert.equal(sent[0].type, 'reader_start');
+  const firstSessionId = sent[0].sessionId;
   assert.equal(sent[0].platform, 'android');
   assert.equal('bookId' in sent[0], false);
   assert.equal(JSON.stringify(sent).includes('private-book-title'), false, 'book key/title must never leave the device');
@@ -135,7 +141,17 @@ class Target {
   context.state.pdfDoc = {};
   context.state.currentBookKey = 'another-private-book.pdf';
   await tick();
-  assert.equal(JSON.parse(requests.at(-1).options.body).events[0].type, 'reader_start', 'switching PDF starts a new analytics session');
+  const switchedSessionStart = JSON.parse(requests.at(-1).options.body).events[0];
+  assert.equal(switchedSessionStart.type, 'reader_start', 'switching PDF starts a new analytics session');
+  assert.notEqual(switchedSessionStart.sessionId, firstSessionId, 'PDF switch must start a distinct session');
+
+  failNextRequest = true;
+  const beforeOfflineHeartbeat = requests.length;
+  await tick(60000);
+  assert.equal(requests.length, beforeOfflineHeartbeat + 1, 'offline heartbeat is attempted once');
+  await tick(5000);
+  assert.equal(requests.length, beforeOfflineHeartbeat + 1, 'failed interval is dropped without retry or queue');
+
   audio.paused = false;
   audio.ended = false;
   audio.dispatch('play');
@@ -155,6 +171,14 @@ class Target {
   assert.equal(requests.length, countAfterOptOut, 'opt-out must stop collection immediately');
   assert.equal(values.get('read_along_analytics_consent_v1'), 'false');
   assert.equal(values.has('read_along_analytics_install_id_v1'), false, 'opt-out clears analytics install ID');
+
+  const allEvents = requests.map(item => JSON.parse(item.options.body).events[0]);
+  assert.equal(new Set(allEvents.map(event => event.eventId)).size, allEvents.length, 'event IDs must be unique');
+  for (const session of new Set(allEvents.map(event => event.sessionId))) {
+    const sequence = allEvents.filter(event => event.sessionId === session).map(event => event.sequence);
+    assert.deepEqual(sequence, sequence.map((_, index) => index), 'sequence must increase monotonically within each session');
+  }
+  assert.equal(JSON.stringify(allEvents).includes('another-private-book'), false, 'PDF names must not be transmitted');
 
   console.log('Analytics collector consent, timing, foreground, privacy and opt-out tests passed.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
