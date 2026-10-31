@@ -161,6 +161,12 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 - Cấu trúc manifest: `{ "books": [{ "id", "title", "pdf", "audios", "sync" }] }`; URL tài nguyên là HTTPS trên public R2 hostname của riêng Read Along. `sync` có thể là `null`.
 - APK đọc trực tiếp manifest public từ R2 khi mở **Truyện trực tuyến**; chỉ thay đổi danh mục không yêu cầu build APK mới.
 
+### Read Along Admin — thư viện theo bộ sách
+
+- Thư viện Admin hiển thị mỗi sách thành một nhóm thu gọn: PDF làm tên/đầu nhóm, tiếp theo là audio theo thứ tự phần và JSON đồng bộ nếu có.
+- Có trạng thái thiếu PDF/audio, trùng PDF/JSON và cảnh báo tương thích WMA. Nhóm chưa đủ thành phần vẫn được giữ để quản trị viên nhận diện; file không thuộc loại hỗ trợ nằm trong khu vực riêng “Chưa ghép được”.
+- Việc ghép chỉ dựa trên tên chuẩn hóa chính xác và cùng thư mục, không ghép gần đúng hoặc thay đổi đối tượng R2. Mở rộng một bộ để thao tác trên từng file.
+
 ## 8. Read Along Admin — web quản trị thư viện
 
 Đã phát triển khu vực quản trị độc lập trong cùng repository, tại thư mục `admin/`. Đây là website riêng, không nằm trong APK, dùng Pages Functions và các tài nguyên Cloudflare dành riêng cho Read Along.
