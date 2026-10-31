@@ -13,22 +13,8 @@ class Target {
   const audio = new Target();
   audio.paused = true;
   audio.ended = false;
-  const modal = new Target();
-  const checkbox = new Target();
-  checkbox.checked = false;
-  const status = { textContent: '' };
-  const menu = new Target();
-  const readMenu = new Target();
-  const readMenuButton = new Target();
   const elements = {
     audioElement: audio,
-    analyticsModal: modal,
-    chkAnalyticsConsent: checkbox,
-    analyticsStatus: status,
-    menuAnalytics: menu,
-    readOptionsMenu: readMenu,
-    btnOpenReadMenu: readMenuButton,
-    btnCloseAnalytics: new Target()
   };
   const document = new Target();
   document.visibilityState = 'visible';
