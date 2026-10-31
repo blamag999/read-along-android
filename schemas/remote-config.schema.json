@@ -1,31 +1,71 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://read-along-admin.pages.dev/schemas/remote-config.schema.json",
-  "title": "Read Along Remote Config (proposed contract)",
+  "title": "Read Along Remote Config v1",
   "type": "object",
-  "required": ["schemaVersion", "configVersion", "features", "readerDefaults"],
+  "required": [
+    "schemaVersion",
+    "configVersion",
+    "issuedAt",
+    "features",
+    "readerDefaults",
+    "announcements"
+  ],
   "additionalProperties": false,
   "properties": {
-    "schemaVersion": { "const": 1 },
-    "configVersion": { "type": "integer", "minimum": 1 },
-    "issuedAt": { "type": "string", "format": "date-time" },
-    "expiresAt": { "type": "string", "format": "date-time" },
+    "schemaVersion": {
+      "const": 1
+    },
+    "configVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "issuedAt": {
+      "type": "string",
+      "format": "date-time",
+      "minLength": 20
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time",
+      "minLength": 20
+    },
     "features": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "showReadingStats": { "type": "boolean" },
-        "showAnnouncements": { "type": "boolean" },
-        "enableOnlineCatalog": { "type": "boolean" }
+        "showReadingStats": {
+          "type": "boolean"
+        },
+        "showAnnouncements": {
+          "type": "boolean"
+        },
+        "enableOnlineCatalog": {
+          "type": "boolean"
+        }
       }
     },
     "readerDefaults": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "pageTurnMode": { "enum": ["next", "markers", "off"] },
-        "viewMode": { "enum": ["fit-height", "fit-width", "two-pages"] },
-        "autoSeekAudio": { "type": "boolean" }
+        "pageTurnMode": {
+          "enum": [
+            "next",
+            "markers",
+            "off"
+          ]
+        },
+        "viewMode": {
+          "enum": [
+            "fit-height",
+            "fit-width",
+            "two-pages"
+          ]
+        },
+        "autoSeekAudio": {
+          "type": "boolean"
+        }
       }
     },
     "announcements": {
@@ -33,12 +73,28 @@
       "maxItems": 10,
       "items": {
         "type": "object",
-        "required": ["id", "text"],
+        "required": [
+          "id",
+          "text"
+        ],
         "additionalProperties": false,
         "properties": {
-          "id": { "type": "string", "maxLength": 80 },
-          "text": { "type": "string", "maxLength": 500 },
-          "level": { "enum": ["info", "warning"] }
+          "id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1
+          },
+          "level": {
+            "enum": [
+              "info",
+              "warning"
+            ]
+          }
         }
       }
     }
