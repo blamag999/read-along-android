@@ -12,9 +12,28 @@
 - Không tạo API/Worker mới nếu hệ thống hiện có đáp ứng; không gộp endpoint khác trách nhiệm.
 - Không đánh dấu hoàn thành nếu thiếu bằng chứng CI, endpoint, deploy hoặc thiết bị tương ứng.
 
+## P1 — Chuẩn hóa Core APK theo hướng data/config-driven
+
+> Đã được người dùng xác nhận ngày 2026-10-31. Kiến trúc mục tiêu: APK đóng gói sẵn engine/renderer; backend chỉ cung cấp dữ liệu và cấu hình giá trị đã whitelist. Không tải/thực thi code từ xa. Chi tiết: [docs/architecture/core-extensibility.md](./docs/architecture/core-extensibility.md).
+
+- [ ] Audit source thực tế của static remote-config asset, schema, Data Client, bootstrap, cache/fallback, caller và production HTTP response; làm rõ mâu thuẫn giữa README, ROADMAP, PLANNING và data-contracts. Không giả định module tồn tại chỉ vì README nhắc tên.
+- [ ] Kiểm tra app-config hiện có có cần thiết không; ưu tiên tái sử dụng static Pages JSON/contract hiện tại, không tạo Worker/API/D1 mới. Nếu không có use case cụ thể thì không triển khai config client runtime.
+- [ ] Audit catalog schema, Admin scanner/publisher và app mapper; thiết kế metadata categories/folders additive, giữ contract cũ tương thích.
+- [ ] Chốt stable book ID độc lập folder/path; kiểm tra ID hiện tại, đề xuất migration/alias nếu ID đang được suy ra từ filename.
+- [ ] Xác định capability registry nội bộ và whitelist config tối thiểu; không biến thành plugin system hoặc dynamic UI/code execution.
+- [ ] Xác định fallback: packaged defaults, last-known-good, flat catalog fallback; lỗi config không được chặn reader/audio.
+- [ ] Thiết kế kiểm thử schema compatibility, unknown fields, malformed config, timeout, host allowlist, stale cache và fallback; không tuyên bố pass trước khi chạy.
+- [ ] Lập batch runtime tối thiểu gồm catalog category UI và per-book progress nếu audit xác nhận cần; giữ marker/audio/PDF engine/native bridge ngoài phạm vi nếu không có lỗi liên quan.
+- [ ] Chỉ tạo một commit cuối cùng có marker [build-apk] sau khi các runtime change và regression pass; test thiết bị thật trước nghiệm thu.
+
+## P1 — Phân loại thay đổi để tránh build APK không cần thiết
+
+- [ ] Lập bảng path/change ownership cho Admin, schemas, catalog/media, config, runtime JS/CSS/HTML, native Android và release workflows.
+- [ ] Kiểm tra workflow path filters hiện tại có phân biệt backend/docs-only với APK runtime hay không; chỉ sửa khi có bằng chứng filter sai.
+- [ ] Ghi rõ trong README rằng OTA APK installer không đồng nghĩa với remote JavaScript OTA; không dựa vào remote code update để né quy trình build/kiểm thử APK.
 ## P2 — Tinh gọn ranh giới APK Core và backend
 
-> Quyết định kiến trúc ngày 2026-10-31: APK chỉ tập trung vào tải nội dung từ cloud và trải nghiệm đọc/nghe. Không xây dựng offline PDF/audio. PDF/audio vẫn phải lấy từ cloud; timestamp/marker (nếu có) dùng để đồng bộ vị trí đọc theo trang. Không duy trì Remote Config vì hiện không có kế hoạch điều khiển tính năng/reader từ xa. Admin, Dashboard, Analytics backend, catalog, scan và vận hành phải phát triển độc lập, không kéo theo build APK nếu không thay đổi mã runtime APK.
+> Quyết định kiến trúc ngày 2026-10-31: APK chỉ tập trung vào tải nội dung từ cloud và trải nghiệm đọc/nghe. Không xây dựng offline PDF/audio. PDF/audio vẫn phải lấy từ cloud; timestamp/marker (nếu có) dùng để đồng bộ vị trí đọc theo trang. Không xây dựng hệ thống remote control hoặc remote code. Người dùng đã xác nhận nhu cầu cấu hình dữ liệu-driven để tránh build APK cho thay đổi đã được hỗ trợ; chỉ dùng static JSON versioned, whitelist và fallback nếu audit chứng minh cần thiết. Không tạo API/Worker mới. Admin, Dashboard, Analytics backend, catalog, scan và vận hành phải phát triển độc lập, không kéo theo build APK nếu không thay đổi mã runtime APK.
 
 ### Chốt hợp đồng dữ liệu tối thiểu của APK Core
 
