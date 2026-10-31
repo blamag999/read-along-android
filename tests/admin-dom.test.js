@@ -49,7 +49,7 @@ assert.ok(script.includes('Đã đổi tên/di chuyển thành công: '), 'Renam
 
 assert.ok(api.includes('best.score>=0.95'), 'Fuzzy rename suggestions must require at least 95% name similarity');
 assert.ok(script.includes('Number(finding.similarity) >= 95'), 'UI must enforce the 95% rename threshold');
-assert.ok(script.includes('Thay tệp WMA thủ công'), 'WMA compatibility finding must recommend manual replacement');
+assert.ok(api.includes('Thay tệp WMA thủ công'), 'WMA compatibility finding must recommend manual replacement');
 assert.ok(script.includes('Admin không chuyển đổi audio.'), 'Diagnostics must clearly state that audio is not converted');
 assert.ok(!script.match(/FFmpeg|ffmpeg|convertWmaGroup|Chuyển WMA/), 'Admin browser must not contain audio conversion code');
 assert.ok(!api.includes('Chuyển đổi sang PDF, MP3'), 'Unsupported format guidance must not suggest in-app conversion');
