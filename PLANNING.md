@@ -232,8 +232,10 @@ Cần build APK cho:
 - Đã tạo `docs/architecture/data-contracts.md`, liệt kê endpoint/caller/trust boundary và các khoảng trống hiện tại.
 - Đã tạo `docs/architecture/marker-and-api-review.md`: ghi chính xác thứ tự nạp marker, phát hiện comment 'GitHub newer' không đúng vì không có so sánh freshness; rà soát API và kết luận không gộp các endpoint khác chức năng.
 - Draft schema marker envelope v1 trong `schemas/marker.schema.json`, vẫn đọc legacy map, numeric seconds, `{time, part}` và empty map; bổ sung structural assertions.
+- CI [41159251879](https://github.com/blamag999/read-along-android/actions/runs/41159251879) success: `npm test`, JS syntax, Pages Functions syntax và isolation checks đều pass.
 - Đã thêm JSON Schema v1 cho catalog, marker, Remote Config và Analytics event; thêm structural regression tests vào `npm test`.
 - CI `41158627378` đã pass trên commit test `24b4058ec05abb1e27ddff65f1ec0978a7fe5558`; test bao gồm contract schema và manifest seed hiện tại.
 - Schema mới chỉ là contract định hướng; chưa tích hợp runtime validator hoặc endpoint Remote Config/Analytics thời lượng.
-- Phase 1: inventory, JSON Schema v1, manifest compatibility regression, CI validation và API overlap review đã hoàn tất. Marker precedence hiện tại đã được ghi nhận; schema envelope v1 tương thích legacy đã được draft. Còn pending runtime conflict policy/migration và CI cho schema update mới.
+- Phase 1: inventory, JSON Schema v1, manifest compatibility regression, CI validation và API overlap review đã hoàn tất. Marker precedence hiện tại đã được ghi nhận; schema envelope v1 tương thích legacy đã được draft. Còn pending runtime conflict policy/migration.
+- CI run `41159251879` pass cho commit `11bdba3ffa20801b8eebaf6728aa9c58f365712c`; run trước `41159157324` fail do lỗi chèn assertion vào giữa file test, đã sửa bằng cách viết lại test file hoàn chỉnh. Không có runtime code bị ảnh hưởng.
 - Tiến độ: Phase 0 hoàn tất; Phase 1 đang thực hiện.
