@@ -589,3 +589,6 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - [x] Nhóm Kênh OTA, Phiên bản đang cài và Kiểm tra cập nhật thành một section gọn; giữ nguyên các ID DOM để không đổi luồng OTA.
 - [x] Bỏ icon và mô tả phụ dư thừa; CSS thu gọn chiều cao và khoảng cách.
 - [ ] CI regression và APK/device acceptance còn chờ xác minh.
+
+- [x] GitHub Actions run #554 passed all regression, syntax, isolation and deployed smoke-test steps.
+- [ ] Beta APK build and physical-device menu acceptance remain pending.
