@@ -749,19 +749,17 @@ function buildPlaylistFromItems(rawItems) {
 }
 
 function updatePlaylistBadgeCount() {
+  // Count is the number of books currently available in the loaded library/catalog.
   const count = state.playlist.length;
   const available = count > 0;
   dom.btnOpenPlaylist.disabled = !available;
   dom.btnOpenPlaylist.setAttribute('aria-disabled', String(!available));
   dom.btnOpenPlaylist.title = available
-    ? 'Mở danh sách tập trong thư mục đã chọn'
-    : 'Hãy chọn thư mục trước để mở danh sách tập';
-  if (available) {
-    dom.lblPlaylistCount.textContent = count;
-    dom.lblPlaylistCount.classList.remove('hidden');
-  } else {
-    dom.lblPlaylistCount.classList.add('hidden');
-  }
+    ? 'Mở thư viện sách (' + count + ' cuốn)'
+    : 'Chưa có danh sách sách. Chọn Bắt đầu để tải thư viện.';
+  dom.btnOpenPlaylist.setAttribute('aria-label', 'Thư viện sách, ' + count + ' cuốn');
+  dom.lblPlaylistCount.textContent = String(count);
+  dom.lblPlaylistCount.classList.remove('hidden');
 }
 
 function openPlaylistModal() {
