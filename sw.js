@@ -1,4 +1,4 @@
-const CACHE_NAME = 'read-along-shell-v50-network-first';
+const CACHE_NAME = 'read-along-shell-v51-network-first';
 const APP_SHELL = [
   './',
   './index.html',
@@ -7,8 +7,6 @@ const APP_SHELL = [
   './modules/page-sync.js',
   './modules/playlist-layout.js',
   './modules/catalog-playlist.js',
-  './modules/remote-config.js',
-  './modules/remote-config-bootstrap.js',
   './modules/remote-sync.js',
   './modules/diagnostics.js',
   './modules/analytics-collector.js',
