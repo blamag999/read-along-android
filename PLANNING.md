@@ -490,3 +490,11 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 ### Trạng thái bàn giao
 - Đợt 1: source change đã ghi vào beta; chờ test/regression và device acceptance.
 - Đợt 2: chưa bắt đầu.
+
+
+### Progress note — Library catalog retry
+- [x] Keep the header Library action enabled when catalog is empty/unavailable; clicking it retries `loadR2Catalog()`.
+- [x] Deduplicate concurrent catalog loads with `state.catalogLoading`.
+- [x] Add source-level assertions in `tests/modules.test.js`.
+- [ ] Run full regression after the Reader/Menu and R2-only cleanup batch; no test pass is claimed yet.
+- Code commits: `4539b6f79ac8635b0a8133955cb78febf752ebcd` and `cbf7515e6f3de252dbc4ff474608c023f75806b6`.
