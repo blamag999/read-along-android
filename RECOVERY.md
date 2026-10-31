@@ -272,3 +272,11 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - OTA smoke test failure in run 41212943321 was a stale expectation that the live endpoint must return 404. Live endpoint correctly returned a beta manifest (HTTP 200, version 1.3.20). Smoke test now validates the actual manifest contract and correct regex escaping.
 - Full workflow [41213578916](https://github.com/blamag999/read-along-android/actions/runs/41213578916) completed successfully on `b1d3ac247e8e6fd463be813cc7169a6ce26407f4`: npm test PASS; Pages Functions syntax PASS; isolation PASS; analytics smoke PASS; OTA beta manifest smoke PASS.
 - Next action: one final beta commit marked `[build-apk]` touching an APK-relevant path. Build workflow will rerun full regression, build/sign APK, verify SHA-256 and publish release/OTA. Do not claim artifact availability until run is complete and release assets are inspected. Keep main unchanged.
+
+
+## Recovery — final beta APK build in progress (2026-10-31)
+
+- Finalized runtime/UI and tests on commit `5839851550c29a1fcb17d8815426db1783b0936d`. This commit is the exact source selected by build workflow [41213680238](https://github.com/blamag999/read-along-android/actions/runs/41213680238).
+- Full regression, Pages Functions syntax, isolation, channel validation, release notes/version generation, web preparation, native updater integration, Android version and launcher icon generation, signing configuration all passed.
+- Current step: `Build signed release APK` is in progress. Pending: signature and SHA-256 verification, OTA R2 upload, workflow artifacts, GitHub Release assets.
+- Main remains unchanged. Do not treat APK as downloadable/OTA-ready until workflow completes successfully and release assets are checked.
