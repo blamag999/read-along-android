@@ -80,6 +80,7 @@ assert.ok(htmlSource.includes('id="btnOpenPlaylist"') && htmlSource.includes('id
 assert.ok(!htmlSource.includes('id="btnCloseBook"') && !htmlSource.includes('id="btnToggleSettings"') && !htmlSource.includes('id="btnOpenSyncModal"'), 'header must not expose separate close-book, settings, or marker buttons');
 assert.ok(htmlSource.includes('id="menuToggleSettings"') && htmlSource.includes('id="menuOpenSyncModal"'), 'settings visibility and timestamp management must remain accessible inside the menu');
 assert.ok(!appSource.includes('btnCloseBook') && !appSource.includes('btnToggleSettings') && !appSource.includes('btnOpenSyncModal'), 'removed header controls must not be referenced by reader initialization');
+assert.ok(appSource.includes('if (state.pdfDoc) {\n    requestCloseBook();'), 'Android Back must retain the existing close-book and save-session flow');
 
 assert.ok(styleSource.includes('white-space: pre-line'), 'toast messages must preserve line breaks');
 assert.ok(styleSource.includes('.app-ui-mode .header-right { flex: 0 0 auto; flex-wrap: nowrap;'), 'reader header actions must stay on one row');
