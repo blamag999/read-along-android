@@ -141,6 +141,12 @@ async function closeCurrentBook() {
   state.totalPages = 0;
   state.lastSessionSaveAt = 0;
   state.lastAudioObservedTime = null;
+  state.audioLoadRequestId = (state.audioLoadRequestId || 0) + 1;
+  state.pageNumPending = null;
+  state.pageNumPendingSyncAudio = false;
+  state.pendingBackwardSeek = null;
+  state.allowBackwardAudioSync = false;
+  state.isAudioDrivenChange = false;
   dom.canvasWrapper.classList.add('hidden');
   dom.canvasWrapper.classList.remove('two-page-mode');
   dom.emptyState.classList.remove('hidden');
