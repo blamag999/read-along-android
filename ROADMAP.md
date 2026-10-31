@@ -419,3 +419,10 @@ Khi một công việc trong PLANNING hoàn tất:
 - Commit: `cab0bf478abd8785d61c5fdc3fe075315c9d1d89`.
 - Chờ CI mới; không build APK.
 
+
+### 2026-10-31 — AN3 collector automated regression pass
+
+- CI [#41167718138](https://github.com/blamag999/read-along-android/actions/runs/41167718138) **success** trên commit `cab0bf478abd8785d61c5fdc3fe075315c9d1d89`: full npm test, JavaScript syntax, Pages Functions syntax, isolation và production non-mutating consent/CORS smoke.
+- Collector tests hiện bao phủ default-off/no install ID before opt-in, opt-in/opt-out, random IDs, PDF open/switch/close, heartbeat timing, audio play/pause/ended, foreground/background, pagehide/pageshow, offline drop/no retry, sequence monotonicity và không gửi book title/file name.
+- Chưa build APK; rotation trên WebView/Android và đo tác động startup/playback cần nghiệm thu thực tế sau khi hoàn tất batch.
+
