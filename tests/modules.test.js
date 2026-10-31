@@ -119,4 +119,14 @@ for (const removedId of ['syncModal', 'btnCloseSyncModal', 'btnExportSync', 'imp
 }
 assert.ok(!appSource.includes('scheduleGitHubSync('), 'local marker edits must not call the removed GitHub sync client');
 
+
+
+const removedReaderStyleSelectors = ['.btn-node-r2', '.option-r2-block', '.btn-r2-action', '.view-controls-bar', '.view-btn', '.zoom-group', '.view-btn-mini', '.zoom-label', '.file-picker-section', '.file-picker-card', '.action-btn', '.btn-node-1', '.btn-node-2', '.btn-node-3', '.active-files-indicator', '.quick-options', '.toggle-label', '.drop-overlay', '.drop-box', '.drop-icon', '.empty-guide-card', '.guide-item', '.item-icon', '.item-text', '.feature-tags', '.page-time-badge', '.save-status-badge', '.sync-actions-mini', '.btn-pin', '.btn-save-mini', '.option-block', '.option-desc', '.divider-text', '.guide-box', '.form-group', '.text-input', '.modal-actions-right', '.btn-primary-large', '.btn-success-large', '.history-section', '.history-item', '.history-item-title', '.sync-actions-row', '.sync-table-container', '.sync-table', '.btn-mini-play', '.btn-mini-del', '.hide-mobile', '.speed-select-wrap', '.speed-select', '.speed-btn', '.page-turn-mode-label', '.replay-page-text', '.menu-toggle-btn', '.btn-choose-audio', '.btn-direct-pdf', '.usage-guide', '.tutorial-steps', '.tutorial-step', '.tutorial-note', '.diagnostics-consent', '.diagnostics-actions', '.btn-secondary', '.btn-primary', '.diagnostics-service-card', '.diagnostics-service-heading', '.is-checking', '.is-connected', '.is-error', '.diagnostics-action-status', '.reading-checkpoint-control', '.btn-restore-checkpoint', '.file-status-row', '.playlist-export-row', '.sync-modal-content', '.menu-view-controls', '.is-on', '.menu-option-state'];
+for (const selector of removedReaderStyleSelectors) {
+  assert.ok(!styleSource.includes(selector), 'removed reader controls must not retain obsolete CSS selector ' + selector);
+}
+for (const selector of ["#btnFitHeight","#btnTwoPages","#btnZoomIn","#btnZoomOut","#btnReloadMarkers","#btnToggleSettings","#filePickerSection","#btnChooseAudio"]) {
+  assert.ok(!styleSource.includes(selector), 'removed reader controls must not retain obsolete CSS selector ' + selector);
+}
+
 console.log('Module behavior and touch-reader UI contract tests passed.');
