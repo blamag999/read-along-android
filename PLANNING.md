@@ -21,7 +21,7 @@
 - [x] Thêm metadata `folder` vào catalog preview/publish; trường optional để tương thích manifest cũ.
 - [x] App có bộ lọc thư mục; Admin có thao tác bulk move chỉ áp dụng file ở root, giữ nguyên `books.json`, không đụng thư mục hiện có, kiểm tra trùng tên và dùng route rename đã có (copy → xác minh kích thước → xóa nguồn).
 - [x] Regression/isolation CI pass tại [run 41226438099](https://github.com/blamag999/read-along-android/actions/runs/41226438099).
-- [ ] Xác nhận Cloudflare Pages deployment của commit trên đã hoàn tất; URL production Admin: https://read-along-admin.pages.dev.
+- [x] Cloudflare Pages deployment hoàn tất: [deployment c3dbf307](https://c3dbf307.read-along-admin.pages.dev), production branch `beta`, build và deploy đều success.
 - [ ] Đăng nhập Admin, ở thư mục gốc chạy **Chuyển sách ngoài thư mục vào DISNEY**; kiểm tra tiến độ và lỗi. Dự kiến 179 tệp (~1.65 GB); `books.json` và 24 object của `ONE STORY A DAY LEVEL 2 FULL` phải giữ nguyên.
 - [ ] Sau khi chuyển thành công, xác nhận bản xem trước catalog không loại nhóm nào; dự kiến 84 sách trong `DISNEY` (82 sách đang có + 2 cặp chưa có catalog) và 12 sách trong `ONE STORY A DAY LEVEL 2 FULL`.
 - [ ] Xuất bản `books.json`; xác minh tất cả URL PDF/audio/JSON tồn tại, tổng số sách và phân nhóm đúng; đồng bộ seed `admin/public/books.json` sau khi manifest live đã được kiểm tra.
