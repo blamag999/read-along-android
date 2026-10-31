@@ -6,12 +6,10 @@
 
 Mục tiêu dài hạn là **APK Core ổn định + dịch vụ/dữ liệu độc lập**: giữ trải nghiệm đọc PDF/audio và tích hợp Android trong APK; tách catalog, media, marker, cấu hình, quản trị, diagnostics, analytics và nội dung thay đổi thường xuyên sang dữ liệu/dịch vụ riêng. Mục đích là giảm số lần phát hành APK, đồng thời giữ khả năng offline, bảo mật và dễ kiểm thử.
 
-Người dùng đã xác nhận các nguyên tắc A–E:
+Người dùng đã xác nhận các nguyên tắc A, B và E:
 
 - **A — Freeze APK Core:** PDF Viewer, Audio Player, đồng bộ trang/audio, Android/WebView lifecycle, lưu/khôi phục phiên và native bridge chỉ thay đổi khi có lỗi nghiêm trọng, bảo mật, tương thích nền tảng hoặc yêu cầu thiết yếu.
 - **B — Tách dịch vụ:** Analytics, Diagnostics backend, Catalog Admin, metadata và nội dung trợ giúp/thông báo chạy độc lập với APK.
-- **C — Remote Config:** có schema/version, validation, cache và offline fallback.
-- **D — Không remote code:** không tải hoặc thực thi JavaScript tùy ý từ server.
 - **E — Build có điều kiện:** chỉ build APK khi thay đổi runtime đóng gói, UI interaction, native plugin/permission/bridge, bảo mật hoặc lỗi lõi.
 
 ## 2. Các giai đoạn đã xây dựng
@@ -69,7 +67,6 @@ Người dùng đã xác nhận các nguyên tắc A–E:
 - Đã tạo JSON Schema v1:
   - `schemas/catalog.schema.json`
   - `schemas/marker.schema.json`
-  - `schemas/remote-config.schema.json`
   - `schemas/analytics-event.schema.json`
 - Đã thêm `tests/contracts.test.js` vào `npm test` để kiểm tra schema và các giới hạn contract.
 - API overlap review kết luận không nên gộp usage, telemetry, diagnostics, catalog Admin và GitHub marker sync vì khác trách nhiệm/quyền. Không tạo Worker/API Analytics thứ hai khi chưa có nhu cầu kỹ thuật rõ ràng.
@@ -80,7 +77,6 @@ Người dùng đã xác nhận các nguyên tắc A–E:
 |---|---|---|
 | R0 | Hợp nhất master planning, Analytics plan và nguyên tắc APK decoupling | **Hoàn tất** |
 | R1 | Inventory API/data, schema và marker/API boundary review | Đã hoàn tất phần inventory/contract; marker runtime conflict policy chưa chốt |
-| R2 | Static Remote Config, Data Client, cache và fallback | Đang thực hiện |
 | R3 | Analytics ingest + D1 + event thời lượng đọc/nghe | Chưa bắt đầu |
 | R4 | Analytics dashboard ngày/tuần/tháng/năm | Chưa bắt đầu |
 | R5 | Help/announcements/theme và config ngoài APK | Chưa bắt đầu |
@@ -94,13 +90,11 @@ Các run dưới đây là kết quả của **commit tương ứng**, không m�
 |---|---|---|
 | [CI 41158627378](https://github.com/blamag999/read-along-android/actions/runs/41158627378) | `24b4058ec05abb1e27ddff65f1ec0978a7fe5558` | Success — schema/contract và manifest seed regression |
 | [CI 41159251879](https://github.com/blamag999/read-along-android/actions/runs/41159251879) | `11bdba3ffa20801b8eebaf6728aa9c58f365712c` | Success — marker contract regression sau khi sửa test |
-| [CI 41159337454](https://github.com/blamag999/read-along-android/actions/runs/41159337454) | `f5ca28b219a1b03227faedceb1ef48ab1179277f` | Success — remote-config static document contract |
 | [Pages deployment 8892563b](https://8892563b.read-along-admin.pages.dev) | `ed083c0c5fe0774c1e4ff69922b5139950491ffe` | Production deployment success; chưa xác minh trực tiếp HTTP body của asset |
 
 Ghi chú:
 - CI run mới nhất nêu trên không chạy trên commit tài liệu mới nhất `6e8f9576479bf587220cf1d8685c7f0228f8c1be`; phải kiểm tra lại CI theo HEAD khi bắt đầu đợt mới.
 - Pages deployment success xác nhận deploy, không tự chứng minh public URL trả đúng JSON.
-- Không có APK build/device test nào được xác nhận trong giai đoạn master planning và schema/Remote Config bootstrap này.
 
 ## 5. Trạng thái repository tại lần chuẩn hóa hồ sơ
 
@@ -109,15 +103,12 @@ Ghi chú:
 - HEAD trước đợt chuẩn hóa tài liệu: `6e8f9576479bf587220cf1d8685c7f0228f8c1be`.
 - Ba nhánh hiện có đã xác minh: `main`, `beta`, `testing`.
 - `beta` là nhánh phát triển/tích hợp; `main` là stable; `testing` chỉ dùng khi cần kiểm chứng riêng.
-- Không có promote stable trong đợt schema/Remote Config bootstrap gần nhất.
 - Không có runtime APK change hoặc APK build trong đợt đó.
-- Remote Config v1 hiện là static JSON với feature/default maps và announcements rỗng; chưa thay đổi hành vi app.
 
 ## 6. Những điều cần hiểu khi tiếp nhận dự án
 
 1. Các tính năng reader/audio/OTA/catalog/Admin đã có nền tảng triển khai, nhưng không được mặc định mọi lỗi lịch sử đã hết; kiểm tra Issues, log và test hiện tại trước khi sửa.
 2. Marker precedence hiện tại có rủi ro ghi đè nguồn; schema versioned đã có nhưng runtime migration/conflict policy chưa được thực hiện.
-3. Remote Config đã có file JSON và schema, nhưng chưa có APK Data Client; endpoint public cần xác minh body trước khi tích hợp.
 4. Usage tracking hiện có đo lượt mở/installation, không phải thời lượng đọc/nghe.
 5. Không tạo thêm API/Worker hoặc thay đổi APK chỉ để thuận tiện nếu có thể dùng contract/service hiện tại.
 6. Các công việc chưa hoàn thành được quản lý duy nhất trong [PLANNING.md](./PLANNING.md).
@@ -129,62 +120,6 @@ Khi một công việc trong PLANNING hoàn tất:
 - Cập nhật trạng thái mốc tương ứng.
 - Chỉ sau đó xóa mục hoàn tất khỏi PLANNING.
 - Giữ lại lịch sử có giá trị; không biến ROADMAP thành backlog mới.
-
-
-### 2026-10-31 — Remote Config contract hardening and branch CI alignment
-- Bổ sung runtime-style contract assertions cho static Remote Config fixture: schema version, config version, timestamp parse, feature flags/default whitelist, announcements, field lạ và expiresAt trước issuedAt.
-- Negative tests xác nhận từ chối schema version không hỗ trợ, configVersion không hợp lệ, field ngoài whitelist, feature/default lạ, announcement field lạ và cấu hình hết hạn không hợp lệ.
-- Điều chỉnh workflow `.github/workflows/check-readalong-admin.yml`: push validation chỉ áp dụng ba nhánh `beta`, `main`, `testing`; bỏ pattern nhánh `feature/**` và cho phép kiểm thử push trên `testing`.
-- CI [41160461292](https://github.com/blamag999/read-along-android/actions/runs/41160461292) success trên commit `e3f448ad778b5db7cf1d945aef827c6b248dd26d`.
-- Không thay đổi APK/runtime reader, không build APK.
-- Public URL `https://read-along-admin.pages.dev/remote-config.json` chưa xác minh được HTTP response/body trong phiên này; static deployment chưa được xem là hoàn tất tích hợp.
-
-
-### 2026-10-31 — Remote Config v1 contract and CI preflight validation
-- Chuẩn hóa `schemas/remote-config.schema.json`: contract v1 bắt buộc `schemaVersion`, `configVersion`, `issuedAt`, `features`, `readerDefaults`, `announcements`; `expiresAt` là tùy chọn; giới hạn nội dung announcement.
-- Thêm `admin/scripts/validate-remote-config.js` làm validator độc lập, có thể chạy trước khi deploy/publish. Validator kiểm tra whitelist top-level/feature/default, kiểu dữ liệu, ISO-8601 date-time có timezone và ngày lịch hợp lệ, expiry, announcement length/level/ID trùng.
-- Tích hợp preflight vào `npm test`; bổ sung negative tests và cấu hình workflow để chạy CI khi `schemas/**` hoặc `scripts/**` thay đổi.
-- Cấu hình mặc định được người dùng cung cấp được giữ nguyên: schemaVersion 1, configVersion 1, issuedAt 2026-10-31T00:00:00Z, feature/default rỗng, announcements rỗng. Không bật tính năng và không thay đổi hành vi APK.
-- CI [41161083538](https://github.com/blamag999/read-along-android/actions/runs/41161083538) success trên commit `0f8a9bbc4645d1e708c4aff5d08d90923e1a178f`; bao gồm toàn bộ `npm test`, preflight validator và các regression suites. Các commit tài liệu theo sau không thay đổi mã chạy.
-- Đây là contract + CI preflight, **chưa phải** xác minh Cloudflare Pages production endpoint hoặc bảo đảm mọi đường publish đều bị gate. Endpoint `https://read-along-admin.pages.dev/remote-config.json` chưa đọc được qua công cụ kiểm tra; cần xác minh sau deployment.
-- Chưa tích hợp Data Client vào APK, không build APK, không thay đổi main.
-
-
-### 2026-10-31 — Cloudflare Pages deploy-time Remote Config gate
-- Xác minh Cloudflare Pages project hiện tại là `read-along-admin`, source đúng repository `blamag999/read-along-android`, production branch `beta`, root directory `admin`, output directory `public`; không tạo Pages project mới.
-- Cấu hình build command của project thành `node scripts/validate-remote-config.js`. Validator được đặt trong `admin/scripts/`, cùng build root; do đó Pages build sẽ dừng nếu Remote Config JSON không đạt contract trước khi publish thư mục `public`.
-- Project-level build config đã được API trả về xác nhận có build command mới. Deployment khởi chạy đồng thời với lúc cập nhật setting có snapshot build command cũ, nên cần thêm một commit sau khi setting đã lưu để nghiệm thu deployment dùng gate mới.
-- Quy tắc version: mọi thay đổi nội dung Remote Config sau khi phát hành phải tăng `configVersion`; validator kiểm tra kiểu/giá trị dương nhưng không tự tăng version và không so sánh được với bản production trước đó. Người sửa config chịu trách nhiệm tăng version.
-
-
-### 2026-10-31 — Pages deploy-time validator verified
-- Deployment [201aeb20](https://201aeb20.read-along-admin.pages.dev) được Cloudflare xác nhận success cho commit `1d0e557444cb501bf0535fb7d719d0a22cba672c`; deployment snapshot ghi nhận build command `node scripts/validate-remote-config.js`, root `admin`, output `public`. Điều này xác nhận Pages đã chạy build command trước publish thành công.
-- Project-level build config hiện giữ build command `node scripts/validate-remote-config.js`; deployment tiếp theo từ beta cũng nhận cấu hình này.
-- CI [41161257650](https://github.com/blamag999/read-along-android/actions/runs/41161257650) success trên commit `59a78ea50991afc1df24d945add91892252f1046`, bao gồm validator trong `npm test`.
-- Còn thiếu duy nhất bước kiểm tra trực tiếp HTTP status/content-type/body của public URL `https://read-along-admin.pages.dev/remote-config.json`. Hai công cụ truy cập ngoài gặp lỗi DNS/internal error; deployment success không thay thế xác minh response.
-
-
-### 2026-10-31 — Remote Config endpoint body confirmed by user; isolated Data Client added
-- Người dùng mở `https://read-along-admin.pages.dev/remote-config.json` và gửi lại JSON:
-  `schemaVersion: 1`, `configVersion: 1`, `issuedAt: 2026-10-31T00:00:00Z`, `features: {}`, `readerDefaults: {}`, `announcements: []`. Body khớp chính xác file `admin/public/remote-config.json` trên beta. Đây là xác nhận thủ công về body; không phải bằng chứng độc lập cho HTTP status hoặc Content-Type.
-- Thêm `modules/remote-config.js`: endpoint HTTPS/hostname cố định, GET JSON, giới hạn body 32 KiB, timeout 4 giây, tối đa 1 retry, schema/allowlist validation, expiresAt enforcement, từ chối configVersion thấp hơn cache, cache last-known-valid và offline defaults. Không thực thi nội dung server và không áp dụng reader settings.
-- Thêm `tests/remote-config.test.js`: network success/cache, offline cache, offline first-run defaults, malformed JSON, HTTP error, wrong content-type, missing/unknown fields, invalid schema/version/types/expiry, duplicate announcement IDs, response quá lớn, version rollback, corrupt/expired cache, timeout và retry giới hạn.
-- Bổ sung retry delay cố định 200 ms (tối đa 1 retry), timeout request 4 giây (có thể hạ trong test), không retry vô hạn.
-- Tích hợp test module vào `npm test` và syntax check.
-- CI [41161695921](https://github.com/blamag999/read-along-android/actions/runs/41161695921) success trên commit `dc63dd35fe51e8008b99ff97c93629f8113c1802`, chạy toàn bộ `npm test` và syntax check bao gồm Data Client; các commit hồ sơ sau đó chỉ sửa tài liệu.
-- Data Client hiện được giữ độc lập, **chưa nạp trong `index.html`/APK**. Không build APK.
-- P0.1 body được người dùng xác nhận; kiểm tra HTTP status/Content-Type vẫn pending. P0.3 đã hoàn tất module nền và một phần test, chưa tích hợp APK.
-
-- Hồ sơ bàn giao cập nhật sau batch Data Client; beta HEAD tại thời điểm cập nhật: `debd81d7a69c95f2e3acbae2b772106ce5e57cb0`.
-
-
-### 2026-10-31 — Production endpoint verified; Data Client bootstrapped in app shell
-- Thêm workflow `.github/workflows/check-remote-config-endpoint.yml` để kiểm tra endpoint production sau thay đổi Remote Config và có thể chạy thủ công. Workflow chạy trên GitHub-hosted runner, kiểm tra status, Content-Type, kích thước response và cấu trúc v1.
-- Endpoint smoke test [41161849355](https://github.com/blamag999/read-along-android/actions/runs/41161849355) success trên commit `a2f7132f45ba76a4b5b6f95ac3e7da444f0b1b52`. Log thực tế xác nhận HTTP **200**, Content-Type **application/json**, schemaVersion **1**, configVersion **1**. Đây là bằng chứng trực tiếp cho P0.1; nội dung body đã được người dùng đối chiếu ở bước trước.
-- Tích hợp `modules/remote-config.js` và `modules/remote-config-bootstrap.js` vào `index.html` sau `app.js`; bootstrap tải cấu hình bất đồng bộ, không chặn khởi động reader. Kết quả được lưu tại `window.ReadAlongRemoteConfigState`; chưa consumer nào áp dụng feature/defaults, do đó config rỗng không thay đổi hành vi PDF/audio.
-- Sửa timeout bao trùm cả response body parsing; cập nhật Service Worker shell cache từ v48 lên v49 và thêm hai module vào APP_SHELL. Việc dọn cache chỉ tác động shell cache có version, không xóa localStorage hoặc dữ liệu đọc.
-- Bổ sung test bootstrap ordering/state; CI [41161982280](https://github.com/blamag999/read-along-android/actions/runs/41161982280) success trên commit `6b9d28d6bbdc279d8f659eda9918a252c5478d30`, gồm toàn bộ npm test và JS syntax checks.
-- Đây là thay đổi runtime đóng gói APK. Chưa build/phát hành APK: workflow `build-android-apk.yml` chỉ chạy bằng workflow_dispatch, không có action dispatch khả dụng trong phiên làm việc. Cần chạy workflow thủ công chọn ref `beta`, channel `beta`; sau đó cài và kiểm tra trên thiết bị thật trước khi xem P0.3 hoàn tất.
 
 
 ### 2026-10-31 — Beta APK v1.3.5 built and one-shot finalization workflow configured
@@ -201,7 +136,6 @@ Khi một công việc trong PLANNING hoàn tất:
 - Thay đổi `.github/workflows/check-readalong-admin.yml`: push lên `beta`, `main`, `testing` chỉ chạy full regression khi commit cuối cùng có marker `[test]`; Pull Request vẫn tự động chạy đầy đủ. Bổ sung `workflow_dispatch` để chạy thủ công.
 - Thay đổi `.github/workflows/build-android-apk.yml`: mọi build được kích hoạt bằng `[build-apk]` hoặc manual dispatch đều cài dependencies và chạy `npm test`, Pages Functions syntax check, isolation checks trước khi chuẩn bị assets/native và build. Các bước kiểm thử thất bại sẽ chặn phát hành.
 - Tránh chạy trùng: commit `[build-apk]` không mang marker `[test]`; workflow build tự kiểm tra chính xác commit đóng gói.
-- README ghi quy ước marker, yêu cầu marker nằm ở commit cuối của push, kiểm thử ngay cho thay đổi critical và giữ Remote Config endpoint smoke test riêng. PLANNING ghi nguyên tắc triển khai tương ứng.
 - Các commit triển khai:
   - Check workflow: `fab4d53e9a5b8c2b69696f7dffb83bf67fd4fa77`
   - APK workflow: `4b529ddc1e98313e16bb8331b1b8b3822f42cf87`
@@ -351,7 +285,6 @@ Khi một công việc trong PLANNING hoàn tất:
 - AN2 đã có bằng chứng production HTTP write/replay/sequence collision ở [#41167147802](https://github.com/blamag999/read-along-android/actions/runs/41167147802); D1 aggregate đúng một lần và tất cả smoke rows đã được dọn. Production write smoke được bỏ khỏi CI thường trực để không làm bẩn analytics.
 - Khảo sát AN3: `app.js` global state có `state.pdfDoc`, `state.currentBookKey`, `state.currentStoryAudios`; PDF load thành công trong `loadPdfFromBlob` và `loadPdfFromUrl`; audio lifecycle có play/pause/ended/error listeners; app lưu reading session ở localStorage và flush khi pause/pagehide.
 - `modules/diagnostics.js` đã có event capture và diagnostics consent riêng, nhưng consent này chỉ áp dụng cho việc người dùng chủ động gửi báo cáo công khai; không được tái sử dụng cho analytics opt-in.
-- Script order hiện tại: page-sync → playlist-layout → catalog-playlist → app.js → remote-config → remote-sync → diagnostics. Có thể thêm collector độc lập sau app.js; tuy nhiên phải giữ collector tách biệt với diagnostics và không gửi bookKey/title/file name.
 - UI hiện có read menu với mục Diagnostics; đề xuất thêm mục Analytics/Thống kê ẩn danh và modal opt-in riêng. Consent mặc định off, lưu key riêng; opt-out dừng ngay và không queue event offline.
 - Không có thay đổi runtime trong batch khảo sát. Không build APK. AN3 implementation chưa bắt đầu.
 
@@ -482,7 +415,7 @@ Khi một công việc trong PLANNING hoàn tất:
 - Release `v1.3.7` (prerelease/beta) published: https://github.com/blamag999/read-along-android/releases/tag/v1.3.7
 - APK asset: `read-along-v1.3.7-android.apk`; SHA-256: `a4f4f5e85f04af05a53925888685ed28b82ba02867571a4ffe84769bcaf06299`.
 - Device acceptance is not yet confirmed. User should install/update this APK and test Analytics consent, opt-in/out, reading/listening counters, offline behavior and playback stability. Android TV remains pending.
-- Next after AN3 device acceptance: close P0.3 Data Client online/offline acceptance, then design safe marker migration; AN4 dashboard follows AN3 collector acceptance and can be developed independently without APK build.
+- Next after AN3 device acceptance: design safe marker migration; AN4 dashboard follows AN3 collector acceptance and can be developed independently without APK build.
 
 
 ### 2026-10-31 — AN3 device acceptance confirmed; AN4 dashboard scope and implementation batch
@@ -519,14 +452,6 @@ Khi một công việc trong PLANNING hoàn tất:
 - Regression CI gần nhất của batch điều hướng/API: [41170506777](https://github.com/blamag999/read-along-android/actions/runs/41170506777), success trên commit `07bd866af16de1dc33d989ac8f6da90349cd539c`. Tài liệu hiện tại ở beta HEAD `3d9f4d49509c52b6f9ca9fc8ad9a47ec4a220b36`.
 - Giới hạn nghiệm thu: xác nhận Dashboard hoạt động từ người dùng; không ghi nhận việc đối chiếu số liệu thực tế với một khoảng đọc/nghe có thời lượng đo độc lập. Không cần build APK cho AN4.
 
-### 2026-10-31 — Điều chỉnh kiến trúc theo định hướng APK Core tối giản
-
-- Người dùng xác nhận không có kế hoạch sử dụng Remote Config để bật/tắt tính năng hoặc thay đổi reader từ xa; mục tiêu APK là tải PDF/audio từ cloud để đọc/nghe, dùng timestamp/marker (nếu có) để đồng bộ theo trang.
-- Chốt định hướng: không phát triển offline PDF/audio; không giữ Remote Config chỉ để có thêm một endpoint/cơ chế cấu hình chưa có consumer. PLANNING chuyển P0 sang gỡ Remote Config và kiểm tra không ảnh hưởng startup/tải PDF/audio/marker/page sync.
-- Phân tách công việc: Admin, Dashboard, Analytics backend, catalog, scan/publish, D1 và diagnostics tiếp tục phát triển/deploy độc lập; chỉ build APK khi thay đổi thực sự chạm runtime/asset/native hoặc contract cần caller APK cập nhật.
-- Analytics collector được phân loại là adapter tùy chọn phía APK, không thuộc APK Core; backend/Dashboard không phụ thuộc vào việc sửa APK. Khi có nhu cầu thay đổi collector phải gom thành một batch APK riêng.
-- Đây là quyết định và cập nhật planning; **chưa gỡ Remote Config khỏi source, Pages build gate hoặc APK**. Việc gỡ cần rà soát references/caller và thực hiện trên beta trong một batch có test; không xóa dịch vụ/backend khác.
-
 ### 2026-10-31 — Reset thống kê và sửa nguyên nhân có thể nhân đôi installation identity
 
 - Trước khi reset, D1 production `read-along-admin-db` có 21 `admin_reading_events`, 1 ngày aggregate, 4 daily-session rows; Dashboard query đếm 2 `install_hash` Android. Nhóm usage cũ có 24 visits và 1 installation. Điều này cho thấy số 2 nằm ở Analytics reading collector, không phải bằng chứng có hai thiết bị vật lý.
@@ -536,9 +461,7 @@ Khi một công việc trong PLANNING hoàn tất:
 - Không xóa `admin_audit_log`, `admin_scan_logs`, `admin_scan_cache`, `admin_client_events`, `admin_server_errors`, `admin_sessions`, `admin_auth_attempts`, `admin_totp_state` hoặc dữ liệu thư viện/R2. Đây là nhật ký vận hành, bảo mật, diagnostics hoặc nội dung, không phải thống kê sử dụng; giữ nguyên để không làm mất khả năng quản trị/chẩn đoán.
 - Dashboard có thể nhận thống kê mới ngay khi collector bản APK hiện tại gửi event trở lại; việc giữ installId qua opt-out có hiệu lực sau khi cài APK chứa commit sửa. Dữ liệu cũ đã reset nên không thể truy nguyên hai hash cũ sau thao tác xóa.
 ### 2026-10-31 — APK Core decoupling and install identity correction
-- Gỡ Remote Config khỏi APK shell (index.html), Service Worker app shell/cache, package test/syntax scripts, schema, validator, test fixture, static JSON và endpoint smoke workflow. Kiểm tra index.html và app.js không còn caller; Service Worker cache key tăng từ v50 lên v51 để thiết bị lấy shell mới.
 - Giữ nguyên catalog R2, PDF/audio cloud path, marker sync, OTA, Diagnostics và Analytics collector; không xóa API/backend độc lập.
-- Cloudflare Pages project read-along-admin build command đã đổi từ validator Remote Config sang true; GET API xác nhận build_config.build_command=true. Cấu hình D1/R2/env vars và source repo không đổi.
 - Collector giữ install ID qua opt-out/re-consent; regression test cập nhật để xác nhận cùng một ID trong cùng app data. Commit code: 8f7bb961; test: 3eada363, 4865e9c.
 - Production usage statistics đã reset và query xác nhận 0 cho reading events/daily/session, app visits/installations và app/platform totals; audit/security/diagnostics/library/content data được giữ.
 - Các thay đổi trên đã push beta. Chưa tuyên bố APK Core freeze hoặc APK build thành công cho đến khi full regression + build workflow hoàn tất.
@@ -586,19 +509,8 @@ Khi một công việc trong PLANNING hoàn tất:
 - Không thay đổi APK runtime, không build APK, không promote code hoặc sửa main trực tiếp.
 
 
-### 2026-10-31 — Chốt định hướng Core APK data/config-driven
-
-- Người dùng xác nhận triển khai kiến trúc **Core APK ổn định + dữ liệu/cấu hình có version + renderer/capability được đóng gói sẵn** nhằm giảm build APK khi thay đổi nội dung, phân loại, metadata và giá trị cấu hình đã được APK hỗ trợ.
-- Tạo tài liệu [docs/architecture/core-extensibility.md](./docs/architecture/core-extensibility.md) tại commit `149bb1b9248d569a60eb15fb405bae417313f9e1`. Đây là kiến trúc mục tiêu, không phải xác nhận các module đã được triển khai.
-- Cập nhật PLANNING tại commit `e2a64eaa9f3d955d73b1829d65578d689f99311f`: ưu tiên audit config thực tế, catalog contract, stable book ID, capability whitelist, fallback và path filters trước khi sửa runtime.
-- Nguyên tắc được chốt: không tải/thực thi JavaScript tùy ý; không tạo Worker/API/D1 mới nếu static JSON hiện có đủ; không gộp progress vào marker; không đổi reader/audio/native chỉ để hỗ trợ catalog/config; chỉ build APK một lần sau batch runtime và regression.
-- Phân biệt rõ OTA APK installer hiện tại với remote JavaScript OTA. Không coi cơ chế tải/cài APK là bằng chứng đã có cập nhật web runtime từ xa.
-- Đối chiếu recovery: beta HEAD trước đợt tài liệu này là `6324daef8a506d0c725707df814df9ac0f10222f`. So sánh từ `71ba2a1d41cb62dc85723a65ba89bfeb55878155` cho thấy beta ahead 2 commit, chỉ chạm `RECOVERY.md` và `ROADMAP.md`; đã đọc lại các thay đổi, không phát hiện code/runtime delta trong compare.
-- Không chạy test/CI/deploy, không build APK, không thay đổi R2, D1, Cloudflare config, main hoặc PR #40 trong batch kiến trúc tài liệu này. Các mục audit/implementation vẫn pending trong PLANNING.
-
-
 ### Mốc bàn giao kiến trúc — 2026-10-31
 
-- Batch tài liệu kiến trúc data/config-driven đã được ghi vào ROADMAP và PLANNING; chi tiết công việc chưa hoàn thành nằm trong PLANNING.
-- Mốc này không phải nghiệm thu runtime, không xác nhận config client/catalog category/progress store đã được triển khai.
+- Đã cập nhật tài liệu kiến trúc Core APK theo hướng mở rộng catalog/metadata mà không thay đổi engine PDF/audio khi không cần thiết.
+- Các hạng mục catalog category và per-book progress vẫn là kế hoạch, chưa được nghiệm thu runtime.
 - HEAD đã được đối chiếu trước checkpoint: `284484f6266d0c9792bd82b36ab1e00ea179ee1b`.
