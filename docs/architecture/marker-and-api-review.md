@@ -46,6 +46,25 @@ Do not silently change the existing precedence until the marker contract is vers
 4. Add tests for stale/newer revisions, equal revisions, missing metadata, invalid JSON, offline fallback, part-index bounds and legacy values.
 5. Migrate only after the reader can read both legacy and versioned formats. Do not rewrite or delete existing marker files automatically.
 
+
+## 3A. Resolved marker conflict policy (pure resolver; runtime integration pending)
+
+The policy applies only to candidates already scoped to the same logical book key. The current envelope has no independent book identifier, so callers must never compare revisions across different books.
+
+1. An explicit user import is authoritative for that import action. A valid legacy map or versioned envelope is accepted; an empty versioned `markers: {}` is an intentional clear-all. An invalid explicit import must be rejected and must not silently fall back to another source.
+2. For normal book opening, validate every candidate before comparison. Reject arrays, malformed page keys, negative/non-finite timestamps, invalid part indices, unknown envelope fields, unsupported schema versions and invalid dates.
+3. If at least one valid versioned envelope exists, ignore legacy candidates for freshness selection and choose the highest integer revision. Do not compare device timestamps across different revisions.
+4. If multiple highest-revision envelopes have identical marker content, use `updatedAt` only as a deterministic tie-breaker; then use source priority `localStorage → R2 → GitHub → folder`.
+5. If highest-revision envelopes have different marker content, report a conflict. Preserve the localStorage candidate when present; otherwise use deterministic fallback `R2 → GitHub → folder`. Never auto-persist a conflict result or overwrite any source.
+6. If no valid versioned envelope exists, preserve legacy behavior exactly: when R2 exists, GitHub replaces it if a valid GitHub legacy map exists; otherwise retain R2. If R2 is absent, use folder JSON, then GitHub, then localStorage. This is compatibility order, not a claim that one legacy copy is newer.
+7. Never merge marker maps automatically. Empty legacy `{}` remains invalid/ambiguous; use the versioned empty envelope to represent an intentional clear-all.
+8. During migration, keep legacy readers and writers intact until dual-format read/write, atomic persistence and recovery tests are complete. Do not rewrite or delete source files automatically.
+
+Implementation boundary:
+- `modules/marker-resolver.js` is a pure, isolated policy implementation and is not yet called by `app.js` or `modules/remote-sync.js`.
+- `tests/marker-resolver.test.js` covers version ordering, same-revision identical/conflicting content, local recovery, legacy fallback, explicit import, clear-all, malformed values and audio-part bounds.
+- This batch does not change reader behavior, marker storage, native code or APK runtime. Runtime migration remains a separate step after review of the policy and migration/write semantics.
+
 ## 4. API overlap review
 
 | Endpoint/service | Data / purpose | Authentication | Overlap assessment |
