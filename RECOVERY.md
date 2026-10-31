@@ -334,3 +334,13 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 
 
 - README synchronization verification after PR #42: beta blob `2c9e534869ee250de84c134a873879dad18f3a7f`, main blob `2c9e534869ee250de84c134a873879dad18f3a7f`; contents are byte-for-byte identical.
+
+
+## 2026-10-31 — Đợt 1 tinh gọn Reader/Menu (đang triển khai)
+
+- Đã loại bỏ khỏi giao diện lựa chọn chế độ đọc ba trạng thái và checkbox “Lật trang tự tua”.
+- Tự tua audio khi người đọc lật trang được cố định luôn bật trong runtime; giá trị `autoSeekAudio=false` từ session cũ không còn được áp dụng.
+- Menu “Tự lật trang” chuyển trực tiếp giữa bật/tắt; session tiếp tục lưu trạng thái bật/tắt qua trường tương thích `pageTurnMode` (giá trị `next/off`).
+- Đã bỏ các nút chọn một/hai trang và zoom nhanh khỏi HTML; chế độ hiển thị cũ trong session được chuẩn hóa về fit-height. Ghép trang theo marker tiếp tục dùng `resolveTimestampSpread()`.
+- Phạm vi chưa hoàn tất: cần loại bỏ wiring/hàm cũ còn tham chiếu phần tử UI đã xóa, cập nhật test hợp đồng và chạy regression. Chưa build APK, chưa chạy CI hoặc kiểm thử thiết bị.
+- Không thay đổi R2 catalog, marker JSON read path, local file picker hay marker manager trong đợt này.
