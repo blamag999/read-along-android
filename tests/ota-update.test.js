@@ -29,6 +29,7 @@ assert.ok(router.includes('requestedVersion !== result.manifest.version'), 'Down
 assert.ok(!router.includes('manifest.downloadUrl'), 'Backend must not redirect clients to a storage-provider URL');
 
 assert.ok(workflow.includes('R2_ACCESS_KEY_ID') && workflow.includes('R2_SECRET_ACCESS_KEY'), 'Release workflow must use bucket-scoped R2 credentials');
+assert.ok(workflow.includes('exit 1'), 'Release workflow must fail closed when bucket-scoped R2 credentials are missing');
 assert.ok(workflow.includes('--bucket read-along-releases --key "releases/$CHANNEL/$APK"'), 'Release workflow must upload APKs to the dedicated OTA bucket');
 assert.ok(workflow.includes('--metadata "sha256=$SHA256"'), 'Release workflow must store the APK checksum as R2 object metadata');
 assert.ok(workflow.includes('aws --no-cli-pager --endpoint-url'), 'Release workflow must upload through the S3-compatible R2 API');
