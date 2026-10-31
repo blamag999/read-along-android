@@ -2841,3 +2841,14 @@ button:focus-visible, select:focus-visible, input:focus-visible, label.action-bt
   .app-ui-mode .playlist-page-btn { min-height: 38px; padding-block: 5px; }
   .app-ui-mode .playlist-pagination { padding-block: 4px 2px; }
 }
+
+/* Per-book recent reading checkpoints */
+.reading-checkpoint-control { display:inline-flex; align-items:center; gap:5px; font-size:.78rem; color:var(--text-muted); }
+.reading-checkpoint-control select { max-width:min(290px, 46vw); min-width:0; height:30px; border:1px solid rgba(255,255,255,.2); border-radius:6px; background:var(--bg-card); color:var(--text-main); padding:0 6px; }
+.btn-restore-checkpoint { height:30px; padding:0 9px; border:0; border-radius:6px; background:var(--primary-color); color:white; cursor:pointer; }
+.btn-restore-checkpoint:disabled, .reading-checkpoint-control select:disabled { opacity:.5; cursor:not-allowed; }
+@media (max-width:620px) {
+  .reading-checkpoint-control { gap:3px; }
+  .reading-checkpoint-control select { max-width:42vw; height:29px; font-size:.72rem; }
+  .btn-restore-checkpoint { height:29px; padding:0 7px; font-size:.72rem; }
+}
