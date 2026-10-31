@@ -48,7 +48,7 @@
       <div class="summary-row">
         <div><div class="eyebrow">THƯ VIỆN R2</div><h2>Quản lý nội dung</h2><p class="muted">Chỉ thao tác trên bucket Read Along.</p></div>
         <div class="toolbar library-actions">
-          <button id="newFolderBtn" class="button secondary" type="button">＋ Thư mục</button>
+          <button id="newFolderBtn" class="button secondary" type="button">＋ Thư mục</button><button id="publishBooksBtn" class="button secondary" type="button">Xuất bản danh mục</button>
           <label class="button primary file-button">↑ Tải tệp lên<input id="fileInput" type="file" multiple accept=".pdf,.json,.mp3,.m4a,.m4b,.aac,.wav,.ogg,.oga,.opus,.flac,.wma"></label>
         </div>
       </div>
@@ -89,13 +89,13 @@
         <div class="tab-status" id="diagnosticsStatusBar" role="status" aria-live="polite"><span class="status-dot"></span><span id="diagnosticsStatus">Chưa chạy kiểm tra.</span></div>
               <details id="diagnosticsPanel" class="panel diagnostics-panel" aria-live="polite">
         <summary class="diagnostics-summary">
-          <span><strong>Kiểm tra &amp; xuất bản danh mục</strong><small id="diagnosticsSummary" class="muted">Chưa chạy kiểm tra.</small></span>
+          <span><strong>Rà soát lỗi và tương thích</strong><small id="diagnosticsSummary" class="muted">Chưa chạy kiểm tra.</small></span>
           <span class="details-hint">Mở công cụ ▾</span>
         </summary>
         <div class="diagnostics-content">
         <div class="diagnostics-heading">
-          <div><div class="eyebrow">KIỂM TRA TÍNH TOÀN VẸN</div><h3>Kết quả kiểm tra thư viện</h3><p class="muted">Quét lỗi, xem nhóm bị loại và xuất bản books.json ngay tại trang quản lý này.</p></div>
-          <div class="diagnostics-actions"><button id="scanBtn" class="button secondary" type="button">Quét thư viện</button><button id="publishBooksBtn" class="button primary" type="button">Tạo danh mục từ R2</button></div>
+          <div><div class="eyebrow">KIỂM TRA TÍNH TOÀN VẸN</div><h3>Kết quả kiểm tra thư viện</h3><p class="muted">Quét chữ ký, cấu trúc và mức độ tương thích của các tệp trong thư viện.</p></div>
+          <div class="diagnostics-actions"><button id="scanBtn" class="button secondary" type="button">Quét thư viện</button></div>
         </div>
         <div id="diagnosticStats" class="diagnostic-stats"></div>
         <div class="table-wrap">
