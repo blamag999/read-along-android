@@ -530,10 +530,23 @@ async function handle(request, env) {
   if (route === "analytics/events" && method === "POST") {
     const contentLength = Number(request.headers.get("content-length") || 0);
     if (contentLength > 65536) return json({ error: "Request too large" }, 413);
-    let raw, body;
+    let raw = "", body;
     try {
-      raw = await request.text();
-      if (raw.length > 65536) return json({ error: "Request too large" }, 413);
+      const reader = request.body?.getReader();
+      if (!reader) return json({ error: "Request body required" }, 400);
+      const decoder = new TextDecoder();
+      let totalBytes = 0;
+      while (true) {
+        const chunk = await reader.read();
+        if (chunk.done) break;
+        totalBytes += chunk.value.byteLength;
+        if (totalBytes > 65536) {
+          await reader.cancel();
+          return json({ error: "Request too large" }, 413);
+        }
+        raw += decoder.decode(chunk.value, { stream: true });
+      }
+      raw += decoder.decode();
       body = JSON.parse(raw);
     } catch { return json({ error: "Invalid JSON" }, 400); }
     const validation = validateAnalyticsBatch(body);
