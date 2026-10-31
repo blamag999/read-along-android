@@ -185,3 +185,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - Sửa timeout bao trùm cả response body parsing; cập nhật Service Worker shell cache từ v48 lên v49 và thêm hai module vào APP_SHELL. Việc dọn cache chỉ tác động shell cache có version, không xóa localStorage hoặc dữ liệu đọc.
 - Bổ sung test bootstrap ordering/state; CI [41161982280](https://github.com/blamag999/read-along-android/actions/runs/41161982280) success trên commit `6b9d28d6bbdc279d8f659eda9918a252c5478d30`, gồm toàn bộ npm test và JS syntax checks.
 - Đây là thay đổi runtime đóng gói APK. Chưa build/phát hành APK: workflow `build-android-apk.yml` chỉ chạy bằng workflow_dispatch, không có action dispatch khả dụng trong phiên làm việc. Cần chạy workflow thủ công chọn ref `beta`, channel `beta`; sau đó cài và kiểm tra trên thiết bị thật trước khi xem P0.3 hoàn tất.
+
+
+### 2026-10-31 — Beta APK v1.3.5 built and one-shot finalization workflow configured
+
+- Người dùng xác nhận đã chạy build; kiểm tra GitHub Actions xác nhận run [41162360209](https://github.com/blamag999/read-along-android/actions/runs/41162360209) trên branch `beta`, commit `a30c6a011456befc04e5af83a51694e5e19eaa1d`, kết quả `success`.
+- Các bước `Build signed release APK`, `Rename and verify signed APK`, upload artifact và tạo GitHub Release đều success. Artifact `read-along-v1.3.5-build` (artifact ID `13027347763`) còn hạn đến 2026-11-30; Release [v1.3.5 beta](https://github.com/blamag999/read-along-android/releases/tag/v1.3.5) có APK, file SHA-256 và Web Local ZIP.
+- Không build lại trong lần chỉnh workflow này; không thay đổi runtime APK. Device acceptance vẫn pending.
+- Sửa `.github/workflows/build-android-apk.yml`: push lên `beta` chỉ chạy job build nếu commit message chứa `[build-apk]`; các commit trung gian không build APK. Khi hoàn tất một đợt, commit chốt có marker sẽ tự kích hoạt build beta, không cần Run workflow thủ công. Giữ `workflow_dispatch` cho stable release/ngoại lệ.
+- Quy trình này bảo đảm một build cho một commit chốt; không tự động build lặp theo mỗi commit. Nếu build chốt thất bại và phải sửa, cần một commit chốt mới để thử lại.
