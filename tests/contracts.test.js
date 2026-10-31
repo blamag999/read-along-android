@@ -110,4 +110,8 @@ assert.ok(readerHtml.includes('🎵 Chưa có âm thanh'), 'Empty reader media l
 assert.ok(readerHtml.includes('📖 Đủ sách và âm thanh'), 'Library filter uses consistent reader terminology');
 assert.ok(appSource.includes("label.textContent = 'Phần âm thanh:';"), 'Audio part label uses Vietnamese terminology');
 
+
+assert.ok(appSource.includes("dom.audioFileName.textContent = '🎵 Chưa có âm thanh';"), 'Dynamic empty media labels use Vietnamese terminology');
+assert.ok(appSource.includes("dom.pdfFileName.textContent = '📖 Chưa có sách';"), 'Dynamic empty book labels use book terminology');
+
 console.log('Read Along data contract schema tests passed.');
