@@ -309,7 +309,7 @@ function restoreSelectedReadingCheckpoint() {
     dom.audioElement.pause();
   }
   updateReadingCheckpointsUI();
-  showToast('Đã khôi phục mốc đọc đã chọn. Audio không tự phát.');
+  showToast('Đã khôi phục mốc đọc. Âm thanh không tự phát.');
 }
 function restoreReadingSessionForCurrentBook() {
   const session = getReadingSessionForBook(state.currentBookKey);
@@ -1473,7 +1473,7 @@ async function handleAudioFileSelect(e) {
     if (saved && saved.pdfBlob) {
       state.currentBookKey = key;
       await loadPdfFromBlob(saved.pdfBlob, true);
-      showToast(`⚡ Đã tự động mở PDF: ${saved.pdfName}`);
+      showToast(`Đã tự động mở sách: ${saved.pdfName}`);
     }
   }
 
@@ -1543,7 +1543,7 @@ function handleFileList(files) {
 
   if (rawItems.length > 0) {
     buildPlaylistFromItems(rawItems);
-    if (unsupportedWmaCount > 0) showToast('Đã bỏ qua ' + unsupportedWmaCount + ' file WMA. Android WebView không phát WMA trực tiếp; hãy chuyển sang MP3 hoặc M4A.');
+    if (unsupportedWmaCount > 0) showToast('Đã bỏ qua ' + unsupportedWmaCount + ' tệp WMA. Hãy dùng MP3 hoặc M4A.');
     if (state.playlist.length > 0) {
       loadStoryFromPlaylist(state.playlist[0]);
     }
@@ -1645,6 +1645,7 @@ async function loadPdfFromBlob(file, shouldResetSync = true) {
   } catch (error) {
     state.pdfDoc = null;
     console.error('Không thể mở sách:', error);
+    console.error('Không thể mở tệp sách:', error);
     alert('Không mở được sách. Vui lòng chọn tệp khác.');
   } finally {
     state.pdfLoading = false;
@@ -2004,15 +2005,15 @@ function getSyncFileName() {
 
 async function saveSyncToDirectoryOrDownload() {
   if (Object.keys(state.pageTimestamps).length === 0) {
-    alert('Chưa có mốc thời gian nào để lưu!');
+    alert('Chưa có mốc thời gian để lưu.');
     return;
   }
   const autoSaved = await autoSaveSyncToLocalDirectory();
   if (autoSaved) {
-    showToast(`🟢 Đã lưu thẳng file mốc vào thư mục máy tính!`);
+    showToast('Đã lưu tệp mốc thời gian.');
   } else {
     exportSyncData();
-    showToast(`💾 Đã tải file [${getSyncFileName()}] về máy!`);
+    showToast('Đã tải tệp mốc thời gian về máy.');
   }
 }
 
@@ -2419,7 +2420,7 @@ window.setManualSync = function(page) {
       if (rawVal && typeof rawVal === 'object' && typeof rawVal.part === 'number') {
         partIdx = rawVal.part;
       }
-      const partInput = prompt(`Trang ${page} thuộc phần audio nào? (1 đến ${state.currentStoryAudios.length}):`, (partIdx + 1));
+      const partInput = prompt(`Trang ${page} thuộc phần âm thanh nào? (1 đến ${state.currentStoryAudios.length}):`, (partIdx + 1));
       if (partInput) {
         const parsedPart = parseInt(partInput, 10);
         if (!isNaN(parsedPart) && parsedPart >= 1 && parsedPart <= state.currentStoryAudios.length) {
@@ -2554,7 +2555,7 @@ function onAudioEnded() {
   const audios = state.currentStoryAudios;
   if (audios && audios.length > 1 && state.currentAudioIndex < audios.length - 1) {
     const nextIdx = state.currentAudioIndex + 1;
-    showToast('🎵 Tự động chuyển sang phần ' + (nextIdx + 1));
+    showToast('Đã tự động chuyển sang phần âm thanh ' + (nextIdx + 1) + '.');
     loadAudioPart(nextIdx);
     // Tự động phát tiếp sau khi load
     setTimeout(() => {
@@ -2829,7 +2830,7 @@ async function checkReadAlongUpdates() {
       const cleanup = await clearReadAlongWebCachesForUpdate();
       if (cleanup.errors.length) {
         console.warn('Một phần cache/service worker chưa được dọn:', cleanup.errors);
-        showToast('Không dọn được toàn bộ cache cũ; vẫn tiếp tục cập nhật.');
+        showToast('Không thể dọn hết dữ liệu tạm. Vẫn tiếp tục cập nhật.');
       }
       showToast('Đang tải bản cập nhật Read Along…\nVui lòng không đóng ứng dụng.');
       await nativeUpdater.downloadAndInstall({
