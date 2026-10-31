@@ -14,9 +14,10 @@
 
 ### P0.1 Xác minh static config đang được publish
 
-- [ ] Truy cập trực tiếp https://read-along-admin.pages.dev/remote-config.json và kiểm tra HTTP status, content-type, body JSON và nội dung schema v1.
-- [ ] Nếu URL production chưa phản ánh file, kiểm tra Pages project/root/output và deployment commit; sửa đúng cấu hình hiện có, không tạo Pages project mới.
-- [ ] Ghi URL, thời điểm và kết quả xác minh vào ROADMAP.
+- [x] Người dùng mở endpoint và gửi lại JSON body trùng khớp file `admin/public/remote-config.json`; ghi nhận xác nhận thủ công ngày 2026-10-31. HTTP status và Content-Type vẫn chưa được kiểm tra độc lập.
+- [x] Đối chiếu Pages project/root/output/production branch và deployment commit; cấu hình Pages hiện tại được xác minh đúng repository/branch/root/output, build gate đã pass.
+- [ ] Xác minh HTTP status và Content-Type trực tiếp bằng công cụ/thiết bị độc lập; body đã được người dùng xác nhận khớp schema v1.
+- [x] Ghi URL, thời điểm và giới hạn bằng chứng vào ROADMAP.
 
 ### P0.2 Chốt contract và kiểm tra config phía publish
 
@@ -29,12 +30,12 @@
 
 ### P0.3 Thiết kế Data Client tối thiểu
 
-- [ ] Chốt boundary và vị trí module cho một Data Client mỏng; không refactor đồng loạt mọi API trong cùng đợt.
-- [ ] Chỉ cho phép HTTPS và hostname đã xác nhận của Read Along/GitHub; không nhận host tùy ý từ Remote Config.
-- [ ] Có timeout hữu hạn, retry giới hạn/backoff, schema validation, cache bản hợp lệ gần nhất và offline defaults.
-- [ ] Không thực thi JavaScript/HTML tùy ý, không nhận native command/permission từ server.
-- [ ] Viết test cho: JSON lỗi, field thiếu/thừa, schemaVersion không hỗ trợ, config hết hạn, configVersion cũ, timeout, HTTP error, cache hợp lệ, cache hỏng và offline lần đầu.
-- [ ] Chỉ tích hợp vào APK sau khi endpoint và server-side contract đã được xác minh; gom thành một thay đổi APK nhỏ.
+- [x] Chốt boundary module độc lập `modules/remote-config.js`; chưa refactor transport API khác.
+- [x] URL HTTPS và hostname cố định `read-along-admin.pages.dev`; không nhận URL/hostname từ payload.
+- [x] Có timeout 4 giây, tối đa 1 retry, validate schema v1, cache bản hợp lệ gần nhất và fallback defaults; cache hết hạn/hỏng bị bỏ qua.
+- [x] Không thực thi JavaScript/HTML và không có native command/permission trong contract.
+- [ ] Hoàn thiện test timeout, cache hỏng, response field thiếu, retry/backoff và xác minh Content-Type/status trên endpoint thực tế; test hiện tại đã bao phủ JSON lỗi, HTTP error, sai Content-Type, field lạ/sai kiểu, schemaVersion, expiry, version rollback, cache hợp lệ và offline lần đầu.
+- [ ] Tích hợp vào APK sau khi endpoint được xác minh HTTP status/Content-Type; hiện module chưa được nạp trong `index.html` và không ảnh hưởng runtime.
 
 ## P1 — Chốt marker conflict policy và migration an toàn
 
