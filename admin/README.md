@@ -2,6 +2,12 @@
 
 Standalone web file manager for the Read Along R2 library. This app lives in the Read Along Android repository and is deployed as a dedicated Cloudflare Pages project with its own R2 binding, D1 database, TOTP secret, cookie, and session.
 
+### Bảo vệ manifest danh mục
+
+- `books.json` ở thư mục gốc được ẩn khỏi danh sách thao tác file thông thường.
+- API từ chối upload thủ công, đổi tên/di chuyển và xóa trực tiếp `books.json`; chỉ luồng **Xem trước danh mục → Xuất bản danh mục** được phép cập nhật manifest.
+- JSON đồng bộ riêng của từng sách vẫn hiển thị và có thể quản lý như trước.
+
 ### Hiển thị thư viện theo bộ sách
 
 - Danh sách chính nhóm theo thư mục và tên gốc chuẩn hóa chính xác: một bộ bắt đầu bằng PDF, bên dưới là các audio (sắp theo hậu tố phần P1, P2...) và JSON đồng bộ nếu có.
