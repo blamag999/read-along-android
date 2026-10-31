@@ -70,7 +70,7 @@
 
 - [ ] Ưu tiên dùng hạ tầng API/Worker hiện có của Read Along nếu đáp ứng; không tạo Analytics Worker thứ hai chỉ để tách tên.
 - [x] Viết route ingest trong Pages Functions hiện có với consent=true, validation strict, 25 events/batch, 64 KiB, rate limit theo install hash, và idempotency theo eventId + (sessionId, sequence). Chờ CI, migration và deploy để nghiệm thu production.
-- [x] Viết migration D1 additive cho raw events, daily aggregates và unique daily sessions bằng trigger; raw retention 90 ngày, daily aggregates 24 tháng. Chưa áp dụng migration production.
+- [x] Viết migration D1 additive cho raw events, daily aggregates và unique daily sessions bằng trigger; raw retention 90 ngày, daily aggregates 24 tháng. Migration đã được áp dụng additive vào database `read-along-admin-db`; đã xác minh đủ 3 bảng và trigger. Chờ Pages deployment/endpoint smoke test.
 - [ ] Thêm test chống trùng, sequence sai, thời gian âm/quá lớn, payload lớn, schema cũ/mới và request không hợp lệ.
 - [ ] Không thay đổi ý nghĩa API usage/track hiện tại: nó chỉ phản ánh visit/installation, không phải reading duration.
 
@@ -138,4 +138,4 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 > Analytics AN1: proposed schema and privacy/event semantics documented; no client collector, API route, D1 table or dashboard deployed yet. Full regression phát hiện assertion bị cắt dòng và phần test trùng ở cuối `tests/contracts.test.js`; đã sửa cả hai và cần chạy lại.
 
 
-> Analytics AN2 backend code staged: endpoint, strict validation helper, D1 migration and regression tests added. It is not active until CI passes, migration is applied to the existing Read Along D1 database, and Pages production deploy/endpoint smoke test are verified. No client collector, dashboard or APK change.
+> Analytics AN2 backend code staged: endpoint, strict validation helper, D1 migration and regression tests added. CI passes, migration is applied to the existing Read Along D1 database and verified. Pages production deploy/endpoint smoke test remain pending. No client collector, dashboard or APK change.
