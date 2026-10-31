@@ -15,7 +15,7 @@
 
 ## P0 — Hoàn tất Remote Config bootstrap và Data Client
 
-> Người dùng đã xác nhận đã kiểm thử APK trên điện thoại; chưa cung cấp chi tiết riêng về online/offline Data Client. Kiểm thử Android TV được quản lý riêng ở P2 và hiện pending.
+> Người dùng xác nhận nội dung PDF/audio phải lấy từ cloud; không đặt mục tiêu đọc/nghe offline. Data Client là cấu hình phụ trợ, không phải nguồn nội dung sách. Chỉ cần bảo đảm lỗi Remote Config không chặn reader/audio; kiểm thử Android TV được quản lý riêng ở P2.
 
 ### P0.1 Xác minh static config đang được publish
 
@@ -43,7 +43,7 @@
 - [x] Test JSON lỗi, field thiếu/thừa, schemaVersion, config hết hạn, configVersion rollback, timeout, HTTP error, sai Content-Type, cache hợp lệ/hỏng, retry giới hạn, response quá lớn và offline lần đầu. HTTP status/Content-Type của production endpoint vẫn cần xác minh độc lập.
 - [x] Build beta v1.3.5 đã chạy trên HEAD `a30c6a011456befc04e5af83a51694e5e19eaa1d`; workflow run 41162360209 success, artifact đã upload, bước build signed APK và verify signature/SHA-256 đều success; GitHub Release beta đã tạo. Bằng chứng ở ROADMAP.
 - [x] Người dùng xác nhận đã cài/kiểm thử APK trên điện thoại.
-- [ ] Bổ sung nghiệm thu riêng Data Client: online nhận source=network, offline lần đầu fallback default, offline lần sau dùng cache; reader/audio không bị chặn startup. Chưa có log/kết quả cụ thể cho ba tình huống này.
+- [ ] Nghiệm thu Data Client theo đúng phạm vi: khi online tải được config hợp lệ từ production (source=network); khi endpoint lỗi/timeout thì fallback cache/default và tuyệt đối không chặn startup/reader/audio. Không yêu cầu PDF/audio hoạt động offline vì nội dung được lấy từ cloud.
 - [x] Điều chỉnh workflow: các push beta thông thường không build APK; chỉ commit chốt có `[build-apk]` mới tự build một lần. Manual dispatch vẫn giữ cho stable/ngoại lệ.
 
 ## P1 — Chốt marker conflict policy và migration an toàn
