@@ -152,14 +152,14 @@ Nếu đường dẫn hoặc kiến trúc đã thay đổi, hãy xác minh trự
 
 ## 8. Danh mục sách Read Along bằng books.json
 
-- Nguồn dữ liệu duy nhất của thư viện Read Along là `books.json` tại thư mục gốc Bucket R2 `my-audio-book`.
-- Manifest dùng đúng cấu trúc: `{ "books": [{ "id", "title", "pdf", "audios", "sync" }] }`; `pdf` là URL PDF, `audios` là mảng URL audio (có thể nhiều track), `sync` là URL JSON hoặc `null`.
-- Admin có nút **Tạo / cập nhật books.json** trong tab **Kiểm tra lỗi**. Nút nạp bản mẫu `admin/public/books.json` (83 sách theo file được cung cấp), kiểm tra host R2, phần mở rộng và sự tồn tại của mọi PDF/audio/sync, rồi mới ghi manifest vào R2. Nếu có tệp thiếu, thao tác dừng và báo danh sách; không ghi đè manifest hiện tại.
-- APK đọc trực tiếp `books.json` từ public R2 bucket riêng của Read Along khi mở **Truyện trực tuyến**; không dùng API danh mục trung gian.
-- Manifest có cấu trúc `{ "books": [{ "id", "title", "pdf", "audios", "sync" }] }`; `pdf`, từng phần tử `audios` và `sync` là URL HTTPS công khai trên R2. Ứng dụng hỗ trợ dạng URL chuỗi trong manifest và giữ hỗ trợ tương thích dạng object `{ "url", "name" }`.
-- Ứng dụng tải PDF/audio/JSON đồng bộ trực tiếp từ URL trong manifest. R2 CORS hiện cho phép origin `*` với GET/HEAD; nếu thay đổi CORS, cần giữ quyền GET để WebView/Capacitor đọc `books.json` và các tệp công khai.
-- Cập nhật danh mục bằng cách publish `admin/public/books.json` lên root bucket R2; không cần build APK mới chỉ để thay đổi danh sách truyện.
-- Để bổ sung hoặc sửa sách: cập nhật file mẫu `admin/public/books.json` theo cùng cấu trúc, commit lên nhánh `beta`, sau đó vào Admin và bấm **Tạo / cập nhật books.json**. Nút xác minh trước khi ghi đè file trên R2.
+- Nguồn danh mục ứng dụng là `books.json` tại thư mục gốc Bucket R2 `my-audio-book`.
+- Admin tạo bản xem trước từ **inventory thực tế của R2**, không dùng `admin/public/books.json` làm nguồn xuất bản. File seed trong Git không còn quyết định nội dung danh mục live.
+- Quy trình: Quét thư viện → Tạo danh mục từ R2 → xem số sách được nhận và nhóm bị loại → quản trị viên xác nhận → API kiểm tra lại từng URL bằng R2 HEAD → ghi `books.json`.
+- Ghép sách chỉ theo tên đã chuẩn hóa và cùng thư mục; không tự ghép tên gần giống. Mỗi sách cần đúng một PDF, ít nhất một audio, tối đa một JSON đồng bộ trùng tên. Nhóm thiếu thành phần, trùng PDF/JSON hoặc có lỗi nghiêm trọng từ bước quét sẽ bị loại khỏi bản xem trước và được báo rõ.
+- Audio có hậu tố `_P1`, `_P2`… được sắp xếp theo số phần. Tệp không có hậu tố được giữ theo thứ tự tên; tên gần giống không được tự động ghép.
+- Quét và tạo danh mục không xóa, đổi tên hoặc di chuyển tệp trong R2. Chỉ manifest `books.json` được thay thế sau khi quản trị viên duyệt và tất cả tham chiếu vượt qua xác minh. Nếu xác minh thất bại, manifest đang hoạt động được giữ nguyên.
+- Cấu trúc manifest: `{ "books": [{ "id", "title", "pdf", "audios", "sync" }] }`; URL tài nguyên là HTTPS trên public R2 hostname của riêng Read Along. `sync` có thể là `null`.
+- APK đọc trực tiếp manifest public từ R2 khi mở **Truyện trực tuyến**; chỉ thay đổi danh mục không yêu cầu build APK mới.
 
 ## 8. Read Along Admin — web quản trị thư viện
 
