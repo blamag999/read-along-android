@@ -230,7 +230,7 @@
     checkpoint();
     if (sessionActive && previousReadingActive) {
       const durations = takeDurations();
-      sendEvent('reader_pause', { readingSeconds: durations.readingSeconds });
+      sendEvent('reader_pause', durations);
     }
     previousReadingActive = false;
     previousListeningActive = false;
