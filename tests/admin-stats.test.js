@@ -36,3 +36,5 @@ assert.ok(!dashboardHtml.includes('analyticsSessions'), 'Dashboard HTML must not
 console.log('Analytics dashboard API regression tests passed.');
 
 // [test] Re-run full dashboard regression after fixing library table placement assertion.
+
+// [test] Dashboard no longer returns unused session-count data.
