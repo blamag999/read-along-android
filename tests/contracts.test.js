@@ -67,10 +67,39 @@ assert.equal(config.properties.readerDefaults.properties.pageTurnMode.enum.join(
 assert.equal(config.properties.readerDefaults.properties.viewMode.enum.join(','), 'fit-height,fit-width,two-pages');
 
 assert.equal(analytics.properties.schemaVersion.const, 1);
-assert.ok(analytics.required.includes('eventId') && analytics.required.includes('sequence'));
-assert.equal(analytics.properties.durationSeconds.maximum, 120);
+assert.ok(analytics.required.includes('eventId') && analytics.required.includes('sessionId') && analytics.required.includes('installId') && analytics.required.includes('sequence'));
+assert.equal(analytics.properties.readingSeconds.maximum, 120);
+assert.equal(analytics.properties.listeningSeconds.maximum, 120);
+assert.equal(analytics.properties.durationSeconds, undefined, 'Reading and listening time must be tracked separately');
+assert.equal(analytics.properties.bookId.pattern, '^[A-Za-z0-9_-]{1,160}
+
+const { validateRemoteConfig } = require('../admin/scripts/validate-remote-config');
+assert.deepEqual(validateRemoteConfig(remoteConfig), { valid: true, errors: [] }, 'Published static fixture must satisfy the strict Remote Config contract');
+for (const [invalid, expected] of [
+  [{ ...remoteConfig, schemaVersion: 2 }, 'schemaVersion'],
+  [{ ...remoteConfig, configVersion: 0 }, 'configVersion'],
+  [{ ...remoteConfig, injectedScript: 'alert(1)' }, 'Unknown top-level field'],
+  [{ ...remoteConfig, features: { arbitraryFeature: true } }, 'Unknown feature flag'],
+  [{ ...remoteConfig, features: { showAnnouncements: 'yes' } }, 'must be boolean'],
+  [{ ...remoteConfig, readerDefaults: { viewMode: 'unbounded' } }, 'Invalid reader default'],
+  [{ ...remoteConfig, announcements: [{ id: 'x', text: 'ok', html: '<script>' }] }, 'Unknown announcement field'],
+  [{ ...remoteConfig, expiresAt: '2026-10-30T00:00:00Z' }, 'expiresAt must be later'],
+  [{ ...remoteConfig, issuedAt: '2026-02-30T00:00:00Z' }, 'issuedAt must be a valid ISO-8601'],
+  [{ ...remoteConfig, announcements: [{ id: 'same', text: 'one' }, { id: 'same', text: 'two' }] }, 'ids must be unique']
+]) {
+  const result = validateRemoteConfig(invalid);
+  assert.equal(result.valid, false, 'Invalid Remote Config must be rejected');
+  assert.ok(result.errors.some(message => message.includes(expected)), 'Expected validation error containing: ' + expected);
+}
+const expired = validateRemoteConfig({ ...remoteConfig, expiresAt: '2026-10-31T00:00:00Z' }, { now: Date.parse('2026-11-01T00:00:00Z') });
+assert.ok(expired.errors.includes('Remote config has expired'), 'Expired config must be rejected at runtime');
+
+
+console.log('Read Along data contract schema tests passed.');
+, 'Only opaque catalog IDs may identify a book');
 assert.equal(analytics.additionalProperties, false, 'Analytics payload must reject unapproved personal/content fields');
 assert.equal(analytics.properties.type.enum.includes('heartbeat'), true);
+assert.equal(analytics.allOf.length, 5, 'Duration fields are required for heartbeat and state-ending events');
 
 const { validateRemoteConfig } = require('../admin/scripts/validate-remote-config');
 assert.deepEqual(validateRemoteConfig(remoteConfig), { valid: true, errors: [] }, 'Published static fixture must satisfy the strict Remote Config contract');
