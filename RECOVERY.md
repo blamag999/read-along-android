@@ -7,10 +7,10 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover code/documentation checkpoint: `73a95d5d03d3cd61739fb703751f7079faaec396` (selectable R2 migration destination UI; regression and Pages deployment passed, live R2 migration has not started).
+- Last formal handover code/documentation checkpoint: `73a95d5d03d3cd61739fb703751f7079faaec396` (selectable R2 migration destination UI; regression and Pages deployment passed; subsequent R2 inventory confirms the media move occurred, catalog content verification remains pending).
 - Last reviewed functional/source HEAD on beta: `73a95d5d03d3cd61739fb703751f7079faaec396`
 - Stable main HEAD: `c1ad733b50d1514679d7c6868f3763859ac45b87` (PR #44 promotion; no new stable APK was built by this batch).
-- Recovery status: `PARTIAL — folder-aware catalog and selectable Admin migration UI implemented; regression CI for the latest UI refinement passed; live R2 move/catalog publication and APK/device acceptance remain pending`
+- Recovery status: `PARTIAL — folder-aware catalog and selectable Admin migration UI implemented; regression CI and Pages deployment passed; R2 media relocation is reflected in inventory; live catalog content verification and APK/device acceptance remain pending`
 - Recovery reviewed on: 2026-11-01
 - Latest policy update: quyết định không lưu PDF/audio offline đã được ghi vào README/ROADMAP/PLANNING/RECOVERY. Xem mục “Quyết định thay thế kế hoạch kho offline”; các checkpoint cũ bên dưới chỉ là lịch sử.
 - README shared policy: PR #44 promoted the accepted beta snapshot to main. Before the next release, verify README parity between main and beta; do not assume PR #40 was merged.
