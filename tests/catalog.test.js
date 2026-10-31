@@ -99,3 +99,16 @@ assert.deepEqual(JSON.parse(JSON.stringify(catalog.filterPlaylist(samplePlaylist
 assert.deepEqual(JSON.parse(JSON.stringify(catalog.filterPlaylist(samplePlaylist, { filter: 'all', query: 'BETA.PDF' }).map(x => x.id))), ['b']);
 
 console.log('Extracted catalog/playlist module tests passed.');
+
+
+// Regression: catalog publishing must be generated from live R2 inventory, not the checked-in seed.
+const adminScript = fs.readFileSync('admin/public/admin.js', 'utf8');
+const adminApi = fs.readFileSync('admin/functions/api/readalong-admin/[[path]].js', 'utf8');
+assert.match(adminScript, /api\("catalog\/preview"\)/, 'Admin must request a fresh R2 catalog preview');
+assert.doesNotMatch(adminScript, /fetch\("\/books\.json"/, 'Admin must not publish the static Git seed');
+assert.match(adminApi, /route === "catalog\/preview"/, 'API must expose an authenticated R2 inventory preview');
+assert.match(adminApi, /group\.pdf\.length !== 1/, 'preview must exclude missing or duplicate PDFs');
+assert.match(adminApi, /!group\.audios\.length/, 'preview must exclude books without audio');
+assert.match(adminApi, /badKeys/, 'preview must exclude files with scan errors');
+assert.match(adminApi, /_P\\\\\(\\\\d\+\\\\\)/, 'preview must recognize numbered audio parts');
+console.log('R2-generated catalog preview regression tests passed.');
