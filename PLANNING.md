@@ -135,4 +135,4 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 > Batch marker-policy resolver: isolated pure module, tests and documentation complete; CI [41164224271](https://github.com/blamag999/read-along-android/actions/runs/41164224271) success. Not wired into reader runtime; no marker files, APK runtime, signing configuration or main branch behavior changed.
 
 
-> Analytics AN1: proposed schema and privacy/event semantics documented; no client collector, API route, D1 table or dashboard deployed yet. Full regression validation pending.
+> Analytics AN1: proposed schema and privacy/event semantics documented; no client collector, API route, D1 table or dashboard deployed yet. Full regression lần đầu phát hiện một assertion bị cắt dòng trong `tests/contracts.test.js`; đã sửa và cần chạy lại.
