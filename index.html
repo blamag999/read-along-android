@@ -48,7 +48,7 @@
       <div id="readOptionsMenu" class="read-options-menu hidden" role="group" aria-label="Tùy chọn đọc sách">
         <button id="menuTwoPages" class="read-menu-option" type="button" aria-pressed="false"><span class="menu-option-icon" aria-hidden="true">📖</span><span>Hiện 2 trang</span><span class="menu-option-state" id="menuTwoPagesState">Tắt</span></button>
         <button id="menuAutoFlip" class="read-menu-option" type="button" aria-pressed="true"><span class="menu-option-icon" aria-hidden="true">🔄</span><span>Tự lật trang</span><span class="menu-option-state" id="menuAutoFlipState">Bật</span></button>
-        <button id="menuReloadMarkers" class="read-menu-option" type="button"><span class="menu-option-icon" aria-hidden="true">⏱️</span><span>Cập nhật mốc thời gian</span></button>
+
         <div id="readingCheckpointMenuGroup" class="read-menu-checkpoints hidden">
           <div class="read-menu-checkpoint-title">↶ Mốc đã đọc gần đây</div>
           <select id="readingCheckpointSelect" aria-label="Chọn một trong ba mốc đọc gần nhất" disabled></select>
@@ -62,11 +62,10 @@
         <div class="read-menu-version" aria-label="Phiên bản ứng dụng đang cài">
           <span class="menu-option-icon">ⓘ</span><span>Phiên bản đang cài</span><strong id="installedAppVersion">Đang tải…</strong>
         </div>
-        <button id="menuDiagnostics" class="read-menu-option" type="button"><span class="menu-option-icon">🛡️</span><span>Chẩn đoán / Báo lỗi</span></button>
-        <button id="menuAnalytics" class="read-menu-option" type="button"><span class="menu-option-icon">📊</span><span>Thống kê sử dụng</span><span class="menu-option-state">Tùy chọn</span></button>
+
         <button id="menuCheckUpdates" class="read-menu-option hidden" type="button"><span class="menu-option-icon" aria-hidden="true">⬆️</span><span>Kiểm tra cập nhật</span></button>
       </div>
-      <button id="btnReloadMarkers" class="icon-btn apk-icon-button hidden" type="button" title="Tải mốc thời gian mới nhất" aria-label="Tải mốc thời gian mới nhất">⟳</button>
+
       <button id="btnOpenSyncModal" class="icon-btn" title="Quản lý mốc đồng bộ thời gian">⚙️ <span class="hide-mobile">Mốc thời gian</span></button>
       <button id="btnToggleSettings" class="icon-btn menu-toggle-btn" type="button" aria-controls="filePickerSection syncBanner" aria-expanded="true" title="Ẩn/hiện dòng chọn tệp và tùy chọn">☰ <span>Menu</span></button>
     </div>
@@ -294,8 +293,7 @@
 
         <div class="sync-actions-row">
           <button id="btnExportSync" class="btn-secondary" title="Xuất tệp mốc để lưu cùng thư mục truyện trên máy">📥 Tải tệp mốc (.json)</button>
-          <button id="btnSaveToGithubFolder" class="btn-primary" title="Đồng bộ các tệp mốc trong thư mục đã chọn">☁️ Đồng bộ mốc đọc</button>
-          <button id="btnLoadFromGithub" class="btn-secondary" title="Tải lại mốc thời gian mới nhất">⬇️ Tải mốc đọc</button>
+
           <p class="modal-desc">Khi đã chọn thư mục, ứng dụng chỉ tải lên các tệp .json có nội dung thay đổi; tệp không đổi sẽ được bỏ qua. Mốc của PDF đang mở được tự động kiểm tra và đồng bộ tối đa mỗi 1 phút khi có thay đổi và đã cấu hình token. Tệp PDF và âm thanh vẫn nằm trên thiết bị của bạn.</p>
           <div class="github-token-panel" style="border:1px solid #475569;border-radius:10px;padding:12px;margin:10px 0;display:grid;gap:8px;">
             <strong>🔐 Mã truy cập đồng bộ</strong>
