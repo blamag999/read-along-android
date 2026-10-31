@@ -66,7 +66,7 @@
 
 ### AN2 — Backend ingest và D1
 
-> AN1 contract/schema đã chốt ở `schemas/analytics-event.schema.json` và `docs/architecture/data-contracts.md`; endpoint và D1 chưa triển khai.
+ > AN1 contract/schema đã chốt ở `schemas/analytics-event.schema.json` và `docs/architecture/data-contracts.md`; CI [41164377952](https://github.com/blamag999/read-along-android/actions/runs/41164377952) success. Endpoint và D1 chưa triển khai.
 
 - [ ] Ưu tiên dùng hạ tầng API/Worker hiện có của Read Along nếu đáp ứng; không tạo Analytics Worker thứ hai chỉ để tách tên.
 - [ ] Triển khai ingest endpoint có validation, rate limit, batch size limit và idempotency.
