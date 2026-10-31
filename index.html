@@ -36,15 +36,6 @@
 
       <button id="btnOpenReadMenu" class="icon-btn read-menu-button" type="button" aria-label="Mở menu" aria-controls="readOptionsMenu" aria-expanded="false" title="Menu">☰ <span>Menu</span></button>
       <div id="readOptionsMenu" class="read-options-menu hidden" role="group" aria-label="Menu ứng dụng" aria-hidden="true">
-        <div class="menu-view-controls" aria-label="Điều khiển hiển thị">
-          <button id="btnFitHeight" class="view-btn active" type="button" title="Vừa trang">↔ Vừa trang</button>
-          <button id="btnTwoPages" class="view-btn" type="button" title="Bật/tắt hiển thị 2 trang" aria-pressed="false">▣ Hai trang</button>
-          <div class="zoom-group">
-            <button id="btnZoomOut" class="view-btn-mini" type="button" title="Thu nhỏ">➖</button>
-            <span id="lblZoomLevel" class="zoom-label">100%</span>
-            <button id="btnZoomIn" class="view-btn-mini" type="button" title="Phóng to">➕</button>
-          </div>
-        </div>
         <button id="menuToggleSettings" class="read-menu-option" type="button" aria-expanded="true"><span class="menu-option-icon" aria-hidden="true">⚙️</span><span>Ẩn/hiện chọn tệp và tùy chọn</span></button>
         <button id="menuOpenSyncModal" class="read-menu-option" type="button"><span class="menu-option-icon" aria-hidden="true">⏱️</span><span>Mốc thời gian</span></button>
         <button id="menuAutoFlip" class="read-menu-option" type="button" aria-pressed="true"><span class="menu-option-icon" aria-hidden="true">🔄</span><span>Tự lật trang</span><span class="menu-option-state" id="menuAutoFlipState">Bật</span></button>
@@ -85,22 +76,6 @@
         <span id="pdfFileName" class="file-status-pill empty">📖 Chưa có sách</span>
         <span id="audioFileName" class="file-status-pill empty">🎵 Chưa có âm thanh</span>
         <span id="syncCountBadge" class="file-status-pill sync-pill empty">⏱️ 0 mốc</span>
-      </div>
-
-      <!-- TÙY CHỌN TỰ ĐỘNG -->
-      <div class="quick-options">
-        <label class="toggle-label page-turn-mode-label" title="Chọn chế độ đọc: dừng chờ lật trang, tự chuyển trang hoặc đọc liên tục">
-          <span>Chế độ đọc</span>
-          <select id="selPageTurnMode" aria-label="Chế độ đọc">
-            <option value="next">Tự động lật trang (theo mốc thời gian)</option>
-            <option value="markers">Tự lật trang (dừng chờ lật trang)</option>
-            <option value="off">Đọc liên tục</option>
-          </select>
-        </label>
-        <label class="toggle-label" title="Khi bạn lật trang, âm thanh tự động chuyển đến đúng đoạn tương ứng">
-          <input type="checkbox" id="chkAutoSeekAudio" checked>
-          <span>Lật trang tự tua</span>
-        </label>
       </div>
 
     </div>
