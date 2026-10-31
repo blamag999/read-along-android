@@ -43,6 +43,10 @@ assert.ok(workflow.includes('--bucket read-along-releases --key "releases/$CHANN
 assert.ok(workflow.includes('--metadata "sha256=$SHA256"'), 'Release workflow must store the APK checksum as R2 object metadata');
 assert.ok(workflow.includes('aws --no-cli-pager --endpoint-url'), 'Release workflow must upload through the S3-compatible R2 API');
 assert.ok(workflow.includes('--key "channels/$CHANNEL/latest.json"'), 'Release workflow must publish the manifest after the APK');
+const pruneStep = workflow.indexOf('python3 scripts/prune-ota-releases.py "$CHANNEL" "$APK"');
+const manifestUpload = workflow.indexOf('--key "channels/$CHANNEL/latest.json"');
+assert.ok(pruneStep > manifestUpload, 'Release retention must run only after the channel manifest has been published');
+assert.ok(workflow.includes('RELEASE_CHANNEL'), 'Retention must follow the selected beta/official release channel');
 assert.ok(workflow.includes('"sha256": os.environ["SHA256"]'), 'Published manifest must contain the APK SHA-256');
 
 assert.ok(app.includes('READ_ALONG_OTA_API'), 'APK must use the fixed OTA API origin');
