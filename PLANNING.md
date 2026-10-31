@@ -57,14 +57,16 @@
 
 ### AN1 — Contract và quyền riêng tư
 
-- [ ] Chốt schema event/session, event ID, session ID, sequence, timestamp và quy tắc deduplication.
-- [ ] Chỉ ghi sự kiện khi reader thực sự active/foreground hoặc audio đang phát; heartbeat mục tiêu khoảng 60 giây.
-- [ ] Xác định start, heartbeat, pause, stop, app hidden/background và audio state.
-- [ ] Giới hạn elapsed time mỗi heartbeat; không cộng thời gian offline không xác minh.
-- [ ] Không thu tên người dùng, nội dung sách, tên file, URL riêng tư, token, cookie hoặc dữ liệu cá nhân.
-- [ ] Xác định retention, xóa dữ liệu, tổng hợp theo ngày và cách xử lý consent/telemetry opt-out.
+- [x] Chốt schema event/session v1: eventId, sessionId, installId, sequence, event type, occurredAt, readingSeconds/listeningSeconds và deduplication theo eventId + (sessionId, sequence).
+- [x] Chốt quy tắc đếm: reading chỉ khi reader mở + foreground; listening chỉ khi audio phát + foreground; heartbeat khoảng 60 giây, duration tối đa 120 giây.
+- [x] Định nghĩa reader_start, heartbeat, reader_pause/resume/stop và audio_play/pause/stop.
+- [x] Giới hạn duration 0–120 giây; không queue/cộng thời gian offline; request lỗi thì drop interval.
+- [x] Chỉ dùng ID ngẫu nhiên/opaque; hash installId ở server; không gửi title, filename, content, URL, token, cookie hay personal identifier.
+- [x] Chốt explicit opt-in (default off), opt-out dừng event; raw event 90 ngày, daily aggregates 24 tháng; received_at phía server là nguồn ngày tổng hợp.
 
 ### AN2 — Backend ingest và D1
+
+> AN1 contract/schema đã chốt ở `schemas/analytics-event.schema.json` và `docs/architecture/data-contracts.md`; endpoint và D1 chưa triển khai.
 
 - [ ] Ưu tiên dùng hạ tầng API/Worker hiện có của Read Along nếu đáp ứng; không tạo Analytics Worker thứ hai chỉ để tách tên.
 - [ ] Triển khai ingest endpoint có validation, rate limit, batch size limit và idempotency.
