@@ -7,12 +7,25 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover code/documentation checkpoint: `d13482e6ede435125600328ce05244231af8a14e` (ROADMAP handover record; source review baseline remains `d6faeb3b1667bebf5130a63851c6090785a4945e`).
-- Last reviewed functional/source HEAD on beta: `d6faeb3b1667bebf5130a63851c6090785a4945e`
-- Recovery status: `PARTIAL — aggregate Git delta and current Reader/R2 source were reviewed; per-commit reconciliation, CI result and device acceptance remain pending`
-- Recovery reviewed on: 2026-10-31
+- Last formal handover code/documentation checkpoint: `410e292477519143176fc7b5bf45b9b8099ccc0a` (source checkpoint; this folder-migration batch is still awaiting live R2 execution and final handover).
+- Last reviewed functional/source HEAD on beta: `410e292477519143176fc7b5bf45b9b8099ccc0a`
+- Stable main HEAD: `c1ad733b50d1514679d7c6868f3763859ac45b87` (PR #44 promotion; no new stable APK was built by this batch).
+- Recovery status: `PARTIAL — folder-aware catalog and guarded Admin migration UI implemented; regression CI passed; Cloudflare Pages deploy, live R2 move/catalog publication and APK/device acceptance remain pending`
+- Recovery reviewed on: 2026-11-01
 - Latest policy update: quyết định không lưu PDF/audio offline đã được ghi vào README/ROADMAP/PLANNING/RECOVERY. Xem mục “Quyết định thay thế kế hoạch kho offline”; các checkpoint cũ bên dưới chỉ là lịch sử.
-- README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
+- README shared policy: PR #44 promoted the accepted beta snapshot to main. Before the next release, verify README parity between main and beta; do not assume PR #40 was merged.
+
+## Mốc R2 folder/catalog — 2026-11-01
+
+- Beta source HEAD: `410e292477519143176fc7b5bf45b9b8099ccc0a`; regression/isolation run [41226438099](https://github.com/blamag999/read-along-android/actions/runs/41226438099) passed.
+- Cloudflare Pages deployment ID: `c3dbf307-e516-43f5-8421-5a1714edd902`; at last check its build stage had passed and deploy stage was still active. Recheck before using Admin.
+- R2 inventory baseline: bucket `my-audio-book`, 204 objects; root contains 180 objects including `books.json`; `ONE STORY A DAY LEVEL 2 FULL/` contains 24 objects (12 PDF + 12 MP3).
+- Current manifest contains 82 books and references 175 existing objects. Four additional root objects form two complete PDF/MP3 books: `Oliver_Company` and `Sleeping Beauty`.
+- No R2 object has been moved or deleted by this source batch. Live `books.json` remains unchanged until the authenticated Admin operation is run.
+- Admin migration action processes root files only, excluding `books.json`, preserves existing folders, checks target-name conflicts, and reuses the authenticated `rename` route. Each object is copied and size-verified before source deletion; two transfers run concurrently.
+- After migration, use Admin catalog preview and publish. Expected grouping, subject to preview validation: 84 books under `DISNEY`, 12 under `ONE STORY A DAY LEVEL 2 FULL`. Do not publish if preview reports excluded groups.
+- App UI now reads optional `folder` metadata and filters the library by folder. Legacy catalog entries infer folder from the PDF/audio URL path.
+- No APK was built in this batch; build beta only after live catalog publication and final regression.
 
 ## Phát hiện sau mốc bàn giao trước
 
