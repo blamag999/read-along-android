@@ -450,3 +450,10 @@ Khi một công việc trong PLANNING hoàn tất:
 - Code review xác nhận `scripts/prepare-web.js` copy toàn bộ `modules/` vào `www/`, build workflow path filter bao gồm index.html, modules/**, sw.js và package.json; collector được đóng gói vào APK và Service Worker cache v50.
 - **Ready for one beta APK build** bằng commit cuối có marker `[build-apk]`. Chưa build trong entry này; kiểm thử WebView/Android thật và Android TV vẫn pending.
 
+
+### 2026-10-31 — Chốt commit build beta APK cho Analytics collector
+
+- Tạo commit cuối có marker `[build-apk]` để workflow Build and Release Read Along chạy full regression trước khi build APK: `85475373bab4813589cf0d3c0777fe8c27df1da7`.
+- Thay đổi source trong commit chỉ là comment giải thích polling boundary; toàn bộ collector/UI/Service Worker/tests đã có ở các commit trước và CI [41167810567](https://github.com/blamag999/read-along-android/actions/runs/41167810567) success.
+- Build workflow dự kiến tạo beta APK, verify signature/SHA-256 và GitHub prerelease. Chưa có kết quả build tại thời điểm ghi; không tuyên bố APK đã phát hành.
+
