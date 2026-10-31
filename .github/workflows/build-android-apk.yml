@@ -389,7 +389,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: auto
           AWS_EC2_METADATA_DISABLED: "true"
-          R2_ENDPOINT: https://27391a829e8a38e9411d17ce76b5ba.r2.cloudflarestorage.com
+          R2_ENDPOINT: https://27391a829e8e4a38e9411d17ce76b5ba.r2.cloudflarestorage.com
           VERSION: ${{ steps.release_info.outputs.version }}
           VERSION_CODE: ${{ github.run_number }}
           RELEASE_CHANNEL: ${{ github.event_name == 'workflow_dispatch' && inputs.channel || 'beta' }}
