@@ -162,3 +162,13 @@ Khi một công việc trong PLANNING hoàn tất:
 - Project-level build config hiện giữ build command `node scripts/validate-remote-config.js`; deployment tiếp theo từ beta cũng nhận cấu hình này.
 - CI [41161257650](https://github.com/blamag999/read-along-android/actions/runs/41161257650) success trên commit `59a78ea50991afc1df24d945add91892252f1046`, bao gồm validator trong `npm test`.
 - Còn thiếu duy nhất bước kiểm tra trực tiếp HTTP status/content-type/body của public URL `https://read-along-admin.pages.dev/remote-config.json`. Hai công cụ truy cập ngoài gặp lỗi DNS/internal error; deployment success không thay thế xác minh response.
+
+
+### 2026-10-31 — Remote Config endpoint body confirmed by user; isolated Data Client added
+- Người dùng mở `https://read-along-admin.pages.dev/remote-config.json` và gửi lại JSON:
+  `schemaVersion: 1`, `configVersion: 1`, `issuedAt: 2026-10-31T00:00:00Z`, `features: {}`, `readerDefaults: {}`, `announcements: []`. Body khớp chính xác file `admin/public/remote-config.json` trên beta. Đây là xác nhận thủ công về body; không phải bằng chứng độc lập cho HTTP status hoặc Content-Type.
+- Thêm `modules/remote-config.js`: endpoint HTTPS/hostname cố định, GET JSON, giới hạn body 32 KiB, timeout 4 giây, tối đa 1 retry, schema/allowlist validation, expiresAt enforcement, từ chối configVersion thấp hơn cache, cache last-known-valid và offline defaults. Không thực thi nội dung server và không áp dụng reader settings.
+- Thêm `tests/remote-config.test.js`: network success/cache, offline cache, offline first-run defaults, malformed JSON, HTTP error, wrong content-type, invalid schema/version/fields/types/expiry, duplicate announcement IDs, response quá lớn, version rollback và expired cache.
+- Tích hợp test module vào `npm test` và syntax check.
+- Data Client hiện được giữ độc lập, **chưa nạp trong `index.html`/APK**, để tránh thay đổi startup/reader trước khi hoàn thiện test timeout/cache hỏng/retry và kiểm tra HTTP response headers. Không build APK.
+- P0.1 body được người dùng xác nhận; kiểm tra HTTP status/Content-Type vẫn pending. P0.3 đã hoàn tất module nền và một phần test, chưa tích hợp APK.
