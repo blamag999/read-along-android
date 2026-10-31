@@ -153,7 +153,6 @@ async function closeCurrentBook() {
   dom.canvasWrapper.classList.remove('two-page-mode');
   dom.emptyState.classList.remove('hidden');
   dom.readerPageStatus.classList.add('hidden');
-  dom.btnCloseBook?.classList.add('hidden');
   dom.btnChooseAudio.classList.add('hidden');
   dom.pdfFileName.textContent = '📄 Chưa có PDF';
   dom.pdfFileName.classList.add('empty');
@@ -451,7 +450,6 @@ const dom = {
   lblZoomLevel: document.getElementById('lblZoomLevel'),
 
   btnOpenPlaylist: document.getElementById('btnOpenPlaylist'),
-  btnCloseBook: document.getElementById('btnCloseBook'),
   lblPlaylistCount: document.getElementById('lblPlaylistCount'),
   playlistModal: document.getElementById('playlistModal'),
   btnClosePlaylist: document.getElementById('btnClosePlaylist'),
@@ -465,7 +463,8 @@ const dom = {
   playlistPagination: document.getElementById('playlistPagination'),
 
   btnNode1FolderOnline: document.getElementById('btnNode1FolderOnline'),
-  btnToggleSettings: document.getElementById('btnToggleSettings'),
+  menuToggleSettings: document.getElementById('menuToggleSettings'),
+  menuOpenSyncModal: document.getElementById('menuOpenSyncModal'),
   btnChooseAudio: document.getElementById('btnChooseAudio'),
   folderInput: document.getElementById('folderInput'),
   pdfFileInput: document.getElementById('pdfFileInput'),
@@ -522,7 +521,6 @@ const dom = {
   selPageTurnMode: document.getElementById('selPageTurnMode'),
   chkAutoSeekAudio: document.getElementById('chkAutoSeekAudio'),
 
-  btnOpenSyncModal: document.getElementById('btnOpenSyncModal'),
   btnCloseSyncModal: document.getElementById('btnCloseSyncModal'),
   syncModal: document.getElementById('syncModal'),
   syncTableBody: document.getElementById('syncTableBody'),
@@ -1105,7 +1103,6 @@ window.selectAudioPart = function(index) {
 function initEvents() {
   initIndexedDB();
 
-  dom.btnCloseBook?.addEventListener('click', requestCloseBook);
   dom.btnOpenPlaylist.addEventListener('click', () => {
     if (state.playlist.length === 0) return;
     openPlaylistModal();
@@ -1185,14 +1182,14 @@ function initEvents() {
   });
 
   dom.btnNode1FolderOnline.addEventListener('click', () => dom.node1Modal.classList.remove('hidden'));
-  dom.btnToggleSettings.addEventListener('click', () => {
+  dom.menuToggleSettings.addEventListener('click', () => {
     const willHide = !dom.filePickerSection.classList.contains('hidden');
     dom.filePickerSection.classList.toggle('hidden', willHide);
     dom.syncBanner.classList.toggle('hidden', willHide);
-    dom.btnToggleSettings.setAttribute('aria-expanded', String(!willHide));
-    dom.btnToggleSettings.title = willHide
-      ? 'Hiện dòng chọn tệp, tùy chọn và thanh mốc trang'
-      : 'Ẩn dòng chọn tệp, tùy chọn và thanh mốc trang';
+    dom.menuToggleSettings.setAttribute('aria-expanded', String(!willHide));
+    dom.menuToggleSettings.querySelector('span:last-child').textContent = willHide
+      ? 'Hiện chọn tệp và tùy chọn'
+      : 'Ẩn chọn tệp và tùy chọn';
   });
   dom.btnChooseAudio.addEventListener('click', () => dom.audioFileInput.click());
   dom.btnCloseNode1Modal.addEventListener('click', () => dom.node1Modal.classList.add('hidden'));
@@ -1354,7 +1351,11 @@ dom.selPageTurnMode.value = state.pageTurnMode;
     dom.audioElement.currentTime = parseFloat(e.target.value);
   });
 
-  dom.btnOpenSyncModal.addEventListener('click', openSyncModal);
+  dom.menuOpenSyncModal.addEventListener('click', () => {
+    dom.readOptionsMenu.classList.add('hidden');
+    dom.btnOpenReadMenu.setAttribute('aria-expanded', 'false');
+    openSyncModal();
+  });
   dom.btnCloseSyncModal.addEventListener('click', () => dom.syncModal.classList.add('hidden'));
   dom.syncModal.addEventListener('click', (e) => {
     if (e.target === dom.syncModal) dom.syncModal.classList.add('hidden');
@@ -1582,7 +1583,6 @@ async function loadPdfFromUrl(url, fileName, shouldResetSync = true) {
     dom.lblTotalPages.textContent = state.totalPages;
     dom.emptyState.classList.add('hidden');
     dom.canvasWrapper.classList.remove('hidden');
-    dom.btnCloseBook?.classList.remove('hidden');
   } catch (error) {
     state.pdfDoc = null;
     throw new Error('Không tải được PDF trực tuyến. Hãy kiểm tra địa chỉ tệp và quyền truy cập. ' + error.message);
@@ -1640,7 +1640,6 @@ async function loadPdfFromBlob(file, shouldResetSync = true) {
     dom.lblTotalPages.textContent = state.totalPages;
     dom.emptyState.classList.add('hidden');
     dom.canvasWrapper.classList.remove('hidden');
-    dom.btnCloseBook?.classList.remove('hidden');
   } catch (error) {
     state.pdfDoc = null;
     alert('Không thể mở file PDF: ' + error.message);
