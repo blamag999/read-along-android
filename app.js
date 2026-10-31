@@ -1994,6 +1994,7 @@ async function autoSaveSyncToLocalDirectory() {
   return false;
 }
 
+// Local JSON export naming is self-contained; no remote marker sync module is required.
 function getSyncFileName() {
   const base = state.currentBookKey || 'truyen';
   return `${base.replace(/\.[^/.]+$/, '').replace(/[\\/:*?"<>|]/g, '_').trim() || 'truyen'}.json`;
