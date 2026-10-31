@@ -77,7 +77,7 @@
 - [ ] APK client phải tự tính SHA-256 sau tải và trước khi mở installer; Android PackageInstaller tiếp tục xác minh chữ ký APK. Không thêm hệ thống chữ ký manifest thứ hai trong MVP để tránh tạo thêm khóa và quy trình rotation; khóa ký APK hiện tại là gốc tin cậy.
 - [ ] Giữ nguyên semantics Beta/Official và chặn downgrade theo cả versionName lẫn versionCode; tuyệt đối không thay signing key.
 - [ ] Native updater chỉ tải HTTPS từ Pages endpoint cố định, không follow redirect sang host ngoài policy; xác minh size/SHA-256 trước khi installer mở APK.
-- [ ] GitHub Actions upload APK + manifest lên R2 sau khi build/sign/verify; secret duy nhất cần cấu hình là `CLOUDFLARE_R2_UPLOAD_TOKEN`, API token chỉ có R2 Object Read & Write trên bucket `read-along-releases`. Account ID không phải secret và đã khai báo trong workflow.
+- [ ] GitHub Actions upload APK + manifest lên R2 sau khi build/sign/verify bằng S3-compatible API; cấu hình hai GitHub Secrets `R2_ACCESS_KEY_ID` và `R2_SECRET_ACCESS_KEY` từ R2 API token chỉ cấp Object Read & Write cho bucket `read-along-releases`. Account ID là định danh công khai, đã khai báo trong workflow.
 - [ ] GitHub Release tiếp tục tồn tại làm kênh phân phối dự phòng trong giai đoạn chuyển đổi.
 - [ ] Regression API: hai channel, thiếu manifest/APK, schema sai, channel mismatch, version mismatch, size/checksum metadata mismatch, request method sai và CORS preflight.
 - [ ] Regression native: download gián đoạn, checksum mismatch, APK không cùng signer, versionCode thấp hơn, installer handoff và giữ cache/user data.
