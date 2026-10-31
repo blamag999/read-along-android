@@ -682,6 +682,78 @@ async function handle(request, env) {
   if (auth.response) return auth.response;
 
 
+  if (route === "analytics/dashboard" && method === "GET") {
+    const parseDay = value => {
+      if (typeof value !== "string" || !/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return null;
+      const date = new Date(value + "T00:00:00.000Z");
+      return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value ? date : null;
+    };
+    const today = new Date();
+    const defaultEnd = today.toISOString().slice(0, 10);
+    const defaultStart = new Date(today.getTime() - 29 * 86400000).toISOString().slice(0, 10);
+    const startText = url.searchParams.get("start") || defaultStart;
+    const endText = url.searchParams.get("end") || defaultEnd;
+    const startDate = parseDay(startText), endDate = parseDay(endText);
+    if (!startDate || !endDate || startText > endText) return json({ error: "Invalid date range" }, 400);
+    const startMs = startDate.getTime(), endExclusive = endDate.getTime() + 86400000;
+    if (endExclusive - startMs > 731 * 86400000) return json({ error: "Date range cannot exceed 24 months" }, 400);
+    const cutoff = Date.now() - 90 * 86400000;
+    const [daily, totals, breakdown] = await Promise.all([
+      env.DB.prepare("SELECT day_utc, reading_seconds, listening_seconds, event_count, session_count FROM admin_reading_daily WHERE day_utc >= ? AND day_utc <= ? ORDER BY day_utc ASC")
+        .bind(startText, endText).all(),
+      env.DB.prepare("SELECT MIN(day_utc) AS first_day, MAX(day_utc) AS last_day, COUNT(*) AS days_with_data FROM admin_reading_daily WHERE day_utc >= ? AND day_utc <= ?")
+        .bind(startText, endText).first(),
+      startMs >= cutoff
+        ? env.DB.prepare("SELECT platform, app_version, COUNT(DISTINCT install_hash) AS devices, COUNT(DISTINCT session_id) AS sessions, SUM(reading_seconds) AS reading_seconds, SUM(listening_seconds) AS listening_seconds, COUNT(*) AS events FROM admin_reading_events WHERE received_at >= ? AND received_at < ? GROUP BY platform, app_version ORDER BY events DESC LIMIT 20")
+          .bind(Math.max(startMs, cutoff), endExclusive).all()
+        : Promise.resolve({ results: [] })
+    ]);
+    const rows = daily.results || [];
+    const readingSeconds = rows.reduce((sum, row) => sum + Number(row.reading_seconds || 0), 0);
+    const listeningSeconds = rows.reduce((sum, row) => sum + Number(row.listening_seconds || 0), 0);
+    const eventCount = rows.reduce((sum, row) => sum + Number(row.event_count || 0), 0);
+    const activeSessionDays = rows.reduce((sum, row) => sum + Number(row.session_count || 0), 0);
+    const rawAvailable = startMs >= cutoff;
+    const breakdownRows = breakdown.results || [];
+    return json({
+      start: startText, end: endText, timezone: "UTC",
+      hasData: rows.length > 0 && eventCount > 0,
+      summary: {
+        readingSeconds, listeningSeconds, totalSeconds: readingSeconds + listeningSeconds,
+        eventCount, activeSessionDays,
+        activeDevices: rawAvailable ? breakdownRows.reduce((sum, row) => sum + Number(row.devices || 0), 0) : null
+      },
+      daily: rows.map(row => ({
+        day: row.day_utc, readingSeconds: Number(row.reading_seconds || 0),
+        listeningSeconds: Number(row.listening_seconds || 0),
+        eventCount: Number(row.event_count || 0), activeSessionDays: Number(row.session_count || 0)
+      })),
+      breakdown: {
+        available: rawAvailable,
+        rawRetentionDays: 90,
+        platforms: breakdownRows.reduce((items, row) => {
+          const key = row.platform || "unknown";
+          let item = items.find(entry => entry.platform === key);
+          if (!item) { item = { platform: key, devices: 0, sessions: 0, readingSeconds: 0, listeningSeconds: 0, events: 0 }; items.push(item); }
+          item.devices += Number(row.devices || 0);
+          item.sessions += Number(row.sessions || 0);
+          item.readingSeconds += Number(row.reading_seconds || 0);
+          item.listeningSeconds += Number(row.listening_seconds || 0);
+          item.events += Number(row.events || 0);
+          return items;
+        }, []),
+        note: rawAvailable ? "Thiết bị/phiên/nền tảng lấy từ dữ liệu chi tiết còn lưu tối đa 90 ngày." : "Dữ liệu chi tiết đã quá thời hạn 90 ngày; chỉ còn số tổng hợp theo ngày."
+      },
+      coverage: {
+        firstDay: totals?.first_day || null, lastDay: totals?.last_day || null,
+        daysWithData: Number(totals?.days_with_data || 0),
+        rawFrom: new Date(Math.max(startMs, cutoff)).toISOString().slice(0, 10),
+        rawAvailable
+      },
+      generatedAt: new Date().toISOString()
+    });
+  }
+
   if (route === "catalog/preview" && method === "GET") {
     // Build from the current R2 inventory; never use the checked-in seed manifest.
     const scan = await scanLibrary(env.READALONG, "", env.DB);
