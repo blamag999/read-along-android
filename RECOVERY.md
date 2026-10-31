@@ -7,11 +7,11 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover commit: `52fd6dba2fc82b811a4228afe39967ac884516d2`
-- Last reviewed HEAD on beta: `52fd6dba2fc82b811a4228afe39967ac884516d2`
+- Last formal handover commit: `48386107f6a924d8bb2f4eff0d8f9f3f9a5ec938`
+- Last reviewed HEAD on beta: `48386107f6a924d8bb2f4eff0d8f9f3f9a5ec938`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
-- Latest recovery checkpoint: Core cleanup handover [handover] commit `1bc2246dc6f47db7a7053db188b98a9d024449c1`
+- Latest recovery checkpoint: Online Reading Progress plan handover (commit will be recorded after checkpoint)
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
 
 ## Phát hiện sau mốc bàn giao trước
@@ -81,3 +81,11 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Không chạy regression suite trong batch tài liệu, không build APK, không thay đổi reader/audio/native, R2, D1 hoặc API nghiệp vụ.
 - Last reviewed HEAD trước commit bàn giao này: `52fd6dba2fc82b811a4228afe39967ac884516d2`.
 - Commit bàn giao tài liệu hiện tại: `1bc2246dc6f47db7a7053db188b98a9d024449c1`.
+
+## Bàn giao kế hoạch Online Reading Progress — 2026-10-31
+
+- Người dùng yêu cầu tiến trình đọc/nghe phải lưu online theo stable device ID, tách riêng theo từng book ID và khôi phục sau clear app data/uninstall/reinstall.
+- Đã cập nhật PLANNING với các bước audit native identity, D1/API hiện hữu, progress sync/outbox, migration local session, conflict handling và acceptance test.
+- Đã cập nhật tài liệu kiến trúc Core với hướng ANDROID_ID app-scoped, D1 table riêng theo `(device_id, book_id)`, Pages Functions hiện hữu và các giới hạn bảo mật/ổn định của device ID.
+- ROADMAP ghi nhận đây là quyết định và kế hoạch, không phải tính năng đã triển khai. Chưa thay đổi native code, API, D1 schema, progress runtime hoặc APK; chưa migrate dữ liệu local.
+- Last reviewed HEAD trước commit handover: `48386107f6a924d8bb2f4eff0d8f9f3f9a5ec938`.
