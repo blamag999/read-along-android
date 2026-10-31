@@ -11,6 +11,14 @@ CHANNELS = {"beta", "official"}
 APK_NAME = re.compile(r"read-along-v\d+\.\d+\.\d+-android\.apk$")
 
 
+def channel_target(channel, filename):
+    """Validate the channel and current APK filename before any R2 operation."""
+    if channel not in CHANNELS or not APK_NAME.fullmatch(filename):
+        raise ValueError("Invalid OTA channel or APK filename")
+    prefix = f"releases/{channel}/"
+    return prefix, prefix + filename
+
+
 def stale_apk_keys(objects, prefix, keep_key):
     """Return old APK keys in this channel, requiring the current APK to exist."""
     keys = [item.get("Key", "") for item in objects]
