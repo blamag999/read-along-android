@@ -622,26 +622,6 @@ body {
   .app-title {
     font-size: 0.95rem;
   }
-  .view-controls-bar {
-    order: 3;
-    width: 100%;
-    justify-content: space-between;
-    margin-top: 4px;
-  }
-  .hide-mobile {
-    display: none;
-  }
-  .file-picker-card {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .action-btn {
-    justify-content: center;
-  }
-  .quick-options {
-    margin-left: 0;
-    justify-content: space-between;
-  }
   .ctrl-btn.page-ctrl {
     padding: 0 6px;
     font-size: 0.75rem;
@@ -863,15 +843,11 @@ button:focus-visible, select:focus-visible, input:focus-visible{
 /* Medium screens and compact laptops */
 @media (max-width: 1100px) {
   .app-header { gap: 8px; }
-  .view-controls-bar { order: 3; }
-  .file-picker-card { gap: 8px; }
-  .quick-options { flex-basis: 100%; justify-content: flex-start; margin-left: 0; }
   .controls-row {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
   .ctrl-btn.page-ctrl { min-width: 0; }
   .replay-page-btn { grid-column: span 2; }
-  .speed-select-wrap { grid-column: span 2; }
 }
 
 /* Tablets and phones: controls wrap without squeezing labels */
@@ -882,26 +858,12 @@ button:focus-visible, select:focus-visible, input:focus-visible{
   .app-title { font-size: .96rem; }
   .header-right { gap: 5px; }
   .icon-btn { min-height: 36px; padding: 7px 9px; }
-  .view-controls-bar { order: 4; width: 100%; margin-top: 0; }
-  .view-controls-bar .view-btn { flex: 1; justify-content: center; }
-  .zoom-group { margin-left: 2px; padding-left: 5px; }
-  .file-picker-section { padding: 10px; }
-  .file-picker-card { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .action-btn { width: 100%; min-width: 0; padding: 9px 8px; font-size: .82rem; }
-  .active-files-indicator { grid-column: 1 / -1; gap: 6px; }
   .file-status-pill { max-width: 100%; flex: 1 1 130px; }
-  .quick-options { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr); gap: 9px; }
-  .toggle-label { flex-wrap: wrap; }
-  .page-turn-mode-label { display: grid; grid-template-columns: auto minmax(0, 1fr); }
-  .page-turn-mode-label select { max-width: none; width: 100%; }
   .viewer-container { padding: 8px; }
   .canvas-wrapper.two-page-mode { align-items: flex-start; }
   .app-footer { padding: 9px 10px max(10px, env(safe-area-inset-bottom)); }
   .sync-banner { align-items: stretch; }
   .sync-info { width: 100%; }
-  .sync-actions-mini { width: 100%; justify-content: stretch; }
-  .btn-pin { flex: 1 1 190px; }
-  .btn-save-mini { flex: 0 0 auto; }
   .controls-row {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 7px;
@@ -914,8 +876,6 @@ button:focus-visible, select:focus-visible, input:focus-visible{
     min-height: 46px;
     font-size: .9rem;
   }
-  .speed-select-wrap { grid-column: span 2; }
-  .ctrl-btn.speed-select { min-height: 46px; width: 100%; }
   .toast-message { bottom: 165px; }
 }
 
@@ -924,14 +884,9 @@ button:focus-visible, select:focus-visible, input:focus-visible{
   .app-title { font-size: .88rem; }
   .header-right { gap: 4px; }
   .icon-btn { padding: 7px; font-size: .76rem; }
-  .file-picker-card { grid-template-columns: minmax(0, 1fr); }
-  .active-files-indicator, .quick-options { grid-column: auto; }
-  .active-files-indicator { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .file-status-pill { max-width: 100%; min-width: 0; }
   .file-status-pill.sync-pill { grid-column: 1 / -1; }
   .page-jump-control { flex-wrap: wrap; }
-  .page-time-badge { flex: 1 1 110px; }
-  .save-status-badge { flex: 1 1 100%; }
   .controls-row { gap: 6px; }
   .ctrl-btn { font-size: .8rem; }
   .ctrl-btn.page-ctrl { font-size: .74rem; }
@@ -944,11 +899,10 @@ button:focus-visible, select:focus-visible, input:focus-visible{
 /* Landscape phones and short windows: keep reader usable */
 @media (max-height: 650px) and (min-width: 761px) {
   .app-header { min-height: 46px; padding-top: 5px; padding-bottom: 5px; }
-  .file-picker-section { padding-top: 7px; padding-bottom: 7px; }
   .app-footer { padding-top: 7px; padding-bottom: 8px; }
   .sync-banner { margin-bottom: 5px; }
   .audio-scrubber-row { margin-bottom: 6px; }
-  .ctrl-btn, .ctrl-btn.play-btn, .ctrl-btn.speed-select { min-height: 38px; }
+  .ctrl-btn, .ctrl-btn.play-btn{ min-height: 38px; }
 }
 
 
@@ -982,26 +936,6 @@ button:focus-visible, select:focus-visible, input:focus-visible{
 
 /* Tinh chỉnh theo phản hồi: thanh chọn tệp một dòng, nút điều khiển phân cấp rõ */
 @media (min-width: 1101px) {
-  .file-picker-section { padding-top: 7px; padding-bottom: 7px; }
-  .file-picker-card {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 10px;
-    align-items: center;
-  }
-  .file-picker-card > .btn-node-1 {
-    flex: 0 0 auto;
-    min-width: 205px;
-    min-height: 38px;
-    padding: 7px 11px;
-  }
-  .active-files-indicator {
-    flex: 1 1 0;
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 7px;
-    min-width: 0;
-  }
   .file-status-pill {
     max-width: 230px;
     min-width: 0;
@@ -1009,18 +943,6 @@ button:focus-visible, select:focus-visible, input:focus-visible{
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .quick-options {
-    flex: 0 0 auto;
-    width: auto;
-    margin-left: 0;
-    padding-top: 0;
-    border-top: 0;
-    gap: 8px 12px;
-    flex-wrap: nowrap;
-  }
-  .page-turn-mode-label { gap: 6px; }
-  .page-turn-mode-label select { max-width: 205px; min-height: 34px; }
-  .toggle-label { white-space: nowrap; }
 }
 .controls-row {
   grid-template-columns: minmax(125px,1.2fr) minmax(30px,.36fr) minmax(72px,.9fr) minmax(30px,.36fr) minmax(125px,1.2fr) minmax(76px,.68fr) 64px;
