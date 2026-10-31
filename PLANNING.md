@@ -156,7 +156,8 @@ Thống kê theo ngày/tuần/tháng/năm, theo sách và theo nền tảng; tha
 - [ ] Chốt precedence/conflict resolution của marker và nguồn dữ liệu chính thức cuối cùng.
 - [x] Định nghĩa JSON Schema version 1 cho catalog, marker, remote config và analytics event tại `schemas/`.
 - [x] Thêm `tests/contracts.test.js` vào `npm test` để khóa các ranh giới schema quan trọng và ngăn remote config/analytics nhận field không được duyệt.
-- [ ] Chạy CI trên HEAD mới và xác minh tương thích với manifest catalog thực tế.
+- [x] CI run `41158627378` thành công trên commit `24b4058ec05abb1e27ddff65f1ec0978a7fe5558`; workflow chạy `npm test`, JS syntax, Pages Functions syntax và isolation checks.
+- [x] Regression test đọc manifest seed `admin/public/books.json`, kiểm tra mọi entry hiện tại có PDF/audio và HTTPS trên đúng R2 hostname.
 - [ ] Rà soát chồng chéo API và chỉ hợp nhất khi chứng minh không phá tương thích.
 - [x] Không thay đổi thuật toán reader/audio trong đợt kiểm kê.
 
@@ -223,9 +224,11 @@ Cần build APK cho:
 - Đã xác nhận `usage/track` và `usage/stats` hiện chỉ ghi lượt mở/installation và số liệu inventory; chưa có analytics thời lượng đọc/nghe.
 - Chưa thay đổi mã runtime hoặc build APK.
 - Beta HEAD trước đợt schema: `02d90abaa4f58295e6e53ee409ee0a2cb9275317`.
+- CI contract regression: [run 41158627378 — success](https://github.com/blamag999/read-along-android/actions/runs/41158627378), tested commit `24b4058ec05abb1e27ddff65f1ec0978a7fe5558`.
 - CI gần nhất được kiểm tra: Admin workflow run `41157267352` success cho commit `8ae1b0df0d8646108302e3230d7c56a00bbb7ec5`; các run kế tiếp thuộc cùng đợt push có run bị cancel. Run này không kiểm thử commit planning mới nhất; cần CI chạy lại cho HEAD hiện tại sau thay đổi tiếp theo.
 - Đã tạo `docs/architecture/data-contracts.md`, liệt kê endpoint/caller/trust boundary và các khoảng trống hiện tại.
 - Đã thêm JSON Schema v1 cho catalog, marker, Remote Config và Analytics event; thêm structural regression tests vào `npm test`.
-- Schema mới chỉ là contract định hướng; chưa tích hợp runtime validator hoặc endpoint Remote Config/Analytics thời lượng. Cần CI và kiểm chứng compatibility trước khi coi là ổn định.
-- Phase 1: inventory và bản schema đầu tiên hoàn tất; marker precedence, API overlap review và CI validation còn pending.
+- CI `41158627378` đã pass trên commit test `24b4058ec05abb1e27ddff65f1ec0978a7fe5558`; test bao gồm contract schema và manifest seed hiện tại.
+- Schema mới chỉ là contract định hướng; chưa tích hợp runtime validator hoặc endpoint Remote Config/Analytics thời lượng.
+- Phase 1: inventory, JSON Schema v1, manifest compatibility regression và CI validation đã hoàn tất. Marker precedence và API overlap review còn pending.
 - Tiến độ: Phase 0 hoàn tất; Phase 1 đang thực hiện.
