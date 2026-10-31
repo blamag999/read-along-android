@@ -684,3 +684,14 @@ Khi một công việc trong PLANNING hoàn tất:
 - Test commit: `d219ce0a109a7202c3a10a51b68ceada5b4dd792`; runtime commit chốt: `4949bae9693d6bf17ccb57af81c80680d74772cf` (`[build-apk]`).
 - GitHub Actions [run 41211507635](https://github.com/blamag999/read-along-android/actions/runs/41211507635): full regression suite, Pages syntax, isolation và release-channel validation đã PASS; signed APK build/verify, R2 OTA publication, artifact upload và GitHub Release còn đang chạy tại thời điểm ghi nhật ký.
 - Không thay đổi nội dung hộp thoại OTA `Tải và cài đặt bản cập nhật? Android có thể yêu cầu xác nhận.`; không chỉnh các toast/alert khác. Chưa promote main. Device acceptance chờ APK và kiểm tra thực tế.
+
+
+## 2026-10-31 — Chuẩn hóa thông báo cập nhật OTA (beta)
+
+- Chuẩn hóa các trạng thái OTA trong `app.js`: có phiên bản mới (hiển thị versionName + release notes + câu hỏi cài đặt và giải thích Android xác nhận); phiên bản hiện tại đã mới nhất; chưa có manifest phát hành trên kênh đang chọn; lỗi kiểm tra/cài đặt; đang tải APK (có hướng dẫn không đóng app).
+- Loại bỏ alert kỹ thuật ở nhánh đã mới nhất (versionCode, so sánh versionName và thông tin khóa ký). Các kiểm tra versionName/versionCode, xác thực manifest, fixed download URL, cleanup cache, native download/install, expected size và SHA-256 vẫn giữ nguyên.
+- Release notes vẫn lấy từ `manifest.notes`, giới hạn 400 ký tự. Không thay đổi cách backend tạo manifest hoặc cách workflow publish OTA.
+- Regression assertions cập nhật trong `tests/contracts.test.js` và `tests/ota-update.test.js` cho từng trạng thái thông báo và xác nhận không lộ chi tiết version/signing ở nhánh không có bản mới.
+- Test commits: `b8841b9fdd3568ea8fc7e3021fffcec03ee91700`, `a36f69ecc67e16a0e8ffb9aa6c513e21f5d2446a`, `ed13753de05d7f28b797c3164f96e6c1be3dfd83`. Runtime commits: `68054fd8a7f60df8c39729ed7cc7296d063fb30a`, `2e5725c4ebaf1948d7a0698d9cd838369375d057`.
+- GitHub Actions build [run 41211770726](https://github.com/blamag999/read-along-android/actions/runs/41211770726) đã được kích hoạt trên commit runtime cuối; trạng thái lúc ghi nhận: QUEUED. Không tuyên bố APK mới sẵn sàng cho tới khi workflow build/signature/OTA hoàn tất.
+- Không promote `main`. Cần kiểm tra APK beta sau khi workflow thành công; Android device acceptance vẫn riêng biệt.
