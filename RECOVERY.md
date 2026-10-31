@@ -201,3 +201,13 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Đã đối chiếu thay đổi bốn commit gần nhất: HTML, CSS, app.js và regression test; không sửa native code, reader/audio lifecycle, marker hoặc IndexedDB schema.
 - Số badge hiển thị state.playlist.length, không được diễn giải thành số blob đã lưu offline trên IndexedDB.
 - CI/build/device validation chưa thực hiện tại mốc này. Không đặt last_handover_commit/last_reviewed_head vượt quá commit đã kiểm tra.
+
+
+## Handover checkpoint — responsive library header release verified (2026-10-31)
+
+- Latest functional/release checkpoint on `beta`: `61b383329ac4a6d5fcc1b3e54f3e5249390e50c2` (`[build-apk] Finalize responsive library header and verify beta APK`).
+- Workflow [41205868772](https://github.com/blamag999/read-along-android/actions/runs/41205868772), run 186 / attempt 1: completed, conclusion `success`.
+- Verified successful steps: dependency install; full regression suite; Pages Functions syntax; isolation constraints; release channel validation; signed release APK build; APK rename/signature verification; OTA object publication to Cloudflare R2; versioned workflow artifact upload; GitHub Release creation and asset attachment.
+- Code commits in this batch: HTML `2c9e181255ba94dfff3e865e1f218875d981d205`; CSS `6b24d50fe6e3dc110fe74a8185bf41ed50002523` plus final focus-visible CSS in `61b383329ac4a6d5fcc1b3e54f3e5249390e50c2`; app badge logic `87b81e5e3b8b4686e2022f5b94efb964174936f9`; regression assertions `23cc765849189a1357b89ee73fe47783e59f6aa4`.
+- Badge count is `state.playlist.length`; it is not a count of offline IndexedDB blobs. No IndexedDB schema/storage behavior was changed in this batch.
+- Remaining acceptance: install/use the generated beta APK on a real touch device; verify portrait widths 320–600 px, visible icon/label/count, no header overlap, library action, menu controls and Android Back close/save behavior. Until user acceptance, do not promote `main`/stable.
