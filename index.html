@@ -42,16 +42,16 @@
           <select id="readingCheckpointSelect" aria-label="Chọn một trong ba mốc đọc gần nhất" disabled></select>
           <button id="btnRestoreReadingCheckpoint" type="button" disabled>Xem tiếp</button>
         </div>
-        <label class="read-menu-option update-channel-row" for="chkBetaOta">
-          <span class="menu-option-icon">⇅</span>
-          <span class="update-channel-label">Kênh OTA <small>Đánh dấu để dùng Beta</small></span>
-          <input id="chkBetaOta" type="checkbox" aria-label="Dùng kênh OTA Beta; bỏ tích để dùng Official">
-        </label>
-        <div class="read-menu-version" aria-label="Phiên bản ứng dụng đang cài">
-          <span class="menu-option-icon">ⓘ</span><span>Phiên bản đang cài</span><strong id="installedAppVersion">Đang tải…</strong>
-        </div>
-
-        <button id="menuCheckUpdates" class="read-menu-option hidden" type="button"><span class="menu-option-icon" aria-hidden="true">⬆️</span><span>Kiểm tra cập nhật</span></button>
+        <section class="ota-settings-group" aria-label="Cập nhật ứng dụng">
+          <label class="read-menu-option update-channel-row" for="chkBetaOta">
+            <span>Kênh OTA</span>
+            <input id="chkBetaOta" type="checkbox" aria-label="Dùng kênh OTA Beta; bỏ tích để dùng Official">
+          </label>
+          <div class="read-menu-version" aria-label="Phiên bản ứng dụng đang cài">
+            <span>Phiên bản đang cài</span><strong id="installedAppVersion">Đang tải…</strong>
+          </div>
+          <button id="menuCheckUpdates" class="read-menu-option update-check-row hidden" type="button">Kiểm tra cập nhật</button>
+        </section>
       </div>
 
     </div>
