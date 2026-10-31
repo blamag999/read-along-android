@@ -59,6 +59,7 @@ class Target {
   const tick = async (ms = 5000) => { now += ms; timers[0](); await Promise.resolve(); await Promise.resolve(); };
 
   assert.equal(requests.length, 0, 'analytics is off by default');
+  assert.equal(values.has('read_along_analytics_install_id_v1'), false, 'install ID must not be created before opt-in');
   assert.equal(typeof context.window.ReadAlongAnalytics.openSettings, 'function', 'analytics settings entry point must be available');
   context.state.pdfDoc = {};
   context.state.currentBookKey = 'private-book-title.pdf';
@@ -130,6 +131,22 @@ class Target {
   context.state.pdfDoc = null;
   await tick();
   assert.equal(JSON.parse(requests.at(-1).options.body).events[0].type, 'reader_stop');
+
+  context.state.pdfDoc = {};
+  context.state.currentBookKey = 'another-private-book.pdf';
+  await tick();
+  assert.equal(JSON.parse(requests.at(-1).options.body).events[0].type, 'reader_start', 'switching PDF starts a new analytics session');
+  audio.paused = false;
+  audio.ended = false;
+  audio.dispatch('play');
+  await Promise.resolve();
+  await tick(4000);
+  window.dispatch('pagehide');
+  await Promise.resolve();
+  const pageHideEvent = JSON.parse(requests.at(-1).options.body).events[0];
+  assert.equal(pageHideEvent.type, 'reader_pause');
+  assert.equal(pageHideEvent.readingSeconds, 4);
+  assert.equal(pageHideEvent.listeningSeconds, 4, 'pagehide must preserve foreground listening duration');
 
   checkbox.checked = false;
   checkbox.dispatch('change');
