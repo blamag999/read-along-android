@@ -738,7 +738,7 @@ async function handle(request, env) {
       daily: rows.map(row => ({
         day: row.day_utc, readingSeconds: Number(row.reading_seconds || 0),
         listeningSeconds: Number(row.listening_seconds || 0),
-        eventCount: Number(row.event_count || 0), activeSessionDays: Number(row.session_count || 0)
+        eventCount: Number(row.event_count || 0)
       })),
       breakdown: {
         available: rawAvailable,
