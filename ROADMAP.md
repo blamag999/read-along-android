@@ -244,6 +244,6 @@ Khi một công việc trong PLANNING hoàn tất:
 - Applied additive migration to the existing D1 database `read-along-admin-db` already bound as `DB` to Pages project `read-along-admin`; verified all 3 tables and the daily trigger. Also appended the same definitions to `admin/schema.sql` for clean database bootstrap.
 - Added unit/contract/API-boundary tests and a GitHub Actions production smoke test. Smoke test verified OPTIONS 204 + exact Capacitor CORS origin and POST without explicit consent returns 400 `Analytics consent required`.
 - CI full regression, JavaScript syntax, Pages Functions syntax, isolation and deployed consent smoke **success**: [41166166847](https://github.com/blamag999/read-along-android/actions/runs/41166166847), commit `e8691fdd320eec71cdddfba67b22c8b0891d8fbe`.
-- Cloudflare Pages production deployment for this commit is still in progress at the time of this note; the consent smoke test already reached the deployed endpoint, but a final deployment-stage success check remains.
+- Cloudflare Pages production deployment for commit `e8691fdd320eec71cdddfba67b22c8b0891d8fbe` completed successfully. A synthetic D1 trigger smoke test inserted a temporary event, verified 12 reading seconds + 3 listening seconds + one event + one unique session in the daily aggregate, then removed all synthetic rows. No test data remains.
 - Not implemented: APK/client consent UI and collector, valid event write/deduplication/aggregate end-to-end test, analytics dashboard. No APK build and no `main` promotion.
 
