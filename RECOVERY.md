@@ -388,3 +388,13 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Test contract cập nhật để cấm marker manager/import/export UI. Các commit: `c6b8e2b` (app), `a2d4e4f` (HTML), `df032da` (test), cùng caller correction ở commit sau đó.
 - Source audit hiện còn `state.pageTimestamps` chỉ được gán khi reset, nạp R2 hoặc fallback localStorage; `saveSyncToStorage()` chỉ được gọi sau khi nạp marker companion R2. Chưa chạy npm test/CI, chưa build APK và chưa kiểm thử thiết bị; không đánh dấu nghiệm thu.
 - Chưa gỡ local PDF/audio/folder picker, Blob loading, drag/drop hoặc các hàm IndexedDB legacy. Không thay đổi API/Admin/R2 objects/Cloudflare/OTA/signing key/main.
+
+
+## 2026-10-31 — Loại bỏ local media loading, chuyển sang R2-only (beta)
+
+- `app.js`: đã bỏ file/folder picker handlers, local playlist builder, drag-and-drop, PDF/audio Blob loader, IndexedDB media-library API và các entry point ẩn còn lại. Playlist mở nội dung bằng URL PDF/audio R2; không có fallback sang Blob hoặc tệp thiết bị.
+- `index.html`: đã bỏ vùng chọn tệp, input file, modal chọn folder/PDF, drop overlay và menu ẩn/hiện cài đặt. Giữ danh sách sách R2, header 2 action, menu, reader, footer và chỉ báo tên sách/audio hiện tại.
+- IndexedDB `PdfAudioSyncDB` cũ không bị xóa, clear, upgrade hay migrate; app không còn mở database này. Dữ liệu legacy hiện nằm nguyên trên thiết bị nhưng không còn được dùng làm thư viện offline.
+- Giữ session/checkpoint localStorage, favorites, marker companion R2 read-only, PDF/audio R2 URL và playlist. Không thay đổi cơ chế Back/session save.
+- Các commit: `9eb40d5` (app), `dbec01f` (HTML), `db86284` (tests), `ed97539` (bổ sung remote media status indicator).
+- Chưa chạy `npm test`/CI, chưa build APK và chưa nghiệm thu thiết bị. Chưa xóa CSS dead styles hoặc schema dữ liệu IndexedDB cũ; cleanup CSS chỉ sau khi audit selector usage. Không thay đổi API/Worker/R2/OTA/signing key/main.
