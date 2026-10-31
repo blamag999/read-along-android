@@ -96,8 +96,9 @@
 - [x] Thêm bộ lọc 7/30/90 ngày và 12/24 tháng; xu hướng đọc/nghe theo ngày/tuần/tháng; breakdown nền tảng.
 - [x] Thêm thống kê thư viện từ manifest đã xuất bản: số đầu sách, PDF, phần audio và sách có JSON đồng bộ.
 - [x] Thêm tình trạng lần quét thư viện gần nhất: số tệp đã kiểm tra, lỗi nghiêm trọng, cảnh báo, thời điểm và trạng thái quét.
-- [x] API Dashboard yêu cầu phiên Admin; raw analytics chỉ truy vấn trong cửa sổ lưu 90 ngày, aggregate daily tối đa 24 tháng.
+- [x] API Dashboard public chỉ đọc (GET) trước OTP guard; chỉ trả số liệu tổng hợp, không lộ install/session IDs, book IDs, tiêu đề sách hoặc dữ liệu tệp. Mọi API quản lý thư viện tiếp tục yêu cầu OTP; raw analytics chỉ truy vấn trong cửa sổ lưu 90 ngày, aggregate daily tối đa 24 tháng.
 - [x] Regression CI cho API, date validation, retention, DOM, trạng thái manifest/scan và Pages Functions syntax: [41169858843](https://github.com/blamag999/read-along-android/actions/runs/41169858843) success trên commit e03acee6141ddc064f162475fad0e2c67655c994.
+- [x] Full regression, JS syntax, Pages Functions syntax, isolation và production consent smoke pass: [41170506777](https://github.com/blamag999/read-along-android/actions/runs/41170506777), commit `07bd866af16de1dc33d989ac8f6da90349cd539c`.
 - [ ] Deploy Pages sau thay đổi Dashboard công khai; xác minh trang chủ mặc định, API GET chỉ đọc và OTP vẫn chặn mọi API quản trị/thay đổi dữ liệu.
 - [ ] Kiểm tra dashboard công khai trên hostname production và preview; đối chiếu thời lượng đọc/nghe sau khi người dùng bật opt-in.
 - [ ] Không thống kê theo từng sách đã đọc: collector không gửi bookId/tên sách theo privacy contract; không mở rộng thu thập chỉ để có chỉ số này.
