@@ -155,6 +155,7 @@ assert.deepEqual(Array.from(libraryGroups.books[0].audio, file => file.name), ["
 assert.equal(libraryGroups.books[0].json[0].name, "Oliver_Company.json");
 assert.equal(libraryGroups.books[0].status, "compatibility", "WMA should mark the grouped book as requiring compatibility handling");
 assert.deepEqual(Array.from(libraryGroups.ungrouped, file => file.name), ["orphan.bin"], "unsupported files must remain visible in the unmatched section");
+assert.ok(!libraryGroups.ungrouped.some(file => file.key === "books.json"), "root books.json must be hidden from the Admin file manager");
 console.log("Admin book-grouping regression tests passed.");
 
 // Admin library pagination must use the same filtered entries for rendering and navigation.
