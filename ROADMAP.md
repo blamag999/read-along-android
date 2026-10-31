@@ -523,3 +523,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Cloudflare Pages `read-along-admin` được xác minh có `build_command: true`, `root_dir: admin`, `destination_dir: public`; không còn custom pre-publish validator. Production deployment [28123f6e](https://28123f6e.read-along-admin.pages.dev) success trên commit `8722c5673f01e9e7ec2ac9430217146d88b324c5`.
 - PR #40 được cập nhật theo README beta mới nhất; diff vẫn chỉ chứa `README.md`, PR còn mở để đồng bộ quy tắc dùng chung sang `main`. Không merge/promote stable trong batch này.
 - Chưa xác minh trực tiếp HTTP 404 của URL asset cũ do endpoint không truy cập được qua công cụ kiểm tra; không dùng deployment success để khẳng định response status. Không có thay đổi R2/D1, API nghiệp vụ, reader/audio engine, OTA installer hoặc APK build trong batch tài liệu này.
+
+### 2026-10-31 — Chốt ưu tiên Core: Online Reading Progress theo device ID
+
+- Người dùng xác nhận yêu cầu: tiến trình đọc/nghe phải lưu online theo từng thiết bị; mỗi thiết bị có identity ổn định, mỗi sách có progress riêng. Local không còn là bản lưu duy nhất mà chỉ là cache/outbox.
+- Chọn hướng kỹ thuật để audit/triển khai: Android `Settings.Secure.ANDROID_ID` làm identity source trên native, tạo app-scoped identifier; không dùng UUID chỉ nằm trong app data. Theo tài liệu Android, từ Android 8.0 ID được scope theo signing key + user + device và không đổi qua uninstall/reinstall thông thường; có thể đổi sau factory reset hoặc đổi signing key. Đây không phải hardware ID bất biến tuyệt đối. <https://developer.android.com/reference/android/provider/Settings.Secure>
+- Backend dự kiến: bảng progress riêng trong D1 hiện hữu, khóa `(device_id, book_id)`; endpoint qua Pages Functions/router hiện có sau audit. Không tạo Worker/database mới, không nhập chung analytics/marker/catalog.
+- Kế hoạch chi tiết, identity fallback, API contract, offline outbox, conflict handling, migration và acceptance cases được ghi trong PLANNING và `docs/architecture/core-extensibility.md`.
+- Trạng thái: quyết định/plan đã ghi nhận; chưa triển khai native identity, D1 schema/API, APK sync engine hoặc kiểm thử clear-data/uninstall trên thiết bị. Không có dữ liệu progress nào được migrate hoặc upload trong bước này.
