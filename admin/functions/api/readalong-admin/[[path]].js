@@ -1091,6 +1091,7 @@ async function handle(request, env) {
     assertOrigin(request);
     const key = request.headers.get("X-Upload-Key") || "";
     const uploadId = request.headers.get("X-Upload-Id") || "";
+    if (key === "books.json") return json({ error: "books.json chỉ được cập nhật qua Xuất bản danh mục" }, 403);
     const partNumber = Number(request.headers.get("X-Part-Number"));
     if (!validKey(key) || !uploadId || !Number.isInteger(partNumber) || partNumber < 1 || partNumber > 10000 || !request.body) return json({ error: "Invalid multipart request" }, 400);
     const upload = env.READALONG.resumeMultipartUpload(key, uploadId);
