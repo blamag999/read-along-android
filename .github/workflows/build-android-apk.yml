@@ -34,6 +34,27 @@ jobs:
           ref: ${{ github.ref }}
           fetch-depth: 0
 
+      # The exact APK commit always runs the complete regression suite first.
+      - name: Set up Node.js for validation
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Run full regression suite before APK build
+        run: npm test
+
+      - name: Check Pages Functions module syntax
+        run: node --check --input-type=module < 'admin/functions/api/readalong-admin/[[path]].js'
+
+      - name: Verify isolation constraints
+        run: |
+          ! grep -R -nE '(^|[^A-Z_])COMICS([^A-Z_]|$)|(^|[^A-Z_])TOTP_SECRET([^A-Z_]|$)|comic_manager_session' admin/functions admin/public
+          grep -q 'READALONG' 'admin/functions/api/readalong-admin/[[path]].js'
+          grep -q 'admin_totp_state' 'admin/functions/api/readalong-admin/[[path]].js'
+
       - name: Validate release channel
         env:
           CHANNEL: ${{ github.event_name == 'workflow_dispatch' && inputs.channel || 'beta' }}
@@ -109,11 +130,6 @@ jobs:
           { echo "changelog<<CHANGELOG_EOF"; echo "$CHANGELOG"; echo "CHANGELOG_EOF"; } >> "$GITHUB_OUTPUT"
           echo "Release version: $VERSION"
           echo "Release channel: $CHANNEL"
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-
       - name: Set up Java
         uses: actions/setup-java@v6
         with:
@@ -146,9 +162,8 @@ jobs:
           cp run_local.bat README-WEB-LOCAL.txt dist/read-along-web-local/
           cd dist && zip -r "read-along-v${VERSION}-web-local.zip" read-along-web-local
 
-      - name: Install dependencies and integrate native updater
+      - name: Integrate native updater
         run: |
-          npm install
           npx cap add android
           mkdir -p android/app/src/main/java/com/blamag999/readalong android/app/src/main/res/xml
           cp native/android/ApkUpdaterPlugin.java android/app/src/main/java/com/blamag999/readalong/ApkUpdaterPlugin.java
