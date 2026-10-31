@@ -283,12 +283,11 @@ function restoreSelectedReadingCheckpoint() {
   state.currentAudioIndex = Number.isInteger(restored.audioIndex) ? restored.audioIndex : 0;
   state.viewMode = 'fit-height';
   state.zoomScale = Number.isFinite(restored.zoomScale) ? Math.max(0.5, Math.min(3, restored.zoomScale)) : state.zoomScale;
-  state.pageTurnMode = restored.pageTurnMode === 'off' ? 'off' : 'next';
+  state.pageTurnMode = 'next'; // Auto page-turn is always enabled; legacy off values are normalized.
   
   state.sessionRestorePending = true;
   state.lastSessionSaveAt = 0;
   dom.canvasWrapper.classList.remove('two-page-mode');
-  updateReadMenuState();
   renderCurrentSpread();
   if (state.currentStoryAudios[state.currentAudioIndex]) {
     loadAudioPart(state.currentAudioIndex, { restoreSession: true });
@@ -316,9 +315,8 @@ function restoreReadingSessionForCurrentBook() {
   state.viewMode = 'fit-height';
   dom.canvasWrapper.classList.remove('two-page-mode');
   if (Number.isFinite(session.zoomScale)) state.zoomScale = Math.max(0.5, Math.min(3, session.zoomScale));
-  state.pageTurnMode = session.pageTurnMode === 'off' ? 'off' : 'next';
+  state.pageTurnMode = 'next'; // Auto page-turn is always enabled; legacy off values are normalized.
   
-  updateReadMenuState();
   state.sessionRestorePending = true;
   updateReadingCheckpointsUI();
   return session;
@@ -346,10 +344,8 @@ function applyPendingAudioSessionRestore() {
 const dom = {
   btnOpenReadMenu: document.getElementById('btnOpenReadMenu'),
   readOptionsMenu: document.getElementById('readOptionsMenu'),
-  menuAutoFlip: document.getElementById('menuAutoFlip'),
   menuCheckUpdates: document.getElementById('menuCheckUpdates'),
   chkBetaOta: document.getElementById('chkBetaOta'),
-  menuAutoFlipState: document.getElementById('menuAutoFlipState'),
   lblZoomLevel: document.getElementById('lblZoomLevel'),
 
   btnOpenPlaylist: document.getElementById('btnOpenPlaylist'),
@@ -1001,17 +997,6 @@ function initEvents() {
       }
     });
   }
-  if (dom.menuAutoFlip) dom.menuAutoFlip.addEventListener('click', () => {
-    state.pageTurnMode = state.pageTurnMode === 'next' ? 'off' : 'next';
-    state.waitingForManualPageTurn = false;
-    state.pendingManualPage = null;
-    state.resumeAfterManualTurn = false;
-    updateReadMenuState();
-    saveReadingSession(true);
-    showToast(state.pageTurnMode === 'next' ? 'Đã bật tự động lật trang theo mốc.' : 'Đã tắt tự động lật trang.');
-  });
-
-
 
   dom.btnPageJump.addEventListener('click', jumpToEnteredPage);
   dom.btnRestoreReadingCheckpoint?.addEventListener('click', restoreSelectedReadingCheckpoint);
@@ -1686,18 +1671,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Tự tải danh sách sách ngay khi mở ứng dụng.
   loadR2Catalog();
 });
-
-
-// Đồng bộ trạng thái hiển thị của các lựa chọn trong menu đọc sách.
-function updateReadMenuState() {
-  if (dom.menuAutoFlip) {
-    const enabled = state.pageTurnMode === 'next';
-    dom.menuAutoFlip.classList.toggle('is-on', enabled);
-    dom.menuAutoFlip.setAttribute('aria-pressed', String(enabled));
-    if (dom.menuAutoFlipState) dom.menuAutoFlipState.textContent = enabled ? 'Bật' : 'Tắt';
-  }
-}
-
 
 
 function installTvRemoteControls() {
