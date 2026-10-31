@@ -654,7 +654,7 @@ Khi một công việc trong PLANNING hoàn tất:
 - Đã sửa beta: header chỉ còn Thư viện sách và Menu. Điều khiển vừa trang/hai trang/zoom, ẩn-hiện vùng chọn file và quản lý mốc thời gian đều nằm trong Menu. Nút Đóng sách riêng bị loại bỏ; Android Back vẫn đi qua luồng đóng sách hiện hữu và lưu phiên đọc.
 - Các thao tác ẩn/hiện vùng chọn tệp và quản lý mốc thời gian được chuyển vào Menu; chức năng quản lý marker local vẫn được giữ.
 - Đã bổ sung regression assertions cho cấu trúc header và menu. Chưa có CI sau batch này và chưa nghiệm thu trên thiết bị.
-- Kho offline 1 GiB với LRU, lưu trọn bộ PDF/audio/JSON và bảo toàn qua OTA mới là kế hoạch; chưa triển khai. Cần audit native storage và OTA cleanup trước khi chọn cách lưu.
+- **Đã bị quyết định ngày 2026-10-31 thay thế:** không có kho offline 1 GiB/LRU. Ứng dụng đọc PDF/audio trực tiếp từ R2, không lưu media offline, không tự xóa sách và không có Download Manager. Đoạn kế hoạch cũ chỉ còn giá trị lịch sử.
 
 
 ### 2026-10-31 — Portrait library button visual correction (implementation; validation pending)
@@ -760,7 +760,7 @@ Khi một công việc trong PLANNING hoàn tất:
 ## 2026-10-31 — Quyết định bỏ mở sách cục bộ và tinh gọn Menu (beta)
 
 - Người dùng xác nhận bỏ hoàn toàn khả năng mở PDF/audio/thư mục tùy ý từ thiết bị; nội dung mở qua thư viện R2.
-- Phân biệt mở tệp cục bộ với cache/offline: vẫn giữ kho offline/cache 1 GiB cho nội dung tải từ R2, cùng marker, session và vị trí đọc. Không xóa dữ liệu đã tải hoặc dữ liệu đọc.
+- **Ghi chú lịch sử đã bị thay thế:** đề xuất giữ kho offline/cache 1 GiB cho nội dung R2 đã bị người dùng hủy ngày 2026-10-31. Chính sách hiện hành: không lưu PDF/audio offline; chỉ giữ cache shell/app assets kỹ thuật và dữ liệu session/checkpoint.
 - Header chỉ có hai action **Thư viện sách** và **Menu**; không có nút Đóng sách riêng vì Android Back đảm nhiệm thao tác này.
 - Kế hoạch Menu: gỡ UI chọn file và vùng điều khiển cũ không còn cần; giữ điều khiển reader, checkpoint “Vị trí đọc gần đây” / “Xem tiếp” và OTA. Rà soát UI quản lý marker thủ công riêng; không xóa marker runtime, marker JSON R2, schema hoặc dữ liệu.
 - Kế hoạch chi tiết và kiểm thử được ghi trong PLANNING.md. Đây là phạm vi đã duyệt, chưa phải code đã triển khai.
@@ -777,3 +777,14 @@ Khi một công việc trong PLANNING hoàn tất:
 - Kiểm thử/build theo batch: kiểm tra nhỏ trong quá trình làm; full regression tại commit `[test]`; chỉ một APK beta ở commit `[build-apk]` sau khi runtime batch hoàn tất.
 - Trạng thái: **PLANNED / APPROVED SCOPE, NOT IMPLEMENTED**. Chưa sửa runtime, chưa chạy test/CI cho kế hoạch này, chưa build APK, chưa deploy hoặc kiểm tra thiết bị. Không thay đổi `main`.
 - Việc tiếp theo: trước khi triển khai, đọc lại các tài liệu theo README, kiểm tra HEAD/diff mới nhất, audit đầy đủ caller của local-file opening và marker write/sync; sau đó triển khai theo checklist P1 trên beta.
+
+
+## 2026-10-31 — Quyết định cuối cùng: không lưu trữ PDF/audio offline
+
+- Người dùng xác nhận **không triển khai kho lưu trữ sách/âm thanh 1 GB**. Ứng dụng tiếp tục stream/đọc PDF và audio trực tiếp từ R2.
+- Không tải trước hoặc lưu bản media bền vững trên thiết bị; không hỗ trợ đọc/nghe offline; không LRU/FIFO, quota, Download Manager, tự xóa sách cũ hay media cache layer.
+- Chỉ giữ cache shell/app assets và cache tạm kỹ thuật cần cho WebView/Service Worker; không dùng các cache này làm kho PDF/audio.
+- Bảo toàn session/checkpoint và trạng thái đọc qua OTA; OTA không được xóa dữ liệu trạng thái đọc.
+- Marker JSON companion từ R2 vẫn được đọc read-only để đồng bộ trang/audio. Nếu có đồng bộ tiến trình đọc/nghe online, đó là dữ liệu trạng thái riêng, không phải media offline.
+- Đây là quyết định hiện hành và thay thế mọi đề xuất kho offline 1 GiB/LRU ghi trước đó trong ROADMAP/PLANNING/RECOVERY. Các đoạn cũ được giữ như lịch sử, không phải công việc cần thực hiện.
+- Phạm vi cập nhật lần này chỉ là tài liệu; không sửa runtime, workflow, API, R2/Cloudflare, không chạy CI, không build APK và không thay đổi `main`.
