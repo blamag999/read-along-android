@@ -265,3 +265,24 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 - Full regression, Pages syntax/isolation, signed APK build + verification, OTA R2 publication và GitHub Release đều thành công. Không còn pending CI/build cho batch header.
 - Chỉ còn nghiệm thu thiết bị thật ở portrait 320–600 px và kiểm tra thao tác Thư viện/Menu/Android Back. Không promote `main` trước khi người dùng xác nhận.
 - Badge lấy từ `state.playlist.length`, không đại diện số blob offline trong IndexedDB.
+
+## P2 — Chuẩn hóa Release Notes cho mọi bản build
+
+> Đề xuất đã ghi vào kế hoạch ngày 2026-10-31; chưa triển khai workflow. Phạm vi áp dụng trước trên beta, chỉ promote cùng bản stable khi người dùng xác nhận.
+
+- [ ] Chuẩn hóa commit subject với bốn nhóm dành cho người dùng: `[feature]`, `[improve]`, `[fix]`, `[security]`; các marker nội bộ như `[test]`, `[docs]`, `[build-apk]`, `[handover]` không xuất hiện trong ghi chú phát hành.
+- [ ] Điều chỉnh workflow `.github/workflows/build-android-apk.yml` để tổng hợp commit từ mốc phát hành trước **cùng kênh** (beta/official), tránh trộn lịch sử hai kênh; xác minh cách xử lý lần phát hành đầu tiên.
+- [ ] Sinh Release Notes tiếng Việt theo các nhóm Tính năng mới / Cải tiến / Sửa lỗi / Bảo mật; chỉ hiển thị nhóm có nội dung, loại bỏ trùng lặp và commit nội bộ, không tự thêm câu cải thiện chung nếu không có thay đổi tương ứng.
+- [ ] Dùng một nội dung changelog duy nhất cho GitHub Release và OTA manifest; thông báo trong app lấy cùng nội dung nhưng rút gọn khoảng 400 ký tự, giữ các thay đổi quan trọng trước.
+- [ ] Bổ sung regression test cho phân loại commit, lọc marker nội bộ, mốc release theo channel, nội dung rỗng và giới hạn độ dài OTA; không thay đổi versioning, signing hoặc cơ chế tải/cài OTA.
+- [ ] Kiểm tra Release Notes thực tế của một bản beta sau khi workflow chạy thành công; chưa coi là hoàn tất chỉ dựa trên test tổng hợp.
+
+## P2 — Rà soát và rút gọn thông báo nội bộ trong ứng dụng
+
+> Đợt rà soát chỉ đọc ngày 2026-10-31. Chưa sửa nội dung thông báo trong batch này; giữ nguyên các thông báo OTA vừa chuẩn hóa ở phiên trước.
+
+- [ ] Phân loại alert/confirm/prompt/toast theo nhóm: thao tác thành công, hướng dẫn thao tác, cảnh báo có thể tự xử lý, lỗi cần hành động và lỗi kỹ thuật.
+- [ ] Rút gọn câu thành tiếng Việt trực tiếp, thống nhất thuật ngữ PDF/audio/mốc thời gian/sách; bỏ emoji trang trí và chi tiết kỹ thuật không giúp người dùng xử lý.
+- [ ] Giữ thông tin lỗi kỹ thuật trong console/diagnostics; thông báo người dùng chỉ nêu việc không thực hiện được và bước khắc phục phù hợp.
+- [ ] Không thay đổi điều kiện hiển thị, luồng xử lý, Confirm/Prompt có dữ liệu động hoặc thông báo OTA đã được chuẩn hóa; bổ sung regression assertions trước khi sửa.
+- [ ] Chỉ build APK khi batch thay đổi runtime đã hoàn tất và full regression pass; nghiệm thu nội dung trên thiết bị thật.
