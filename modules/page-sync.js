@@ -52,3 +52,5 @@
   }
   root.ReadAlongPageSync = Object.freeze({ normalizeMarker, markerMatchesPart, findTargetPage, isConfirmedBackwardSeek, alignPage, shouldAllowPageChange });
 })(window);
+
+// Final batch checkpoint: zero-second page markers remain valid on every PDF page.
