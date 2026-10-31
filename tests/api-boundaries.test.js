@@ -39,6 +39,18 @@ assert.match(diagnosticsWorker, /api\.github\.com\/repos\/blamag999\/read-along-
 assert.match(adminApi, /JSON\.stringify\(\{ books: normalized \}, null, 2\) \+ "\\n"/,
   "published books.json must end with a real newline, not literal backslash-n characters");
 
+assert.match(adminApi, /route === "analytics\/events" && method === "POST"/,
+  'reading analytics must use a distinct endpoint in the existing Read Along Pages Functions router');
+assert.match(adminApi, /validateAnalyticsBatch\(body\)/,
+  'analytics ingest must validate explicit consent and the strict event contract');
+assert.match(adminApi, /sha256\(validation\.installId\)/,
+  'analytics must hash the random installation ID before storage');
+assert.match(adminApi, /INSERT OR IGNORE INTO admin_reading_events/,
+  'analytics ingest must be idempotent for retried event IDs and session sequences');
+assert.match(adminApi, /received_at < \?/,
+  'raw analytics events must enforce the 90-day retention window');
+assert.match(adminApi, /admin_reading_daily/,
+  'daily aggregates must be maintained independently of raw event retention');
 assert.match(adminApi, /const allowedOrigins = new Set\(\["https:\/\/localhost", "http:\/\/localhost", "capacitor:\/\/localhost"\]\)/,
   'Admin CORS must allow only the app local origins it needs');
 assert.doesNotMatch(adminApi, /pages\.dev|workers\.dev/,
