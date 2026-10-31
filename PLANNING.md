@@ -165,11 +165,13 @@ Thống kê theo ngày/tuần/tháng/năm, theo sách và theo nền tảng; tha
 - [x] Không thay đổi thuật toán reader/audio trong đợt kiểm kê.
 
 ### Phase 2 — Nền tảng Remote Config/Data Client
-- [ ] Chốt endpoint config trên hạ tầng Read Along hiện có, tránh thêm dịch vụ không cần thiết.
-- [ ] Tạo schema config, validator và bộ test.
-- [ ] Chuẩn bị fallback/cache và versioning.
-- [ ] Tích hợp Admin chỉnh config an toàn.
-- [ ] Chỉ sau khi test backend hoàn tất mới chuẩn bị một thay đổi APK tối thiểu để đọc config.
+- [x] Chọn static JSON trên Cloudflare Pages hiện có (`admin/public/remote-config.json`) để tránh tạo thêm Worker/API.
+- [x] Tạo schema config version 1, document khởi tạo và structural regression checks.
+- [ ] Xác minh URL public sau Pages production deploy.
+- [ ] Bổ sung validator runtime phía server/Admin khi có luồng chỉnh sửa; kiểm tra schema trước khi publish.
+- [ ] Chuẩn bị cache/fallback/version handling trong APK.
+- [ ] Tích hợp Admin chỉnh config an toàn (chỉ khi generic R2/file workflow không đáp ứng).
+- [ ] Chỉ sau khi test backend/config hoàn tất mới gom một thay đổi APK tối thiểu để đọc config.
 
 ### Phase 3 — Analytics độc lập
 - [ ] AN1–AN2: schema, ingest API, D1, chống trùng, retention, tests.
@@ -235,7 +237,8 @@ Cần build APK cho:
 - CI [41159251879](https://github.com/blamag999/read-along-android/actions/runs/41159251879) success: `npm test`, JS syntax, Pages Functions syntax và isolation checks đều pass.
 - Đã thêm JSON Schema v1 cho catalog, marker, Remote Config và Analytics event; thêm structural regression tests vào `npm test`.
 - CI `41158627378` đã pass trên commit test `24b4058ec05abb1e27ddff65f1ec0978a7fe5558`; test bao gồm contract schema và manifest seed hiện tại.
-- Schema mới chỉ là contract định hướng; chưa tích hợp runtime validator hoặc endpoint Remote Config/Analytics thời lượng.
+- Schema mới chỉ là contract định hướng; chưa tích hợp runtime validator hoặc endpoint Analytics thời lượng.
+- Phase 2 đã bắt đầu ở phần không cần APK: chọn static Pages JSON và thêm `admin/public/remote-config.json` phiên bản 1, hiện chỉ có cấu trúc rỗng nên chưa ảnh hưởng reader. URL production cần xác minh sau deploy.
 - Phase 1: inventory, JSON Schema v1, manifest compatibility regression, CI validation và API overlap review đã hoàn tất. Marker precedence hiện tại đã được ghi nhận; schema envelope v1 tương thích legacy đã được draft. Còn pending runtime conflict policy/migration.
 - CI run `41159251879` pass cho commit `11bdba3ffa20801b8eebaf6728aa9c58f365712c`; run trước `41159157324` fail do lỗi chèn assertion vào giữa file test, đã sửa bằng cách viết lại test file hoàn chỉnh. Không có runtime code bị ảnh hưởng.
 - Tiến độ: Phase 0 hoàn tất; Phase 1 đang thực hiện.
