@@ -574,3 +574,13 @@ Khi một công việc trong PLANNING hoàn tất:
 - Commit bỏ tab Tổng quan: `fb1facd2478e7afd80b934a5056fecb559d92126`; commit cập nhật kiểm thử: `7d88475bfaf2d6e3676228eeb1244d3a6afa7ccf`.
 - Phạm vi nghiệm thu theo xác nhận người dùng: Dashboard beta hoạt động ổn. Không suy diễn đây là nghiệm thu toàn bộ regression APK Core, Android TV, OTA hoặc marker migration; các việc đó tiếp tục nằm trong PLANNING.
 - Không thay đổi `main`, APK, D1 schema hoặc dữ liệu R2.
+
+
+### 2026-10-31 — Git-based recovery và đối chiếu sau handover
+
+- Bổ sung quy trình khôi phục tiến trình vào README: Git history/working tree là nguồn sự thật về thay đổi; tài liệu handover không được xem là trạng thái hiện tại nếu HEAD hoặc working tree đã vượt mốc.
+- Tạo `RECOVERY.md` trên beta để ghi `last_handover_commit`, `last_reviewed_head`, trạng thái recovery, phát hiện sau bàn giao và quy trình đối chiếu. README hướng dẫn kiểm tra cả commit đã push lẫn staged/unstaged/untracked trong working tree; thay đổi local chưa push không thể phục hồi từ GitHub.
+- Đối chiếu hiện trạng marker: `modules/marker-resolver.js`, `tests/marker-resolver.test.js`, `docs/architecture/marker-and-api-review.md` đã tồn tại ở beta. Resolver là pure module, chưa tích hợp reader/runtime. CI resolver được ghi nhận success: [41164224271](https://github.com/blamag999/read-along-android/actions/runs/41164224271). Không có cơ sở kết luận migration/runtime đã hoàn tất; tiếp tục giữ các mục tương ứng trong PLANNING.
+- Mốc handover trước: `1ea6bb3124bafc9c5819d78146fa2cafb8206f40`. Beta README recovery commit: `fb521a9927fa4e81d414049208f30e296266c80e`; RECOVERY file commit được ghi trong GitHub sau khi tạo.
+- README beta blob: `0fac10f7d304663ff96726971b2eab046e564ee6`. Đồng bộ README lên main bị branch rule từ chối vì main yêu cầu Pull Request; không bypass và không push trực tiếp. Sẽ mở PR README-only để giữ nguyên quy tắc hai nhánh.
+- Không thay đổi APK runtime, không build APK, không promote code hoặc sửa main trực tiếp.
