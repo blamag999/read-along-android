@@ -51,6 +51,7 @@ assert.equal(marker.$defs.versionedEnvelope.properties.markers.$ref, '#/$defs/ma
 assert.equal(marker.$defs.versionedEnvelope.additionalProperties, false, 'Versioned marker envelope rejects unknown fields');
 assert.equal(marker.$defs.markerMap.minProperties, undefined, 'An empty marker map must represent clear-all');
 
+assert.deepEqual(config.required, ['schemaVersion', 'configVersion', 'issuedAt', 'features', 'readerDefaults', 'announcements']);
 assert.equal(config.properties.schemaVersion.const, 1);
 assert.equal(remoteConfig.schemaVersion, 1);
 assert.equal(Number.isInteger(remoteConfig.configVersion), true);
