@@ -22,17 +22,28 @@
 
 ## 2. Quy ước làm việc với Git
 
-### Nhánh
+> **BẮT BUỘC ĐỌC TRƯỚC MỌI THAY ĐỔI:** Trước khi tạo/sử dụng nhánh, mở PR, commit hoặc sửa mã, phải đọc mục này và kiểm tra trạng thái thực tế của `main`, `beta`, `testing`. Nếu ghi chú lịch sử hoặc tài liệu cũ ở phần dưới mâu thuẫn với quy ước này, **mục này là quy định hiện hành và được ưu tiên**. Không lặp lại quy trình nhánh tạm riêng lẻ đã ghi trong các nhật ký lịch sử.
 
-- Nhánh tích hợp `beta`; nhánh phát hành stable `main`.
-- Mỗi đợt sửa/kiểm thử dùng duy nhất nhánh tạm **`testing`** được tạo từ `beta`; gom mọi chỉnh sửa liên quan vào nhánh này.
-- Khi hoàn tất, tạo một PR `testing` → `beta`; kiểm thử tiếp và sửa bổ sung ngay trên `testing`. Sau khi PR được merge, xóa nhánh `testing`.
-- Không tạo các nhánh `feature/*` hoặc `fix/*` riêng lẻ cho từng lỗi trong cùng đợt.
-- Chỉ đưa bản đã kiểm thử từ `beta` lên **`main`** khi người dùng yêu cầu phát hành stable hoặc xác nhận rõ việc promote.
-- Không tự ý force-push, viết lại lịch sử, xóa nhánh, xóa secrets hoặc thay đổi khóa ký.
-- Trước khi sửa: đọc README và workflow liên quan, kiểm tra commit mới nhất của `beta`/`main`, xem diff và các issue mở.
-- Sau khi sửa: chạy kiểm tra phù hợp, đọc lại diff, commit với thông điệp mô tả đúng thay đổi và báo rõ phần nào đã/chưa được kiểm thử.
-- Không tuyên bố build, cài đặt, OTA hoặc phát hành thành công nếu chưa có kết quả thực tế từ workflow/thiết bị.
+### Quy ước nhánh hiện hành — tối giản
+
+- `main`: nhánh **Stable**, chỉ cập nhật khi người dùng yêu cầu phát hành stable hoặc xác nhận rõ việc promote từ beta.
+- `beta`: nhánh phát triển/tích hợp chính. Mặc định thực hiện thay đổi trực tiếp trên `beta` theo quy trình commit và CI của repository.
+- `testing`: nhánh kiểm chứng có sẵn, chỉ dùng khi thật sự cần cô lập một đợt kiểm thử hoặc khi người dùng yêu cầu. Không tự động tạo mới, không coi đây là nhánh bắt buộc cho mỗi đợt sửa.
+- **Không tạo nhánh mới cho từng tính năng, lỗi, PR hoặc đợt sửa.** Không tạo các nhánh đặt tên như `feature/*`, `fix/*`, `testing-*` hay nhánh tạm tương tự nếu chưa có yêu cầu rõ ràng của người dùng.
+- Không tạo nhánh thay thế chỉ vì `testing` đang cũ/stale; trước tiên kiểm tra khả năng cập nhật và sử dụng quy trình trực tiếp trên `beta`.
+- Chỉ đề xuất ngoại lệ khi có lý do kỹ thuật cụ thể (ví dụ cần cô lập thay đổi có rủi ro cao); phải nêu lý do và xin phép trước khi tạo nhánh mới.
+- Không tự ý xóa bất kỳ nhánh hiện có nào. Việc dọn nhánh chỉ thực hiện khi người dùng yêu cầu rõ ràng.
+- Không tự ý force-push, viết lại lịch sử, xóa secrets hoặc thay đổi khóa ký.
+
+### Quy trình mặc định
+
+1. Đọc README/roadmap và workflow liên quan; kiểm tra commit mới nhất, trạng thái CI, PR, issue và release.
+2. Xác nhận đang làm trên đúng repository `blamag999/read-along-android`; không gọi API hoặc dùng tài nguyên từ dự án khác.
+3. Thực hiện thay đổi trực tiếp trên `beta` trừ khi có chỉ thị khác hoặc ngoại lệ đã được người dùng chấp thuận.
+4. Thêm/cập nhật test, chạy kiểm tra phù hợp và đọc lại diff trước khi commit.
+5. Commit lên `beta`, theo dõi CI; xử lý lỗi ngay trên cùng nhánh `beta`, không tạo nhánh mới để né CI.
+6. Cập nhật README/roadmap sau mỗi đợt công việc: ghi rõ thay đổi, commit SHA, CI, deploy/release, kiểm thử thực tế và việc còn pending.
+7. Chỉ promote `beta` → `main` khi người dùng yêu cầu hoặc xác nhận rõ phát hành stable.
 
 ### Build và phát hành
 
@@ -44,6 +55,13 @@
 6. Không tự đoán số phiên bản tiếp theo; đọc logic workflow và danh sách Releases tại thời điểm chạy.
 
 APK cập nhật đè phải dùng **cùng khóa ký** với ứng dụng đã cài. Không đưa keystore, mật khẩu, token hay secrets vào README, issue, log hoặc mã nguồn. Sao lưu khóa ký an toàn.
+
+### Bài học quy trình — không lặp lại việc tạo nhánh ngoài quy ước
+
+- PR #39 đã được thực hiện qua nhánh phụ `testing-catalog-cleanup`. Đây là thao tác không phù hợp với mục tiêu tối giản và quy ước nhánh của dự án; không lấy cách làm đó làm tiền lệ.
+- Nhánh `testing-catalog-cleanup` vẫn được giữ nguyên vì không được tự ý xóa nhánh. Không tạo thêm nhánh tương tự.
+- Từ các phiên làm việc sau, phải đọc mục này trước khi thao tác Git. Mặc định chỉ dùng `beta` cho phát triển/tích hợp, `main` cho stable, và `testing` khi có nhu cầu kiểm chứng thực sự.
+- Nếu một đoạn nhật ký cũ phía dưới mô tả việc tạo nhánh tạm cho từng PR, đó chỉ là lịch sử đã xảy ra, **không phải hướng dẫn hiện hành**.
 
 ## 3. OTA: các điểm cần duy trì và kiểm thử
 
