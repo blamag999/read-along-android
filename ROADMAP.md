@@ -389,3 +389,10 @@ Khi một công việc trong PLANNING hoàn tất:
 - Commit: `d79b010a6906c33464852b8719defff0e37f94af`.
 - Chờ CI mới; chưa nghiệm thu collector. README không đổi.
 
+
+### 2026-10-31 — Chốt batch AN3 collector để chạy full regression
+
+- Bổ sung assertion xác nhận entry point `window.ReadAlongAnalytics.openSettings` có sẵn; giữ các test consent/timing/audio/visibility/page lifecycle/PDF close/privacy.
+- Commit chốt batch: `c9450a150add931fb971934a6234b7b452f4f10b`; marker `[test]` yêu cầu chạy full regression.
+- Code collector đã bỏ in-flight serialization guard theo finding trước đó. Chờ run mới; không build APK trước khi CI pass và review xong.
+
