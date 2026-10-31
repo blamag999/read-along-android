@@ -517,9 +517,9 @@ async function runDiagnostics() {
         match.textContent = "Tệp đối chiếu: " + finding.candidateKey + (finding.similarity ? " · " + finding.similarity + "%" : "");
         actionCell.append(match);
       }
-      if (finding.suggestedRename && Number(finding.compatibilityConfidence) >= 95) {
+      if (finding.suggestedRename && (Number(finding.similarity) >= 95 || finding.code === "rename_audio_part")) {
         actionCell.append(actionButton("Duyệt gợi ý đổi tên", async () => {
-          const destination = prompt("Xác nhận tên mới cho tệp này (độ tin cậy " + Number(finding.compatibilityConfidence) + "%):", finding.suggestedRename);
+          const destination = prompt("Xác nhận tên mới cho tệp này (độ tin cậy " + (Number(finding.similarity) || 100) + "%):", finding.suggestedRename);
           if (!destination || destination === finding.key) return;
           if (!allowed.test(destination)) { setStatus("Tên tệp hoặc định dạng không hợp lệ.", true); return; }
           try {
@@ -783,7 +783,7 @@ async function loadAnalyticsDashboard() {
       }
       body.append(row);
     }
-  } catch (error) { status.textContent = "Không tải được Dashboard: " + error.message; }
+  } catch (error) { status.textContent = "Không tải được Dashboard: " + error.message; setStatus("Không tải được dữ liệu tổng quan: " + error.message, true, "overview"); setStatus("Không tải được thống kê: " + error.message, true, "analytics"); }
   finally { button.disabled = false; }
 }
 $("refreshAnalyticsBtn").addEventListener("click", loadAnalyticsDashboard);\n$("overviewRefreshBtn").addEventListener("click", loadAnalyticsDashboard);
@@ -805,7 +805,7 @@ function switchTab(name) {
   }
   sessionStorage.setItem("readalong-admin-tab", name);
   if (name === "analytics" || name === "overview") loadAnalyticsDashboard();
-  if (name === "audit") loadAuditEntries();
+  if (name === "audit") { const details = $("auditRows").closest("details"); details.open = true; loadAuditEntries(); }
   if (name === "diagnostics" && $("diagnosticsPanel").dataset.scanned !== "true") setStatus("Chưa có kết quả mới. Chọn Quét thư viện để bắt đầu.", false, "diagnostics");
 }
 for (const [key, id] of Object.entries(tabButtons)) $(id).addEventListener("click", () => switchTab(key));
