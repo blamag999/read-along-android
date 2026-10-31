@@ -583,3 +583,9 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - [x] Add regression contracts; workflow #550 passed full npm test, JS syntax, Pages Functions syntax and isolation checks.
 - [ ] Build one beta APK and verify the artifact/release/OTA publication.
 - [ ] Install and verify the reader viewport on device.
+
+
+### Bàn giao — Menu OTA compact (2026-11-01)
+- [x] Nhóm Kênh OTA, Phiên bản đang cài và Kiểm tra cập nhật thành một section gọn; giữ nguyên các ID DOM để không đổi luồng OTA.
+- [x] Bỏ icon và mô tả phụ dư thừa; CSS thu gọn chiều cao và khoảng cách.
+- [ ] CI regression và APK/device acceptance còn chờ xác minh.
