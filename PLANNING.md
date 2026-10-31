@@ -87,14 +87,20 @@
 - [x] AN3.4 Chỉ đo khi PDF mở + document visible; listening chỉ khi audio phát + visible; monotonic clock, heartbeat 60s, clamp interval tối đa 120s.
 - [x] AN3.5 Gửi trực tiếp tới endpoint cố định; no offline queue/retry; lỗi request thì drop; không block startup/playback.
 - [x] AN3.6 Không gửi bookId, title, filename, path, URL hoặc document/audio content.
-- [x] AN3.7 Automated regression hoàn tất: PDF switch/close, audio play/pause/ended, foreground/background, rotation, pagehide/pageshow, opt-out, privacy, offline drop/no retry, eventId/sequence và fetch pending không block reader lifecycle. CI [41167810567](https://github.com/blamag999/read-along-android/actions/runs/41167810567) success; rotation regression [41167772447](https://github.com/blamag999/read-along-android/actions/runs/41167772447) success. Kiểm thử WebView/Android thật vẫn pending sau APK build.
-- [x] AN3.8 Build beta APK hoàn tất từ commit `85475373bab4813589cf0d3c0777fe8c27df1da7`; workflow [41167887202](https://github.com/blamag999/read-along-android/actions/runs/41167887202) success, full regression pass, signed APK build/verification pass, artifact và Release `v1.3.7` đã publish. APK: https://github.com/blamag999/read-along-android/releases/download/v1.3.7/read-along-v1.3.7-android.apk. SHA-256 APK: `a4f4f5e85f04af05a53925888685ed28b82ba02867571a4ffe84769bcaf06299`. Artifact archive SHA-256: `6f70ed03519fc7b0c739908d114ef7c6153e5d5dd17947cd49141b7a47e3576c`. Chưa có xác nhận người dùng cài/kiểm thử thực tế: consent UI, opt-in/off, thời lượng đọc/nghe, offline và playback vẫn pending; Android TV pending.
+- [x] AN3.7 Automated regression hoàn tất: PDF switch/close, audio play/pause/ended, foreground/background, rotation, pagehide/pageshow, opt-out, privacy, offline drop/no retry, eventId/sequence và fetch pending không block reader lifecycle. CI [41167810567](https://github.com/blamag999/read-along-android/actions/runs/41167810567) success; rotation regression [41167772447](https://github.com/blamag999/read-along-android/actions/runs/41167772447) success. Người dùng xác nhận đã hoàn tất kiểm tra thực tế APK v1.3.7, không phát hiện lỗi trong đợt kiểm tra. Đối chiếu số liệu đọc/nghe chờ Dashboard AN4. Android TV vẫn pending.
+- [x] AN3.8 Build beta APK hoàn tất từ commit `85475373bab4813589cf0d3c0777fe8c27df1da7`; workflow [41167887202](https://github.com/blamag999/read-along-android/actions/runs/41167887202) success, full regression pass, signed APK build/verification pass, artifact và Release `v1.3.7` đã publish. APK: https://github.com/blamag999/read-along-android/releases/download/v1.3.7/read-along-v1.3.7-android.apk. SHA-256 APK: `a4f4f5e85f04af05a53925888685ed28b82ba02867571a4ffe84769bcaf06299`. Artifact archive SHA-256: `6f70ed03519fc7b0c739908d114ef7c6153e5d5dd17947cd49141b7a47e3576c`. Người dùng xác nhận hoàn tất kiểm tra APK v1.3.7, không phát hiện lỗi trong đợt kiểm tra. Kiểm tra đối chiếu số liệu đọc/nghe chuyển sang AN4 Dashboard; Android TV vẫn pending.
 
 ### AN4 — Dashboard
 
-- [ ] Xây dashboard Admin theo ngày/tuần/tháng/năm.
-- [ ] Có tổng thời gian đọc, tổng thời gian nghe, phiên, thiết bị/nền tảng và thống kê theo sách trong phạm vi dữ liệu được phép.
-- [ ] Có phân trang/lọc và phân biệt dữ liệu thiếu với giá trị 0.
+- [x] Chốt KPI chính: thời gian đọc, thời gian nghe, tổng thời gian sử dụng và thiết bị hoạt động; bỏ KPI phiên hoạt động/ngày theo yêu cầu người dùng.
+- [x] Thêm bộ lọc 7/30/90 ngày và 12/24 tháng; xu hướng đọc/nghe theo ngày/tuần/tháng; breakdown nền tảng.
+- [x] Thêm thống kê thư viện từ manifest đã xuất bản: số đầu sách, PDF, phần audio và sách có JSON đồng bộ.
+- [x] Thêm tình trạng lần quét thư viện gần nhất: số tệp đã kiểm tra, lỗi nghiêm trọng, cảnh báo, thời điểm và trạng thái quét.
+- [x] API Dashboard yêu cầu phiên Admin; raw analytics chỉ truy vấn trong cửa sổ lưu 90 ngày, aggregate daily tối đa 24 tháng.
+- [ ] Hoàn tất regression CI cho API, date validation, retention, DOM và các trạng thái manifest/scan.
+- [ ] Deploy Pages và kiểm tra Dashboard thực tế; đối chiếu thời lượng đọc/nghe sau khi người dùng bật opt-in.
+- [ ] Không thống kê theo từng sách đã đọc: collector không gửi bookId/tên sách theo privacy contract; không mở rộng thu thập chỉ để có chỉ số này.
+- [ ] Phân biệt rõ không có dữ liệu với giá trị 0; cảnh báo kết quả quét là lần quét gần nhất, không khẳng định thời gian thực.
 - [ ] Dashboard/report thay đổi độc lập không cần build APK.
 
 ## P2 — Nội dung và cấu hình UI độc lập
