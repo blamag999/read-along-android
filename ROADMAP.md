@@ -148,3 +148,10 @@ Khi một công việc trong PLANNING hoàn tất:
 - CI [41161083538](https://github.com/blamag999/read-along-android/actions/runs/41161083538) success trên commit `0f8a9bbc4645d1e708c4aff5d08d90923e1a178f`; bao gồm toàn bộ `npm test`, preflight validator và các regression suites. Các commit tài liệu theo sau không thay đổi mã chạy.
 - Đây là contract + CI preflight, **chưa phải** xác minh Cloudflare Pages production endpoint hoặc bảo đảm mọi đường publish đều bị gate. Endpoint `https://read-along-admin.pages.dev/remote-config.json` chưa đọc được qua công cụ kiểm tra; cần xác minh sau deployment.
 - Chưa tích hợp Data Client vào APK, không build APK, không thay đổi main.
+
+
+### 2026-10-31 — Cloudflare Pages deploy-time Remote Config gate
+- Xác minh Cloudflare Pages project hiện tại là `read-along-admin`, source đúng repository `blamag999/read-along-android`, production branch `beta`, root directory `admin`, output directory `public`; không tạo Pages project mới.
+- Cấu hình build command của project thành `node scripts/validate-remote-config.js`. Validator được đặt trong `admin/scripts/`, cùng build root; do đó Pages build sẽ dừng nếu Remote Config JSON không đạt contract trước khi publish thư mục `public`.
+- Project-level build config đã được API trả về xác nhận có build command mới. Deployment khởi chạy đồng thời với lúc cập nhật setting có snapshot build command cũ, nên cần thêm một commit sau khi setting đã lưu để nghiệm thu deployment dùng gate mới.
+- Quy tắc version: mọi thay đổi nội dung Remote Config sau khi phát hành phải tăng `configVersion`; validator kiểm tra kiểu/giá trị dương nhưng không tự tăng version và không so sánh được với bản production trước đó. Người sửa config chịu trách nhiệm tăng version.
