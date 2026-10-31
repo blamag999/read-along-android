@@ -36,12 +36,13 @@ Observed in `app.js` and `modules/remote-sync.js`:
 Do not silently change the existing precedence until the marker contract is versioned. The safe migration sequence is:
 
 1. Keep legacy numeric/object marker parsing.
-2. Define a versioned envelope for new marker files, with `schemaVersion`, `revision`, `updatedAt`, `sourceId` and a `markers` object.
-3. Define explicit conflict rules:
-   - A user-selected local file is an explicit import and should apply only after confirmation or a clearly intentional import action.
-   - For normal online book opening, select the highest valid revision among the canonical published marker and the user's authenticated sync source.
-   - LocalStorage is a recovery candidate; compare its revision before applying it, rather than always treating it as newer or older.
-   - If legacy sources have no revision metadata and conflict, do not merge guesses. Keep the current source order for backward compatibility and show a clear source/status indicator.
+2. A proposed versioned envelope is now specified in `schemas/marker.schema.json`: `schemaVersion: 1`, monotonically increasing `revision`, ISO `updatedAt`, `sourceId` and a `markers` object. Legacy page-number maps remain accepted by the same schema.
+3. Proposed conflict rules for the runtime migration:
+   - A user-selected local file is an explicit import and remains highest priority only when the user intentionally selects/imports it.
+   - For normal online book opening, compare `revision` only among versioned copies of the same logical book; use `updatedAt` only as a deterministic tie-breaker. Never compare timestamps from untrusted device clocks as the sole freshness proof.
+   - LocalStorage is a recovery candidate; use its revision when present. Legacy localStorage without metadata follows the documented legacy fallback order.
+   - If legacy sources have no revision metadata and conflict, do not merge guesses. Preserve current legacy order for backward compatibility: R2 is loaded first, then a valid GitHub copy replaces it; if no valid R2 marker is available, folder JSON is tried, then GitHub, then localStorage.
+   - An empty `markers` object is valid and means the user intentionally cleared all markers; do not treat it as a missing file.
 4. Add tests for stale/newer revisions, equal revisions, missing metadata, invalid JSON, offline fallback, part-index bounds and legacy values.
 5. Migrate only after the reader can read both legacy and versioned formats. Do not rewrite or delete existing marker files automatically.
 
@@ -72,8 +73,9 @@ Do not silently change the existing precedence until the marker contract is vers
 - [x] Identify the incorrect "GitHub newer" assumption: there is no freshness comparison.
 - [x] Review current Admin usage, telemetry, diagnostics and catalog routes for actual functional overlap.
 - [x] Decide not to merge semantically distinct endpoints.
-- [ ] Design and approve the versioned marker envelope and conflict policy.
+- [x] Draft versioned marker envelope schema v1 while retaining legacy map support; allow empty maps for clear-all behavior.
+- [ ] Implement and test revision-aware conflict policy in the APK only after runtime migration is scheduled.
 - [ ] Add contract tests and backward-compatible reader migration.
 - [ ] Only then change runtime marker loading/sync behavior.
 
-No runtime code or user marker data was changed by this review.
+No runtime code or user marker data was changed by this review. The schema update is documentation/contract only; no marker files were rewritten.
