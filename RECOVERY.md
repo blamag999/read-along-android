@@ -7,11 +7,11 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover code/documentation checkpoint: `6b2fc0afb8b745f49874265e33d80023fa7fc3e1`.
-- Last reviewed functional HEAD on beta: `2e5725c4ebaf1948d7a0698d9cd838369375d057`
+- Last formal handover code/documentation checkpoint: `96fc15e8dcdcf0ab42961e23ac4d7138618c8174`.
+- Last reviewed functional HEAD on beta: `96fc15e8dcdcf0ab42961e23ac4d7138618c8174`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
-- Latest recovery checkpoint: standardized OTA user-facing notifications; tests in b8841b9, a36f69e and ed13753; runtime commit 2e5725c4ebaf1948d7a0698d9cd838369375d057. Full regression and pre-build checks passed; signed APK build/OTA publication are running in workflow 41211770726.
+- Latest recovery checkpoint: docs-only plan and audit for release notes and app notifications; no runtime files changed. OTA notification implementation remains at prior checkpoint; build workflow 41211770726 status must be checked before claiming APK availability.
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
 
 ## Phát hiện sau mốc bàn giao trước
@@ -231,3 +231,11 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Test commits: `b8841b9fdd3568ea8fc7e3021fffcec03ee91700`, `a36f69ecc67e16a0e8ffb9aa6c513e21f5d2446a`, `ed13753de05d7f28b797c3164f96e6c1be3dfd83`. Runtime commits: `68054fd8a7f60df8c39729ed7cc7296d063fb30a`, `2e5725c4ebaf1948d7a0698d9cd838369375d057`.
 - Build workflow [41211770726](https://github.com/blamag999/read-along-android/actions/runs/41211770726) was queued for final runtime commit at the time of this checkpoint. Wait for full regression, signed APK build, signature verification, R2 OTA publication and GitHub Release creation before reporting APK readiness.
 - `main` remains unchanged; no device acceptance has been claimed.
+
+## Bàn giao kế hoạch Release Notes và rà soát thông báo — 2026-10-31
+
+- Đối chiếu beta HEAD trước phiên: `5e876ebd12570bd22b6f4a33fbc706150545fb98`; PLANNING/ROADMAP/RECOVERY đã được đọc trước khi cập nhật.
+- Đã thêm hai hạng mục chưa hoàn thành vào PLANNING: (1) Release Notes tự động, phân loại commit và lấy mốc theo đúng channel; (2) audit/rút gọn thông báo nội bộ app.
+- Đã rà soát các alert/confirm/prompt/toast trong `app.js`, ghi các câu đề xuất và nguyên tắc xử lý lỗi vào PLANNING. Không sửa `app.js` hoặc file runtime nào.
+- Commit PLANNING đầu: `3644258c70ea0bbe6e052d030f546a0c356fe08c`; commit PLANNING audit: `3acea281aa64040e4e74b1c25557007dbd56a203`; commit ROADMAP: `96fc15e8dcdcf0ab42961e23ac4d7138618c8174`.
+- Không chạy regression/CI, không build APK, không deploy, không thay đổi OTA hoặc main. Việc tiếp theo: người dùng duyệt nội dung; sau đó mới thực hiện batch sửa thông báo với regression tests.
