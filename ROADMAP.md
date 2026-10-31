@@ -585,3 +585,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Bổ sung ba vùng chạm mờ trên trang: 25% trái lật trang trước, 50% giữa play/pause, 25% phải lật trang sau; vuốt ngang vẫn lật trang và tránh kích hoạt tap lần hai.
 - Regression coverage mới trong tests/modules.test.js và tests/native-lifecycle.test.js. Phạm vi thiết kế/kiểm thử của batch này là điện thoại Android màn hình cảm ứng; không thực hiện tối ưu Android TV.
 - Tại thời điểm ghi mục này, code đã được chuẩn bị cho commit beta; CI/build APK và nghiệm thu thiết bị chưa được xác nhận. Xem PLANNING để biết các bước acceptance còn lại.
+
+
+### CI status — 2026-10-31
+
+- Functional implementation commit: c988a4ab31d70f41a2bc672eac7541f7b4c1c67e (beta).
+- Full npm test suite, Pages Functions syntax and isolation checks passed in workflow run 41189021463.
+- Native updater/lifecycle integration and Android asset preparation passed.
+- At last status check, the signed APK Gradle build step was still in progress; APK checksum verification and R2 OTA publication are not yet confirmed. Do not treat this batch as install-ready until run 41189021463 completes successfully.

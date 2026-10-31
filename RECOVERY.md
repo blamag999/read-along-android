@@ -119,3 +119,11 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Phiên đọc local hiện tại và hai checkpoint trước đó được giữ lại; đóng sách lưu và giải phóng tài nguyên. Mở lại hỏi resume; từ chối resume bắt đầu từ đầu và vẫn có thể chọn checkpoint.
 - Native MainActivity được workflow tích hợp với readalong-back-pressed và readalong-user-leave; plugin AppLifecycle cung cấp lệnh thoát Activity. Home/background dừng HTML audio và lưu vị trí; không bật foreground service.
 - CI/build/device acceptance chưa được đánh dấu DONE cho tới khi workflow thành công và người dùng xác nhận trên điện thoại. Không thay đổi main, OTA backend, R2/D1 hoặc signing key.
+
+
+## Latest functional commit — 2026-10-31
+
+- Beta functional code commit: c988a4ab31d70f41a2bc672eac7541f7b4c1c67e. This follows the main touch-first implementation commit 160bca36376a9573ca481fbcc67a09eb9cc4cc36 and the corrected final-page spread test commit 88087ece0072c5b55bc7c89fe6e835aa89350442.
+- Close-book cleanup additionally invalidates pending audio-load callbacks and queued PDF render requests before the next book is opened.
+- Workflow run 41189021463: npm tests and pre-build checks passed; Android native integration passed. APK Gradle build was still running at the last check. No claim of APK availability until signing/checksum and R2 publish steps complete.
+- Device acceptance is still required on a touch-screen Android phone. Android TV is out of scope for this batch.
