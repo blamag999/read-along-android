@@ -67,3 +67,5 @@ assert.ok(script.includes('window.addEventListener("hashchange", handleRoute)'),
 
 assert.ok((script.match(/switchTab\("library"\)/g) || []).length >= 2, 'Session restore and OTP login must both open Library');
 console.log('Admin dashboard, task status, theme, library operation and diagnostics tests passed.');
+
+// Regression rerun after correcting auth-tab test formatting.
