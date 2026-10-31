@@ -513,3 +513,10 @@ Quy tắc bảo trì:
 - Khu vực quản trị không còn tab chuyển qua lại. Danh sách R2, công cụ quét lỗi và xuất bản danh mục nằm trong cùng section; phần công cụ nâng cao thu gọn mặc định và chỉ mở khi cần.
 - Nút tạo thư mục và tải tệp lên có cùng chiều cao 44 px, căn giữa; bố cục mobile chia hai cột bằng nhau.
 - Nhãn phân trang đổi thành số mục quản lý; phần mô tả tách số bộ sách, thư mục và nhóm tệp độc lập.
+
+
+### Admin — chuyển đổi audio từ kết quả kiểm tra (2026-10-31)
+
+- Nút WMA → MP3 nằm trong dòng cảnh báo WMA ở **Kiểm tra & xuất bản danh mục**, không đặt trên danh sách quản lý sách.
+- Các phần WMA cùng bộ sách được xử lý chung; tiến độ theo giai đoạn được hiển thị trực tiếp dưới nút. Giữ nguyên WMA gốc và không ghi đè MP3 có sẵn.
+- Module thống kê được định hướng độc lập khỏi APK: giao diện/biểu đồ và tổng hợp dữ liệu đặt trong Admin Pages + API/D1; APK chỉ cần cung cấp sự kiện thời gian đọc tối thiểu một lần để có dữ liệu đáng tin cậy. Các chỉ số và biểu đồ mới sau đó có thể thay đổi độc lập mà không build APK lại.
