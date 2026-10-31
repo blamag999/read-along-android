@@ -674,3 +674,13 @@ Khi một công việc trong PLANNING hoàn tất:
 - Build signed release APK và bước rename/verify APK success; publish OTA objects lên Cloudflare R2 success; upload workflow artifacts và tạo GitHub Release/đính kèm files đều success.
 - Phạm vi runtime chỉ là giao diện header Thư viện. Badge biểu thị `state.playlist.length` (số sách trong playlist/catalog đã nạp), không phải tổng số file lưu offline IndexedDB.
 - Device acceptance vẫn pending: cần kiểm tra portrait 320–600 px, nút Thư viện/badge, Menu và thao tác mở sách trên thiết bị thật. Không promote `main`/stable.
+
+
+## 2026-10-31 — Rút gọn 4 hộp thoại Confirm (beta)
+
+- Người dùng duyệt chính xác 4 nội dung: đóng sách `Đóng sách “[Tên sách]”?`; thoát ứng dụng `Bạn muốn thoát Read Along?`; khôi phục vị trí `Tiếp tục xem: [Thông tin vị trí]?`; xóa marker `Xóa tất cả mốc thời gian của sách?`.
+- Runtime chỉ thay 4 chuỗi trong `app.js`; giữ nguyên điều kiện confirm, nhánh Có/Không, `closeCurrentBook()`, luồng thoát Capacitor, xử lý từ chối khôi phục vị trí và thao tác xóa/lưu marker. Các toast/alert/confirm khác không được chọn không thay đổi.
+- Regression assertions mới trong `tests/contracts.test.js` xác nhận 4 chuỗi đã duyệt, nhánh từ chối khôi phục, guard trước khi xóa marker và xác nhận OTA vẫn nguyên văn.
+- Test commit: `d219ce0a109a7202c3a10a51b68ceada5b4dd792`; runtime commit chốt: `4949bae9693d6bf17ccb57af81c80680d74772cf` (`[build-apk]`).
+- GitHub Actions [run 41211507635](https://github.com/blamag999/read-along-android/actions/runs/41211507635): full regression suite, Pages syntax, isolation và release-channel validation đã PASS; signed APK build/verify, R2 OTA publication, artifact upload và GitHub Release còn đang chạy tại thời điểm ghi nhật ký.
+- Không thay đổi nội dung hộp thoại OTA `Tải và cài đặt bản cập nhật? Android có thể yêu cầu xác nhận.`; không chỉnh các toast/alert khác. Chưa promote main. Device acceptance chờ APK và kiểm tra thực tế.
