@@ -651,7 +651,7 @@ Khi một công việc trong PLANNING hoàn tất:
 
 ## Header hai action và kế hoạch kho offline — 2026-10-31
 
-- Đã sửa beta: header chỉ còn Thư viện sách và Menu. Nút Đóng sách riêng bị loại bỏ; Android Back vẫn đi qua luồng đóng sách hiện hữu và lưu phiên đọc.
+- Đã sửa beta: header chỉ còn Thư viện sách và Menu. Điều khiển vừa trang/hai trang/zoom, ẩn-hiện vùng chọn file và quản lý mốc thời gian đều nằm trong Menu. Nút Đóng sách riêng bị loại bỏ; Android Back vẫn đi qua luồng đóng sách hiện hữu và lưu phiên đọc.
 - Các thao tác ẩn/hiện vùng chọn tệp và quản lý mốc thời gian được chuyển vào Menu; chức năng quản lý marker local vẫn được giữ.
 - Đã bổ sung regression assertions cho cấu trúc header và menu. Chưa có CI sau batch này và chưa nghiệm thu trên thiết bị.
 - Kho offline 1 GiB với LRU, lưu trọn bộ PDF/audio/JSON và bảo toàn qua OTA mới là kế hoạch; chưa triển khai. Cần audit native storage và OTA cleanup trước khi chọn cách lưu.
