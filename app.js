@@ -30,7 +30,6 @@ const state = {
   waitingForManualPageTurn: false,
   pendingManualPage: null,
   resumeAfterManualTurn: false,
-  autoSeekAudio: true,
   isAudioDrivenChange: false,
 
   // CHẾ ĐỘ HIỂN THỊ
@@ -245,7 +244,7 @@ function saveReadingSession(force = false) {
     bookKey: state.currentBookKey, page: state.pageNum, audioIndex: state.currentAudioIndex,
     audioTime: Number.isFinite(dom.audioElement.currentTime) ? Math.max(0, dom.audioElement.currentTime) : 0,
     viewMode: state.viewMode, zoomScale: state.zoomScale, pageTurnMode: state.pageTurnMode,
-    autoSeekAudio: state.autoSeekAudio, updatedAt: now
+    updatedAt: now
   };
   const record = getReadingSessionRecordForBook(state.currentBookKey);
   const previous = record.current;
@@ -288,18 +287,13 @@ function restoreSelectedReadingCheckpoint() {
   state.timestampSpread = false;
   state.pageNum = Number.isInteger(restored.page) ? Math.max(1, Math.min(state.totalPages, restored.page)) : 1;
   state.currentAudioIndex = Number.isInteger(restored.audioIndex) ? restored.audioIndex : 0;
-  state.viewMode = ['fit-height', 'fit-width', 'two-pages'].includes(restored.viewMode) ? restored.viewMode : state.viewMode;
+  state.viewMode = 'fit-height';
   state.zoomScale = Number.isFinite(restored.zoomScale) ? Math.max(0.5, Math.min(3, restored.zoomScale)) : state.zoomScale;
   state.pageTurnMode = ['next', 'markers', 'off'].includes(restored.pageTurnMode) ? restored.pageTurnMode : state.pageTurnMode;
-  state.autoSeekAudio = typeof restored.autoSeekAudio === 'boolean' ? restored.autoSeekAudio : state.autoSeekAudio;
+  
   state.sessionRestorePending = true;
   state.lastSessionSaveAt = 0;
   dom.canvasWrapper.classList.toggle('two-page-mode', state.viewMode === 'two-pages');
-  dom.btnFitHeight?.classList.toggle('active', state.viewMode === 'fit-height');
-  dom.btnTwoPages?.classList.toggle('active', state.viewMode === 'two-pages');
-  if (dom.selPageTurnMode) dom.selPageTurnMode.value = state.pageTurnMode;
-  if (dom.chkAutoSeekAudio) dom.chkAutoSeekAudio.checked = state.autoSeekAudio;
-  updateZoomLabel();
   updateReadMenuState();
   renderCurrentSpread();
   if (state.currentStoryAudios[state.currentAudioIndex]) {
@@ -328,16 +322,10 @@ function restoreReadingSessionForCurrentBook() {
   if (['fit-height', 'fit-width', 'two-pages'].includes(session.viewMode)) {
     state.viewMode = session.viewMode;
     dom.canvasWrapper.classList.toggle('two-page-mode', state.viewMode === 'two-pages');
-    dom.btnFitHeight?.classList.toggle('active', state.viewMode === 'fit-height');
-    dom.btnTwoPages?.classList.toggle('active', state.viewMode === 'two-pages');
-    dom.btnTwoPages?.setAttribute('aria-pressed', String(state.viewMode === 'two-pages'));
   }
   if (Number.isFinite(session.zoomScale)) state.zoomScale = Math.max(0.5, Math.min(3, session.zoomScale));
   if (['next', 'markers', 'off'].includes(session.pageTurnMode)) state.pageTurnMode = session.pageTurnMode;
-  if (typeof session.autoSeekAudio === 'boolean') state.autoSeekAudio = session.autoSeekAudio;
-  if (dom.selPageTurnMode) dom.selPageTurnMode.value = state.pageTurnMode;
-  if (dom.chkAutoSeekAudio) dom.chkAutoSeekAudio.checked = state.autoSeekAudio;
-  updateZoomLabel();
+  
   updateReadMenuState();
   state.sessionRestorePending = true;
   updateReadingCheckpointsUI();
@@ -435,8 +423,6 @@ async function getBookFromLibrary(key) {
 
 // DOM ELEMENTS
 const dom = {
-  btnFitHeight: document.getElementById('btnFitHeight'),
-  btnTwoPages: document.getElementById('btnTwoPages'),
   btnAutoFlipToggle: document.getElementById('btnAutoFlipToggle'),
   btnOpenReadMenu: document.getElementById('btnOpenReadMenu'),
   readOptionsMenu: document.getElementById('readOptionsMenu'),
@@ -517,8 +503,6 @@ const dom = {
   btnRewind5: document.getElementById('btnRewind5'),
   btnForward5: document.getElementById('btnForward5'),
   btnReplayPage: document.getElementById('btnReplayPage'),
-  selPageTurnMode: document.getElementById('selPageTurnMode'),
-  chkAutoSeekAudio: document.getElementById('chkAutoSeekAudio'),
 
   btnCloseSyncModal: document.getElementById('btnCloseSyncModal'),
   syncModal: document.getElementById('syncModal'),
@@ -1217,8 +1201,6 @@ function initEvents() {
   dom.pdfFileInput.addEventListener('change', handlePdfFileSelect);
   dom.audioFileInput.addEventListener('change', handleAudioFileSelect);
 
-  dom.btnFitHeight.addEventListener('click', () => setViewMode('fit-height'));
-  dom.btnTwoPages.addEventListener('click', () => setViewMode(state.viewMode === 'two-pages' ? 'fit-height' : 'two-pages'));
   if (dom.btnOpenReadMenu && dom.readOptionsMenu) {
     dom.btnOpenReadMenu.addEventListener('click', () => {
       const isOpen = !dom.readOptionsMenu.classList.contains('hidden');
@@ -1236,27 +1218,25 @@ function initEvents() {
     });
   }
   if (dom.menuAutoFlip) dom.menuAutoFlip.addEventListener('click', () => {
-    if (dom.btnAutoFlipToggle) dom.btnAutoFlipToggle.click();
-    else {
-      dom.selPageTurnMode.value = state.pageTurnMode === 'next' ? 'off' : 'next';
-      dom.selPageTurnMode.dispatchEvent(new Event('change', { bubbles: true }));
-    }
+    state.pageTurnMode = state.pageTurnMode === 'next' ? 'off' : 'next';
+    state.waitingForManualPageTurn = false;
+    state.pendingManualPage = null;
+    state.resumeAfterManualTurn = false;
     updateReadMenuState();
+    saveReadingSession(true);
+    showToast(state.pageTurnMode === 'next' ? 'Đã bật tự động lật trang theo mốc.' : 'Đã tắt tự động lật trang.');
   });
   if (dom.btnAutoFlipToggle) {
     dom.btnAutoFlipToggle.addEventListener('click', () => {
       const enabled = state.pageTurnMode !== 'next';
       state.pageTurnMode = enabled ? 'next' : 'off';
-      dom.selPageTurnMode.value = state.pageTurnMode;
-      dom.btnAutoFlipToggle.classList.toggle('active', enabled);
+          dom.btnAutoFlipToggle.classList.toggle('active', enabled);
       dom.btnAutoFlipToggle.setAttribute('aria-pressed', String(enabled));
       dom.btnAutoFlipToggle.title = enabled ? 'Tự động lật trang: bật' : 'Tự động lật trang: tắt';
       updateReadMenuState();
       showToast(enabled ? 'Đã bật tự động lật trang theo mốc.' : 'Đã tắt tự động lật trang.');
     });
   }
-  dom.btnZoomIn.addEventListener('click', () => changeZoom(0.15));
-  dom.btnZoomOut.addEventListener('click', () => changeZoom(-0.15));
 
   initDragAndDrop();
 
@@ -1266,20 +1246,6 @@ dom.selPageTurnMode.value = state.pageTurnMode;
     dom.btnAutoFlipToggle.classList.toggle('active', autoFlipOn);
     dom.btnAutoFlipToggle.setAttribute('aria-pressed', String(autoFlipOn));
   }
-  dom.selPageTurnMode.addEventListener('change', (e) => {
-    state.pageTurnMode = e.target.value;
-    state.waitingForManualPageTurn = false;
-    state.pendingManualPage = null;
-    state.resumeAfterManualTurn = false;
-    showToast(
-      state.pageTurnMode === 'markers'
-        ? 'Đến mốc trang kế tiếp, âm thanh sẽ dừng chờ bạn lật trang; nếu không có mốc, âm thanh tiếp tục.'
-        : state.pageTurnMode === 'next'
-          ? 'Tự động lật trang theo mốc thời gian.'
-          : 'Đọc liên tục, không tự dừng hoặc chuyển trang.'
-    );
-  });
-  dom.chkAutoSeekAudio.addEventListener('change', (e) => { state.autoSeekAudio = e.target.checked; });
   dom.btnPageJump.addEventListener('click', jumpToEnteredPage);
   dom.btnRestoreReadingCheckpoint?.addEventListener('click', restoreSelectedReadingCheckpoint);
   dom.pageJumpInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') jumpToEnteredPage(); });
@@ -1684,7 +1650,7 @@ function loadAudioFromBlob(file) {
 }
 
 function isTwoPageLayout() {
-  return state.viewMode === 'two-pages' || state.timestampSpread === true;
+  return state.timestampSpread === true;
 }
 
 async function renderCurrentSpread(syncAudioToPage = false) {
@@ -1787,7 +1753,7 @@ async function renderCurrentSpread(syncAudioToPage = false) {
   // Chỉ tua audio nếu render thành công và vẫn tương ứng với trang đang chọn.
   // Render cũ hoàn tất muộn sau resize không được kéo audio về mốc trang cũ.
   if (renderSucceeded && syncAudioToPage && state.pageNum === leftPageNum &&
-      state.autoSeekAudio && !state.isAudioDrivenChange) {
+      !state.isAudioDrivenChange) {
     const rawTarget = state.pendingManualBackwardMarker || state.pageTimestamps[leftPageNum];
     state.pendingManualBackwardMarker = null;
     if (typeof rawTarget === 'number') {
@@ -1808,7 +1774,6 @@ async function renderCurrentSpread(syncAudioToPage = false) {
 function setViewMode(mode) {
   state.viewMode = mode;
   state.zoomScale = 1.0;
-  updateZoomLabel();
 
   dom.btnFitHeight.classList.toggle('active', mode === 'fit-height');
   dom.btnTwoPages.classList.toggle('active', mode === 'two-pages');
@@ -1829,12 +1794,7 @@ function changeZoom(delta) {
   const newZoom = Math.max(0.5, Math.min(3.0, state.zoomScale + delta));
   state.zoomScale = Math.round(newZoom * 100) / 100;
   saveReadingSession(true);
-  updateZoomLabel();
   if (state.pdfDoc) renderCurrentSpread();
-}
-
-function updateZoomLabel() {
-  dom.lblZoomLevel.textContent = `${Math.round(state.zoomScale * 100)}%`;
 }
 
 function changePage(delta) {
@@ -1855,15 +1815,13 @@ function changePage(delta) {
       duration: dom.audioElement.duration
     });
     if (previous) {
-      newPage = state.viewMode === 'two-pages'
-        ? window.ReadAlongPageSync.alignPage(previous.markerPage, 'two-pages')
-        : previous.startPage;
+      newPage = previous.startPage;
       state.pendingManualBackwardMarker = previous.marker;
-      state.timestampSpread = state.viewMode === 'two-pages' ? false : previous.spread;
+      state.timestampSpread = previous.spread;
     } else {
       state.timestampSpread = false;
     }
-  } else if (state.viewMode !== 'two-pages') {
+  } else {
     state.timestampSpread = false;
   }
 
@@ -2198,7 +2156,7 @@ function onAudioTimeUpdate() {
   const markerMatchesPart = marker => window.ReadAlongPageSync.markerMatchesPart(
     marker, currentPart, audioCount
   );
-  const step = state.viewMode === 'two-pages' ? 2 : 1;
+  const step = 1;
 
   if (state.pageTurnMode === 'markers') {
     const nextPage = state.pageNum + step;
@@ -2253,17 +2211,12 @@ function onAudioTimeUpdate() {
 
   const wasTwoPageLayout = isTwoPageLayout();
   let alignedPage;
-  if (state.viewMode === 'two-pages') {
-    state.timestampSpread = false;
-    alignedPage = window.ReadAlongPageSync.alignPage(target.page, 'two-pages');
-  } else {
-    const spread = window.ReadAlongPageSync.resolveTimestampSpread({
-      pageTimestamps: markers, page: target.page, totalPages: state.totalPages,
-      currentPart, audioCount
-    });
-    state.timestampSpread = spread.spread;
-    alignedPage = spread.startPage;
-  }
+  const spread = window.ReadAlongPageSync.resolveTimestampSpread({
+    pageTimestamps: markers, page: target.page, totalPages: state.totalPages,
+    currentPart, audioCount
+  });
+  state.timestampSpread = spread.spread;
+  const alignedPage = spread.startPage;
   if (alignedPage === state.pageNum && wasTwoPageLayout === isTwoPageLayout()) return;
 
   // A stale timeupdate must never undo a manual page turn. Backward alignment is
