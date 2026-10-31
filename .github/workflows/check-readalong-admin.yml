@@ -127,8 +127,15 @@ jobs:
 
               const latest = await fetch(endpoint + '?channel=beta');
               const latestBody = await latest.json();
-              if (latest.status !== 404 || latestBody.error !== 'OTA release not found') {
-                throw new Error('OTA storage/manifest response unexpected: ' + latest.status + ' ' + JSON.stringify(latestBody));
+              if (!latest.ok || latestBody.schemaVersion !== 1 || latestBody.channel !== 'beta' ||
+                  !/^\\d+\\.\\d+\\.\\d+$/.test(latestBody.version || '') ||
+                  !Number.isInteger(latestBody.versionCode) || latestBody.versionCode < 1 ||
+                  !Number.isInteger(latestBody.size) || latestBody.size < 1 ||
+                  !/^[a-f0-9]{64}$/i.test(latestBody.sha256 || '') ||
+                  !/^read-along-v.+-android\\.apk$/.test(latestBody.filename || '') ||
+                  typeof latestBody.notes !== 'string' ||
+                  !latestBody.downloadUrl?.startsWith('https://read-along-admin.pages.dev/api/readalong-admin/ota/download?channel=beta&version=')) {
+                throw new Error('OTA manifest contract failed: ' + latest.status + ' ' + JSON.stringify(latestBody));
               }
               ready = true;
               break;
@@ -138,5 +145,5 @@ jobs:
             await wait(10000);
           }
           if (!ready) throw new Error('OTA endpoint did not become ready');
-          console.log('Deployed OTA API routing, CORS and empty-channel response passed.');
+          console.log('Deployed OTA API routing, CORS and beta manifest contract passed.');
           NODE
