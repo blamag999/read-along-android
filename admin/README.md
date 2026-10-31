@@ -2,6 +2,14 @@
 
 Standalone web file manager for the Read Along R2 library. This app lives in the Read Along Android repository and is deployed as a dedicated Cloudflare Pages project with its own R2 binding, D1 database, TOTP secret, cookie, and session.
 
+### Hiển thị thư viện theo bộ sách
+
+- Danh sách chính nhóm theo thư mục và tên gốc chuẩn hóa chính xác: một bộ bắt đầu bằng PDF, bên dưới là các audio (sắp theo hậu tố phần P1, P2...) và JSON đồng bộ nếu có.
+- Mỗi bộ mặc định thu gọn; mở rộng để thao tác đổi tên/di chuyển hoặc xóa từng file. Số lượng, dung lượng và thời điểm cập nhật được tổng hợp ở hàng bộ sách.
+- Trạng thái nhóm thể hiện đủ file, thiếu PDF/audio, trùng PDF/JSON hoặc có audio WMA cần xử lý tương thích. Nhóm chỉ có audio/JSON vẫn được giữ để không thất lạc file.
+- File định dạng không thuộc PDF/audio/JSON hiển thị riêng trong mục “Chưa ghép được”; tìm kiếm khớp tên sách hoặc tên các file thành phần.
+- Ghép nhóm chỉ dựa trên tên chuẩn hóa và cùng thư mục, không dùng so khớp gần đúng. Phân trang tính theo bộ sách/thư mục thay vì số file thành phần.
+
 ## Architecture and isolation
 
 - Git repository: `blamag999/read-along-android`
