@@ -83,7 +83,7 @@ assert.ok(appSource.includes("showToast('Chưa có âm thanh. Hãy chọn tệp 
 assert.ok(appSource.includes("showToast('Không thể phát lại trang này. Hãy thử nhấn Phát.');"), 'Page replay error gives a concise recovery action');
 assert.ok(appSource.includes("alert('Thời gian không hợp lệ. Hãy nhập giây hoặc MM:SS.');"), 'Timestamp validation keeps its input format guidance');
 assert.ok(appSource.includes("alert('Tệp mốc thời gian không hợp lệ.');"), 'Invalid marker JSON uses concise terminology');
-assert.ok(appSource.includes("console.error('Không thể nạp âm thanh:', error);"), 'Technical audio errors remain available in console');
+assert.ok(appSource.includes("console.error('Lỗi khi nạp audio:', error);"), 'Technical audio load errors remain available in console');
 
 
 const releaseWorkflow = fs.readFileSync(path.join(__dirname, '..', '.github/workflows/build-android-apk.yml'), 'utf8');
