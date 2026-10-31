@@ -9,9 +9,9 @@
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
 - Last formal handover code/documentation checkpoint: `d13482e6ede435125600328ce05244231af8a14e` (ROADMAP handover record; source review baseline remains `d6faeb3b1667bebf5130a63851c6090785a4945e`).
 - Last reviewed functional/source HEAD on beta: `d6faeb3b1667bebf5130a63851c6090785a4945e`
-- Recovery status: `RECONCILED — 6 commit sau mốc handover cũ đã đối chiếu; cập nhật kế hoạch APK Core/Reader Menu; runtime chưa triển khai`
+- Recovery status: `DOCUMENTATION POLICY UPDATED — quyết định online-only media đã được ghi rõ; thay đổi lượt này chỉ cập nhật tài liệu, không xác minh lại toàn bộ runtime HEAD`
 - Recovery reviewed on: 2026-10-31
-- Latest recovery checkpoint: beta HEAD d6faeb3b1667bebf5130a63851c6090785a4945e được đối chiếu; 6 commit kể từ 50b7c496 chỉ thay đổi tài liệu. Phạm vi tinh gọn Reader/Menu và ranh giới APK Core đã được ghi nhận; chưa có runtime changes.
+- Latest policy update: quyết định không lưu PDF/audio offline đã được ghi vào README/ROADMAP/PLANNING/RECOVERY. Xem mục “Quyết định thay thế kế hoạch kho offline”; các checkpoint cũ bên dưới chỉ là lịch sử.
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
 
 ## Phát hiện sau mốc bàn giao trước
@@ -322,3 +322,12 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Online Reading Progress (nếu triển khai) là dữ liệu trạng thái đọc/nghe, tách biệt hoàn toàn với lưu trữ media offline.
 - Thay đổi hiện tại chỉ cập nhật tài liệu; không sửa runtime/API/workflow/R2/Cloudflare, không chạy CI/build APK và không thay đổi main.
 - Các mục lịch sử cũ được giữ để truy vết quyết định, nhưng khi lập kế hoạch hoặc khôi phục phải áp dụng quyết định mới này.
+
+
+## Cập nhật tài liệu online-only — 2026-10-31
+
+- PLANNING policy commit: `ff4a4bf0e3da7b71afd3e66d47667e52b52d78b7`; checklist formatting correction: `d8b8cec9e60f4f2a3f636d36b6f13bb4d6df3c91`; wording cleanup was applied afterward.
+- ROADMAP policy commit: `51671f1e4b757ca651c9b82b729cd2d175b8dbdc`; architecture-summary clarification was applied afterward.
+- RECOVERY decision record commit: `b2c0712cd9a26113e44041ed21fce236a1957184`.
+- README policy was committed on beta at `599e7138ff303484d26df49ffeb4abf794fd0e52`. Synchronization to main is proposed as README-only PR [#41](https://github.com/blamag999/read-along-android/pull/41); it is open and not merged because main requires pull requests.
+- Scope: documentation only. No runtime/source, API, workflow, R2/Cloudflare, OTA or signing changes; no CI, APK build, deploy or device test was run.
