@@ -268,7 +268,8 @@ function libraryAssetGroups(entries) {
     .replace(/\bbook\b/gi, " ").replace(/[^\p{L}\p{N}]+/gu, " ")
     .replace(/\s+/g, " ").trim().toLocaleLowerCase("vi");
   for (const file of files) {
-    if (file.key === "books.json") { ungrouped.push(file); continue; }
+    // The root catalog manifest is managed only by the dedicated preview/publish workflow.
+    if (file.key === "books.json") continue;
     const ext = extension(file.name);
     const isPdf = ext === ".pdf", isJson = ext === ".json", isAudio = audioExtensions.has(ext);
     if (!isPdf && !isJson && !isAudio) { ungrouped.push(file); continue; }
