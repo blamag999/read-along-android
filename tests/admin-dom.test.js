@@ -34,3 +34,5 @@ assert.ok(!html.includes('id="showAnalyticsBtn"'), "Analytics must not be hidden
 // [test] Public dashboard landing page and OTP return navigation batch.
 
 // [test] Re-run after removing obsolete home-stat DOM references.
+
+// [test] Final regression after aligning DOM test with analytics dashboard loader.
