@@ -664,3 +664,13 @@ Khi một công việc trong PLANNING hoàn tất:
 - Số đếm hiện lấy từ state.playlist.length (danh sách sách đã được nạp vào thư viện/catalog trong phiên), không phải tổng bản ghi PDF/audio blob riêng trong IndexedDB. Không thay đổi schema hoặc dữ liệu IndexedDB.
 - Commit code: HTML 2c9e181255ba94dfff3e865e1f218875d981d205; CSS 6b24d50fe6e3dc110fe74a8185bf41ed50002523; app.js 87b81e5e3b8b4686e2022f5b94efb964174936f9; regression assertion 23cc765849189a1357b89ee73fe47783e59f6aa4.
 - Chưa có CI trên commit chốt, chưa build APK và chưa kiểm tra thiết bị thật. Không promote main.
+
+
+### 2026-10-31 — Portrait library header: CI, signed APK and OTA release verified
+
+- Commit chốt code: `61b383329ac4a6d5fcc1b3e54f3e5249390e50c2` (`[build-apk] Finalize responsive library header and verify beta APK`). Bao gồm HTML nút Thư viện, CSS responsive/focus-visible, badge số lượng trong app và regression assertions ở các commit trước đó.
+- GitHub Actions [run 41205868772](https://github.com/blamag999/read-along-android/actions/runs/41205868772), run attempt 1, trên branch `beta` và đúng commit chốt: **completed / success**.
+- Full regression suite, Pages Functions syntax, isolation constraints và release channel validation đều success trước khi build.
+- Build signed release APK và bước rename/verify APK success; publish OTA objects lên Cloudflare R2 success; upload workflow artifacts và tạo GitHub Release/đính kèm files đều success.
+- Phạm vi runtime chỉ là giao diện header Thư viện. Badge biểu thị `state.playlist.length` (số sách trong playlist/catalog đã nạp), không phải tổng số file lưu offline IndexedDB.
+- Device acceptance vẫn pending: cần kiểm tra portrait 320–600 px, nút Thư viện/badge, Menu và thao tác mở sách trên thiết bị thật. Không promote `main`/stable.
