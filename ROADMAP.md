@@ -915,3 +915,6 @@ Khi một công việc trong PLANNING hoàn tất:
 - [x] Thu gọn chiều cao, padding và kiểu chữ của phiên bản; nút kiểm tra cập nhật hiển thị gọn trong cùng nhóm.
 - [x] Giữ nguyên ID DOM và luồng JavaScript OTA hiện có; không thay endpoint, lưu lựa chọn kênh, installer hay cơ chế ký APK.
 - [ ] Chờ CI regression, sau đó build APK beta và kiểm tra Menu trên thiết bị thật; chưa nghiệm thu runtime.
+
+- [x] GitHub Actions regression run #554 (`0243a8177c282758369f11e0503c7a89cd467d2b`) completed successfully: npm test, JS/Pages syntax, isolation and deployment smoke tests all passed.
+- [ ] Build APK beta and verify the compact Menu on a real Android device; no APK/device acceptance is claimed yet.
