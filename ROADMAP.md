@@ -510,3 +510,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Chuyển riêng `GET /analytics/dashboard` ra trước OTP guard. API chỉ trả dữ liệu tổng hợp theo ngày, thời lượng đọc/nghe, số thiết bị theo nền tảng, số liệu manifest và kết quả scan gần nhất; không trả install/session IDs, book IDs, tiêu đề sách hay dữ liệu tệp cá nhân. Không có mutation route nào được chuyển ra public.
 - Toàn bộ API upload/rename/delete/scan/publish/catalog/audit tiếp tục nằm sau `requireAuth` OTP. Các API ingest analytics/telemetry là các endpoint riêng theo contract sẵn có, không thay đổi trong batch này.
 - Regression mới kiểm tra dashboard landing/OTP back button và thứ tự public GET so với auth guard. Full regression, JS syntax, Pages Functions syntax, isolation và production consent smoke đã pass trong CI [41170506777](https://github.com/blamag999/read-along-android/actions/runs/41170506777) trên commit `07bd866af16de1dc33d989ac8f6da90349cd539c`. Cloudflare Pages deployment đang chạy; cần xác minh trang chủ mặc định, public GET và OTP chặn API quản trị sau deploy. Không cần build APK.
+
+
+### 2026-10-31 — AN4 Dashboard được người dùng xác nhận hoạt động thành công
+
+- Người dùng xác nhận Dashboard production hoạt động thành công; đóng nghiệm thu AN4 theo xác nhận thực tế ngày 2026-10-31.
+- Dashboard mặc định là trang chủ Admin; khu vực “Quản lý nâng cao” vẫn đi qua OTP. Public endpoint chỉ đọc dữ liệu tổng hợp; các API thay đổi dữ liệu tiếp tục được bảo vệ.
+- Regression CI gần nhất của batch điều hướng/API: [41170506777](https://github.com/blamag999/read-along-android/actions/runs/41170506777), success trên commit `07bd866af16de1dc33d989ac8f6da90349cd539c`. Tài liệu hiện tại ở beta HEAD `3d9f4d49509c52b6f9ca9fc8ad9a47ec4a220b36`.
+- Giới hạn nghiệm thu: xác nhận Dashboard hoạt động từ người dùng; không ghi nhận việc đối chiếu số liệu thực tế với một khoảng đọc/nghe có thời lượng đo độc lập. Không cần build APK cho AN4.
