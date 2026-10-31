@@ -277,3 +277,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - **Trạng thái tại lúc ghi:** mới thêm kiểm thử; chưa có kết quả CI/HTTP. Không đánh dấu nghiệm thu trước khi workflow hoàn tất và xác minh D1.
 - Không thay đổi app runtime, không thêm collector, không build APK, không thay đổi main/testing. README không đổi nên vẫn giữ đồng nhất ba nhánh.
 
+
+### 2026-10-31 — Sửa path filter để tự kiểm thử thay đổi workflow
+
+- Lần push thêm production smoke test không tạo workflow run vì push path filter trước đó không bao gồm chính file `.github/workflows/check-readalong-admin.yml`. Đã xác định đây là nguyên nhân, không phải lỗi GitHub Actions.
+- Bổ sung workflow file vào push paths để thay đổi CI definition có thể tự kích hoạt regression khi commit có marker `[test]`; PR filter đã có đường dẫn này.
+- Commit: `d4d53504160de89e4d916be9bc4da1f0e32f3999`.
+- Run của commit smoke test trước `0b013fa` không được tạo; không dùng làm bằng chứng. Chờ run mới trên commit này.
+- Không thay đổi runtime/APK hoặc nhánh khác. README giữ nguyên và vẫn đồng nhất ba nhánh.
+
