@@ -442,3 +442,14 @@ Quy tắc bảo trì:
 - Issue [#38](https://github.com/blamag999/read-along-android/issues/38) vẫn mở cho tới khi manifest R2 được publish/kiểm tra và lỗi trên thiết bị được xác nhận đã hết.
 - Trạng thái bàn giao: **Code fix: Completed; PR merge: Completed; CI: Passed; Admin production deploy: Passed; R2 manifest republish: Pending authenticated Admin action; APK beta build: Pending manual workflow dispatch; Android device verification: Pending.**
 - Không promote `main`, không phát hành stable, không thay đổi signing secrets/keystore.
+
+
+### Catalog cleanup — removed Brave assets (2026-10-31)
+
+- Admin publish failed because the curated seed `admin/public/books.json` still referenced the deleted R2 objects `Brave_Read-Along.pdf`, `Brave_Read-Along.mp3`, and `Brave_Read-Along.json`.
+- Confirmed the stale manifest entry: `id: brave`, title `Brave`. Removed exactly this one book from the Git seed; no R2 objects were deleted or modified by this change.
+- Seed catalog count changed from 83 to **82**. All other book entries and URLs were retained.
+- Added a regression assertion in `tests/catalog.test.js` to ensure the deleted Brave entry is not reintroduced.
+- Commits on `testing-catalog-cleanup`: `3230016a7c08baefb3c896cd3897b2f62b506b72` (manifest), `55cbc4f1fc6f1d48ec622d8cdde18c45ea249b48` (test).
+- Pending: CI; PR review/merge to `beta`; automatic Cloudflare Pages production deployment; then Admin OTP → Diagnostics → **Tạo / cập nhật books.json** to publish the corrected 82-book manifest. After publish, verify public JSON and Android catalog.
+- This correction only removes the stale Brave reference from the manifest seed. It does not restore deleted files and does not change the R2 bucket.
