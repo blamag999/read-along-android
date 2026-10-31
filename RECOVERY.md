@@ -11,7 +11,7 @@
 - Last reviewed HEAD on beta: `52fd6dba2fc82b811a4228afe39967ac884516d2`
 - Recovery status: `RECONCILED`
 - Recovery reviewed on: 2026-10-31
-- Latest recovery checkpoint: Core cleanup handover [handover] commit `4c51950df6e881815f77fc1c45be95462ee5ec46`
+- Latest recovery checkpoint: Core cleanup handover [handover] commit `1bc2246dc6f47db7a7053db188b98a9d024449c1`
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
 
 ## Phát hiện sau mốc bàn giao trước
@@ -80,4 +80,4 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - README dùng chung đã được cập nhật trên nhánh beta và đồng bộ vào head của PR #40. PR vẫn chỉ thay đổi README.md và còn mở; chưa cập nhật main.
 - Không chạy regression suite trong batch tài liệu, không build APK, không thay đổi reader/audio/native, R2, D1 hoặc API nghiệp vụ.
 - Last reviewed HEAD trước commit bàn giao này: `52fd6dba2fc82b811a4228afe39967ac884516d2`.
-- Commit bàn giao tài liệu hiện tại: `4c51950df6e881815f77fc1c45be95462ee5ec46`.
+- Commit bàn giao tài liệu hiện tại: `1bc2246dc6f47db7a7053db188b98a9d024449c1`.
