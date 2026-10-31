@@ -2,6 +2,15 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+
+assert.ok(app.includes('function getReadingSessionRecordForBook(bookKey)'), 'Reading progress must be stored as a per-book checkpoint record');
+assert.ok(app.includes('history: history.slice(0, 2)'), 'Each book must retain no more than two previous checkpoints plus the current one');
+assert.ok(app.includes('function updateReadingCheckpointsUI()'), 'The reader must expose its recent checkpoints');
+assert.ok(app.includes('function restoreSelectedReadingCheckpoint()'), 'A previous checkpoint must be restorable');
+assert.ok(app.includes('session.audioTime < (previous.audioTime || 0) - 3'), 'Backward audio seeks must preserve the previous position as a recovery checkpoint');
+assert.ok(app.includes('Math.abs(session.audioTime - (previous.audioTime || 0)) >= 30'), 'Large audio position jumps must preserve the previous position');
+assert.ok(app.includes('btnRestoreReadingCheckpoint?.addEventListener'), 'The restore checkpoint control must be wired');
+assert.ok(app.includes('Mới nhất') && app.includes('Trước đó'), 'Checkpoint choices must be distinguishable in the UI');
 assert.ok(app.includes('async function clearReadAlongWebCachesForUpdate()'), 'OTA cache cleanup function must be defined');
 assert.ok(app.includes('await clearReadAlongWebCachesForUpdate()'), 'OTA flow must await cache cleanup');
 assert.ok(app.includes("/^read-along-shell-/i.test(key)"), 'Cleanup must be restricted to Read Along shell caches');
