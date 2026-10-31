@@ -194,3 +194,17 @@ Khi một công việc trong PLANNING hoàn tất:
 - Không build lại trong lần chỉnh workflow này; không thay đổi runtime APK. Device acceptance vẫn pending.
 - Sửa `.github/workflows/build-android-apk.yml`: push lên `beta` chỉ chạy job build nếu commit message chứa `[build-apk]`; các commit trung gian không build APK. Khi hoàn tất một đợt, commit chốt có marker sẽ tự kích hoạt build beta, không cần Run workflow thủ công. Giữ `workflow_dispatch` cho stable release/ngoại lệ.
 - Quy trình này bảo đảm một build cho một commit chốt; không tự động build lặp theo mỗi commit. Nếu build chốt thất bại và phải sửa, cần một commit chốt mới để thử lại.
+
+
+### 2026-10-31 — CI regression kiểm thử theo mốc batch
+
+- Thay đổi `.github/workflows/check-readalong-admin.yml`: push lên `beta`, `main`, `testing` chỉ chạy full regression khi commit cuối cùng có marker `[test]`; Pull Request vẫn tự động chạy đầy đủ. Bổ sung `workflow_dispatch` để chạy thủ công.
+- Thay đổi `.github/workflows/build-android-apk.yml`: mọi build được kích hoạt bằng `[build-apk]` hoặc manual dispatch đều cài dependencies và chạy `npm test`, Pages Functions syntax check, isolation checks trước khi chuẩn bị assets/native và build. Các bước kiểm thử thất bại sẽ chặn phát hành.
+- Tránh chạy trùng: commit `[build-apk]` không mang marker `[test]`; workflow build tự kiểm tra chính xác commit đóng gói.
+- README ghi quy ước marker, yêu cầu marker nằm ở commit cuối của push, kiểm thử ngay cho thay đổi critical và giữ Remote Config endpoint smoke test riêng. PLANNING ghi nguyên tắc triển khai tương ứng.
+- Các commit triển khai:
+  - Check workflow: `fab4d53e9a5b8c2b69696f7dffb83bf67fd4fa77`
+  - APK workflow: `4b529ddc1e98313e16bb8331b1b8b3822f42cf87`
+  - README: `4eb7e19cd5e462b8984be8359192895be430d2a5`
+  - PLANNING: `b97e3a3387110545f7c81ef12085e12ec7209a45`
+- Chưa chạy full regression hoặc build APK trong batch tài liệu/workflow này; commit cuối cùng chỉ cập nhật ROADMAP. Cần kiểm chứng thực tế bằng một commit `[test]` ở batch kế tiếp hoặc chạy workflow thủ công. Không có thay đổi APK runtime và không promote `main`.
