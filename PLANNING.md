@@ -16,7 +16,7 @@
 
 - [x] Người dùng mở endpoint và gửi lại JSON body trùng khớp file `admin/public/remote-config.json`; ghi nhận xác nhận thủ công ngày 2026-10-31. HTTP status và Content-Type vẫn chưa được kiểm tra độc lập.
 - [x] Đối chiếu Pages project/root/output/production branch và deployment commit; cấu hình Pages hiện tại được xác minh đúng repository/branch/root/output, build gate đã pass.
-- [ ] Xác minh HTTP status và Content-Type trực tiếp bằng công cụ/thiết bị độc lập; body đã được người dùng xác nhận khớp schema v1.
+- [x] GitHub Actions endpoint smoke test xác minh trực tiếp HTTP 200, `Content-Type: application/json`, schemaVersion 1 và configVersion 1 trên production endpoint.
 - [x] Ghi URL, thời điểm và giới hạn bằng chứng vào ROADMAP.
 
 ### P0.2 Chốt contract và kiểm tra config phía publish
@@ -31,11 +31,13 @@
 ### P0.3 Thiết kế Data Client tối thiểu
 
 - [x] Chốt boundary module độc lập `modules/remote-config.js`; chưa refactor transport API khác.
+- [x] Nạp client qua `modules/remote-config-bootstrap.js` sau `app.js`; tải cấu hình bất đồng bộ, không chặn reader startup và chưa áp dụng setting/feature flag vào UI hoặc reader.
 - [x] URL HTTPS và hostname cố định `read-along-admin.pages.dev`; không nhận URL/hostname từ payload.
 - [x] Có timeout 4 giây, tối đa 1 retry, validate schema v1, cache bản hợp lệ gần nhất và fallback defaults; cache hết hạn/hỏng bị bỏ qua.
 - [x] Không thực thi JavaScript/HTML và không có native command/permission trong contract.
 - [x] Test JSON lỗi, field thiếu/thừa, schemaVersion, config hết hạn, configVersion rollback, timeout, HTTP error, sai Content-Type, cache hợp lệ/hỏng, retry giới hạn, response quá lớn và offline lần đầu. HTTP status/Content-Type của production endpoint vẫn cần xác minh độc lập.
-- [ ] Tích hợp vào APK sau khi endpoint được xác minh HTTP status/Content-Type; hiện module chưa được nạp trong `index.html` và không ảnh hưởng runtime.
+- [ ] Chạy workflow build beta trên GitHub Actions, kiểm tra APK artifact/signature/SHA-256; workflow hiện là `workflow_dispatch` và cần thao tác Run workflow.
+- [ ] Cài APK beta lên thiết bị thật; xác minh online nhận source=network, offline lần đầu fallback default, offline lần sau dùng cache; reader/audio vẫn hoạt động bình thường và không bị chặn startup.
 
 ## P1 — Chốt marker conflict policy và migration an toàn
 
