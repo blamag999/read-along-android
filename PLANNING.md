@@ -161,3 +161,9 @@
 
 
 Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên xử lý lỗi đó trước; cập nhật ROADMAP/PLANNING sau khi có bằng chứng.
+
+
+## P1 — Ba mốc đọc gần nhất cho từng cuốn sách
+- [ ] Kiểm thử trên APK beta: mỗi sách giữ tối đa 3 checkpoint (mốc hiện tại + 2 mốc trước); chuyển trang, tua audio lùi/nhảy xa và đổi phần audio phải giữ lại vị trí trước đó.
+- [ ] Xác nhận chọn một mốc cũ để khôi phục không tự phát audio, đồng thời vị trí vừa rời đi vẫn được giữ làm mốc phục hồi.
+- [ ] Kiểm tra chuyển A → B → A, đóng/mở app và OTA update; dữ liệu checkpoint của các sách không ghi đè lẫn nhau.
