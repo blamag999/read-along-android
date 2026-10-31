@@ -738,3 +738,10 @@ Khi một công việc trong PLANNING hoàn tất:
 - Sửa OTA smoke test: endpoint đã có manifest beta hợp lệ, nên test giờ xác nhận schemaVersion/channel/version/versionCode/size/SHA-256/filename/notes/downloadUrl thay vì kỳ vọng 404. Đã sửa escape regex để chạy đúng trong JavaScript heredoc.
 - Full workflow [41213578916](https://github.com/blamag999/read-along-android/actions/runs/41213578916) trên code/test HEAD `b1d3ac247e8e6fd463be813cc7169a6ce26407f4`: completed/success; npm test, Pages syntax, isolation, analytics smoke và OTA manifest smoke đều PASS.
 - Chưa build APK từ batch này. Bước kế tiếp: tạo một commit chốt `[build-apk]` có thay đổi runtime path, để workflow chạy regression lần cuối, build/sign APK, verify SHA-256 và publish beta Release/OTA. Không promote main.
+
+
+### Final beta build — in progress (2026-10-31)
+
+- Finalization commit: `5839851550c29a1fcb17d8815426db1783b0936d` (`[build-apk]`).
+- Workflow [41213680238](https://github.com/blamag999/read-along-android/actions/runs/41213680238): completed successfully through full regression, Pages Functions syntax, isolation, release channel validation, release version/changelog generation, web asset preparation, version embedding, Web Local ZIP, native updater integration, Android version, launcher icons and signing configuration.
+- APK Gradle build is still in progress. Signature/SHA-256 verification, OTA R2 publication, artifact upload and GitHub Release creation remain pending. Do not report APK available until all steps and assets are verified.
