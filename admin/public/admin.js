@@ -241,26 +241,99 @@ function addEntry(row, entry) {
 function normalizeSearch(value) {
   return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").toLocaleLowerCase("vi");
 }
+function libraryAssetGroups(entries) {
+  const folders = entries.filter(entry => entry.type === "folder");
+  const files = entries.filter(entry => entry.type === "file");
+  const groups = new Map(), ungrouped = [];
+  const audioExtensions = new Set([".mp3", ".m4a", ".m4b", ".aac", ".wav", ".ogg", ".oga", ".opus", ".flac", ".wma"]);
+  const extension = name => {
+    const match = String(name || "").match(/\\.[^.]+$/);
+    return match ? match[0].toLowerCase() : "";
+  };
+  const normalize = value => String(value || "").normalize("NFKC")
+    .replace(/\\.[^/.]+$/, "").replace(/[_-]+/g, " ")
+    .replace(/[’']/g, "").replace(/\\bread\\s+along\\b/gi, " ")
+    .replace(/\\bbook\\b/gi, " ").replace(/[^\\p{L}\\p{N}]+/gu, " ")
+    .replace(/\\s+/g, " ").trim().toLocaleLowerCase("vi");
+  for (const file of files) {
+    const ext = extension(file.name);
+    const isPdf = ext === ".pdf", isJson = ext === ".json", isAudio = audioExtensions.has(ext);
+    if (!isPdf && !isJson && !isAudio) { ungrouped.push(file); continue; }
+    const stem = file.name.replace(/\\.[^.]+$/, "");
+    const partMatch = !isPdf && !isJson ? stem.match(/(?:_P(\\d+)|[_ -](?:side|part|pt|disc)[ _.-]*(\\d+))$/i) : null;
+    const base = partMatch ? stem.slice(0, partMatch.index) : stem;
+    const normalized = normalize(isJson ? base.replace(/[_-]sync$/i, "") : base);
+    if (!normalized) { ungrouped.push(file); continue; }
+    const directory = file.key.slice(0, Math.max(0, file.key.lastIndexOf("/") + 1));
+    const groupKey = directory + "|" + normalized;
+    if (!groups.has(groupKey)) groups.set(groupKey, { key: groupKey, normalized, directory, pdf: [], audio: [], json: [], all: [] });
+    const group = groups.get(groupKey);
+    group.all.push(file);
+    if (isPdf) group.pdf.push(file);
+    else if (isJson) group.json.push(file);
+    else group.audio.push({ ...file, part: partMatch ? Number(partMatch[1] || partMatch[2]) : null });
+  }
+  const sortFiles = (a,b) => a.name.localeCompare(b.name,"vi",{sensitivity:"base",numeric:true});
+  const books = [...groups.values()].map(group => {
+    group.pdf.sort(sortFiles); group.json.sort(sortFiles);
+    group.audio.sort((a,b) => {
+      if (Number.isInteger(a.part) && Number.isInteger(b.part)) return a.part-b.part || sortFiles(a,b);
+      if (Number.isInteger(a.part)) return -1;
+      if (Number.isInteger(b.part)) return 1;
+      return sortFiles(a,b);
+    });
+    const representative = group.pdf[0] || group.audio[0] || group.json[0];
+    const titleFile = group.pdf[0] || representative;
+    let title = titleFile.name.replace(/\\.[^.]+$/, "").replace(/[_-]+/g, " ").replace(/\\bread\\s+along\\b/ig, "").replace(/\\s+/g, " ").trim();
+    const status = group.pdf.length > 1 || group.json.length > 1 ? "error"
+      : !group.pdf.length || !group.audio.length ? "warning"
+      : group.audio.some(file => extension(file.name) === ".wma") ? "compatibility" : "good";
+    return { ...group, title: title || group.normalized, status };
+  }).sort((a,b) => a.title.localeCompare(b.title,"vi",{sensitivity:"base",numeric:true}));
+  return { folders: folders.sort(sortFiles), books, ungrouped: ungrouped.sort(sortFiles) };
+}
+const expandedLibraryGroups = new Set();
+function libraryStatus(group) {
+  if (group.status === "error") return ["Trùng file", "error"];
+  if (group.status === "warning") return [!group.pdf.length ? "Thiếu PDF" : "Thiếu audio", "warning"];
+  if (group.status === "compatibility") return ["Cần xử lý audio", "warning"];
+  return ["Đủ file", "good"];
+}
+function appendLibraryFileRow(groupRow, file, kind, label) {
+  const row = document.createElement("tr");
+  row.className = "library-file-row";
+  const nameCell = document.createElement("td");
+  nameCell.className = "library-child-name";
+  nameCell.textContent = (kind === "pdf" ? "📕 " : kind === "audio" ? "🎧 " : "🧩 ") + file.name;
+  row.append(nameCell);
+  addCell(row, label);
+  addCell(row, formatSize(file.size));
+  addCell(row, formatDate(file.uploaded));
+  const actions = document.createElement("div");
+  actions.className = "row-actions";
+  actions.append(actionButton("Đổi tên / Di chuyển", () => renameEntry(file)));
+  actions.append(actionButton("Xóa", () => deleteFile(file), "delete"));
+  const cell = document.createElement("td"); cell.append(actions); row.append(cell);
+  groupRow.after(row);
+  return row;
+}
 function renderLibraryPage() {
   const term=normalizeSearch($("searchFilesInput").value.trim());
   const sort=$("sortFilesSelect").value;
-  filteredLibraryEntries=allLibraryEntries.filter(entry=>!term||normalizeSearch(entry.name).includes(term));
-  filteredLibraryEntries.sort((a,b)=>{
-    if(a.type!==b.type) return a.type==="folder"?-1:1;
-    const compared=a.name.localeCompare(b.name,"vi",{sensitivity:"base",numeric:true});
-    return sort==="desc"?-compared:compared;
-  });
-  const totalPages=Math.max(1,Math.ceil(filteredLibraryEntries.length/pageSize));
+  const grouped = libraryAssetGroups(allLibraryEntries);
+  const folders = grouped.folders.filter(entry => !term || normalizeSearch(entry.name).includes(term));
+  let books = grouped.books.filter(group => !term || normalizeSearch(group.title + " " + group.all.map(file => file.name).join(" ")).includes(term));
+  let ungrouped = grouped.ungrouped.filter(entry => !term || normalizeSearch(entry.name).includes(term));
+  if (sort === "desc") books = books.reverse();
+  const entries = [...folders.map(entry => ({ type:"folder", entry })), ...books.map(entry => ({ type:"book", entry }))];
+  if (ungrouped.length) entries.push({ type:"unmatched", entry:ungrouped });
+  const totalPages=Math.max(1,Math.ceil(entries.length/pageSize));
   filePageIndex=Math.min(Math.max(0,filePageIndex),totalPages-1);
-  const start=filePageIndex*pageSize;
-  const entries=filteredLibraryEntries.slice(start,start+pageSize);
-  $("pageJumpInput").value=String(filePageIndex+1);
-  $("pageJumpInput").max=String(totalPages);
+  const start=filePageIndex*pageSize, pageEntries=entries.slice(start,start+pageSize);
+  $("pageJumpInput").value=String(filePageIndex+1); $("pageJumpInput").max=String(totalPages);
   $("pageTotal").textContent=" / "+totalPages;
-  $("firstPageBtn").disabled=filePageIndex===0;
-  $("prevPageBtn").disabled=filePageIndex===0;
-  $("nextPageBtn").disabled=filePageIndex>=totalPages-1;
-  $("lastPageBtn").disabled=filePageIndex>=totalPages-1;
+  $("firstPageBtn").disabled=filePageIndex===0; $("prevPageBtn").disabled=filePageIndex===0;
+  $("nextPageBtn").disabled=filePageIndex>=totalPages-1; $("lastPageBtn").disabled=filePageIndex>=totalPages-1;
   $("fileRows").replaceChildren();
   if(currentPrefix){
     const parent=document.createElement("tr"),up=document.createElement("button");
@@ -269,14 +342,45 @@ function renderLibraryPage() {
     const cell=document.createElement("td");cell.append(up);parent.append(cell);
     addCell(parent,"Thư mục cha");addCell(parent,"—");addCell(parent,"—");addCell(parent,"—");$("fileRows").append(parent);
   }
-  for(const entry of entries){const row=document.createElement("tr");addEntry(row,entry);$("fileRows").append(row);}
-  if(!entries.length){
-    const row=document.createElement("tr"),cell=addCell(row,term?"Không tìm thấy tệp/thư mục phù hợp.":(currentPrefix?"Thư mục trống.":"Thư viện chưa có tệp. Hãy tải PDF/audio lên."));
+  for (const item of pageEntries) {
+    if (item.type === "folder") {
+      const row=document.createElement("tr"); addEntry(row,item.entry); $("fileRows").append(row); continue;
+    }
+    if (item.type === "unmatched") {
+      const section=document.createElement("tr"), cell=addCell(section,"Chưa ghép được · "+item.entry.length+" file");
+      cell.colSpan=5; cell.className="library-unmatched-heading"; $("fileRows").append(section);
+      for (const file of item.entry) { const row=document.createElement("tr"); addEntry(row,file); $("fileRows").append(row); }
+      continue;
+    }
+    const group=item.entry, row=document.createElement("tr"), [statusLabel,statusKind]=libraryStatus(group);
+    row.className="library-book-row";
+    const titleCell=document.createElement("td");
+    const toggle=actionButton((expandedLibraryGroups.has(group.key)?"▾ ":"▸ ")+group.title,()=>{
+      if(expandedLibraryGroups.has(group.key)) expandedLibraryGroups.delete(group.key); else expandedLibraryGroups.add(group.key);
+      renderLibraryPage();
+    },"library-book-toggle");
+    titleCell.append(toggle);
+    if(group.pdf[0]) { const hint=document.createElement("div"); hint.className="file-meta"; hint.textContent="PDF: "+group.pdf[0].name; titleCell.append(hint); }
+    else { const hint=document.createElement("div"); hint.className="file-meta"; hint.textContent="Chưa có PDF"; titleCell.append(hint); }
+    row.append(titleCell);
+    addCell(row,group.pdf.length+" PDF · "+group.audio.length+" Audio · "+group.json.length+" JSON");
+    addCell(row,formatSize(group.all.reduce((sum,file)=>sum+Number(file.size||0),0)));
+    addCell(row,formatDate(group.all.reduce((latest,file)=>!latest||new Date(file.uploaded)>new Date(latest)?file.uploaded:latest,null)));
+    const actions=document.createElement("div"); actions.className="row-actions";
+    const status=document.createElement("span"); status.className="library-status "+statusKind; status.textContent=statusLabel; actions.append(status);
+    const actionCell=document.createElement("td"); actionCell.append(actions); row.append(actionCell);
+    $("fileRows").append(row);
+    if(expandedLibraryGroups.has(group.key)){
+      for(const file of group.pdf) appendLibraryFileRow(row,file,"pdf","PDF chính");
+      for(const file of group.audio) appendLibraryFileRow(row,file,"audio","Audio"+(Number.isInteger(file.part)?" · Phần "+file.part:""));
+      for(const file of group.json) appendLibraryFileRow(row,file,"json","JSON đồng bộ");
+    }
+  }
+  if(!pageEntries.length){
+    const row=document.createElement("tr"),cell=addCell(row,term?"Không tìm thấy sách/tệp/thư mục phù hợp.":(currentPrefix?"Thư mục trống.":"Thư viện chưa có tệp. Hãy tải PDF/audio lên."));
     cell.colSpan=5;cell.className="empty";$("fileRows").append(row);
   }
-  $("pageStatus").textContent=filteredLibraryEntries.length
-    ? "Hiển thị "+(start+1)+"–"+Math.min(start+entries.length,filteredLibraryEntries.length)+" / "+filteredLibraryEntries.length+" mục"
-    : "0 mục";
+  $("pageStatus").textContent=entries.length ? "Hiển thị "+(start+1)+"–"+Math.min(start+pageEntries.length,entries.length)+" / "+entries.length+" bộ/thư mục" : "0 bộ";
 }
 async function loadFiles() {
   const requestSeq=++fileLoadSequence,requestedPrefix=currentPrefix,startedAt=performance.now();
