@@ -562,3 +562,14 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - [x] Created `[build-apk]` finalization commit `fd0d4909994ab3d065ad4bbb3fc4221e6db8f0fc` on beta. It changes only an inert CSS comment in an APK-relevant path to satisfy the workflow path filter; no runtime behavior changed.
 - [ ] Confirm Build and Release workflow result, signed APK artifact, GitHub Release and R2 beta OTA manifest. Current GitHub connector does not expose push-triggered run listing.
 - [ ] Install APK and complete device acceptance. Keep main untouched until acceptance.
+
+
+### Quy tắc vận hành repository — cập nhật 2026-11-01
+
+- [x] Chốt `beta` là branch phát triển/tích hợp duy nhất; `main` là stable.
+- [x] Không tạo branch phụ cho từng feature/batch hoặc branch thử nghiệm CI; không tạo PR giả lập để kích hoạt workflow.
+- [x] Làm việc trực tiếp trên `beta`, chia commit theo nhóm thay đổi và cập nhật nhật ký bàn giao sau mỗi đợt.
+- [x] Chỉ promote `beta` sang `main` sau khi APK beta được kiểm thử và người dùng xác nhận nghiệm thu.
+- [x] Chạy regression tại các mốc quan trọng; chỉ build APK cuối đợt sau khi regression pass.
+- [x] Không tạo commit giả để kích hoạt CI/build; ưu tiên sửa workflow hiện có nếu trigger cần điều chỉnh.
+- Ghi chú: PR #43 là branch kiểm thử đã tồn tại và được merge vào beta trước khi quy tắc mới được xác nhận. Không tạo thêm branch tương tự.
