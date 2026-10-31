@@ -242,6 +242,7 @@ Không tuyên bố hoàn tất nếu còn thiếu kiểm thử bắt buộc; ghi
 - Diagnostics phải giới hạn dữ liệu, không gửi nội dung sách, token, cookie, tên file nhạy cảm hoặc URL riêng tư.
 - Marker hiện có cả nguồn local/import, R2, GitHub và localStorage. Không tự ý thay đổi precedence, merge hoặc migrate marker khi chưa có policy và regression tests; bảo toàn dữ liệu cũ.
 - Không xóa dữ liệu người dùng khi dọn cache. OTA chỉ được xóa đúng shell cache/service worker được xác định; không xóa localStorage/sessionStorage hoặc dữ liệu đọc.
+- R2 bucket `read-along-releases` chỉ giữ một APK mới nhất trong `releases/beta/` và một APK mới nhất trong `releases/official/`. Hai manifest `channels/beta/latest.json` và `channels/official/latest.json` luôn được giữ. Workflow chỉ dọn APK cũ trong đúng channel sau khi upload APK mới và cập nhật manifest thành công; nếu APK mới không tồn tại hoặc bước xác minh thất bại thì dừng, không dọn.
 
 ## 9. Liên kết vận hành
 
