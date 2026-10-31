@@ -104,7 +104,8 @@ assert.ok(styleSource.includes('.app-ui-mode .header-right { flex: 0 0 auto; fle
 assert.ok(!htmlSource.includes('menuReloadMarkers') && !htmlSource.includes('btnReloadMarkers'), 'online marker refresh controls must be removed from the reader UI');
 assert.ok(!htmlSource.includes('diagnosticsModal') && !htmlSource.includes('menuDiagnostics'), 'diagnostics UI must be removed from the personal app');
 assert.ok(!htmlSource.includes('menuAnalytics') && !htmlSource.includes('analyticsModal'), 'analytics must not require a settings/consent dialog');
-assert.ok(htmlSource.includes('Mốc đọc gần đây'), 'checkpoint label must use the concise Vietnamese name');
+assert.ok(htmlSource.includes('Vị trí đã xem'), 'checkpoint label must use the approved concise Vietnamese name');
+assert.ok(htmlSource.includes('>Xem tiếp</button>'), 'checkpoint restore action must use the approved concise label');
 assert.ok(styleSource.includes('Compact touch header') && styleSource.includes('@media (max-width: 600px)'), 'portrait header must use compact responsive controls');
 assert.ok(!appSource.includes('saveSyncToDirectoryOrDownload') && !appSource.includes('exportSyncData') && !appSource.includes('importSyncData'), 'marker editing and import/export must be removed from the APK client');
 assert.ok(!/loadPdfFromBlob|loadAudioFromBlob|handlePdfFileSelect|handleAudioFileSelect|handleFolderPick|handleFileList|initDragAndDrop|saveBookToLibrary|getBookFromLibrary|indexedDB\\.open|showDirectoryPicker/.test(appSource), 'APK must not expose local PDF/audio/folder or offline media-library flows');
