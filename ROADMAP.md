@@ -545,7 +545,7 @@ Khi một công việc trong PLANNING hoàn tất:
 
 ### 2026-10-31 — Admin Dashboard redesign and management UX (beta deployment)
 
-- Tái cấu trúc Admin thành 5 tab ngang: **Thư viện → Tổng quan → Kiểm tra → Thống kê → Nhật ký**. Sau khi khôi phục session hoặc đăng nhập OTP, tab mặc định là Thư viện. Public dashboard vẫn có KPI gọn và nút vào quản trị.
+- Tái cấu trúc Admin ban đầu thành 5 tab ngang; sau đó đã bỏ tab Tổng quan trùng Dashboard công khai, còn 4 tab: **Thư viện → Kiểm tra → Thống kê → Nhật ký**. Sau khi khôi phục session hoặc đăng nhập OTP, tab mặc định là Thư viện. Public dashboard vẫn có KPI gọn và nút vào quản trị.
 - Bố cục được tinh gọn, tăng chiều rộng nội dung, giảm khoảng trắng dư thừa; hỗ trợ Light/Dark, lần đầu theo `prefers-color-scheme`, lựa chọn thủ công được lưu trong localStorage.
 - Mỗi tab có Status Bar riêng, thống nhất kiểu hiển thị và giữ trạng thái tại tab khởi tạo tác vụ. Thêm Status Bar cho public dashboard.
 - Thư viện: upload nhiều file có tiến trình tổng thể, kết quả từng file và tiếp tục các file còn lại nếu một file thất bại; đổi tên hiển thị tên nguồn/đích và kết quả; xóa file/thư mục yêu cầu xác nhận trong giao diện và nêu đường dẫn đối tượng.
