@@ -142,7 +142,7 @@ assert.ok(adminScript.includes('@ffmpeg/ffmpeg@0.12.10'), 'browser conversion en
 assert.ok(adminScript.includes('@ffmpeg/core@0.12.10'), 'FFmpeg core must use a pinned version');
 assert.match(adminScript, /libmp3lame/, 'WMA conversion must encode MP3 audio');
 assert.ok(adminScript.includes('file đích đã tồn tại'), 'conversion must refuse to overwrite an existing MP3');
-assert.ok(adminScript.includes('file WMA gốc vẫn được giữ nguyên'), 'conversion must preserve original WMA files');
+assert.ok(adminScript.includes('File WMA gốc được giữ nguyên'), 'conversion must preserve original WMA files');
 assert.ok(fs.readFileSync('admin/public/index.html', 'utf8').indexOf('class="library-tools"') < fs.readFileSync('admin/public/index.html', 'utf8').indexOf('<div class="table-wrap">'), 'library search and sort controls must appear before the file table');
 console.log('Admin pagination, WMA conversion and search placement regression tests passed.');
 
