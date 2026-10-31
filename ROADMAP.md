@@ -897,3 +897,12 @@ Khi một công việc trong PLANNING hoàn tất:
 - Gom thay đổi thành các commit theo nhóm công việc; chạy regression ở các mốc quan trọng và chỉ build APK ở cuối đợt sau khi regression pass.
 - Không tạo commit giả hoặc thay đổi nội dung không cần thiết chỉ để kích hoạt build. Nếu trigger workflow chưa phù hợp, điều chỉnh workflow hiện có một lần để quy trình ổn định.
 - PR #43 đã được merge vào beta trước khi nguyên tắc này được chốt; giữ nguyên lịch sử, không tạo thêm branch để xử lý. Không thay đổi main trong cập nhật này.
+
+
+## Reader UI cleanup — remove PDF/audio filename status row (2026-11-01)
+
+- Removed the PDF and audio filename status row above the PDF canvas to recover reader viewport space.
+- Kept filename values in application state for book identity and session behavior; only display DOM wiring was removed.
+- Removed unused filename-pill CSS and added regression guards.
+- Commits: HTML `b7c696a45e856e383b1c9859cae07b5a3d3d546f`; JS `86d3a95a2491fffa61a0289d79fb7513a389f696`; CSS `b527223e38ac2943cfa288af4432b47f26e80cc6`; contract tests `ced2edb14dca5b398f2dced0f899b94ade4fdbe1`; module test correction `921833ce96b1740e103f99828db55f481bdc859e`.
+- Regression passed in workflow run #550. APK build and device acceptance remain pending.
