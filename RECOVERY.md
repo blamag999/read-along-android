@@ -540,3 +540,11 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Cloudflare Pages production deployment `d4f6c813-40c9-49e5-ba75-5915cfe46e22` for commit `eeba49a...` completed successfully: queued, initialize, clone_repo, build, and deploy stages all succeeded. This deployment contains the Admin protection code.
 - A subsequent docs-only commit `78cf6db4bb6db2bc5e83d5b9d63d5c3a641f6d45` created a separate Pages deployment `9e2e5f49-65dc-48a5-ba2f-9fcb608bdb89`, which was still queued at the last check; it does not change the already deployed Admin code.
 - No APK build, no main promotion.
+
+
+## Live catalog and OTA retention checkpoint — 2026-11-01
+
+- Live R2 manifest verified: 96 books (DISNEY 84; ONE STORY A DAY LEVEL 2 FULL 12), 96 PDF references, 99 audio references, 8 sync JSON references; all 203 referenced assets exist in the 204-object media inventory. No catalog republish or media mutation was needed.
+- OTA current pointers: beta 1.3.23, official 1.4.0. R2 currently contains multiple old beta APKs. Retention automation is implemented in scripts/prune-ota-releases.py and invoked after channel APK + latest manifest publication. It scopes deletion to stale APK objects under the selected channel prefix and verifies one APK remains; channel manifests and the opposite channel are untouched.
+- Regression tests were added and wired into npm test; confirm the [test] Actions run before marking the policy verified. Existing stale beta APK cleanup is a separate explicit operation and should be verified by listing the bucket after deletion.
+- No APK build, no main code promotion.
