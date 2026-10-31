@@ -307,3 +307,11 @@ Khi một công việc trong PLANNING hoàn tất:
 - Chờ CI mới trên commit này; chưa deploy route fix lên production và chưa chạy lại HTTP valid event/replay.
 - Không thay đổi runtime ngoài route fix đã ghi; không build APK; README giữ nguyên đồng nhất ba nhánh.
 
+
+### 2026-10-31 — Điều chỉnh regex test Analytics SQL
+
+- CI [#41167021058](https://github.com/blamag999/read-along-android/actions/runs/41167021058) tiếp tục dừng tại `npm test`: regex trong regression assertion dùng escape kép, nên không khớp literal SQL `SELECT changes()`; implementation route không bị kiểm tra tới production smoke trong run này.
+- Đã sửa regex về escape đúng cho regex literal JavaScript ở commit `cefe81173d63f785ebd29608d22e7712a439080d`.
+- Chờ CI mới; chưa coi accepted-count fix đã pass.
+- Không có thay đổi APK/runtime bổ sung; README vẫn đồng nhất ba nhánh.
+
