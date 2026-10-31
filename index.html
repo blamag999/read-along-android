@@ -295,80 +295,7 @@
           <button id="btnExportSync" class="btn-secondary" title="Xuất tệp mốc để lưu cùng thư mục truyện trên máy">📥 Tải tệp mốc (.json)</button>
 
           
-          <div class="github-token-panel" style="border:1px solid #475569;border-radius:10px;padding:12px;margin:10px 0;display:grid;gap:8px;">
-            <strong>🔐 Mã truy cập đồng bộ</strong>
-            <p id="githubTokenStatus" class="modal-desc" style="margin:0;">Chưa có token trong phiên này.</p>
-            <label for="githubTokenInput">Nhập mã truy cập (quyền đọc và ghi tệp)</label>
-            <input id="githubTokenInput" type="password" autocomplete="new-password" placeholder="Mã truy cập" style="width:100%;box-sizing:border-box;padding:10px;border-radius:6px;">
-            <div class="sync-actions-row">
-              <button id="btnSaveGithubToken" type="button" class="btn-primary">🔑 Lưu / thay token</button>
-              <button id="btnClearGithubToken" type="button" class="btn-danger">🗑️ Xóa token đang lưu</button>
-            </div>
-            <p class="modal-desc" style="margin:0;">Mã chỉ lưu trong phiên trình duyệt hiện tại, không ghi vào mã nguồn. Xóa mã ở đây chỉ xóa mã khỏi phiên; muốn thu hồi quyền đã cấp, hãy thu hồi mã trên trang quản lý truy cập.</p>
-          </div>
-          <label for="importSyncInput" class="btn-secondary">
-            📂 Nhập file mốc từ máy
-          </label>
-          <input type="file" id="importSyncInput" accept=".json" style="display:none;">
-          <button id="btnClearSync" class="btn-danger">🗑️ Xóa hết mốc của truyện này</button>
-        </div>
-
-        <div class="sync-table-container">
-          <table class="sync-table">
-            <thead>
-              <tr>
-                <th>Trang</th>
-                <th>Thời điểm bắt đầu</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody id="syncTableBody">
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL CHẨN ĐOÁN: tạo Issue thủ công, không cần dịch vụ trung gian -->
-  <div id="diagnosticsModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="diagnosticsTitle">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="diagnosticsTitle">🛠️ Chẩn đoán và báo lỗi</h3>
-        <button id="btnCloseDiagnostics" class="close-btn" type="button" aria-label="Đóng">×</button>
-      </div>
-      <div class="modal-body">
-        <p class="modal-desc">Log ghi nhận sự kiện audio, PDF, xoay màn hình và vòng đời Activity/WebView. Không ghi nội dung sách, tên tệp, đường dẫn hay URL audio.</p>
-        <p id="diagnosticsStatus" class="modal-desc diagnostics-action-status" role="status">Nhật ký sẽ được gửi qua dịch vụ trung gian và tạo báo cáo công khai. Bạn không cần đăng nhập.</p>
-        <label class="diagnostics-consent">
-          <input id="chkDiagnosticsConsent" type="checkbox">
-          <span>Tôi đồng ý chia sẻ nhật ký chẩn đoán trong báo cáo công khai. Tôi sẽ kiểm tra nhật ký trước khi gửi.</span>
-        </label>
-        <div class="diagnostics-actions">
-          <button id="btnExportDiagnostics" class="btn-secondary" type="button">📥 Xuất log ra tệp</button>
-          <button id="btnSubmitDiagnostics" class="btn-primary" type="button">📤 Gửi nhật ký chẩn đoán</button>
-        </div>
-        <p class="modal-desc">Ứng dụng sẽ tự tạo báo cáo chứa nhật ký. Nếu gửi lỗi, ứng dụng sẽ tải tệp JSON để bạn có thể gửi thủ công. Báo cáo và nhật ký là công khai.</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL THỐNG KÊ ẨN DANH: consent độc lập với diagnostics -->
-  <div id="analyticsModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="analyticsTitle">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="analyticsTitle">📊 Thống kê thời lượng đọc/nghe</h3>
-        <button id="btnCloseAnalytics" class="close-btn" type="button" aria-label="Đóng">×</button>
-      </div>
-      <div class="modal-body">
-        <p class="modal-desc">Tùy chọn này mặc định tắt. Nếu bật, ứng dụng chỉ gửi thời lượng đọc khi PDF đang mở và ứng dụng ở foreground; thời lượng nghe chỉ tính khi audio đang phát và ứng dụng ở foreground.</p>
-        <p class="modal-desc">Dữ liệu gửi đi chỉ gồm mã ngẫu nhiên, loại sự kiện, thời điểm, phiên bản ứng dụng, nền tảng và số giây đọc/nghe. Không gửi tên sách, tên tệp, đường dẫn, URL, nội dung tài liệu hoặc âm thanh. Event thô được lưu 90 ngày; số liệu tổng hợp được lưu 24 tháng. Không lưu hàng đợi khi offline; gửi lỗi thì khoảng thời gian đó bị bỏ qua.</p>
-        <p id="analyticsStatus" class="modal-desc diagnostics-action-status" role="status">Thống kê đang tắt. Chỉ bật khi bạn chủ động đồng ý.</p>
-        <label class="diagnostics-consent">
-          <input id="chkAnalyticsConsent" type="checkbox">
-          <span>Tôi đồng ý gửi thống kê thời lượng đọc và nghe ẩn danh. Tôi có thể tắt bất cứ lúc nào.</span>
-        </label>
-      </div>
+          
     </div>
   </div>
 
@@ -385,8 +312,7 @@
   <script src="app.js"></script>
   <script src="modules/analytics-collector.js"></script>
   <script src="modules/remote-sync.js"></script>
-  <script src="modules/diagnostics.js"></script>
-  <script>
+    <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed: ', err));
