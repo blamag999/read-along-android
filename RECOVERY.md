@@ -70,5 +70,4 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Đã cập nhật PLANNING để ghi các audit/implementation task chưa hoàn thành (commit `e2a64eaa9f3d955d73b1829d65578d689f99311f`).
 - Đã cập nhật ROADMAP và tạo handover checkpoint (commit `284484f6266d0c9792bd82b36ab1e00ea179ee1b`, sau đó `[handover]` commit `b5ff1d273e0a69ccdf0d37efd94cbe26942d5b09`).
 - Recovery status `RECONCILED`: thay đổi từ mốc cũ đã được đối chiếu; batch hiện tại chỉ thay đổi tài liệu. `last_reviewed_head` và `last formal handover commit` được đặt tại checkpoint `b5ff1d273e0a69ccdf0d37efd94cbe26942d5b09`.
-- Mâu thuẫn tài liệu Remote Config chưa được coi là đã giải quyết về mặt code: README mô tả module client/bootstrap, trong khi Data Contract/PLANNING mô tả static config và runtime client chưa tích hợp. PLANNING giữ audit task để xác minh source và HTTP response trước khi quyết định có cần runtime client.
 - Không chạy test/CI, không deploy, không build APK, không thay đổi R2/D1/Cloudflare, không cập nhật main. PR #40 vẫn là README-only và chưa được merge tại thời điểm đối chiếu.
