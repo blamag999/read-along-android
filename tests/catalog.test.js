@@ -137,12 +137,17 @@ console.log("Admin book-grouping regression tests passed.");
 assert.match(adminScript, /filteredLibraryEntries = entries;/, 'pagination must store the exact filtered list used by the current render');
 assert.ok(adminScript.includes('nextPageBtn') && adminScript.includes('filteredLibraryEntries.length'), 'next-page navigation must use the rendered filtered list');
 assert.ok(adminScript.includes('lastPageBtn') && adminScript.includes('filteredLibraryEntries.length'), 'last-page navigation must use the rendered filtered list');
-assert.ok(adminScript.includes('function convertWmaGroup(group, button)'), 'WMA conversion must be available from a book group');
+assert.ok(adminScript.includes('async function convertWmaGroup(group, button, reportProgress = () => {})'), 'WMA conversion must report progress from diagnostic findings');
+assert.ok(adminScript.includes('diagnosticBooks.find(book => book.audio.some(file => file.key === finding.key))'), 'WMA diagnostic findings must resolve to the complete book audio group');
+assert.ok(adminScript.includes('conversion-progress-track') && adminScript.includes('Đang tải MP3 lên R2'), 'WMA conversion must display in-row progress through upload');
+assert.ok(!adminScript.includes('convertWmaGroup(group,event.currentTarget)'), 'WMA conversion action must not appear in the library list');
+assert.ok(adminScript.includes('uploadOne(outputFile, index, sources.length, destinations[index]'), 'WMA conversion must upload to the source folder regardless of the currently browsed folder');
 assert.ok(adminScript.includes('@ffmpeg/ffmpeg@0.12.10'), 'browser conversion engine must use a pinned FFmpeg.wasm version');
 assert.ok(adminScript.includes('@ffmpeg/core@0.12.10'), 'FFmpeg core must use a pinned version');
 assert.match(adminScript, /libmp3lame/, 'WMA conversion must encode MP3 audio');
 assert.ok(adminScript.includes('file đích đã tồn tại'), 'conversion must refuse to overwrite an existing MP3');
 assert.ok(adminScript.includes('File WMA gốc được giữ nguyên'), 'conversion must preserve original WMA files');
+assert.ok(adminScript.includes('finding.code === "playback_compatibility"'), 'conversion action must be attached to WMA compatibility diagnostics');
 assert.ok(fs.readFileSync('admin/public/index.html', 'utf8').indexOf('class="library-tools"') < fs.readFileSync('admin/public/index.html', 'utf8').indexOf('<div class="table-wrap">'), 'library search and sort controls must appear before the file table');
 console.log('Admin pagination, WMA conversion and search placement regression tests passed.');
 
