@@ -138,4 +138,4 @@ Nếu phát sinh lỗi nghiêm trọng ảnh hưởng người dùng, ưu tiên 
 > Analytics AN1: proposed schema and privacy/event semantics documented; no client collector, API route, D1 table or dashboard deployed yet. Full regression phát hiện assertion bị cắt dòng và phần test trùng ở cuối `tests/contracts.test.js`; đã sửa cả hai và cần chạy lại.
 
 
-> Analytics AN2 backend code staged: endpoint, strict validation helper, D1 migration and regression tests added. CI passes, migration is applied to the existing Read Along D1 database and verified. Pages production deploy/endpoint smoke test remain pending. No client collector, dashboard or APK change.
+> Analytics AN2 backend code staged: endpoint, strict validation helper, D1 migration and regression tests added. Migration is applied to the existing Read Along D1 database and verified. Latest endpoint hardening and regression-test changes are pending CI; Pages production deploy/endpoint smoke test remain pending. No client collector, dashboard or APK change.
