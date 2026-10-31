@@ -61,4 +61,6 @@ assert.deepEqual(JSON.parse(JSON.stringify(result.markers)), {});
 
 result = resolver.resolve([{ source: 'github', data: { 1: 'bad' } }]);
 assert.equal(result.status, 'empty');
+result = resolver.resolve([{ source: 'github', data: { bad: -1 } }], { explicitImport: true });
+assert.equal(result.status, 'invalid-import', 'invalid explicit import must not silently fall back');
 console.log('Marker resolver tests passed.');
