@@ -635,5 +635,5 @@ Khi một công việc trong PLANNING hoàn tất:
 - Menu: bỏ mục Chẩn đoán/Báo lỗi và không nạp diagnostics client; bỏ màn hình xin đồng ý thống kê; analytics mặc định bật. Bộ thu thập hiện hữu chỉ đo sự kiện và thời lượng đọc/nghe ẩn danh, không gửi tên sách, tên file hoặc nội dung.
 - Đổi nhãn checkpoint từ “Mốc đã đọc gần đây” thành “Mốc đọc gần đây”.
 - Regression assertions bổ sung trong `tests/modules.test.js` cho menu đã tinh gọn, header responsive, nhãn checkpoint và bảo toàn export marker local.
-- Code batch đã cập nhật trên beta tới `b0a542e75692e5ab3711d43bda68b07e8b328019`; các commit tiếp theo hiện chỉ cập nhật PLANNING/ROADMAP/RECOVERY.
+- Code batch được mở rộng thêm bằng commit `163abfbeab279b479e358e39ada6f3fa63fda3dd`: loại bỏ fallback `loadCloudSyncForBook()` để không còn nạp đè marker R2 bằng nguồn đồng bộ online. Regression assertions bổ sung tại `f2bebf47071a712021e29e6645551e8bdc910475`.
 - Trạng thái: IMPLEMENTED; CI/full regression, APK build, R2 marker smoke test và nghiệm thu thiết bị CHƯA XÁC NHẬN. Không promote main.
