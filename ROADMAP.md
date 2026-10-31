@@ -554,3 +554,13 @@ Khi một công việc trong PLANNING hoàn tất:
 - Chưa tạo R2 API token, chưa thêm GitHub secrets, chưa upload APK, chưa chạy APK build/Gradle compile hoặc OTA install trên thiết bị. Người dùng cần tạo token bucket-scoped và lưu hai secrets theo PLANNING trước khi tạo bản APK beta chuyển tiếp.
 - Không đổi main, không chuyển repository sang Private, không đổi signing key và không xóa GitHub Releases.
 
+
+
+### 2026-10-31 — Giữ ba mốc đọc gần nhất theo từng cuốn sách
+
+- Reader local session được nâng thành record riêng theo book key gồm mốc hiện tại và tối đa hai mốc trước đó (tổng cộng ba mốc).
+- Khi đổi trang/part audio, tua lùi hoặc nhảy audio đáng kể, vị trí trước đó được lưu thành checkpoint; các lần cập nhật tiến trình bình thường trên cùng vị trí chỉ cập nhật mốc hiện tại, tránh làm đầy lịch sử bởi mỗi sự kiện timeupdate.
+- Bổ sung bộ chọn ba mốc gần nhất và nút khôi phục ngay khu vực trạng thái đọc. Khôi phục không tự phát audio; vị trí đang đọc trước khi khôi phục vẫn được giữ trong lịch sử.
+- Dữ liệu legacy một-mốc được migrate sang cấu trúc mới khi đọc; không xóa dữ liệu cũ.
+- Regression assertions được bổ sung vào `tests/ota-update.test.js`. CI và build APK beta được kích hoạt tại commit chốt của batch; nghiệm thu thiết bị vẫn pending.
+- Không thay đổi D1/API, native updater, signing key hoặc nhánh `main`.
