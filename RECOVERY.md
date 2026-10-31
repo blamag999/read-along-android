@@ -7,9 +7,9 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover code/documentation checkpoint: `96fc15e8dcdcf0ab42961e23ac4d7138618c8174`.
-- Last reviewed functional HEAD on beta: `96fc15e8dcdcf0ab42961e23ac4d7138618c8174`
-- Recovery status: `RECONCILED`
+- Last formal handover code/documentation checkpoint: `63fc3f279f6f28e7075d049ff6c423ed8739672a` (implementation checkpoint; handover commit to follow).
+- Last reviewed functional HEAD on beta: `63fc3f279f6f28e7075d049ff6c423ed8739672a`
+- Recovery status: `PARTIAL — implementation pushed; regression and release verification pending`
 - Recovery reviewed on: 2026-10-31
 - Latest recovery checkpoint: docs-only plan and audit for release notes and app notifications; no runtime files changed. OTA notification implementation remains at prior checkpoint; build workflow 41211770726 status must be checked before claiming APK availability.
 - README shared policy: beta content updated; main synchronization is pending PR #40 (README-only) because main requires changes through a pull request.
@@ -245,3 +245,12 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - User-facing: “PDF” → “sách” khi nói về tài liệu đang đọc; “audio” → “âm thanh”. Tên định dạng cụ thể (PDF/MP3/M4A) vẫn được dùng trong hướng dẫn chọn tệp.
 - Không đổi identifiers/API/metadata/log kỹ thuật. Quy ước được ghi trong PLANNING; runtime chưa thay đổi.
 - Docs commits: PLANNING `751ad7311acf43dd445d48a4b443a7161f48dc2c`; ROADMAP `169ae24e8941c6a375ab6c1f255201a08f076d4d`.
+
+
+## Recovery — Release Notes and app notifications implementation (2026-10-31)
+
+- Starting beta HEAD was `3f35283b34329e58e2830ba4295960272c018c97`; stable main HEAD was `d683282ad319ba4b9a1bc5669a0e12667c20ac8a` and remains unchanged.
+- App notification edits: `85b5046b42e81aee3da34510f91ffbec7e4e02a7`, `5c7816f4c1d492843db3db86e2dc06842e43438e`, `9507390a3d9607d2cf7543cca9108b4234a4822e`.
+- Release Notes generator/tests/workflow edits: `f0506562ab2ee00181b0fda2bda6ea1c018bb40e`, `2b9a742af049fa0948d0ac44be0a3664474b226a`, `04323771c6059b3477b8e810ed0c25b4346fa17f`, `108158e291302596b2d5be1a935d9214d7edd789`, `5b07dc2a11aa24914eb17843347509ab31d45587`, `9d724505cea2c6437a286394ed5d6a76d740dc6e`, `c1af5b3e302b334ed4a066d89ee4c02b6c1d7de7`, `63fc3f279f6f28e7075d049ff6c423ed8739672a`.
+- Implementation is not yet DONE: no regression/CI evidence, release generation has not been exercised in Actions, and the in-app notification audit still has unmodified legacy messages. No APK or OTA publication from this batch.
+- Next: validate the Python generator/tests and workflow outputs; complete remaining user-facing notification strings and add coverage; then run one full regression batch and one final beta APK build. Keep main unchanged.
