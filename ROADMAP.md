@@ -208,3 +208,6 @@ Khi một công việc trong PLANNING hoàn tất:
   - README: `4eb7e19cd5e462b8984be8359192895be430d2a5`
   - PLANNING: `b97e3a3387110545f7c81ef12085e12ec7209a45`
 - Chưa chạy full regression hoặc build APK trong batch tài liệu/workflow này; commit cuối cùng chỉ cập nhật ROADMAP. Cần kiểm chứng thực tế bằng một commit `[test]` ở batch kế tiếp hoặc chạy workflow thủ công. Không có thay đổi APK runtime và không promote `main`.
+
+
+- Đóng batch CI bằng commit chốt có marker `[build-apk]` để xác minh end-to-end chính sách mới và tạo APK beta mới nhất; build sẽ bị chặn nếu full regression hoặc isolation checks thất bại. Đây là build xác minh workflow, không có thay đổi runtime APK.
