@@ -542,3 +542,15 @@ Nguyên tắc không thay đổi: không đưa `error.message`, HTTP status, cod
 - [ ] Run full npm test / obtain confirmed GitHub Actions result before APK build.
 - CSS reduced from 91,946 to 66,287 characters (~27.9%). Static checks confirm balanced CSS braces, no removed selectors/IDs in active CSS, and no removed class references in the audited runtime sources.
 - Commits: CSS 0382630, fe22a15; tests 9c20bd8, aa25129, f50d1c7.
+
+
+### Regression confirmation — 2026-11-01
+
+- [x] Full `npm test` passed in GitHub Actions PR #43, run #543.
+- [x] JavaScript syntax checks passed as part of `npm test`.
+- [x] Pages Functions module syntax check passed.
+- [x] Isolation constraints passed.
+- [x] Update stale contracts in `tests/contracts.test.js` to match current R2-only reader/media copy and removed local picker UI; runtime code unchanged for these test fixes.
+- PR #43 was squash-merged into beta at `d10459e9788eb1d961e3dfba08a5ab95324233c6`. Deployment-dependent analytics/OTA smoke tests were skipped by workflow conditions.
+- [ ] Build one final beta APK and verify workflow artifact/release/OTA result.
+- [ ] Install and perform device acceptance; no main promotion until accepted.
