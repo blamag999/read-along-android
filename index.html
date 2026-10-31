@@ -37,7 +37,6 @@
       <button id="btnOpenReadMenu" class="icon-btn read-menu-button" type="button" aria-label="Mở menu" aria-controls="readOptionsMenu" aria-expanded="false" title="Menu">☰ <span>Menu</span></button>
       <div id="readOptionsMenu" class="read-options-menu hidden" role="group" aria-label="Menu ứng dụng" aria-hidden="true">
         <button id="menuToggleSettings" class="read-menu-option" type="button" aria-expanded="true"><span class="menu-option-icon" aria-hidden="true">⚙️</span><span>Ẩn/hiện chọn tệp và tùy chọn</span></button>
-        <button id="menuOpenSyncModal" class="read-menu-option" type="button"><span class="menu-option-icon" aria-hidden="true">⏱️</span><span>Mốc thời gian</span></button>
         <button id="menuAutoFlip" class="read-menu-option" type="button" aria-pressed="true"><span class="menu-option-icon" aria-hidden="true">🔄</span><span>Tự lật trang</span><span class="menu-option-state" id="menuAutoFlipState">Bật</span></button>
 
         <div id="readingCheckpointMenuGroup" class="read-menu-checkpoints hidden">
@@ -75,7 +74,6 @@
       <div class="active-files-indicator">
         <span id="pdfFileName" class="file-status-pill empty">📖 Chưa có sách</span>
         <span id="audioFileName" class="file-status-pill empty">🎵 Chưa có âm thanh</span>
-        <span id="syncCountBadge" class="file-status-pill sync-pill empty">⏱️ 0 mốc</span>
       </div>
 
     </div>
@@ -143,19 +141,9 @@
           <input id="pageJumpInput" type="number" min="1" step="1" inputmode="numeric" aria-label="Số trang cần mở" placeholder="Số">
           <button id="btnPageJump" type="button">Đi</button>
         </label>
-        <span id="lblPageTimestamp" class="page-time-badge">Mốc: Chưa gán</span>
-        <span id="lblSaveStatus" class="save-status-badge">💾 Sẵn sàng</span>
 
       </div>
       
-      <div class="sync-actions-mini">
-        <button id="btnPinCurrentTime" class="btn-pin" title="Gán giây hiện tại cho trang này">
-          📍 Ghim mốc giây này cho trang
-        </button>
-        <button id="btnSaveToFolder" class="btn-save-mini" title="Lưu tệp mốc vào thư mục hoặc tải về máy">
-          💾 Lưu mốc
-        </button>
-      </div>
     </div>
 
     <div class="audio-scrubber-row">
@@ -251,30 +239,6 @@
     </div>
   </div>
 
-  <!-- SYNC MANAGEMENT MODAL: local JSON import/export only -->
-  <div id="syncModal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>⏱️ Quản lý mốc thời gian theo trang</h3>
-        <button id="btnCloseSyncModal" class="close-btn" type="button" aria-label="Đóng">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p class="modal-desc">Quản lý mốc thời gian của sách. Có thể nhập JSON từ thiết bị hoặc xuất JSON để lưu cạnh tệp sách và âm thanh trên R2.</p>
-        <div class="sync-actions-row">
-          <button id="btnExportSync" class="btn-secondary" type="button" title="Xuất tệp mốc JSON">📥 Tải tệp mốc (.json)</button>
-          <label for="importSyncInput" class="btn-secondary">📂 Nhập file mốc từ máy</label>
-          <input type="file" id="importSyncInput" accept=".json,application/json" style="display:none;">
-          <button id="btnClearSync" class="btn-danger" type="button">🗑️ Xóa hết mốc của truyện này</button>
-        </div>
-        <div class="sync-table-container">
-          <table class="sync-table">
-            <thead><tr><th>Trang</th><th>Thời điểm bắt đầu</th><th>Thao tác</th></tr></thead>
-            <tbody id="syncTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- TOAST THÔNG BÁO -->
   <div id="toastMessage" class="toast-message hidden"></div>
