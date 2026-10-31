@@ -7,10 +7,10 @@
 - Repository: `blamag999/read-along-android`
 - Branch phát triển: `beta`
 - Branch stable: `main` (không cập nhật code trong quy trình khôi phục)
-- Last formal handover code/documentation checkpoint: `eeba49a678063fda4ed302b4c424b0906986ee24` (Admin manifest protection and regression assertions committed; push-triggered CI result and latest production Pages deployment are not yet confirmed).
+- Last formal handover code/documentation checkpoint: `78cf6db4bb6db2bc5e83d5b9d63d5c3a641f6d45` (Admin manifest protection deployed to production; regression CI result remains unconfirmed; latest documentation-only commit follows the deployed code).
 - Last reviewed functional/source HEAD on beta: `eeba49a678063fda4ed302b4c424b0906986ee24`
 - Stable main HEAD: `c1ad733b50d1514679d7c6868f3763859ac45b87` (PR #44 promotion; no new stable APK was built by this batch).
-- Recovery status: `PARTIAL — Admin hides and protects root books.json; test assertions committed; CI and latest production Pages deployment are awaiting confirmation; live manifest content verification remains pending; no APK build`
+- Recovery status: `PARTIAL — Admin hides and protects root books.json; production Pages deployment for code commit eeba49a succeeded; CI result and live manifest content verification remain pending; no APK build`
 - Recovery reviewed on: 2026-11-01
 - Latest policy update: quyết định không lưu PDF/audio offline đã được ghi vào README/ROADMAP/PLANNING/RECOVERY. Xem mục “Quyết định thay thế kế hoạch kho offline”; các checkpoint cũ bên dưới chỉ là lịch sử.
 - README shared policy: PR #44 promoted the accepted beta snapshot to main. Before the next release, verify README parity between main and beta; do not assume PR #40 was merged.
@@ -537,5 +537,6 @@ Các thay đổi đã được đối chiếu trong lịch sử Git và tài li�
 - Relevant code commits: `e0b28d2983cbe8687482dfcdc2a1dc2dc6704334`, `12f3a5e27bf1cf038f7b71ed6b62513bce7b7cd7`, `3b1fc07531eb45997315ace7fe01d16697636db6`, `43cf94643cdd1c39a3f6af7b3753ce04787bcac5`, `270b90d947f29a356d04324dd6cd9dff73b6b344`, `93fda47c69cc4dbcbaed861fa473ca9540d2e930`; regression-test commit `eeba49a678063fda4ed302b4c424b0906986ee24`.
 - No changes to live R2 objects or `books.json` content. Live manifest folder values still require Admin preview verification before any publish.
 - Regression CI was requested with the `[test]` commit, but the push-run result was not available through the connected GitHub status interface at this checkpoint. Do not mark CI PASS without the Actions result.
-- Cloudflare Pages production deployment `d4f6c813-40c9-49e5-ba75-5915cfe46e22` for commit `eeba49a...` was queued at the last check. Verify deployment status before assuming the production Admin is updated.
+- Cloudflare Pages production deployment `d4f6c813-40c9-49e5-ba75-5915cfe46e22` for commit `eeba49a...` completed successfully: queued, initialize, clone_repo, build, and deploy stages all succeeded. This deployment contains the Admin protection code.
+- A subsequent docs-only commit `78cf6db4bb6db2bc5e83d5b9d63d5c3a641f6d45` created a separate Pages deployment `9e2e5f49-65dc-48a5-ba2f-9fcb608bdb89`, which was still queued at the last check; it does not change the already deployed Admin code.
 - No APK build, no main promotion.
