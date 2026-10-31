@@ -12,17 +12,18 @@
 - Không tạo API/Worker mới nếu hệ thống hiện có đáp ứng; không gộp endpoint khác trách nhiệm.
 - Không đánh dấu hoàn thành nếu thiếu bằng chứng CI, endpoint, deploy hoặc thiết bị tương ứng.
 
-## P0 — Chuyển sách R2 vào DISNEY và phân nhóm catalog theo folder
+## P0 — Di chuyển sách R2 vào thư mục được chọn và phân nhóm catalog theo folder
 
 ### Trạng thái tại beta source HEAD `410e292477519143176fc7b5bf45b9b8099ccc0a`
 
 - [x] Khảo sát bucket `my-audio-book`: 204 object; 180 object ở root (gồm `books.json`), 24 object trong `ONE STORY A DAY LEVEL 2 FULL`.
 - [x] Đối chiếu catalog hiện tại: 82 sách tham chiếu 175 media objects; 4 media objects còn lại tạo thành 2 cặp PDF/MP3 chưa có trong catalog (`Oliver_Company`, `Sleeping Beauty`).
 - [x] Thêm metadata `folder` vào catalog preview/publish; trường optional để tương thích manifest cũ.
-- [x] App có bộ lọc thư mục; Admin có thao tác bulk move chỉ áp dụng file ở root, giữ nguyên `books.json`, không đụng thư mục hiện có, kiểm tra trùng tên và dùng route rename đã có (copy → xác minh kích thước → xóa nguồn).
+- [x] App có bộ lọc thư mục; Admin có thao tác bulk move chỉ áp dụng file ở root, giữ nguyên `books.json`, không di chuyển nội dung các thư mục hiện có, kiểm tra trùng tên và dùng route rename đã có (copy → xác minh kích thước → xóa nguồn).
 - [x] Regression/isolation CI pass tại [run 41226438099](https://github.com/blamag999/read-along-android/actions/runs/41226438099).
 - [x] Cloudflare Pages deployment hoàn tất: [deployment c3dbf307](https://c3dbf307.read-along-admin.pages.dev), production branch `beta`, build và deploy đều success.
-- [ ] Đăng nhập Admin, ở thư mục gốc chạy **Chuyển sách ngoài thư mục vào DISNEY**; kiểm tra tiến độ và lỗi. Dự kiến 179 tệp (~1.65 GB); `books.json` và 24 object của `ONE STORY A DAY LEVEL 2 FULL` phải giữ nguyên.
+- [x] Cải tiến Admin: nút **Chuyển tệp ngoài thư mục…** cho phép chọn bất kỳ thư mục R2 hiện có (kể cả thư mục con) hoặc tạo thư mục cấp gốc mới; tên đích không còn hardcode `DISNEY`. Giữ nguyên `books.json`, kiểm tra collision và copy → verify size → delete source.
+- [ ] Đăng nhập Admin, ở thư mục gốc chạy **Chuyển tệp ngoài thư mục…**; chọn thư mục đích hoặc tạo mới, kiểm tra tiến độ và lỗi. Dự kiến 179 tệp (~1.65 GB); `books.json` và 24 object của `ONE STORY A DAY LEVEL 2 FULL` phải giữ nguyên.
 - [ ] Sau khi chuyển thành công, xác nhận bản xem trước catalog không loại nhóm nào; dự kiến 84 sách trong `DISNEY` (82 sách đang có + 2 cặp chưa có catalog) và 12 sách trong `ONE STORY A DAY LEVEL 2 FULL`.
 - [ ] Xuất bản `books.json`; xác minh tất cả URL PDF/audio/JSON tồn tại, tổng số sách và phân nhóm đúng; đồng bộ seed `admin/public/books.json` sau khi manifest live đã được kiểm tra.
 - [ ] Smoke test app: tải catalog, chuyển qua lại hai folder, mở PDF/audio, xác nhận JSON mốc thời gian vẫn khớp; chạy regression cuối batch và build một APK beta để kiểm thử thiết bị.
