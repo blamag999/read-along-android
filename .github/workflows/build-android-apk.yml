@@ -160,6 +160,7 @@ jobs:
       - name: Embed release version in app
         env:
           VERSION: ${{ steps.release_info.outputs.version }}
+          VERSION_CODE: ${{ github.run_number }}
         run: |
           python3 - <<'PY'
           import os, re
@@ -168,6 +169,8 @@ jobs:
           html = path.read_text()
           html, count = re.subn(r'(<meta\s+name="app-version"\s+content=")[^"]*(")', lambda m: m.group(1) + os.environ["VERSION"] + m.group(2), html, count=1)
           if count != 1: raise SystemExit('app-version meta tag not found')
+          html, code_count = re.subn(r'(<meta\\s+name="app-version-code"\\s+content=")[^"]*(")', lambda m: m.group(1) + os.environ["VERSION_CODE"] + m.group(2), html, count=1)
+          if code_count != 1: raise SystemExit('app-version-code meta tag not found')
           path.write_text(html)
           PY
 
